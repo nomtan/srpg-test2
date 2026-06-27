@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -47,6 +47,8 @@
 [ext_resource type="Script" path="res://scripts/save/player_profile_data.gd" id="45_profile"]
 [ext_resource type="Script" path="res://scripts/save/unit_progress_manager.gd" id="46_unit_progress"]
 [ext_resource type="Script" path="res://scripts/save/stage_progress_manager.gd" id="47_stage_progress"]
+[ext_resource type="Script" path="res://scripts/status/status_calculator.gd" id="48_status"]
+[ext_resource type="Script" path="res://scripts/job/job_unlock_system.gd" id="49_job_unlock"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -62,6 +64,12 @@ script = ExtResource("46_unit_progress")
 
 [node name="StageProgressManager" type="Node" parent="."]
 script = ExtResource("47_stage_progress")
+
+[node name="StatusCalculator" type="Node" parent="."]
+script = ExtResource("48_status")
+
+[node name="JobUnlockSystem" type="Node" parent="."]
+script = ExtResource("49_job_unlock")
 
 [node name="GridSystem" type="Node" parent="."]
 script = ExtResource("2_grid")

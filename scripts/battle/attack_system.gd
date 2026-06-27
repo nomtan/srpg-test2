@@ -60,13 +60,18 @@ func calculate_hit_rate(attacker: BattleUnit, target: BattleUnit) -> int:
 	var height_bonus := mini(height_diff * 5, 15) if height_diff > 0 else maxi(height_diff * 7, -21)
 	var terrain_bonus := grid.get_cell(Vector2i(target.grid_x, target.grid_z)).evasion_bonus
 	var direction_bonus: int = {AttackDirection.FRONT: -5, AttackDirection.SIDE: 10, AttackDirection.BACK: 20}[get_attack_direction(attacker, target)]
-	return clampi(attacker.accuracy - target.evasion - terrain_bonus + height_bonus + direction_bonus, 5, 100)
+	return clampi(attacker.accuracy - target.evasion - terrain_bonus + height_bonus + direction_bonus, 5, 95)
 
 
 func calculate_damage(attacker: BattleUnit, target: BattleUnit) -> int:
 	var terrain_defense := grid.get_cell(Vector2i(target.grid_x, target.grid_z)).defense_bonus
 	var direction_bonus: int = {AttackDirection.FRONT: 0, AttackDirection.SIDE: 2, AttackDirection.BACK: 5}[get_attack_direction(attacker, target)]
 	return maxi(1, attacker.attack_power - target.defense - target.temporary_defense_bonus - terrain_defense + direction_bonus)
+
+func calculate_critical_rate(attacker: BattleUnit, _target: BattleUnit, skill: SkillData = null) -> int:
+	var rate := attacker.build_stats.critical_rate if attacker.build_stats else 0
+	if skill: rate += skill.critical_modifier
+	return clampi(rate, 0, 50)
 
 
 func get_attack_direction(attacker: BattleUnit, target: BattleUnit) -> AttackDirection:
@@ -99,5 +104,7 @@ func execute_attack(attacker: BattleUnit, target: BattleUnit) -> Dictionary:
 	var hit_rate := calculate_hit_rate(attacker, target)
 	if randi_range(1, 100) > hit_rate: return {"success": true, "hit": false, "damage": 0, "message": "Miss!", "defeated": false, "hit_rate": hit_rate}
 	var damage := calculate_damage(attacker, target)
+	var critical := randi_range(1, 100) <= calculate_critical_rate(attacker, target)
+	if critical: damage = maxi(1, roundi(damage * 1.5))
 	target.take_damage(damage)
-	return {"success": true, "hit": true, "damage": damage, "message": "Hit!", "defeated": not target.is_alive(), "hit_rate": hit_rate}
+	return {"success": true, "hit": true, "damage": damage, "message": "Critical Hit!" if critical else "Hit!", "defeated": not target.is_alive(), "hit_rate": hit_rate, "critical": critical}

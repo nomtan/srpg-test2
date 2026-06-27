@@ -2,6 +2,7 @@ class_name FloatingNumberManager
 extends Node3D
 
 func show_damage(unit: BattleUnit, amount: int) -> void: _spawn(unit, str(amount), "damage")
+func show_critical(unit: BattleUnit, amount: int) -> void: _spawn(unit, "%d CRITICAL" % amount, "critical")
 func show_heal(unit: BattleUnit, amount: int) -> void: _spawn(unit, str(amount), "heal")
 func show_miss(unit: BattleUnit) -> void: _spawn(unit, "Miss", "miss")
 

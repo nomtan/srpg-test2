@@ -6,9 +6,10 @@ var units: UnitManager
 var attacks: AttackSystem
 var elements: ElementSystem
 var los: LineOfSight
+var status_calculator: Node
 
-func setup(source_grid: GridSystem, unit_manager: UnitManager, attack_system: AttackSystem, element_system: ElementSystem, line: LineOfSight) -> void:
-	grid = source_grid; units = unit_manager; attacks = attack_system; elements = element_system; los = line
+func setup(source_grid: GridSystem, unit_manager: UnitManager, attack_system: AttackSystem, element_system: ElementSystem, line: LineOfSight, calculator: Node = null) -> void:
+	grid = source_grid; units = unit_manager; attacks = attack_system; elements = element_system; los = line; status_calculator = calculator
 
 func can_use_skill(user: BattleUnit, skill: SkillData) -> bool: return user.is_alive() and user.ap >= skill.ap_cost
 
@@ -67,8 +68,17 @@ func calculate_preview(user: BattleUnit, skill: SkillData, target_pos: Vector2i)
 	var hit_rate := 100
 	if target and skill.skill_type == SkillData.SkillType.ATTACK:
 		var terrain_defense := grid.get_cell(Vector2i(target.grid_x, target.grid_z)).defense_bonus
-		value = maxi(1, int((user.attack_power + skill.power - target.defense - target.temporary_defense_bonus - terrain_defense) * elements.get_damage_multiplier(skill.element, target.element)))
-		hit_rate = clampi(attacks.calculate_hit_rate(user, target) + skill.accuracy_modifier + elements.get_hit_modifier(skill.element, target.element), 5, 100)
+		if skill.scaling_type == SkillData.ScalingType.MAGICAL:
+			var magic_attack := user.build_stats.magic_attack_power if user.build_stats else user.intelligence
+			var magic_defense := target.build_stats.magic_defense if target.build_stats else target.mind
+			value = maxi(1, magic_attack + skill.power - magic_defense)
+		else:
+			value = maxi(1, user.attack_power + skill.power - target.defense - target.temporary_defense_bonus - terrain_defense)
+		value = elements.apply_element_modifiers(value, skill.element, target)
+		hit_rate = clampi(attacks.calculate_hit_rate(user, target) + skill.accuracy_modifier + elements.get_hit_modifier(skill.element, target.element), 5, 95)
+	elif skill.scaling_type == SkillData.ScalingType.HEALING:
+		var final_stats: Dictionary = status_calculator.calculate_final_base_stats(user) if status_calculator else {"mnd": user.mind}
+		value = skill.power + floori(int(final_stats.mnd) * 1.5)
 	return {"value": value, "hit_rate": hit_rate, "targets": targets, "ap_cost": skill.ap_cost, "is_heal": skill.skill_type == SkillData.SkillType.HEAL}
 
 func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> Dictionary:
@@ -88,9 +98,11 @@ func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> 
 			messages.append("%s recovers %d HP" % [target.unit_name, healed])
 			target_results.append({"target": target, "hit": true, "damage": 0, "heal": healed, "defeated": false, "result_type": "heal"})
 		elif randi_range(1, 100) <= int(preview.hit_rate):
-			target.take_damage(int(preview.value))
-			messages.append("%s takes %d damage" % [target.unit_name, preview.value])
-			target_results.append({"target": target, "hit": true, "damage": int(preview.value), "heal": 0, "defeated": not target.is_alive(), "result_type": "damage"})
+			var critical := skill.scaling_type == SkillData.ScalingType.PHYSICAL and randi_range(1, 100) <= attacks.calculate_critical_rate(user, target, skill)
+			var damage := roundi(int(preview.value) * 1.5) if critical else int(preview.value)
+			target.take_damage(damage)
+			messages.append("%s takes %d damage%s" % [target.unit_name, damage, " (Critical!)" if critical else ""])
+			target_results.append({"target": target, "hit": true, "damage": damage, "heal": 0, "defeated": not target.is_alive(), "result_type": "damage", "critical": critical})
 			if not target.is_alive(): units.remove_unit(target)
 		else:
 			messages.append("Miss!")

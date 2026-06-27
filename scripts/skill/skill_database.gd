@@ -14,6 +14,14 @@ func _ready() -> void:
 	_register(SkillData.create("guard_stance", "ガードスタンス", SkillData.SkillType.BUFF, SkillData.TargetType.SELF, SkillData.RangeType.MAGIC, BattleUnit.ElementType.NONE, 6, 0, 0, 0, 0, 0, false))
 
 func _register(skill: SkillData) -> void: skills[skill.skill_id] = skill
+func configure_phase_11_5_scaling() -> void:
+	_set_scaling("earth_break", SkillData.ScalingType.MAGICAL)
+	_set_scaling("aqua_edge", SkillData.ScalingType.MAGICAL)
+	_set_scaling("healing_water", SkillData.ScalingType.HEALING)
+	_set_scaling("guard_stance", SkillData.ScalingType.FIXED)
+func _set_scaling(id: String, scaling: SkillData.ScalingType) -> void:
+	var skill := get_skill(id)
+	if skill: skill.scaling_type = scaling
 func get_skill(id: String) -> SkillData: return skills.get(id)
 func get_skills_for_unit(unit: BattleUnit) -> Array[SkillData]:
 	var result: Array[SkillData] = []

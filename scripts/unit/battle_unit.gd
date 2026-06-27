@@ -56,6 +56,13 @@ var vitality := 10
 var mind := 10
 var intelligence := 10
 var agility := 10
+var base_str := 10
+var base_dex := 10
+var base_vit := 10
+var base_mnd := 10
+var base_int := 10
+var base_agi := 10
+var build_stats: BuildStats
 var temporary_defense_bonus := 0
 
 var body_material: StandardMaterial3D
@@ -219,8 +226,26 @@ func apply_level_growth(growth: Dictionary) -> Dictionary:
 	max_hp += int(growth.get("max_hp", 5)); max_ap += int(growth.get("max_ap", 1))
 	attack_power += int(growth.get("attack_power", 1)); defense += int(growth.get("defense", 1))
 	accuracy += int(growth.get("accuracy", 1)); evasion += int(growth.get("evasion", 1))
+	base_str += int(growth.get("str", growth.get("attack_power", 1)))
+	base_dex += int(growth.get("dex", growth.get("accuracy", 1)))
+	base_vit += int(growth.get("vit", growth.get("defense", 1)))
+	base_mnd += int(growth.get("mnd", 1))
+	base_int += int(growth.get("int", 1))
+	base_agi += int(growth.get("agi", growth.get("evasion", 1)))
 	hp = max_hp; ap = max_ap
 	return growth
+
+func refresh_build_stats(status_calculator: Node) -> void:
+	var hp_ratio := float(hp) / float(max_hp) if max_hp > 0 else 1.0
+	build_stats = status_calculator.calculate_build_stats(self)
+	var final_stats: Dictionary = status_calculator.calculate_final_base_stats(self)
+	strength = int(final_stats.str); dexterity = int(final_stats.dex); vitality = int(final_stats.vit)
+	mind = int(final_stats.mnd); intelligence = int(final_stats.int); agility = int(final_stats.agi)
+	max_hp = status_calculator.calculate_max_hp(self, final_stats)
+	attack_power = build_stats.attack_power; defense = build_stats.defense
+	accuracy = build_stats.accuracy; evasion = build_stats.evasion
+	move_range = build_stats.move_range; jump_height = build_stats.jump_height
+	hp = clampi(roundi(max_hp * hp_ratio), 1, max_hp) if not is_dead else 0
 
 func add_job_exp(amount: int) -> Array[Dictionary]:
 	var target_job := main_job_id if not main_job_id.is_empty() else job_id

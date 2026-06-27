@@ -14,6 +14,6 @@ func add_message(message: String) -> void:
 
 func show_attack_result(attacker: BattleUnit, target: BattleUnit, result: Dictionary) -> void:
 	var message := "%s attacks %s\n" % [attacker.unit_name, target.unit_name]
-	message += "Hit! %d damage" % result.damage if result.hit else "Miss!"
+	message += (("Critical! %d damage" if bool(result.get("critical", false)) else "Hit! %d damage") % result.damage) if result.hit else "Miss!"
 	if result.defeated: message += "\n%s defeated" % target.unit_name
 	add_message(message)

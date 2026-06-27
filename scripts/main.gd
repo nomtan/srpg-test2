@@ -40,6 +40,8 @@ extends Node3D
 @onready var player_profile: PlayerProfileData = $PlayerProfileData
 @onready var unit_progress: UnitProgressManager = $UnitProgressManager
 @onready var stage_progress: StageProgressManager = $StageProgressManager
+@onready var status_calculator: Node = $StatusCalculator
+@onready var job_unlock_system: JobUnlockSystem = $JobUnlockSystem
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -59,9 +61,15 @@ func _ready() -> void:
 	save_manager.status_message.connect(_on_save_status)
 	save_manager.load_or_create(unit_manager.get_player_units())
 	unit_progress.apply_progress_to_units(unit_manager.get_player_units())
+	status_calculator.setup(job_database)
+	job_unlock_system.setup(job_database)
+	skill_database.configure_phase_11_5_scaling()
+	for unit: BattleUnit in unit_manager.units:
+		if unit.team == "player": job_unlock_system.unlock_available_jobs(unit)
+		unit.refresh_build_stats(status_calculator)
 	line_of_sight.setup(grid)
 	attack_system.setup(grid, line_of_sight)
-	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight)
+	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight, status_calculator)
 	job_system.setup(job_database)
 	experience_system.setup(job_database)
 	skill_unlock_system.setup(job_database)
@@ -95,7 +103,7 @@ func _ready() -> void:
 	turn_manager.combat_message.connect(_on_combat_message)
 	turn_manager.battle_ended.connect(_on_battle_ended)
 	pre_battle_setup.battle_started.connect(_on_pre_battle_started)
-	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system)
+	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system, job_unlock_system, status_calculator)
 	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
 
@@ -210,7 +218,7 @@ func _on_skill_confirmed() -> void:
 	for target_result: Dictionary in result.results:
 		var type: String = target_result.result_type
 		var amount := int(target_result.heal) if type == "heal" else int(target_result.damage)
-		_show_floating_result(target_result.target, type, amount)
+		_show_floating_result(target_result.target, "critical" if bool(target_result.get("critical", false)) else type, amount)
 		if type == "damage" and amount > 0: total_exp += experience_system.calculate_action_exp(acting_unit, target_result.target, true)
 		elif type == "heal" and amount > 0: total_exp += experience_system.calculate_action_exp(acting_unit, target_result.target, true)
 		if bool(target_result.defeated): defeat_count += 1
@@ -256,7 +264,7 @@ func _on_combat_confirmed() -> void:
 	var gained_exp := experience_system.calculate_action_exp(attacker, target, bool(result.hit) and int(result.damage) > 0)
 	if bool(result.defeated): gained_exp += 30
 	_grant_growth(attacker, gained_exp, 5 + (5 if result.defeated else 0))
-	_show_floating_result(target, "damage" if result.hit else "miss", int(result.damage))
+	_show_floating_result(target, "critical" if bool(result.get("critical", false)) else ("damage" if result.hit else "miss"), int(result.damage))
 	battle_log.show_attack_result(attacker, target, result)
 	_update_status(result.message)
 	if not target.is_alive(): unit_manager.remove_unit(target)
@@ -438,6 +446,7 @@ func _update_status(message: String) -> void:
 
 func _show_floating_result(target: BattleUnit, result_type: String, amount: int) -> void:
 	if result_type == "damage": floating_numbers.show_damage(target, amount)
+	elif result_type == "critical": floating_numbers.show_critical(target, amount)
 	elif result_type == "heal": floating_numbers.show_heal(target, amount)
 	elif result_type == "miss": floating_numbers.show_miss(target)
 
@@ -461,6 +470,11 @@ func _grant_growth(unit: BattleUnit, exp_amount: int, job_exp_amount: int) -> vo
 		var message := "SKILL UNLOCKED!\n%s\nSet it before the next battle" % (skill.skill_name if skill else skill_id)
 		battle_log.add_message(message)
 		battle_message.show_message(message)
+	var new_jobs := job_unlock_system.unlock_available_jobs(unit)
+	for job_id: String in new_jobs:
+		var unlocked_job := job_database.get_job(job_id)
+		battle_log.add_message("JOB UNLOCKED! %s" % (unlocked_job.job_name if unlocked_job else job_id))
+	unit.refresh_build_stats(status_calculator)
 
 
 func _show_move_range(unit: BattleUnit, origin: Vector2i) -> void:
