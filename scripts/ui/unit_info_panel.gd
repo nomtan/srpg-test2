@@ -20,3 +20,18 @@ func show_damage_preview(attacker: BattleUnit, target: BattleUnit, damage: int) 
 		attacker.unit_name, target.unit_name, target.hp, target.max_hp,
 		damage, maxi(0, target.hp - damage), target.max_hp
 	]
+
+
+func show_battle_preview(attacker: BattleUnit, target: BattleUnit, preview: Dictionary) -> void:
+	var range_text := str(preview.min_range) if preview.min_range == preview.max_range else "%d - %d" % [preview.min_range, preview.max_range]
+	label.text = "Attacker: %s\nTarget: %s\nDirection: %s\nHP: %d / %d\nDamage: %d  Hit: %d%%\nAfter HP: %d / %d\nRange: %s  Height: %+d\nTerrain: %s (Eva %+d / Def %+d)\nLine of Sight: %s" % [attacker.unit_name, target.unit_name, preview.direction, target.hp, target.max_hp, preview.damage, preview.hit_rate, preview.after_hp, target.max_hp, range_text, preview.height_diff, preview.terrain, preview.evasion_bonus, preview.defense_bonus, preview.line_of_sight]
+
+
+func show_cell(cell: GridCell, unit: BattleUnit = null) -> void:
+	var facing_names := ["North", "East", "South", "West"]
+	var unit_text := "%s  HP: %d / %d\nAccuracy: %d  Evasion: %d\nFacing: %s  Status: %s\n" % [unit.unit_name, unit.hp, unit.max_hp, unit.accuracy, unit.evasion, facing_names[int(unit.facing)], unit.get_status_name()] if unit else ""
+	label.text = unit_text + "Terrain: %s\nMove Cost: %d\nEvasion: %+d%%  Defense: %+d\nWalkable: %s  LOS Block: %s" % [cell.terrain, cell.move_cost, cell.evasion_bonus, cell.defense_bonus, "Yes" if cell.walkable else "No", "Yes" if cell.blocks_line_of_sight else "No"]
+
+
+func show_blocked_target(target: BattleUnit) -> void:
+	label.text = "Target: %s\nCannot Attack\nReason: Line of sight blocked" % target.unit_name

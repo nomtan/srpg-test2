@@ -1,6 +1,10 @@
 class_name BattleUnit
 extends Node3D
 
+enum AttackType { MELEE, RANGED }
+enum FacingDirection { NORTH, EAST, SOUTH, WEST }
+enum EnemyType { AGGRESSIVE, DEFENSIVE, SNIPER, GUARD, BOSS }
+
 var unit_id: String
 var unit_name: String
 var grid_x: int
@@ -14,11 +18,18 @@ var max_hp: int = 100
 var hp: int = 100
 var attack_power: int = 30
 var defense: int = 5
-var attack_range: int = 1
+var attack_type: AttackType = AttackType.MELEE
+var accuracy: int = 90
+var evasion: int = 10
+var min_attack_range: int = 1
+var max_attack_range: int = 1
 var is_dead: bool = false
+var facing: FacingDirection = FacingDirection.SOUTH
+var enemy_type: EnemyType = EnemyType.AGGRESSIVE
 
 var body_material: StandardMaterial3D
 var base_color: Color
+var direction_marker: MeshInstance3D
 
 
 func configure(
@@ -47,13 +58,17 @@ func setup_visual() -> void:
 	body.mesh = capsule
 	body.position.y = 0.45
 	body_material = StandardMaterial3D.new()
-	base_color = Color("#4ba3ff") if team == "player" else Color("#dc4c4c")
+	if attack_type == AttackType.RANGED:
+		base_color = Color("#65c8a0") if team == "player" else Color("#d47a42")
+	else:
+		base_color = Color("#4ba3ff") if team == "player" else Color("#dc4c4c")
 	body_material.albedo_color = base_color
 	body_material.metallic = 0.15
 	body.material_override = body_material
 	add_child(body)
 
 	var marker := MeshInstance3D.new()
+	direction_marker = marker
 	var cone := PrismMesh.new()
 	cone.size = Vector3(0.22, 0.25, 0.22)
 	marker.mesh = cone
@@ -61,6 +76,27 @@ func setup_visual() -> void:
 	marker.material_override = body_material
 	add_child(marker)
 	update_visual_state()
+	update_facing_visual()
+
+
+func face_toward(target_pos: Vector2i) -> void:
+	var delta := target_pos - Vector2i(grid_x, grid_z)
+	if absi(delta.x) >= absi(delta.y) and delta.x != 0:
+		facing = FacingDirection.EAST if delta.x > 0 else FacingDirection.WEST
+	elif delta.y != 0:
+		facing = FacingDirection.SOUTH if delta.y > 0 else FacingDirection.NORTH
+	update_facing_visual()
+
+
+func set_facing(direction: FacingDirection) -> void:
+	facing = direction
+	update_facing_visual()
+
+
+func update_facing_visual() -> void:
+	if not direction_marker: return
+	var offsets := [Vector3(0, 1.05, -0.28), Vector3(0.28, 1.05, 0), Vector3(0, 1.05, 0.28), Vector3(-0.28, 1.05, 0)]
+	direction_marker.position = offsets[int(facing)]
 
 
 func set_selected(selected: bool) -> void:
@@ -76,12 +112,19 @@ func mark_acted(moved: bool = true) -> void:
 	update_visual_state()
 
 
-func set_combat_stats(new_max_hp: int, power: int, armor: int, range_value: int = 1) -> void:
+func set_combat_stats(
+	new_max_hp: int, power: int, armor: int, hit: int, dodge: int,
+	type: AttackType = AttackType.MELEE, min_range: int = 1, max_range: int = 1
+) -> void:
 	max_hp = new_max_hp
 	hp = max_hp
 	attack_power = power
 	defense = armor
-	attack_range = range_value
+	accuracy = hit
+	evasion = dodge
+	attack_type = type
+	min_attack_range = min_range
+	max_attack_range = max_range
 
 
 func take_damage(amount: int) -> void:
@@ -98,6 +141,11 @@ func die() -> void:
 
 func is_alive() -> bool:
 	return not is_dead and hp > 0
+
+
+func get_status_name() -> String:
+	if is_dead: return "Defeated"
+	return "Acted" if has_acted else "Ready"
 
 
 func reset_action_state() -> void:

@@ -5,13 +5,15 @@ var grid: GridSystem
 var unit_manager: UnitManager
 var pathfinding: BattlePathfinding
 var attack_system: AttackSystem
+var unit_mover: UnitMover
 
 
-func setup(source_grid: GridSystem, units: UnitManager, paths: BattlePathfinding, attacks: AttackSystem) -> void:
+func setup(source_grid: GridSystem, units: UnitManager, paths: BattlePathfinding, attacks: AttackSystem, mover: UnitMover) -> void:
 	grid = source_grid
 	unit_manager = units
 	pathfinding = paths
 	attack_system = attacks
+	unit_mover = mover
 
 
 func process_enemy_unit(enemy: BattleUnit) -> String:
@@ -26,9 +28,13 @@ func process_enemy_unit(enemy: BattleUnit) -> String:
 	)
 	var destination := _find_best_destination(enemy, nearest, reachable)
 	if destination != Vector2i(enemy.grid_x, enemy.grid_z):
+		var path := pathfinding.find_path(grid, enemy, destination)
+		await unit_mover.move_unit_along_path(enemy, path)
 		unit_manager.move_unit_to_grid(enemy, destination)
 	target = find_attackable_player_unit(enemy)
-	return _attack(enemy, target) if target else "%sは移動して待機" % enemy.unit_name
+	if target: return _attack(enemy, target)
+	enemy.face_toward(Vector2i(nearest.grid_x, nearest.grid_z))
+	return "%sは移動して待機" % enemy.unit_name
 
 
 func find_nearest_player_unit(enemy: BattleUnit) -> BattleUnit:
@@ -43,10 +49,18 @@ func find_nearest_player_unit(enemy: BattleUnit) -> BattleUnit:
 
 
 func find_attackable_player_unit(enemy: BattleUnit) -> BattleUnit:
+	var best: BattleUnit
+	var best_hit_rate := -1
 	for player in unit_manager.get_player_units():
 		if attack_system.can_attack(enemy, player):
-			return player
-	return null
+			var hit_rate := attack_system.calculate_hit_rate(enemy, player)
+			var priority := hit_rate
+			if player.unit_id == "vain": priority += 8
+			if enemy.enemy_type == BattleUnit.EnemyType.BOSS and enemy.hp * 2 <= enemy.max_hp: priority += 15
+			if priority > best_hit_rate or (priority == best_hit_rate and (not best or player.hp < best.hp)):
+				best = player
+				best_hit_rate = priority
+	return best
 
 
 func _find_best_destination(enemy: BattleUnit, target: BattleUnit, reachable: Dictionary) -> Vector2i:
@@ -65,6 +79,9 @@ func _find_best_destination(enemy: BattleUnit, target: BattleUnit, reachable: Di
 
 
 func _attack(enemy: BattleUnit, target: BattleUnit) -> String:
-	var damage := attack_system.execute_attack(enemy, target)
+	var result := attack_system.execute_attack(enemy, target)
 	if not target.is_alive(): unit_manager.remove_unit(target)
-	return "%sが%sに%dダメージ" % [enemy.unit_name, target.unit_name, damage]
+	if not result.hit: return "%s attacks %s\nMiss!" % [enemy.unit_name, target.unit_name]
+	var message := "%s attacks %s\nHit! %d damage" % [enemy.unit_name, target.unit_name, result.damage]
+	if result.defeated: message += "\n%s defeated" % target.unit_name
+	return message

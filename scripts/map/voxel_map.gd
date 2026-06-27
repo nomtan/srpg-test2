@@ -8,6 +8,10 @@ var terrain_colors := {
 	"dirt": Color("#8c6239"),
 	"stone": Color("#747b86"),
 	"rock": Color("#3d4249"),
+	"forest": Color("#285d38"),
+	"water": Color("#397fa8"),
+	"high_ground": Color("#87906d"),
+	"wall": Color("#4c4d55"),
 }
 
 

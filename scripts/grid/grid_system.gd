@@ -20,15 +20,21 @@ func generate_grid() -> void:
 			# 中央の丘、北東の崖、泥地、岩を持つ小さなテスト盤面。
 			if x in [3, 4] and z in [3, 4]:
 				height = 2
-				terrain = "dirt"
+				terrain = "high_ground"
 			if x >= 5 and z <= 2:
 				height = 3
-				terrain = "stone"
+				terrain = "high_ground"
 			if Vector2i(x, z) in [Vector2i(1, 5), Vector2i(2, 5), Vector2i(2, 6)]:
-				terrain = "dirt"
-				move_cost = 2
+				terrain = "water"
+			if Vector2i(x, z) in [Vector2i(3, 1), Vector2i(3, 2), Vector2i(0, 5)]:
+				terrain = "forest"
 			if Vector2i(x, z) in [Vector2i(4, 1), Vector2i(6, 4), Vector2i(4, 6)]:
 				terrain = "rock"
+				height = 2
+				walkable = false
+			if Vector2i(x, z) == Vector2i(4, 2):
+				terrain = "wall"
+				height = 2
 				walkable = false
 
 			cells[Vector2i(x, z)] = GridCell.new(

@@ -5,7 +5,7 @@ signal confirm_pressed
 signal cancel_pressed
 signal grid_position_changed(grid_pos: Vector2i)
 
-enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING }
+enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING, COMBAT_CONFIRM }
 
 var grid: GridSystem
 var camera: Camera3D
@@ -66,6 +66,15 @@ func show_reachable(reachable: Dictionary, origin: Vector2i) -> void:
 		if grid_pos == origin:
 			continue
 		var marker := _create_highlight(Color(0.15, 0.65, 1.0, 0.42))
+		marker.position = grid.grid_to_world(grid_pos, 0.025)
+		range_root.add_child(marker)
+
+func show_move_range(reachable: Dictionary, origin: Vector2i, danger_cells: Dictionary) -> void:
+	clear_reachable()
+	for grid_pos: Vector2i in reachable:
+		if grid_pos == origin: continue
+		var color := Color(0.62, 0.18, 0.85, 0.52) if danger_cells.has(grid_pos) else Color(0.15, 0.65, 1.0, 0.42)
+		var marker := _create_highlight(color)
 		marker.position = grid.grid_to_world(grid_pos, 0.025)
 		range_root.add_child(marker)
 

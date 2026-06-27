@@ -22,7 +22,7 @@ func finish_player_turn(unit_manager: UnitManager, enemy_ai: EnemyAI) -> void:
 	for enemy in unit_manager.get_enemy_units():
 		combat_message.emit("%s acting..." % enemy.unit_name)
 		await get_tree().create_timer(0.25).timeout
-		combat_message.emit(enemy_ai.process_enemy_unit(enemy))
+		combat_message.emit(await enemy_ai.process_enemy_unit(enemy))
 		await get_tree().create_timer(0.5).timeout
 		if unit_manager.are_all_players_defeated():
 			is_transitioning = false

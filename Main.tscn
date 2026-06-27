@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -13,6 +13,20 @@
 [ext_resource type="Script" path="res://scripts/ui/action_menu.gd" id="11_menu"]
 [ext_resource type="Script" path="res://scripts/ui/unit_info_panel.gd" id="12_info"]
 [ext_resource type="Script" path="res://scripts/battle/enemy_ai.gd" id="13_ai"]
+[ext_resource type="Script" path="res://scripts/ui/battle_log.gd" id="14_log"]
+[ext_resource type="Script" path="res://scripts/battle/line_of_sight.gd" id="15_los"]
+[ext_resource type="Script" path="res://scripts/ui/facing_selector.gd" id="16_facing"]
+[ext_resource type="Script" path="res://scripts/stage/stage_manager.gd" id="17_stage"]
+[ext_resource type="Script" path="res://scripts/stage/trigger_manager.gd" id="18_trigger"]
+[ext_resource type="Script" path="res://scripts/stage/event_manager.gd" id="19_event"]
+[ext_resource type="Script" path="res://scripts/ui/mission_ui.gd" id="20_mission"]
+[ext_resource type="Script" path="res://scripts/ui/battle_message.gd" id="21_message"]
+[ext_resource type="Script" path="res://scripts/stage/stage_data.gd" id="22_stage_data"]
+[ext_resource type="Script" path="res://scripts/stage/stage_object.gd" id="23_stage_object"]
+[ext_resource type="Script" path="res://scripts/battle/threat_system.gd" id="24_threat"]
+[ext_resource type="Script" path="res://scripts/battle/threat_arrow_manager.gd" id="25_arrows"]
+[ext_resource type="Script" path="res://scripts/unit/unit_mover.gd" id="26_mover"]
+[ext_resource type="Script" path="res://scripts/ui/combat_confirm_panel.gd" id="27_confirm"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -26,6 +40,9 @@ script = ExtResource("3_map")
 [node name="UnitManager" type="Node3D" parent="."]
 script = ExtResource("4_units")
 
+[node name="UnitMover" type="Node" parent="."]
+script = ExtResource("26_mover")
+
 [node name="BattleCursor" type="Node3D" parent="."]
 script = ExtResource("5_cursor")
 
@@ -35,11 +52,29 @@ script = ExtResource("6_path")
 [node name="AttackSystem" type="Node" parent="."]
 script = ExtResource("10_attack")
 
+[node name="LineOfSight" type="Node" parent="."]
+script = ExtResource("15_los")
+
+[node name="ThreatSystem" type="Node" parent="."]
+script = ExtResource("24_threat")
+
+[node name="ThreatArrowManager" type="Node3D" parent="."]
+script = ExtResource("25_arrows")
+
 [node name="EnemyAI" type="Node" parent="."]
 script = ExtResource("13_ai")
 
 [node name="TurnManager" type="Node" parent="."]
 script = ExtResource("8_turn")
+
+[node name="StageManager" type="Node3D" parent="."]
+script = ExtResource("17_stage")
+
+[node name="TriggerManager" type="Node" parent="."]
+script = ExtResource("18_trigger")
+
+[node name="EventManager" type="Node" parent="."]
+script = ExtResource("19_event")
 
 [node name="CameraController" type="Node3D" parent="."]
 script = ExtResource("7_camera")
@@ -104,6 +139,10 @@ text = "攻撃"
 custom_minimum_size = Vector2(220, 52)
 text = "待機"
 
+[node name="FacingButton" type="Button" parent="UI/ActionMenu"]
+custom_minimum_size = Vector2(220, 52)
+text = "向き変更"
+
 [node name="CancelButton" type="Button" parent="UI/ActionMenu"]
 custom_minimum_size = Vector2(220, 52)
 text = "キャンセル"
@@ -118,3 +157,85 @@ script = ExtResource("12_info")
 [node name="UnitInfoLabel" type="Label" parent="UI/UnitInfoPanel"]
 theme_override_font_sizes/font_size = 20
 text = ""
+
+[node name="BattleLog" type="PanelContainer" parent="UI"]
+offset_left = 1480.0
+offset_top = 850.0
+offset_right = 1900.0
+offset_bottom = 1040.0
+script = ExtResource("14_log")
+
+[node name="BattleLogLabel" type="Label" parent="UI/BattleLog"]
+theme_override_font_sizes/font_size = 18
+text = "Battle Log"
+
+[node name="FacingSelector" type="VBoxContainer" parent="UI"]
+visible = false
+offset_left = 1060.0
+offset_top = 360.0
+offset_right = 1280.0
+offset_bottom = 650.0
+theme_override_constants/separation = 6
+script = ExtResource("16_facing")
+
+[node name="NorthButton" type="Button" parent="UI/FacingSelector"]
+custom_minimum_size = Vector2(220, 48)
+text = "North"
+[node name="EastButton" type="Button" parent="UI/FacingSelector"]
+custom_minimum_size = Vector2(220, 48)
+text = "East"
+[node name="SouthButton" type="Button" parent="UI/FacingSelector"]
+custom_minimum_size = Vector2(220, 48)
+text = "South"
+[node name="WestButton" type="Button" parent="UI/FacingSelector"]
+custom_minimum_size = Vector2(220, 48)
+text = "West"
+
+[node name="MissionUI" type="PanelContainer" parent="UI"]
+offset_left = 20.0
+offset_top = 270.0
+offset_right = 360.0
+offset_bottom = 510.0
+script = ExtResource("20_mission")
+
+[node name="MissionLabel" type="Label" parent="UI/MissionUI"]
+theme_override_font_sizes/font_size = 18
+text = "Mission"
+
+[node name="BattleMessage" type="Label" parent="UI"]
+visible = false
+offset_left = 660.0
+offset_top = 150.0
+offset_right = 1260.0
+offset_bottom = 240.0
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 38
+text = "Player Phase"
+horizontal_alignment = 1
+script = ExtResource("21_message")
+
+[node name="CombatConfirmPanel" type="PanelContainer" parent="UI"]
+visible = false
+offset_left = 700.0
+offset_top = 300.0
+offset_right = 1220.0
+offset_bottom = 720.0
+script = ExtResource("27_confirm")
+
+[node name="VBox" type="VBoxContainer" parent="UI/CombatConfirmPanel"]
+theme_override_constants/separation = 14
+
+[node name="PreviewLabel" type="Label" parent="UI/CombatConfirmPanel/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "Combat Preview"
+
+[node name="Buttons" type="HBoxContainer" parent="UI/CombatConfirmPanel/VBox"]
+theme_override_constants/separation = 12
+
+[node name="ConfirmButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(220, 52)
+text = "決定"
+
+[node name="CancelButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(220, 52)
+text = "キャンセル"
