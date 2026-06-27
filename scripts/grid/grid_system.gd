@@ -27,7 +27,7 @@ func generate_grid() -> void:
 			if Vector2i(x, z) in [Vector2i(1, 5), Vector2i(2, 5), Vector2i(2, 6)]:
 				terrain = "dirt"
 				move_cost = 2
-			if Vector2i(x, z) in [Vector2i(4, 1), Vector2i(6, 4), Vector2i(5, 6)]:
+			if Vector2i(x, z) in [Vector2i(4, 1), Vector2i(6, 4), Vector2i(4, 6)]:
 				terrain = "rock"
 				walkable = false
 
@@ -56,3 +56,18 @@ func grid_to_world(position: Vector2i, extra_height: float = 0.0) -> Vector3:
 
 func world_to_grid(world_position: Vector3) -> Vector2i:
 	return Vector2i(floori(world_position.x / CELL_SIZE), floori(world_position.z / CELL_SIZE))
+
+
+func set_occupied_unit(grid_pos: Vector2i, unit: BattleUnit) -> void:
+	var cell := get_cell(grid_pos)
+	if cell:
+		cell.occupied_unit = unit
+
+
+func clear_occupied_unit(grid_pos: Vector2i) -> void:
+	set_occupied_unit(grid_pos, null)
+
+
+func move_occupied_unit(from_pos: Vector2i, to_pos: Vector2i, unit: BattleUnit) -> void:
+	clear_occupied_unit(from_pos)
+	set_occupied_unit(to_pos, unit)

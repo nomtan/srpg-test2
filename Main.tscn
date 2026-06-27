@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -7,6 +7,12 @@
 [ext_resource type="Script" path="res://scripts/battle/battle_cursor.gd" id="5_cursor"]
 [ext_resource type="Script" path="res://scripts/battle/pathfinding.gd" id="6_path"]
 [ext_resource type="Script" path="res://scripts/camera/camera_controller.gd" id="7_camera"]
+[ext_resource type="Script" path="res://scripts/battle/turn_manager.gd" id="8_turn"]
+[ext_resource type="Script" path="res://scripts/ui/battle_hud.gd" id="9_hud"]
+[ext_resource type="Script" path="res://scripts/battle/attack_system.gd" id="10_attack"]
+[ext_resource type="Script" path="res://scripts/ui/action_menu.gd" id="11_menu"]
+[ext_resource type="Script" path="res://scripts/ui/unit_info_panel.gd" id="12_info"]
+[ext_resource type="Script" path="res://scripts/battle/enemy_ai.gd" id="13_ai"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -26,6 +32,15 @@ script = ExtResource("5_cursor")
 [node name="Pathfinding" type="Node" parent="."]
 script = ExtResource("6_path")
 
+[node name="AttackSystem" type="Node" parent="."]
+script = ExtResource("10_attack")
+
+[node name="EnemyAI" type="Node" parent="."]
+script = ExtResource("13_ai")
+
+[node name="TurnManager" type="Node" parent="."]
+script = ExtResource("8_turn")
+
 [node name="CameraController" type="Node3D" parent="."]
 script = ExtResource("7_camera")
 
@@ -42,21 +57,64 @@ shadow_enabled = true
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 510.0
-offset_bottom = 112.0
+offset_bottom = 220.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="UI/MarginContainer"]
+[node name="BattleHUD" type="VBoxContainer" parent="UI/MarginContainer"]
 theme_override_constants/separation = 8
+script = ExtResource("9_hud")
 
-[node name="Title" type="Label" parent="UI/MarginContainer/VBoxContainer"]
+[node name="Title" type="Label" parent="UI/MarginContainer/BattleHUD"]
 theme_override_colors/font_color = Color(0.95, 0.9, 0.72, 1)
 theme_override_font_sizes/font_size = 22
 text = "VOXEL SRPG PROTOTYPE"
 
-[node name="Status" type="Label" parent="UI/MarginContainer/VBoxContainer"]
+[node name="TurnLabel" type="Label" parent="UI/MarginContainer/BattleHUD"]
+theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
+theme_override_font_sizes/font_size = 20
+text = "Turn 1"
+
+[node name="PhaseLabel" type="Label" parent="UI/MarginContainer/BattleHUD"]
+theme_override_colors/font_color = Color(0.45, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Player Turn"
+
+[node name="StatusLabel" type="Label" parent="UI/MarginContainer/BattleHUD"]
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 text = "Loading..."
 
-[node name="Help" type="Label" parent="UI/MarginContainer/VBoxContainer"]
+[node name="Help" type="Label" parent="UI/MarginContainer/BattleHUD"]
 theme_override_colors/font_color = Color(0.78, 0.82, 0.88, 1)
 text = "矢印/WASD: カーソル  Enter/Space/左クリック: 決定  Esc/右クリック: 解除"
+
+[node name="ActionMenu" type="VBoxContainer" parent="UI"]
+visible = false
+offset_left = 820.0
+offset_top = 420.0
+offset_right = 1040.0
+offset_bottom = 540.0
+theme_override_constants/separation = 8
+script = ExtResource("11_menu")
+
+[node name="AttackButton" type="Button" parent="UI/ActionMenu"]
+custom_minimum_size = Vector2(220, 52)
+text = "攻撃"
+
+[node name="WaitButton" type="Button" parent="UI/ActionMenu"]
+custom_minimum_size = Vector2(220, 52)
+text = "待機"
+
+[node name="CancelButton" type="Button" parent="UI/ActionMenu"]
+custom_minimum_size = Vector2(220, 52)
+text = "キャンセル"
+
+[node name="UnitInfoPanel" type="PanelContainer" parent="UI"]
+offset_left = 20.0
+offset_top = 850.0
+offset_right = 360.0
+offset_bottom = 1040.0
+script = ExtResource("12_info")
+
+[node name="UnitInfoLabel" type="Label" parent="UI/UnitInfoPanel"]
+theme_override_font_sizes/font_size = 20
+text = ""

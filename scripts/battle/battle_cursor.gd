@@ -3,12 +3,17 @@ extends Node3D
 
 signal confirm_pressed
 signal cancel_pressed
+signal grid_position_changed(grid_pos: Vector2i)
+
+enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING }
 
 var grid: GridSystem
 var camera: Camera3D
 var grid_position := Vector2i(1, 1)
 var cursor_mesh: MeshInstance3D
 var range_root: Node3D
+var input_enabled: bool = true
+var current_mode: CursorMode = CursorMode.IDLE
 
 
 func setup(source_grid: GridSystem, source_camera: Camera3D) -> void:
@@ -23,6 +28,8 @@ func setup(source_grid: GridSystem, source_camera: Camera3D) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not input_enabled:
+		return
 	var movement := Vector2i.ZERO
 	if event.is_action_pressed("ui_left") or _is_key(event, KEY_A): movement = Vector2i.LEFT
 	elif event.is_action_pressed("ui_right") or _is_key(event, KEY_D): movement = Vector2i.RIGHT
@@ -35,6 +42,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			clampi(grid_position.y + movement.y, 0, GridSystem.DEPTH - 1)
 		)
 		_update_cursor_visual()
+		grid_position_changed.emit(grid_position)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		confirm_pressed.emit()
@@ -62,11 +70,25 @@ func show_reachable(reachable: Dictionary, origin: Vector2i) -> void:
 		range_root.add_child(marker)
 
 
+func show_attack_range(cells: Array[Vector2i]) -> void:
+	clear_reachable()
+	for grid_pos in cells:
+		var marker := _create_highlight(Color(1.0, 0.2, 0.18, 0.48))
+		marker.position = grid.grid_to_world(grid_pos, 0.03)
+		range_root.add_child(marker)
+
+
 func clear_reachable() -> void:
 	if not range_root:
 		return
 	for child in range_root.get_children():
 		child.queue_free()
+
+
+func set_grid_position(grid_pos: Vector2i) -> void:
+	grid_position = grid_pos
+	_update_cursor_visual()
+	grid_position_changed.emit(grid_position)
 
 
 func _update_cursor_visual() -> void:
@@ -93,6 +115,7 @@ func _update_from_mouse(screen_position: Vector2) -> void:
 		if candidate != grid_position:
 			grid_position = candidate
 			_update_cursor_visual()
+			grid_position_changed.emit(grid_position)
 		return
 
 
