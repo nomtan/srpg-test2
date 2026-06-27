@@ -139,10 +139,6 @@ text = "攻撃"
 custom_minimum_size = Vector2(220, 52)
 text = "待機"
 
-[node name="FacingButton" type="Button" parent="UI/ActionMenu"]
-custom_minimum_size = Vector2(220, 52)
-text = "向き変更"
-
 [node name="CancelButton" type="Button" parent="UI/ActionMenu"]
 custom_minimum_size = Vector2(220, 52)
 text = "キャンセル"

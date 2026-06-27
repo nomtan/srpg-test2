@@ -20,7 +20,7 @@ extends Node3D
 @onready var event_manager: EventManager = $EventManager
 @onready var mission_ui: MissionUI = $UI/MissionUI
 @onready var battle_message: BattleMessage = $UI/BattleMessage
-@onready var threat_system: ThreatSystem = $ThreatSystem
+@onready var threat_system = $ThreatSystem
 @onready var threat_arrows: ThreatArrowManager = $ThreatArrowManager
 @onready var unit_mover: UnitMover = $UnitMover
 @onready var combat_confirm: CombatConfirmPanel = $UI/CombatConfirmPanel
@@ -53,9 +53,8 @@ func _ready() -> void:
 	action_menu.attack_selected.connect(_on_attack_selected)
 	action_menu.wait_selected.connect(_on_wait_selected)
 	action_menu.cancel_selected.connect(_cancel_after_move)
-	action_menu.facing_selected.connect(_open_facing_selector)
 	facing_selector.direction_selected.connect(_on_facing_selected)
-	facing_selector.cancelled.connect(_close_facing_selector)
+	facing_selector.cancelled.connect(_on_facing_cancelled)
 	combat_confirm.confirmed.connect(_on_combat_confirmed)
 	combat_confirm.cancelled.connect(_on_combat_cancelled)
 	turn_manager.phase_changed.connect(_on_phase_changed)
@@ -99,7 +98,7 @@ func _confirm_move(grid_pos: Vector2i) -> void:
 	var origin := Vector2i(unit.grid_x, unit.grid_z)
 	if grid_pos != origin: unit_manager.move_selected_to(grid_pos)
 	unit.has_moved = grid_pos != origin
-	var enemies := threat_system.get_threatening_enemies_for_cell(unit, grid_pos)
+	var enemies: Array[BattleUnit] = threat_system.get_threatening_enemies_for_cell(unit, grid_pos)
 	if not enemies.is_empty(): threat_arrows.show_threat_arrows(enemies, unit)
 	else: threat_arrows.clear_threat_arrows()
 	cursor.clear_reachable()
@@ -140,7 +139,7 @@ func _on_combat_confirmed() -> void:
 	_update_status(result.message)
 	if not target.is_alive(): unit_manager.remove_unit(target)
 	selected_attack_target = null
-	_finish_action()
+	_request_final_facing("攻撃後の向きを選択してください")
 
 
 func _on_combat_cancelled() -> void:
@@ -153,23 +152,25 @@ func _on_combat_cancelled() -> void:
 
 func _on_wait_selected() -> void:
 	action_menu.close()
-	_update_status("%sは待機しました" % unit_manager.selected_unit.unit_name)
-	_finish_action()
+	_request_final_facing("待機後の向きを選択してください")
 
 
-func _open_facing_selector() -> void:
+func _request_final_facing(message: String) -> void:
 	action_menu.close()
+	cursor.input_enabled = false
 	facing_selector.open()
+	_update_status(message)
 
 
 func _on_facing_selected(direction: BattleUnit.FacingDirection) -> void:
 	unit_manager.selected_unit.set_facing(direction)
-	_close_facing_selector()
-
-
-func _close_facing_selector() -> void:
 	facing_selector.close()
-	action_menu.open()
+	_finish_action()
+
+
+func _on_facing_cancelled() -> void:
+	facing_selector.close()
+	_finish_action()
 
 
 func _finish_action() -> void:

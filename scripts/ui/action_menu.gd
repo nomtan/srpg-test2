@@ -4,7 +4,6 @@ extends VBoxContainer
 signal attack_selected
 signal wait_selected
 signal cancel_selected
-signal facing_selected
 
 @onready var attack_button: Button = $AttackButton
 
@@ -13,7 +12,6 @@ func _ready() -> void:
 	$AttackButton.pressed.connect(func() -> void: attack_selected.emit())
 	$WaitButton.pressed.connect(func() -> void: wait_selected.emit())
 	$CancelButton.pressed.connect(func() -> void: cancel_selected.emit())
-	$FacingButton.pressed.connect(func() -> void: facing_selected.emit())
 
 
 func open() -> void:
