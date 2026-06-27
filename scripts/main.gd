@@ -36,6 +36,10 @@ extends Node3D
 @onready var growth_panel: GrowthResultPanel = $UI/GrowthResultPanel
 @onready var skill_unlock_system: SkillUnlockSystem = $SkillUnlockSystem
 @onready var pre_battle_setup: PreBattleSetupPanel = $UI/PreBattleSetupPanel
+@onready var save_manager: SaveManager = $SaveManager
+@onready var player_profile: PlayerProfileData = $PlayerProfileData
+@onready var unit_progress: UnitProgressManager = $UnitProgressManager
+@onready var stage_progress: StageProgressManager = $StageProgressManager
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -50,6 +54,11 @@ func _ready() -> void:
 	grid.generate_grid()
 	voxel_map.build_from_grid(grid)
 	unit_manager.setup(grid)
+	unit_progress.setup(job_database)
+	save_manager.setup(player_profile, unit_progress, stage_progress)
+	save_manager.status_message.connect(_on_save_status)
+	save_manager.load_or_create(unit_manager.get_player_units())
+	unit_progress.apply_progress_to_units(unit_manager.get_player_units())
 	line_of_sight.setup(grid)
 	attack_system.setup(grid, line_of_sight)
 	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight)
@@ -91,6 +100,8 @@ func _ready() -> void:
 	_update_unit_info(cursor.grid_position)
 
 func _on_pre_battle_started() -> void:
+	unit_progress.update_progress_from_units(unit_manager.get_player_units())
+	save_manager.save_game()
 	cursor.input_enabled = true
 	turn_manager.start_battle()
 
@@ -399,6 +410,7 @@ func _on_stage_message(message: String) -> void:
 
 
 func _on_battle_ended(result: String) -> void:
+	if is_battle_finished: return
 	is_battle_finished = true
 	cursor.input_enabled = false
 	action_menu.close()
@@ -409,7 +421,16 @@ func _on_battle_ended(result: String) -> void:
 	threat_arrows.clear_threat_arrows()
 	_update_status(result)
 	battle_message.show_message("Mission Complete" if result == "Victory" else "Defeat", 4.0)
-	if result == "Victory": growth_panel.show_results(unit_manager.get_player_units())
+	if result == "Victory":
+		unit_progress.update_progress_from_units(unit_manager.get_player_units())
+		stage_progress.mark_stage_cleared(player_profile.current_stage_id, turn_manager.turn_count)
+		var saved := save_manager.save_game()
+		growth_panel.show_results(unit_manager.get_player_units(), saved)
+
+
+func _on_save_status(message: String) -> void:
+	if battle_log:
+		battle_log.add_message(message)
 
 
 func _update_status(message: String) -> void:
