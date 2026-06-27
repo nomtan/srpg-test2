@@ -1,0 +1,62 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
+[ext_resource type="Script" path="res://scripts/map/voxel_map.gd" id="3_map"]
+[ext_resource type="Script" path="res://scripts/unit/unit_manager.gd" id="4_units"]
+[ext_resource type="Script" path="res://scripts/battle/battle_cursor.gd" id="5_cursor"]
+[ext_resource type="Script" path="res://scripts/battle/pathfinding.gd" id="6_path"]
+[ext_resource type="Script" path="res://scripts/camera/camera_controller.gd" id="7_camera"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="GridSystem" type="Node" parent="."]
+script = ExtResource("2_grid")
+
+[node name="VoxelMap" type="Node3D" parent="."]
+script = ExtResource("3_map")
+
+[node name="UnitManager" type="Node3D" parent="."]
+script = ExtResource("4_units")
+
+[node name="BattleCursor" type="Node3D" parent="."]
+script = ExtResource("5_cursor")
+
+[node name="Pathfinding" type="Node" parent="."]
+script = ExtResource("6_path")
+
+[node name="CameraController" type="Node3D" parent="."]
+script = ExtResource("7_camera")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -35, 0)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="MarginContainer" type="MarginContainer" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 510.0
+offset_bottom = 112.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/MarginContainer"]
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UI/MarginContainer/VBoxContainer"]
+theme_override_colors/font_color = Color(0.95, 0.9, 0.72, 1)
+theme_override_font_sizes/font_size = 22
+text = "VOXEL SRPG PROTOTYPE"
+
+[node name="Status" type="Label" parent="UI/MarginContainer/VBoxContainer"]
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Loading..."
+
+[node name="Help" type="Label" parent="UI/MarginContainer/VBoxContainer"]
+theme_override_colors/font_color = Color(0.78, 0.82, 0.88, 1)
+text = "矢印/WASD: カーソル  Enter/Space/左クリック: 決定  Esc/右クリック: 解除"
