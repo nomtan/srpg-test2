@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3]
+[gd_scene load_steps=44 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -40,6 +40,9 @@
 [ext_resource type="Script" path="res://scripts/battle/experience_system.gd" id="38_exp"]
 [ext_resource type="Script" path="res://scripts/ui/growth_result_panel.gd" id="39_growth"]
 [ext_resource type="Script" path="res://scripts/job/job_data.gd" id="40_job_data"]
+[ext_resource type="Script" path="res://scripts/skill/skill_unlock_system.gd" id="41_unlock"]
+[ext_resource type="Script" path="res://scripts/ui/pre_battle_setup_panel.gd" id="42_setup"]
+[ext_resource type="Script" path="res://scripts/unit/unit_build_data.gd" id="43_build"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -82,6 +85,9 @@ script = ExtResource("37_job_system")
 
 [node name="ExperienceSystem" type="Node" parent="."]
 script = ExtResource("38_exp")
+
+[node name="SkillUnlockSystem" type="Node" parent="."]
+script = ExtResource("41_unlock")
 
 [node name="LineOfSight" type="Node" parent="."]
 script = ExtResource("15_los")
@@ -332,3 +338,44 @@ text = "Growth Results"
 [node name="Results" type="Label" parent="UI/GrowthResultPanel/VBox"]
 theme_override_font_sizes/font_size = 20
 text = ""
+
+[node name="PreBattleSetupPanel" type="PanelContainer" parent="UI"]
+offset_left = 250.0
+offset_top = 90.0
+offset_right = 1670.0
+offset_bottom = 990.0
+script = ExtResource("42_setup")
+
+[node name="Layout" type="HBoxContainer" parent="UI/PreBattleSetupPanel"]
+theme_override_constants/separation = 24
+
+[node name="UnitList" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout"]
+custom_minimum_size = Vector2(240, 0)
+
+[node name="Detail" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout"]
+custom_minimum_size = Vector2(1080, 0)
+theme_override_constants/separation = 10
+
+[node name="Name" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+theme_override_font_sizes/font_size = 28
+text = "Unit"
+
+[node name="MainJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+text = "Main Job"
+[node name="MainJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="SubJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+text = "Sub Job"
+[node name="SubJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+
+[node name="Skills" type="HBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+theme_override_constants/separation = 20
+[node name="Equipped" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail/Skills"]
+custom_minimum_size = Vector2(500, 360)
+[node name="Available" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail/Skills"]
+custom_minimum_size = Vector2(500, 360)
+
+[node name="Message" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+text = "Equipped Skills 0 / 6"
+[node name="StartBattle" type="Button" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+custom_minimum_size = Vector2(0, 64)
+text = "戦闘開始"

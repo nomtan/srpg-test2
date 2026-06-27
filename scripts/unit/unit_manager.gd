@@ -24,6 +24,11 @@ func spawn_initial_units() -> void:
 	get_unit_by_id("glen").configure_role("archer", "弓術師", BattleUnit.ElementType.WIND, 25, ["aimed_shot", "piercing_arrow"])
 	boss.configure_role("bandit", "盗賊", BattleUnit.ElementType.NONE, 15, ["heavy_attack"])
 	sniper.configure_role("enemy_archer", "敵弓兵", BattleUnit.ElementType.WIND, 20, ["aimed_shot"])
+	get_unit_by_id("vain").unlocked_job_ids = ["swordsman", "magic_swordsman"]
+	get_unit_by_id("acrea").unlocked_job_ids = ["magic_swordsman", "swordsman"]
+	get_unit_by_id("glen").unlocked_job_ids = ["archer", "swordsman"]
+	boss.unlocked_job_ids = ["bandit"]
+	sniper.unlocked_job_ids = ["enemy_archer"]
 
 
 func _spawn_unit(

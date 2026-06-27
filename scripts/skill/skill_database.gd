@@ -17,7 +17,7 @@ func _register(skill: SkillData) -> void: skills[skill.skill_id] = skill
 func get_skill(id: String) -> SkillData: return skills.get(id)
 func get_skills_for_unit(unit: BattleUnit) -> Array[SkillData]:
 	var result: Array[SkillData] = []
-	for id in unit.skill_ids:
+	for id in unit.equipped_skill_ids:
 		var skill := get_skill(id)
 		if skill: result.append(skill)
 	return result

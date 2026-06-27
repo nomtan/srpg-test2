@@ -34,6 +34,8 @@ extends Node3D
 @onready var job_system: JobSystem = $JobSystem
 @onready var experience_system: ExperienceSystem = $ExperienceSystem
 @onready var growth_panel: GrowthResultPanel = $UI/GrowthResultPanel
+@onready var skill_unlock_system: SkillUnlockSystem = $SkillUnlockSystem
+@onready var pre_battle_setup: PreBattleSetupPanel = $UI/PreBattleSetupPanel
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -53,6 +55,7 @@ func _ready() -> void:
 	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight)
 	job_system.setup(job_database)
 	experience_system.setup(job_database)
+	skill_unlock_system.setup(job_database)
 	threat_system.setup(unit_manager, attack_system, pathfinding, grid, skill_database, skill_system)
 	unit_mover.setup(grid)
 	enemy_ai.setup(grid, unit_manager, pathfinding, attack_system, unit_mover, skill_database, skill_system)
@@ -82,8 +85,14 @@ func _ready() -> void:
 	turn_manager.phase_changed.connect(_on_phase_changed)
 	turn_manager.combat_message.connect(_on_combat_message)
 	turn_manager.battle_ended.connect(_on_battle_ended)
-	turn_manager.start_battle()
+	pre_battle_setup.battle_started.connect(_on_pre_battle_started)
+	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system)
+	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
+
+func _on_pre_battle_started() -> void:
+	cursor.input_enabled = true
+	turn_manager.start_battle()
 
 
 func _on_confirm() -> void:
@@ -428,7 +437,7 @@ func _grant_growth(unit: BattleUnit, exp_amount: int, job_exp_amount: int) -> vo
 		battle_message.show_message(message)
 	for skill_id: String in job_result.learned:
 		var skill := skill_database.get_skill(skill_id)
-		var message := "SKILL LEARNED!\n%s" % (skill.skill_name if skill else skill_id)
+		var message := "SKILL UNLOCKED!\n%s\nSet it before the next battle" % (skill.skill_name if skill else skill_id)
 		battle_log.add_message(message)
 		battle_message.show_message(message)
 

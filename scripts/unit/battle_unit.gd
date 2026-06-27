@@ -34,6 +34,16 @@ var element: ElementType = ElementType.NONE
 var max_ap := 30
 var ap := 30
 var skill_ids: Array[String] = []
+const MAX_EQUIPPED_SKILLS := 6
+var learned_skill_ids: Array[String] = []
+var equipped_skill_ids: Array[String] = []
+var main_job_id := ""
+var main_job_name := ""
+var sub_job_id := ""
+var sub_job_name := ""
+var unlocked_job_ids: Array[String] = []
+var job_levels: Dictionary = {}
+var job_exps: Dictionary = {}
 var level := 1
 var exp := 0
 var exp_to_next_level := 100
@@ -171,10 +181,30 @@ func get_status_name() -> String:
 func configure_role(id: String, display_name: String, affinity: ElementType, new_max_ap: int, skills: Array[String]) -> void:
 	job_id = id
 	job_name = display_name
+	main_job_id = id
+	main_job_name = display_name
+	sub_job_id = id
+	sub_job_name = display_name
 	element = affinity
 	max_ap = new_max_ap
 	ap = max_ap
-	skill_ids = skills
+	skill_ids = skills.duplicate()
+	equipped_skill_ids = skills.duplicate()
+	job_levels[id] = job_level
+	job_exps[id] = job_exp
+
+func get_job_level_for(id: String) -> int: return int(job_levels.get(id, 1))
+func get_job_exp_for(id: String) -> int: return int(job_exps.get(id, 0))
+func set_job_level_for(id: String, value: int) -> void: job_levels[id] = value
+func set_job_exp_for(id: String, value: int) -> void: job_exps[id] = value
+
+func equip_skill(id: String) -> bool:
+	if id in equipped_skill_ids: return true
+	if equipped_skill_ids.size() >= MAX_EQUIPPED_SKILLS: return false
+	equipped_skill_ids.append(id); return true
+func unequip_skill(id: String) -> void: equipped_skill_ids.erase(id)
+func clear_equipped_skills() -> void: equipped_skill_ids.clear()
+func get_build_data() -> Dictionary: return {"unit_id": unit_id, "main_job_id": main_job_id, "sub_job_id": sub_job_id, "equipped_skill_ids": equipped_skill_ids.duplicate()}
 
 func add_exp(amount: int, growth: Dictionary) -> Array[Dictionary]:
 	exp += amount
@@ -193,12 +223,16 @@ func apply_level_growth(growth: Dictionary) -> Dictionary:
 	return growth
 
 func add_job_exp(amount: int) -> Array[Dictionary]:
-	job_exp += amount
+	var target_job := main_job_id if not main_job_id.is_empty() else job_id
+	job_exp = get_job_exp_for(target_job) + amount
+	job_level = get_job_level_for(target_job)
 	var results: Array[Dictionary] = []
 	while job_exp >= job_exp_to_next_level:
 		job_exp -= job_exp_to_next_level
 		job_level += 1
+		set_job_level_for(target_job, job_level)
 		results.append({"unit": self, "job_level": job_level})
+	set_job_exp_for(target_job, job_exp)
 	return results
 
 
