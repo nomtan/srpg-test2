@@ -5,7 +5,7 @@ signal confirm_pressed
 signal cancel_pressed
 signal grid_position_changed(grid_pos: Vector2i)
 
-enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING, COMBAT_CONFIRM }
+enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING, COMBAT_CONFIRM, SKILL_MENU, SKILL_TARGETING, SKILL_CONFIRM }
 
 var grid: GridSystem
 var camera: Camera3D
@@ -84,6 +84,21 @@ func show_attack_range(cells: Array[Vector2i]) -> void:
 	for grid_pos in cells:
 		var marker := _create_highlight(Color(1.0, 0.2, 0.18, 0.48))
 		marker.position = grid.grid_to_world(grid_pos, 0.03)
+		range_root.add_child(marker)
+
+func show_skill_range(cells: Array[Vector2i], is_heal: bool) -> void:
+	clear_reachable()
+	var color := Color(0.2, 0.9, 0.4, 0.48) if is_heal else Color(1.0, 0.2, 0.18, 0.48)
+	for grid_pos in cells:
+		var marker := _create_highlight(color)
+		marker.position = grid.grid_to_world(grid_pos, 0.035)
+		range_root.add_child(marker)
+
+func show_skill_area(cells: Array[Vector2i]) -> void:
+	clear_reachable()
+	for grid_pos in cells:
+		var marker := _create_highlight(Color(1.0, 0.86, 0.1, 0.55))
+		marker.position = grid.grid_to_world(grid_pos, 0.04)
 		range_root.add_child(marker)
 
 

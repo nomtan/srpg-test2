@@ -4,19 +4,31 @@ extends VBoxContainer
 signal attack_selected
 signal wait_selected
 signal cancel_selected
+signal skill_selected
+signal move_selected
 
 @onready var attack_button: Button = $AttackButton
+@onready var move_button: Button = $MoveButton
+@onready var skill_button: Button = $SkillButton
 
 
 func _ready() -> void:
 	$AttackButton.pressed.connect(func() -> void: attack_selected.emit())
 	$WaitButton.pressed.connect(func() -> void: wait_selected.emit())
 	$CancelButton.pressed.connect(func() -> void: cancel_selected.emit())
+	$SkillButton.pressed.connect(func() -> void: skill_selected.emit())
+	$MoveButton.pressed.connect(func() -> void: move_selected.emit())
 
 
-func open() -> void:
+func open(unit: BattleUnit = null) -> void:
 	visible = true
-	attack_button.grab_focus()
+	if unit:
+		move_button.disabled = unit.has_moved
+		attack_button.disabled = unit.has_used_action
+		skill_button.disabled = unit.has_used_action
+	var first_button := move_button if not move_button.disabled else attack_button
+	if first_button.disabled: first_button = $WaitButton
+	first_button.grab_focus()
 
 
 func close() -> void:

@@ -1,22 +1,30 @@
 class_name EnemyAI
 extends Node
 
+signal floating_result(target: BattleUnit, result_type: String, amount: int)
+
 var grid: GridSystem
 var unit_manager: UnitManager
 var pathfinding: BattlePathfinding
 var attack_system: AttackSystem
 var unit_mover: UnitMover
+var skill_database: SkillDatabase
+var skill_system: SkillSystem
 
 
-func setup(source_grid: GridSystem, units: UnitManager, paths: BattlePathfinding, attacks: AttackSystem, mover: UnitMover) -> void:
+func setup(source_grid: GridSystem, units: UnitManager, paths: BattlePathfinding, attacks: AttackSystem, mover: UnitMover, database: SkillDatabase, skills: SkillSystem) -> void:
 	grid = source_grid
 	unit_manager = units
 	pathfinding = paths
 	attack_system = attacks
 	unit_mover = mover
+	skill_database = database
+	skill_system = skills
 
 
 func process_enemy_unit(enemy: BattleUnit) -> String:
+	var skill_message := _try_skill(enemy)
+	if not skill_message.is_empty(): return skill_message
 	var target := find_attackable_player_unit(enemy)
 	if target:
 		return _attack(enemy, target)
@@ -32,9 +40,22 @@ func process_enemy_unit(enemy: BattleUnit) -> String:
 		await unit_mover.move_unit_along_path(enemy, path)
 		unit_manager.move_unit_to_grid(enemy, destination)
 	target = find_attackable_player_unit(enemy)
+	skill_message = _try_skill(enemy)
+	if not skill_message.is_empty(): return skill_message
 	if target: return _attack(enemy, target)
 	enemy.face_toward(Vector2i(nearest.grid_x, nearest.grid_z))
 	return "%sは移動して待機" % enemy.unit_name
+
+func _try_skill(enemy: BattleUnit) -> String:
+	for skill in skill_database.get_skills_for_unit(enemy):
+		if not skill_system.can_use_skill(enemy, skill) or skill.skill_type != SkillData.SkillType.ATTACK: continue
+		for player in unit_manager.get_player_units():
+			var target_pos := Vector2i(player.grid_x, player.grid_z)
+			if skill_system.can_target_skill(enemy, skill, target_pos):
+				var result := skill_system.execute_skill(enemy, skill, target_pos)
+				_show_skill_results(result)
+				return result.message
+	return ""
 
 
 func find_nearest_player_unit(enemy: BattleUnit) -> BattleUnit:
@@ -80,8 +101,16 @@ func _find_best_destination(enemy: BattleUnit, target: BattleUnit, reachable: Di
 
 func _attack(enemy: BattleUnit, target: BattleUnit) -> String:
 	var result := attack_system.execute_attack(enemy, target)
+	floating_result.emit(target, "damage" if result.hit else "miss", int(result.damage))
 	if not target.is_alive(): unit_manager.remove_unit(target)
 	if not result.hit: return "%s attacks %s\nMiss!" % [enemy.unit_name, target.unit_name]
 	var message := "%s attacks %s\nHit! %d damage" % [enemy.unit_name, target.unit_name, result.damage]
 	if result.defeated: message += "\n%s defeated" % target.unit_name
 	return message
+
+func _show_skill_results(result: Dictionary) -> void:
+	if not result.has("results"): return
+	for target_result: Dictionary in result.results:
+		var type: String = target_result.result_type
+		var amount := int(target_result.heal) if type == "heal" else int(target_result.damage)
+		floating_result.emit(target_result.target, type, amount)

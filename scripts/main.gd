@@ -24,12 +24,24 @@ extends Node3D
 @onready var threat_arrows: ThreatArrowManager = $ThreatArrowManager
 @onready var unit_mover: UnitMover = $UnitMover
 @onready var combat_confirm: CombatConfirmPanel = $UI/CombatConfirmPanel
+@onready var skill_database: SkillDatabase = $SkillDatabase
+@onready var element_system: ElementSystem = $ElementSystem
+@onready var skill_system: SkillSystem = $SkillSystem
+@onready var skill_menu: SkillMenu = $UI/SkillMenu
+@onready var skill_confirm: SkillConfirmPanel = $UI/SkillConfirmPanel
+@onready var floating_numbers: FloatingNumberManager = $FloatingNumberManager
+@onready var job_database: JobDatabase = $JobDatabase
+@onready var job_system: JobSystem = $JobSystem
+@onready var experience_system: ExperienceSystem = $ExperienceSystem
+@onready var growth_panel: GrowthResultPanel = $UI/GrowthResultPanel
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
 var original_facing: BattleUnit.FacingDirection = BattleUnit.FacingDirection.SOUTH
 var is_battle_finished := false
 var selected_attack_target: BattleUnit
+var selected_skill: SkillData
+var selected_skill_target := Vector2i.ZERO
 
 
 func _ready() -> void:
@@ -38,9 +50,13 @@ func _ready() -> void:
 	unit_manager.setup(grid)
 	line_of_sight.setup(grid)
 	attack_system.setup(grid, line_of_sight)
-	threat_system.setup(unit_manager, attack_system, pathfinding, grid)
+	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight)
+	job_system.setup(job_database)
+	experience_system.setup(job_database)
+	threat_system.setup(unit_manager, attack_system, pathfinding, grid, skill_database, skill_system)
 	unit_mover.setup(grid)
-	enemy_ai.setup(grid, unit_manager, pathfinding, attack_system, unit_mover)
+	enemy_ai.setup(grid, unit_manager, pathfinding, attack_system, unit_mover, skill_database, skill_system)
+	enemy_ai.floating_result.connect(_show_floating_result)
 	var stage_data := StageData.new()
 	stage_manager.stage_message.connect(_on_stage_message)
 	stage_manager.stage_finished.connect(_on_battle_ended)
@@ -53,10 +69,16 @@ func _ready() -> void:
 	action_menu.attack_selected.connect(_on_attack_selected)
 	action_menu.wait_selected.connect(_on_wait_selected)
 	action_menu.cancel_selected.connect(_cancel_after_move)
+	action_menu.skill_selected.connect(_on_skill_menu_requested)
+	action_menu.move_selected.connect(_on_move_selected)
 	facing_selector.direction_selected.connect(_on_facing_selected)
 	facing_selector.cancelled.connect(_on_facing_cancelled)
 	combat_confirm.confirmed.connect(_on_combat_confirmed)
 	combat_confirm.cancelled.connect(_on_combat_cancelled)
+	skill_menu.skill_selected.connect(_on_skill_selected)
+	skill_menu.cancelled.connect(_on_skill_menu_cancelled)
+	skill_confirm.confirmed.connect(_on_skill_confirmed)
+	skill_confirm.cancelled.connect(_on_skill_confirm_cancelled)
 	turn_manager.phase_changed.connect(_on_phase_changed)
 	turn_manager.combat_message.connect(_on_combat_message)
 	turn_manager.battle_ended.connect(_on_battle_ended)
@@ -74,6 +96,8 @@ func _on_confirm() -> void:
 		_confirm_move(grid_pos)
 	elif cursor.current_mode == BattleCursor.CursorMode.ATTACK_TARGETING:
 		_confirm_attack(grid_pos)
+	elif cursor.current_mode == BattleCursor.CursorMode.SKILL_TARGETING:
+		_confirm_skill_target(grid_pos)
 
 
 func _select_unit(grid_pos: Vector2i) -> void:
@@ -84,9 +108,22 @@ func _select_unit(grid_pos: Vector2i) -> void:
 	unit_manager.select_unit(unit)
 	original_grid_pos = grid_pos
 	original_facing = unit.facing
+	unit.has_moved = false
+	unit.has_used_action = false
+	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+	cursor.input_enabled = false
+	action_menu.open(unit)
+	_update_status("%sの行動を選択" % unit.unit_name)
+
+
+func _on_move_selected() -> void:
+	action_menu.close()
+	var unit := unit_manager.selected_unit
+	var grid_pos := Vector2i(unit.grid_x, unit.grid_z)
 	reachable = pathfinding.find_reachable(grid, grid_pos, unit.move_range, unit.jump_height)
 	_show_move_range(unit, grid_pos)
 	cursor.current_mode = BattleCursor.CursorMode.MOVE_TARGETING
+	cursor.input_enabled = true
 	_update_status("%sの移動先を選択" % unit.unit_name)
 
 
@@ -102,10 +139,13 @@ func _confirm_move(grid_pos: Vector2i) -> void:
 	if not enemies.is_empty(): threat_arrows.show_threat_arrows(enemies, unit)
 	else: threat_arrows.clear_threat_arrows()
 	cursor.clear_reachable()
-	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
-	cursor.input_enabled = false
-	action_menu.open()
-	_update_status("行動を選択してください")
+	if unit.has_used_action:
+		_request_final_facing("移動後の向きを選択してください")
+	else:
+		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+		cursor.input_enabled = false
+		action_menu.open(unit)
+		_update_status("攻撃・スキル・待機を選択してください")
 
 
 func _on_attack_selected() -> void:
@@ -115,6 +155,64 @@ func _on_attack_selected() -> void:
 	cursor.current_mode = BattleCursor.CursorMode.ATTACK_TARGETING
 	cursor.input_enabled = true
 	_update_status("攻撃対象を選択 / Escで戻る")
+
+func _on_skill_menu_requested() -> void:
+	action_menu.close()
+	skill_menu.open(unit_manager.selected_unit, skill_database.get_skills_for_unit(unit_manager.selected_unit))
+	cursor.current_mode = BattleCursor.CursorMode.SKILL_MENU
+
+func _on_skill_selected(skill: SkillData) -> void:
+	selected_skill = skill
+	skill_menu.close()
+	var cells := skill_system.get_skill_range_cells(unit_manager.selected_unit, skill)
+	cursor.show_skill_range(cells, skill.skill_type == SkillData.SkillType.HEAL)
+	cursor.current_mode = BattleCursor.CursorMode.SKILL_TARGETING
+	cursor.input_enabled = true
+	_update_status("%sの対象を選択" % skill.skill_name)
+
+func _confirm_skill_target(grid_pos: Vector2i) -> void:
+	if not skill_system.can_target_skill(unit_manager.selected_unit, selected_skill, grid_pos):
+		_update_status("そのマスは対象にできません")
+		return
+	selected_skill_target = grid_pos
+	var preview := skill_system.calculate_preview(unit_manager.selected_unit, selected_skill, grid_pos)
+	if selected_skill.area_radius > 0: cursor.show_skill_area(skill_system.get_skill_area_cells(grid_pos, selected_skill))
+	skill_confirm.open(unit_manager.selected_unit, selected_skill, grid_pos, preview)
+	cursor.current_mode = BattleCursor.CursorMode.SKILL_CONFIRM
+	cursor.input_enabled = false
+
+func _on_skill_confirmed() -> void:
+	skill_confirm.close()
+	var result := skill_system.execute_skill(unit_manager.selected_unit, selected_skill, selected_skill_target)
+	var acting_unit := unit_manager.selected_unit
+	var total_exp := 0
+	var defeat_count := 0
+	for target_result: Dictionary in result.results:
+		var type: String = target_result.result_type
+		var amount := int(target_result.heal) if type == "heal" else int(target_result.damage)
+		_show_floating_result(target_result.target, type, amount)
+		if type == "damage" and amount > 0: total_exp += experience_system.calculate_action_exp(acting_unit, target_result.target, true)
+		elif type == "heal" and amount > 0: total_exp += experience_system.calculate_action_exp(acting_unit, target_result.target, true)
+		if bool(target_result.defeated): defeat_count += 1
+	total_exp += defeat_count * 30
+	_grant_growth(acting_unit, total_exp, 8 + defeat_count * 5)
+	battle_log.add_message(result.message)
+	_update_status(result.message.replace("\n", " / "))
+	selected_skill = null
+	unit_manager.selected_unit.has_used_action = true
+	cursor.clear_reachable()
+	_after_primary_action("スキルを使用しました")
+
+func _on_skill_confirm_cancelled() -> void:
+	skill_confirm.close()
+	cursor.current_mode = BattleCursor.CursorMode.SKILL_TARGETING
+	cursor.input_enabled = true
+	cursor.show_skill_range(skill_system.get_skill_range_cells(unit_manager.selected_unit, selected_skill), selected_skill.skill_type == SkillData.SkillType.HEAL)
+
+func _on_skill_menu_cancelled() -> void:
+	skill_menu.close()
+	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+	action_menu.open(unit_manager.selected_unit)
 
 
 func _confirm_attack(grid_pos: Vector2i) -> void:
@@ -135,11 +233,27 @@ func _on_combat_confirmed() -> void:
 	combat_confirm.close()
 	camera_controller.pulse_focus()
 	var result := attack_system.execute_attack(attacker, target)
+	var gained_exp := experience_system.calculate_action_exp(attacker, target, bool(result.hit) and int(result.damage) > 0)
+	if bool(result.defeated): gained_exp += 30
+	_grant_growth(attacker, gained_exp, 5 + (5 if result.defeated else 0))
+	_show_floating_result(target, "damage" if result.hit else "miss", int(result.damage))
 	battle_log.show_attack_result(attacker, target, result)
 	_update_status(result.message)
 	if not target.is_alive(): unit_manager.remove_unit(target)
 	selected_attack_target = null
-	_request_final_facing("攻撃後の向きを選択してください")
+	attacker.has_used_action = true
+	_after_primary_action("攻撃しました")
+
+
+func _after_primary_action(message: String) -> void:
+	var unit := unit_manager.selected_unit
+	if unit.has_moved:
+		_request_final_facing("%s。向きを選択してください" % message)
+	else:
+		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+		cursor.input_enabled = false
+		action_menu.open(unit)
+		_update_status("%s。移動または待機を選択してください" % message)
 
 
 func _on_combat_cancelled() -> void:
@@ -191,15 +305,21 @@ func _on_cancel() -> void:
 		cursor.clear_reachable()
 		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
 		cursor.input_enabled = false
-		action_menu.open()
+		action_menu.open(unit_manager.selected_unit)
 	elif cursor.current_mode == BattleCursor.CursorMode.MOVE_TARGETING:
-		unit_manager.clear_selection()
 		cursor.clear_reachable()
-		cursor.current_mode = BattleCursor.CursorMode.IDLE
+		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+		cursor.input_enabled = false
+		action_menu.open(unit_manager.selected_unit)
 	elif cursor.current_mode == BattleCursor.CursorMode.ACTION_MENU:
 		_cancel_after_move()
 	elif cursor.current_mode == BattleCursor.CursorMode.COMBAT_CONFIRM:
 		_on_combat_cancelled()
+	elif cursor.current_mode == BattleCursor.CursorMode.SKILL_TARGETING:
+		cursor.clear_reachable()
+		_on_skill_menu_requested()
+	elif cursor.current_mode == BattleCursor.CursorMode.SKILL_CONFIRM:
+		_on_skill_confirm_cancelled()
 
 
 func _cancel_after_move() -> void:
@@ -207,16 +327,19 @@ func _cancel_after_move() -> void:
 	threat_arrows.clear_threat_arrows()
 	var unit := unit_manager.selected_unit
 	if not unit: return
+	if unit.has_used_action:
+		_request_final_facing("行動後の向きを選択してください")
+		return
 	if Vector2i(unit.grid_x, unit.grid_z) != original_grid_pos:
 		unit_manager.move_unit_to_grid(unit, original_grid_pos)
 	unit.has_moved = false
 	unit.set_facing(original_facing)
-	reachable = pathfinding.find_reachable(grid, original_grid_pos, unit.move_range, unit.jump_height)
-	_show_move_range(unit, original_grid_pos)
 	cursor.set_grid_position(original_grid_pos)
-	cursor.current_mode = BattleCursor.CursorMode.MOVE_TARGETING
+	unit_manager.clear_selection()
+	cursor.clear_reachable()
+	cursor.current_mode = BattleCursor.CursorMode.IDLE
 	cursor.input_enabled = true
-	_update_status("移動を取り消しました")
+	_update_status("行動選択を解除しました")
 
 
 func _on_phase_changed(turn_count: int, phase: TurnManager.TurnPhase) -> void:
@@ -272,13 +395,42 @@ func _on_battle_ended(result: String) -> void:
 	action_menu.close()
 	facing_selector.close()
 	combat_confirm.close()
+	skill_menu.close()
+	skill_confirm.close()
 	threat_arrows.clear_threat_arrows()
 	_update_status(result)
 	battle_message.show_message("Mission Complete" if result == "Victory" else "Defeat", 4.0)
+	if result == "Victory": growth_panel.show_results(unit_manager.get_player_units())
 
 
 func _update_status(message: String) -> void:
 	battle_hud.set_status(message)
+
+func _show_floating_result(target: BattleUnit, result_type: String, amount: int) -> void:
+	if result_type == "damage": floating_numbers.show_damage(target, amount)
+	elif result_type == "heal": floating_numbers.show_heal(target, amount)
+	elif result_type == "miss": floating_numbers.show_miss(target)
+
+func _grant_growth(unit: BattleUnit, exp_amount: int, job_exp_amount: int) -> void:
+	if unit.team != "player": return
+	if exp_amount > 0:
+		var exp_result := experience_system.grant_exp(unit, exp_amount)
+		battle_log.add_message("%s gains %d EXP" % [unit.unit_name, exp_amount])
+		for level_up: Dictionary in exp_result.level_ups:
+			var message := "LEVEL UP!\n%s Lv %d" % [unit.unit_name, level_up.new_level]
+			battle_log.add_message(message)
+			battle_message.show_message(message)
+	var job_result := job_system.grant_job_exp(unit, job_exp_amount)
+	battle_log.add_message("%s gains %d JobEXP" % [unit.unit_name, job_exp_amount])
+	for job_up: Dictionary in job_result.level_ups:
+		var message := "JOB LEVEL UP!\n%s %s Lv %d" % [unit.unit_name, unit.job_name, job_up.job_level]
+		battle_log.add_message(message)
+		battle_message.show_message(message)
+	for skill_id: String in job_result.learned:
+		var skill := skill_database.get_skill(skill_id)
+		var message := "SKILL LEARNED!\n%s" % (skill.skill_name if skill else skill_id)
+		battle_log.add_message(message)
+		battle_message.show_message(message)
 
 
 func _show_move_range(unit: BattleUnit, origin: Vector2i) -> void:

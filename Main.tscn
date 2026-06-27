@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=41 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -27,6 +27,19 @@
 [ext_resource type="Script" path="res://scripts/battle/threat_arrow_manager.gd" id="25_arrows"]
 [ext_resource type="Script" path="res://scripts/unit/unit_mover.gd" id="26_mover"]
 [ext_resource type="Script" path="res://scripts/ui/combat_confirm_panel.gd" id="27_confirm"]
+[ext_resource type="Script" path="res://scripts/skill/skill_database.gd" id="28_skill_db"]
+[ext_resource type="Script" path="res://scripts/battle/element_system.gd" id="29_element"]
+[ext_resource type="Script" path="res://scripts/battle/skill_system.gd" id="30_skill_system"]
+[ext_resource type="Script" path="res://scripts/ui/skill_menu.gd" id="31_skill_menu"]
+[ext_resource type="Script" path="res://scripts/ui/skill_confirm_panel.gd" id="32_skill_confirm"]
+[ext_resource type="Script" path="res://scripts/skill/skill_data.gd" id="33_skill_data"]
+[ext_resource type="Script" path="res://scripts/effect/floating_number_manager.gd" id="34_floating_manager"]
+[ext_resource type="Script" path="res://scripts/effect/floating_number_3d.gd" id="35_floating_number"]
+[ext_resource type="Script" path="res://scripts/job/job_database.gd" id="36_job_db"]
+[ext_resource type="Script" path="res://scripts/job/job_system.gd" id="37_job_system"]
+[ext_resource type="Script" path="res://scripts/battle/experience_system.gd" id="38_exp"]
+[ext_resource type="Script" path="res://scripts/ui/growth_result_panel.gd" id="39_growth"]
+[ext_resource type="Script" path="res://scripts/job/job_data.gd" id="40_job_data"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -52,6 +65,24 @@ script = ExtResource("6_path")
 [node name="AttackSystem" type="Node" parent="."]
 script = ExtResource("10_attack")
 
+[node name="SkillSystem" type="Node" parent="."]
+script = ExtResource("30_skill_system")
+
+[node name="ElementSystem" type="Node" parent="."]
+script = ExtResource("29_element")
+
+[node name="SkillDatabase" type="Node" parent="."]
+script = ExtResource("28_skill_db")
+
+[node name="JobDatabase" type="Node" parent="."]
+script = ExtResource("36_job_db")
+
+[node name="JobSystem" type="Node" parent="."]
+script = ExtResource("37_job_system")
+
+[node name="ExperienceSystem" type="Node" parent="."]
+script = ExtResource("38_exp")
+
 [node name="LineOfSight" type="Node" parent="."]
 script = ExtResource("15_los")
 
@@ -60,6 +91,9 @@ script = ExtResource("24_threat")
 
 [node name="ThreatArrowManager" type="Node3D" parent="."]
 script = ExtResource("25_arrows")
+
+[node name="FloatingNumberManager" type="Node3D" parent="."]
+script = ExtResource("34_floating_manager")
 
 [node name="EnemyAI" type="Node" parent="."]
 script = ExtResource("13_ai")
@@ -131,9 +165,17 @@ offset_bottom = 540.0
 theme_override_constants/separation = 8
 script = ExtResource("11_menu")
 
+[node name="MoveButton" type="Button" parent="UI/ActionMenu"]
+custom_minimum_size = Vector2(220, 52)
+text = "移動"
+
 [node name="AttackButton" type="Button" parent="UI/ActionMenu"]
 custom_minimum_size = Vector2(220, 52)
 text = "攻撃"
+
+[node name="SkillButton" type="Button" parent="UI/ActionMenu"]
+custom_minimum_size = Vector2(220, 52)
+text = "スキル"
 
 [node name="WaitButton" type="Button" parent="UI/ActionMenu"]
 custom_minimum_size = Vector2(220, 52)
@@ -235,3 +277,58 @@ text = "決定"
 [node name="CancelButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons"]
 custom_minimum_size = Vector2(220, 52)
 text = "キャンセル"
+
+[node name="SkillMenu" type="PanelContainer" parent="UI"]
+visible = false
+offset_left = 700.0
+offset_top = 280.0
+offset_right = 1220.0
+offset_bottom = 730.0
+script = ExtResource("31_skill_menu")
+
+[node name="VBox" type="VBoxContainer" parent="UI/SkillMenu"]
+theme_override_constants/separation = 10
+[node name="Title" type="Label" parent="UI/SkillMenu/VBox"]
+theme_override_font_sizes/font_size = 24
+text = "Skills"
+[node name="SkillList" type="VBoxContainer" parent="UI/SkillMenu/VBox"]
+[node name="Description" type="Label" parent="UI/SkillMenu/VBox"]
+custom_minimum_size = Vector2(480, 100)
+text = "スキルを選択"
+[node name="CancelButton" type="Button" parent="UI/SkillMenu/VBox"]
+text = "キャンセル"
+
+[node name="SkillConfirmPanel" type="PanelContainer" parent="UI"]
+visible = false
+offset_left = 690.0
+offset_top = 280.0
+offset_right = 1230.0
+offset_bottom = 720.0
+script = ExtResource("32_skill_confirm")
+[node name="VBox" type="VBoxContainer" parent="UI/SkillConfirmPanel"]
+theme_override_constants/separation = 14
+[node name="Preview" type="Label" parent="UI/SkillConfirmPanel/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "Skill Preview"
+[node name="Buttons" type="HBoxContainer" parent="UI/SkillConfirmPanel/VBox"]
+[node name="Confirm" type="Button" parent="UI/SkillConfirmPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(220, 52)
+text = "決定"
+[node name="Cancel" type="Button" parent="UI/SkillConfirmPanel/VBox/Buttons"]
+custom_minimum_size = Vector2(220, 52)
+text = "キャンセル"
+
+[node name="GrowthResultPanel" type="PanelContainer" parent="UI"]
+visible = false
+offset_left = 570.0
+offset_top = 180.0
+offset_right = 1350.0
+offset_bottom = 900.0
+script = ExtResource("39_growth")
+[node name="VBox" type="VBoxContainer" parent="UI/GrowthResultPanel"]
+[node name="Title" type="Label" parent="UI/GrowthResultPanel/VBox"]
+theme_override_font_sizes/font_size = 30
+text = "Growth Results"
+[node name="Results" type="Label" parent="UI/GrowthResultPanel/VBox"]
+theme_override_font_sizes/font_size = 20
+text = ""

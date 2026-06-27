@@ -66,7 +66,7 @@ func calculate_hit_rate(attacker: BattleUnit, target: BattleUnit) -> int:
 func calculate_damage(attacker: BattleUnit, target: BattleUnit) -> int:
 	var terrain_defense := grid.get_cell(Vector2i(target.grid_x, target.grid_z)).defense_bonus
 	var direction_bonus: int = {AttackDirection.FRONT: 0, AttackDirection.SIDE: 2, AttackDirection.BACK: 5}[get_attack_direction(attacker, target)]
-	return maxi(1, attacker.attack_power - target.defense - terrain_defense + direction_bonus)
+	return maxi(1, attacker.attack_power - target.defense - target.temporary_defense_bonus - terrain_defense + direction_bonus)
 
 
 func get_attack_direction(attacker: BattleUnit, target: BattleUnit) -> AttackDirection:

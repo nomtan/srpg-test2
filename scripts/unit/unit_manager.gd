@@ -19,6 +19,11 @@ func spawn_initial_units() -> void:
 	boss.enemy_type = BattleUnit.EnemyType.BOSS
 	var sniper := _spawn_unit("bandit_b", "Bandit B", Vector2i(5, 6), "enemy", 70, 18, 3, 80, 10, BattleUnit.AttackType.RANGED, 2, 3)
 	sniper.enemy_type = BattleUnit.EnemyType.SNIPER
+	get_unit_by_id("vain").configure_role("swordsman", "剣術師", BattleUnit.ElementType.EARTH, 30, ["power_slash", "earth_break"])
+	get_unit_by_id("acrea").configure_role("magic_swordsman", "魔法剣士", BattleUnit.ElementType.WATER, 45, ["aqua_edge", "healing_water"])
+	get_unit_by_id("glen").configure_role("archer", "弓術師", BattleUnit.ElementType.WIND, 25, ["aimed_shot", "piercing_arrow"])
+	boss.configure_role("bandit", "盗賊", BattleUnit.ElementType.NONE, 15, ["heavy_attack"])
+	sniper.configure_role("enemy_archer", "敵弓兵", BattleUnit.ElementType.WIND, 20, ["aimed_shot"])
 
 
 func _spawn_unit(

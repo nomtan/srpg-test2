@@ -4,6 +4,7 @@ extends Node3D
 enum AttackType { MELEE, RANGED }
 enum FacingDirection { NORTH, EAST, SOUTH, WEST }
 enum EnemyType { AGGRESSIVE, DEFENSIVE, SNIPER, GUARD, BOSS }
+enum ElementType { NONE, EARTH, WATER, WIND, FIRE, THUNDER, ICE, LIGHT, DARK }
 
 var unit_id: String
 var unit_name: String
@@ -14,6 +15,7 @@ var jump_height: int = 1
 var team: String
 var has_acted: bool = false
 var has_moved: bool = false
+var has_used_action: bool = false
 var max_hp: int = 100
 var hp: int = 100
 var attack_power: int = 30
@@ -26,6 +28,25 @@ var max_attack_range: int = 1
 var is_dead: bool = false
 var facing: FacingDirection = FacingDirection.SOUTH
 var enemy_type: EnemyType = EnemyType.AGGRESSIVE
+var job_id := ""
+var job_name := ""
+var element: ElementType = ElementType.NONE
+var max_ap := 30
+var ap := 30
+var skill_ids: Array[String] = []
+var level := 1
+var exp := 0
+var exp_to_next_level := 100
+var job_level := 1
+var job_exp := 0
+var job_exp_to_next_level := 50
+var strength := 10
+var dexterity := 10
+var vitality := 10
+var mind := 10
+var intelligence := 10
+var agility := 10
+var temporary_defense_bonus := 0
 
 var body_material: StandardMaterial3D
 var base_color: Color
@@ -147,10 +168,45 @@ func get_status_name() -> String:
 	if is_dead: return "Defeated"
 	return "Acted" if has_acted else "Ready"
 
+func configure_role(id: String, display_name: String, affinity: ElementType, new_max_ap: int, skills: Array[String]) -> void:
+	job_id = id
+	job_name = display_name
+	element = affinity
+	max_ap = new_max_ap
+	ap = max_ap
+	skill_ids = skills
+
+func add_exp(amount: int, growth: Dictionary) -> Array[Dictionary]:
+	exp += amount
+	var results: Array[Dictionary] = []
+	while exp >= exp_to_next_level:
+		exp -= exp_to_next_level
+		level += 1
+		results.append({"unit": self, "new_level": level, "growth": apply_level_growth(growth)})
+	return results
+
+func apply_level_growth(growth: Dictionary) -> Dictionary:
+	max_hp += int(growth.get("max_hp", 5)); max_ap += int(growth.get("max_ap", 1))
+	attack_power += int(growth.get("attack_power", 1)); defense += int(growth.get("defense", 1))
+	accuracy += int(growth.get("accuracy", 1)); evasion += int(growth.get("evasion", 1))
+	hp = max_hp; ap = max_ap
+	return growth
+
+func add_job_exp(amount: int) -> Array[Dictionary]:
+	job_exp += amount
+	var results: Array[Dictionary] = []
+	while job_exp >= job_exp_to_next_level:
+		job_exp -= job_exp_to_next_level
+		job_level += 1
+		results.append({"unit": self, "job_level": job_level})
+	return results
+
 
 func reset_action_state() -> void:
 	has_acted = false
 	has_moved = false
+	has_used_action = false
+	temporary_defense_bonus = 0
 	update_visual_state()
 
 
