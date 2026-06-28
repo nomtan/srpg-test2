@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -49,6 +49,7 @@
 [ext_resource type="Script" path="res://scripts/save/stage_progress_manager.gd" id="47_stage_progress"]
 [ext_resource type="Script" path="res://scripts/status/status_calculator.gd" id="48_status"]
 [ext_resource type="Script" path="res://scripts/job/job_unlock_system.gd" id="49_job_unlock"]
+[ext_resource type="Script" path="res://scripts/ui/turn_order_panel.gd" id="50_turn_order"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -185,6 +186,24 @@ text = "Loading..."
 [node name="Help" type="Label" parent="UI/MarginContainer/BattleHUD"]
 theme_override_colors/font_color = Color(0.78, 0.82, 0.88, 1)
 text = "矢印/WASD: カーソル  Enter/Space/左クリック: 決定  Esc/右クリック: 解除"
+
+[node name="TurnOrderPanel" type="PanelContainer" parent="UI"]
+offset_left = 1510.0
+offset_top = 20.0
+offset_right = 1900.0
+offset_bottom = 310.0
+script = ExtResource("50_turn_order")
+
+[node name="VBox" type="VBoxContainer" parent="UI/TurnOrderPanel"]
+theme_override_constants/separation = 10
+
+[node name="CurrentActorLabel" type="Label" parent="UI/TurnOrderPanel/VBox"]
+theme_override_font_sizes/font_size = 22
+text = "Current: ---"
+
+[node name="UpcomingList" type="Label" parent="UI/TurnOrderPanel/VBox"]
+theme_override_font_sizes/font_size = 18
+text = "Next:"
 
 [node name="ActionMenu" type="VBoxContainer" parent="UI"]
 visible = false

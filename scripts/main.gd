@@ -42,6 +42,7 @@ extends Node3D
 @onready var stage_progress: StageProgressManager = $StageProgressManager
 @onready var status_calculator: Node = $StatusCalculator
 @onready var job_unlock_system: JobUnlockSystem = $JobUnlockSystem
+@onready var turn_order_panel: TurnOrderPanel = $UI/TurnOrderPanel
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -50,6 +51,7 @@ var is_battle_finished := false
 var selected_attack_target: BattleUnit
 var selected_skill: SkillData
 var selected_skill_target := Vector2i.ZERO
+var pending_wait_action := false
 
 
 func _ready() -> void:
@@ -102,6 +104,9 @@ func _ready() -> void:
 	turn_manager.phase_changed.connect(_on_phase_changed)
 	turn_manager.combat_message.connect(_on_combat_message)
 	turn_manager.battle_ended.connect(_on_battle_ended)
+	turn_manager.actor_ready.connect(_on_ct_actor_ready)
+	turn_manager.turn_order_changed.connect(_on_turn_order_changed)
+	turn_manager.setup(unit_manager)
 	pre_battle_setup.battle_started.connect(_on_pre_battle_started)
 	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system, job_unlock_system, status_calculator)
 	cursor.input_enabled = false
@@ -110,7 +115,9 @@ func _ready() -> void:
 func _on_pre_battle_started() -> void:
 	unit_progress.update_progress_from_units(unit_manager.get_player_units())
 	save_manager.save_game()
-	cursor.input_enabled = true
+	cursor.input_enabled = false
+	battle_message.show_message("Battle Start")
+	battle_log.add_message("Battle started")
 	turn_manager.start_battle()
 
 
@@ -130,7 +137,7 @@ func _on_confirm() -> void:
 
 func _select_unit(grid_pos: Vector2i) -> void:
 	var unit := unit_manager.unit_at(grid_pos)
-	if not unit or unit.team != "player" or unit.has_acted:
+	if not unit or unit.team != "player" or unit != turn_manager.current_actor:
 		_update_status("未行動の味方ユニットを選択してください")
 		return
 	unit_manager.select_unit(unit)
@@ -138,6 +145,7 @@ func _select_unit(grid_pos: Vector2i) -> void:
 	original_facing = unit.facing
 	unit.has_moved = false
 	unit.has_used_action = false
+	pending_wait_action = false
 	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
 	cursor.input_enabled = false
 	action_menu.open(unit)
@@ -294,6 +302,7 @@ func _on_combat_cancelled() -> void:
 
 func _on_wait_selected() -> void:
 	action_menu.close()
+	pending_wait_action = not unit_manager.selected_unit.has_used_action
 	_request_final_facing("待機後の向きを選択してください")
 
 
@@ -317,15 +326,17 @@ func _on_facing_cancelled() -> void:
 
 func _finish_action() -> void:
 	threat_arrows.clear_threat_arrows()
-	unit_manager.mark_unit_acted(unit_manager.selected_unit, unit_manager.selected_unit.has_moved)
+	var finished_actor := unit_manager.selected_unit
+	unit_manager.mark_unit_acted(finished_actor, finished_actor.has_moved)
 	unit_manager.clear_selection()
 	cursor.clear_reachable()
 	cursor.current_mode = BattleCursor.CursorMode.IDLE
-	cursor.input_enabled = true
+	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
 	if _check_battle_result(): return
-	if unit_manager.are_all_player_units_acted():
-		turn_manager.finish_player_turn(unit_manager, enemy_ai)
+	battle_log.add_message(("%s waits" if pending_wait_action else "%s ends action") % finished_actor.unit_name)
+	turn_manager.finish_actor_turn(finished_actor, pending_wait_action)
+	pending_wait_action = false
 
 
 func _on_cancel() -> void:
@@ -386,6 +397,34 @@ func _on_phase_changed(turn_count: int, phase: TurnManager.TurnPhase) -> void:
 		_update_status("Enemy Turn")
 
 
+func _on_ct_actor_ready(actor: BattleUnit) -> void:
+	if is_battle_finished: return
+	battle_hud.update_current_actor(actor)
+	turn_order_panel.update_order(actor, turn_manager.estimate_turn_order(5))
+	battle_message.show_message("%s Turn" % actor.unit_name)
+	battle_log.add_message("%s is ready" % actor.unit_name)
+	camera_controller.focus_on_unit(actor)
+	stage_manager.on_turn_started(turn_manager.turn_count)
+	if not stage_manager.check_result(turn_manager.turn_count).is_empty(): return
+	cursor.set_grid_position(Vector2i(actor.grid_x, actor.grid_z))
+	if actor.team == "player":
+		cursor.input_enabled = true
+		cursor.current_mode = BattleCursor.CursorMode.IDLE
+		_select_unit(Vector2i(actor.grid_x, actor.grid_z))
+	else:
+		cursor.input_enabled = false
+		unit_manager.clear_selection()
+		action_menu.close()
+		var result_message: String = await enemy_ai.process_enemy_unit(actor)
+		_on_combat_message(result_message)
+		if _check_battle_result(): return
+		turn_manager.finish_actor_turn(actor, false)
+
+
+func _on_turn_order_changed(order: Array[BattleUnit]) -> void:
+	turn_order_panel.update_order(turn_manager.current_actor, order)
+
+
 func _update_unit_info(grid_pos: Vector2i) -> void:
 	var unit := unit_manager.unit_at(grid_pos)
 	if unit and unit_manager.selected_unit and cursor.current_mode == BattleCursor.CursorMode.ATTACK_TARGETING:
@@ -420,6 +459,7 @@ func _on_stage_message(message: String) -> void:
 func _on_battle_ended(result: String) -> void:
 	if is_battle_finished: return
 	is_battle_finished = true
+	turn_manager.stop_battle()
 	cursor.input_enabled = false
 	action_menu.close()
 	facing_selector.close()

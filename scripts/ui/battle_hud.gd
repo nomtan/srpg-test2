@@ -17,3 +17,7 @@ func update_turn(turn_count: int, phase: TurnManager.TurnPhase) -> void:
 
 func set_status(message: String) -> void:
 	status_label.text = message
+
+func update_current_actor(actor: BattleUnit) -> void:
+	turn_label.text = "CT Battle"
+	phase_label.text = "Current Actor: %s" % (actor.unit_name if actor else "---")

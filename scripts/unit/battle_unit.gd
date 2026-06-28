@@ -63,6 +63,8 @@ var base_mnd := 10
 var base_int := 10
 var base_agi := 10
 var build_stats: BuildStats
+var ct := 0
+var is_current_actor := false
 var temporary_defense_bonus := 0
 
 var body_material: StandardMaterial3D
@@ -267,6 +269,11 @@ func reset_action_state() -> void:
 	has_used_action = false
 	temporary_defense_bonus = 0
 	update_visual_state()
+
+func add_ct(amount: int) -> void: ct += amount
+func is_ready_to_act() -> bool: return ct >= 100 and is_alive()
+func reset_ct_after_action() -> void: ct = 0
+func reset_ct_after_wait() -> void: ct = 20
 
 
 func update_visual_state() -> void:

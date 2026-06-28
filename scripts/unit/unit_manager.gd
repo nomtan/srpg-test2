@@ -106,6 +106,15 @@ func get_player_units() -> Array[BattleUnit]:
 func get_enemy_units() -> Array[BattleUnit]:
 	return get_units_for_team("enemy")
 
+func get_alive_units() -> Array[BattleUnit]:
+	var result: Array[BattleUnit] = []
+	for unit in units:
+		if unit.is_alive(): result.append(unit)
+	return result
+
+func get_all_units() -> Array[BattleUnit]:
+	return units.duplicate()
+
 
 func are_all_player_units_acted() -> bool:
 	for unit in get_player_units():
