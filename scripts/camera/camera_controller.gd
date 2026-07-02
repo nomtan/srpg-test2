@@ -9,10 +9,10 @@ func setup() -> Camera3D:
 	camera = Camera3D.new()
 	camera.name = "Camera3D"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 12.5
-	camera.position = Vector3(11.5, 12.5, 13.5)
-	focus_offset = camera.position - Vector3(4, 0.8, 4)
-	camera.look_at_from_position(camera.position, Vector3(4, 0.8, 4), Vector3.UP)
+	camera.size = 14.0
+	camera.position = Vector3(9.5, 12.5, 11.5)
+	focus_offset = camera.position - Vector3(2.0, 0.8, 2.0)
+	camera.look_at_from_position(camera.position, Vector3(2.0, 0.8, 2.0), Vector3.UP)
 	add_child(camera)
 	return camera
 
@@ -20,9 +20,9 @@ func setup() -> Camera3D:
 func pulse_focus() -> void:
 	if not camera: return
 	var tween := create_tween()
-	tween.tween_property(camera, "size", 10.5, 0.15)
+	tween.tween_property(camera, "size", 12.0, 0.15)
 	tween.tween_interval(0.25)
-	tween.tween_property(camera, "size", 12.5, 0.2)
+	tween.tween_property(camera, "size", 14.0, 0.2)
 
 func focus_on_unit(unit: BattleUnit) -> void:
 	if not camera or not unit: return

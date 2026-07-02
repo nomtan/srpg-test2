@@ -1,8 +1,8 @@
 class_name GridSystem
 extends Node
 
-const WIDTH := 8
-const DEPTH := 8
+const WIDTH := 16
+const DEPTH := 16
 const CELL_SIZE := 1.0
 
 var cells: Dictionary = {}
@@ -17,25 +17,88 @@ func generate_grid() -> void:
 			var walkable := true
 			var move_cost := 1
 
-			# 中央の丘、北東の崖、泥地、岩を持つ小さなテスト盤面。
-			if x in [3, 4] and z in [3, 4]:
+			if z >= 14:
+				# Enemy base: fortified high ground with wall structures
 				height = 2
 				terrain = "high_ground"
-			if x >= 5 and z <= 2:
-				height = 3
-				terrain = "high_ground"
-			if Vector2i(x, z) in [Vector2i(1, 5), Vector2i(2, 5), Vector2i(2, 6)]:
-				terrain = "water"
-			if Vector2i(x, z) in [Vector2i(3, 1), Vector2i(3, 2), Vector2i(0, 5)]:
-				terrain = "forest"
-			if Vector2i(x, z) in [Vector2i(4, 1), Vector2i(6, 4), Vector2i(4, 6)]:
-				terrain = "rock"
-				height = 2
-				walkable = false
-			if Vector2i(x, z) == Vector2i(4, 2):
-				terrain = "wall"
-				height = 2
-				walkable = false
+				if x in [4, 11]:
+					terrain = "rock"; height = 3; walkable = false
+				elif x in [0, 1, 14, 15]:
+					terrain = "wall"; height = 3; walkable = false
+				elif x == 7 and z == 15:
+					terrain = "stone"
+
+			elif z == 13:
+				# Enemy advance: elevated stone/high-ground plateau
+				if x in [0, 15]:
+					terrain = "forest"
+				elif x in [6, 7, 8, 9]:
+					terrain = "stone"; height = 2
+				else:
+					terrain = "high_ground"; height = 2
+
+			elif z == 12:
+				# Enemy approach: scattered rocks, edge forest
+				if x in [5, 10]:
+					terrain = "rock"; height = 2; walkable = false
+				elif x in [0, 15]:
+					terrain = "forest"
+
+			elif z >= 8:
+				# Mid-map contested zone
+				if x == 7 and z == 8:
+					terrain = "rock"; height = 2; walkable = false
+				elif x == 9 and z == 8:
+					terrain = "rock"; height = 2; walkable = false
+				elif x in [1, 2] and z == 9:
+					terrain = "forest"
+				elif x in [13, 14] and z == 9:
+					terrain = "forest"
+				elif x == 6 and z == 10:
+					terrain = "stone"; height = 2
+				elif x == 9 and z == 10:
+					terrain = "stone"; height = 2
+				elif x in [3, 4] and z == 11:
+					terrain = "forest"
+				elif x in [11, 12] and z == 11:
+					terrain = "forest"
+				elif x in [0, 15]:
+					terrain = "forest"
+
+			elif z == 7:
+				# River: water with grass fords at x=4 and x=11
+				if x in [4, 11]:
+					terrain = "grass"
+				else:
+					terrain = "water"; move_cost = 2
+
+			elif z >= 4:
+				# Transitional zone: hills, forest, river-approach rocks
+				if x in [2, 3] and z in [4, 5]:
+					height = 2; terrain = "high_ground"
+				elif x in [12, 13] and z in [4, 5]:
+					height = 2; terrain = "high_ground"
+				elif x == 6 and z == 5:
+					terrain = "forest"
+				elif x == 9 and z == 5:
+					terrain = "forest"
+				elif x == 5 and z == 6:
+					terrain = "rock"; height = 2; walkable = false
+				elif x == 10 and z == 6:
+					terrain = "rock"; height = 2; walkable = false
+				elif x in [0, 15]:
+					terrain = "forest"
+
+			else:
+				# Player start zone (z=0-3): flat grass with minor features
+				if x in [0, 15]:
+					terrain = "forest"
+				elif x == 4 and z == 2:
+					terrain = "forest"
+				elif x == 10 and z == 2:
+					terrain = "forest"
+				elif x == 7 and z == 1:
+					terrain = "rock"; height = 2; walkable = false
 
 			cells[Vector2i(x, z)] = GridCell.new(
 				x, z, height, terrain, walkable, move_cost

@@ -15,9 +15,9 @@ func spawn_initial_units() -> void:
 	_spawn_unit("vain", "Vain", Vector2i(1, 1), "player", 120, 30, 8, 90, 10)
 	_spawn_unit("acrea", "Acrea", Vector2i(2, 1), "player", 90, 24, 5, 92, 15)
 	_spawn_unit("glen", "Glen", Vector2i(1, 2), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3)
-	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(6, 6), "enemy", 80, 22, 4, 85, 8)
+	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(12, 14), "enemy", 80, 22, 4, 85, 8)
 	boss.enemy_type = BattleUnit.EnemyType.BOSS
-	var sniper := _spawn_unit("bandit_b", "Bandit B", Vector2i(5, 6), "enemy", 70, 18, 3, 80, 10, BattleUnit.AttackType.RANGED, 2, 3)
+	var sniper := _spawn_unit("bandit_b", "Bandit B", Vector2i(10, 14), "enemy", 70, 18, 3, 80, 10, BattleUnit.AttackType.RANGED, 2, 3)
 	sniper.enemy_type = BattleUnit.EnemyType.SNIPER
 	get_unit_by_id("vain").configure_role("swordsman", "剣術師", BattleUnit.ElementType.EARTH, 30, ["power_slash", "earth_break"])
 	get_unit_by_id("acrea").configure_role("magic_swordsman", "魔法剣士", BattleUnit.ElementType.WATER, 45, ["aqua_edge", "healing_water"])
