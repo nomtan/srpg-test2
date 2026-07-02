@@ -137,5 +137,13 @@ func finish_player_turn(manager: UnitManager, enemy_ai: EnemyAI) -> void:
 	is_transitioning = true; current_phase = TurnPhase.ENEMY_TURN; phase_changed.emit(turn_count, current_phase)
 	for enemy in manager.get_enemy_units():
 		combat_message.emit(await enemy_ai.process_enemy_unit(enemy))
+		if manager.are_all_players_defeated():
+			is_transitioning = false
+			battle_ended.emit("Defeat")
+			return
+	if manager.are_all_enemies_defeated():
+		is_transitioning = false
+		battle_ended.emit("Victory")
+		return
 	manager.reset_player_units_action_state(); turn_count += 1
 	current_phase = TurnPhase.PLAYER_TURN; is_transitioning = false; phase_changed.emit(turn_count, current_phase)

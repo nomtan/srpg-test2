@@ -5,11 +5,14 @@ enum AttackDirection { FRONT, SIDE, BACK }
 
 var grid: GridSystem
 var line_of_sight: LineOfSight
+var equipment_database: Node
+var weapon_power_calculator: Node
 
 
-func setup(source_grid: GridSystem, los: LineOfSight) -> void:
+func setup(source_grid: GridSystem, los: LineOfSight, equipment_db: Node = null, weapon_calculator: Node = null) -> void:
 	grid = source_grid
 	line_of_sight = los
+	equipment_database = equipment_db; weapon_power_calculator = weapon_calculator
 
 
 func get_attackable_cells(attacker: BattleUnit) -> Array[Vector2i]:
@@ -41,18 +44,31 @@ func can_attack_cell(attacker: BattleUnit, target_unit: BattleUnit, target_pos: 
 func can_attack_position(attacker: BattleUnit, from_pos: Vector2i, target_pos: Vector2i) -> bool:
 	var distance := absi(from_pos.x - target_pos.x) + absi(from_pos.y - target_pos.y)
 	var height_diff := grid.get_cell(from_pos).height - grid.get_cell(target_pos).height
+	var min_range := get_normal_attack_min_range(attacker)
 	var max_range := get_adjusted_max_range(attacker, height_diff)
-	var height_limit := 1 if attacker.attack_type == BattleUnit.AttackType.MELEE else 3
-	if not (distance >= attacker.min_attack_range and distance <= max_range and absi(height_diff) <= height_limit): return false
-	if attacker.attack_type == BattleUnit.AttackType.RANGED and not line_of_sight.has_line_between(from_pos, target_pos): return false
+	var height_limit := 3 if get_normal_attack_max_range(attacker) > 1 else 1
+	if not (distance >= min_range and distance <= max_range and absi(height_diff) <= height_limit): return false
+	if normal_attack_requires_line_of_sight(attacker) and not line_of_sight.has_line_between(from_pos, target_pos): return false
 	return true
 
 
 func get_adjusted_max_range(attacker: BattleUnit, height_diff: int) -> int:
-	if attacker.attack_type == BattleUnit.AttackType.MELEE: return attacker.max_attack_range
-	if height_diff > 0: return attacker.max_attack_range + mini(height_diff, 2)
-	if height_diff < 0: return maxi(attacker.min_attack_range, attacker.max_attack_range + height_diff)
-	return attacker.max_attack_range
+	var base_max := get_normal_attack_max_range(attacker)
+	var base_min := get_normal_attack_min_range(attacker)
+	if base_max <= 1: return base_max
+	if height_diff > 0: return base_max + mini(height_diff, 2)
+	if height_diff < 0: return maxi(base_min, base_max + height_diff)
+	return base_max
+
+func get_normal_attack_min_range(unit: BattleUnit) -> int:
+	var weapon: WeaponData = equipment_database.get_weapon(unit.equipped_weapon_id) if equipment_database else null
+	return weapon.min_range if weapon else unit.min_attack_range
+func get_normal_attack_max_range(unit: BattleUnit) -> int:
+	var weapon: WeaponData = equipment_database.get_weapon(unit.equipped_weapon_id) if equipment_database else null
+	return weapon.max_range if weapon else unit.max_attack_range
+func normal_attack_requires_line_of_sight(unit: BattleUnit) -> bool:
+	var weapon: WeaponData = equipment_database.get_weapon(unit.equipped_weapon_id) if equipment_database else null
+	return weapon.requires_line_of_sight if weapon else unit.attack_type == BattleUnit.AttackType.RANGED
 
 
 func calculate_hit_rate(attacker: BattleUnit, target: BattleUnit) -> int:
@@ -60,16 +76,22 @@ func calculate_hit_rate(attacker: BattleUnit, target: BattleUnit) -> int:
 	var height_bonus := mini(height_diff * 5, 15) if height_diff > 0 else maxi(height_diff * 7, -21)
 	var terrain_bonus := grid.get_cell(Vector2i(target.grid_x, target.grid_z)).evasion_bonus
 	var direction_bonus: int = {AttackDirection.FRONT: -5, AttackDirection.SIDE: 10, AttackDirection.BACK: 20}[get_attack_direction(attacker, target)]
-	return clampi(attacker.accuracy - target.evasion - terrain_bonus + height_bonus + direction_bonus, 5, 95)
+	var weapon: WeaponData = equipment_database.get_weapon(attacker.equipped_weapon_id) if equipment_database else null
+	var weapon_accuracy: int = weapon.weapon_accuracy_modifier if weapon else 0
+	return clampi(attacker.accuracy + weapon_accuracy - target.evasion - terrain_bonus + height_bonus + direction_bonus, 5, 95)
 
 
 func calculate_damage(attacker: BattleUnit, target: BattleUnit) -> int:
 	var terrain_defense := grid.get_cell(Vector2i(target.grid_x, target.grid_z)).defense_bonus
 	var direction_bonus: int = {AttackDirection.FRONT: 0, AttackDirection.SIDE: 2, AttackDirection.BACK: 5}[get_attack_direction(attacker, target)]
-	return maxi(1, attacker.attack_power - target.defense - target.temporary_defense_bonus - terrain_defense + direction_bonus)
+	var weapon: WeaponData = equipment_database.get_weapon(attacker.equipped_weapon_id) if equipment_database else null
+	var attack_value: int = weapon_power_calculator.calculate_weapon_attack_power(attacker, weapon) if weapon and weapon_power_calculator else attacker.attack_power
+	return maxi(1, attack_value - target.defense - target.temporary_defense_bonus - terrain_defense + direction_bonus)
 
 func calculate_critical_rate(attacker: BattleUnit, _target: BattleUnit, skill: SkillData = null) -> int:
 	var rate := attacker.build_stats.critical_rate if attacker.build_stats else 0
+	var weapon: WeaponData = equipment_database.get_weapon(attacker.equipped_weapon_id) if equipment_database else null
+	if weapon: rate += weapon.weapon_critical_modifier
 	if skill: rate += skill.critical_modifier
 	return clampi(rate, 0, 50)
 
@@ -95,7 +117,8 @@ func get_battle_preview(attacker: BattleUnit, target: BattleUnit) -> Dictionary:
 	var height_diff := grid.get_cell(attacker_pos).height - grid.get_cell(target_pos).height
 	var damage := calculate_damage(attacker, target)
 	var target_cell := grid.get_cell(target_pos)
-	return {"damage": damage, "hit_rate": calculate_hit_rate(attacker, target), "after_hp": maxi(0, target.hp - damage), "height_diff": height_diff, "min_range": attacker.min_attack_range, "max_range": get_adjusted_max_range(attacker, height_diff), "direction": get_direction_name(get_attack_direction(attacker, target)), "terrain": target_cell.terrain, "evasion_bonus": target_cell.evasion_bonus, "defense_bonus": target_cell.defense_bonus, "line_of_sight": "Clear"}
+	var weapon: WeaponData = equipment_database.get_weapon(attacker.equipped_weapon_id) if equipment_database else null
+	return {"damage": damage, "hit_rate": calculate_hit_rate(attacker, target), "critical_rate": calculate_critical_rate(attacker, target), "weapon_name": weapon.equipment_name if weapon else "Unarmed", "after_hp": maxi(0, target.hp - damage), "height_diff": height_diff, "min_range": get_normal_attack_min_range(attacker), "max_range": get_adjusted_max_range(attacker, height_diff), "direction": get_direction_name(get_attack_direction(attacker, target)), "terrain": target_cell.terrain, "evasion_bonus": target_cell.evasion_bonus, "defense_bonus": target_cell.defense_bonus, "line_of_sight": "Clear"}
 
 
 func execute_attack(attacker: BattleUnit, target: BattleUnit) -> Dictionary:

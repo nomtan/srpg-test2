@@ -43,6 +43,9 @@ extends Node3D
 @onready var status_calculator: Node = $StatusCalculator
 @onready var job_unlock_system: JobUnlockSystem = $JobUnlockSystem
 @onready var turn_order_panel: TurnOrderPanel = $UI/TurnOrderPanel
+@onready var equipment_database: Node = $EquipmentDatabase
+@onready var equipment_system: Node = $EquipmentSystem
+@onready var weapon_power_calculator: Node = $WeaponPowerCalculator
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -52,6 +55,7 @@ var selected_attack_target: BattleUnit
 var selected_skill: SkillData
 var selected_skill_target := Vector2i.ZERO
 var pending_wait_action := false
+var battle_result := ""
 
 
 func _ready() -> void:
@@ -63,15 +67,17 @@ func _ready() -> void:
 	save_manager.status_message.connect(_on_save_status)
 	save_manager.load_or_create(unit_manager.get_player_units())
 	unit_progress.apply_progress_to_units(unit_manager.get_player_units())
-	status_calculator.setup(job_database)
+	status_calculator.setup(job_database, equipment_database)
+	equipment_system.setup(equipment_database, job_database, status_calculator)
+	weapon_power_calculator.setup(status_calculator)
 	job_unlock_system.setup(job_database)
 	skill_database.configure_phase_11_5_scaling()
 	for unit: BattleUnit in unit_manager.units:
 		if unit.team == "player": job_unlock_system.unlock_available_jobs(unit)
 		unit.refresh_build_stats(status_calculator)
 	line_of_sight.setup(grid)
-	attack_system.setup(grid, line_of_sight)
-	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight, status_calculator)
+	attack_system.setup(grid, line_of_sight, equipment_database, weapon_power_calculator)
+	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight, status_calculator, equipment_database, weapon_power_calculator)
 	job_system.setup(job_database)
 	experience_system.setup(job_database)
 	skill_unlock_system.setup(job_database)
@@ -84,6 +90,7 @@ func _ready() -> void:
 	stage_manager.stage_finished.connect(_on_battle_ended)
 	stage_manager.setup(stage_data, grid, unit_manager, trigger_manager, event_manager)
 	mission_ui.setup(stage_data.stage_name)
+	unit_info.setup(equipment_database)
 	cursor.setup(grid, camera_controller.setup())
 	cursor.confirm_pressed.connect(_on_confirm)
 	cursor.cancel_pressed.connect(_on_cancel)
@@ -108,7 +115,7 @@ func _ready() -> void:
 	turn_manager.turn_order_changed.connect(_on_turn_order_changed)
 	turn_manager.setup(unit_manager)
 	pre_battle_setup.battle_started.connect(_on_pre_battle_started)
-	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system, job_unlock_system, status_calculator)
+	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system, job_unlock_system, status_calculator, equipment_database, equipment_system)
 	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
 
@@ -459,6 +466,7 @@ func _on_stage_message(message: String) -> void:
 func _on_battle_ended(result: String) -> void:
 	if is_battle_finished: return
 	is_battle_finished = true
+	battle_result = result
 	turn_manager.stop_battle()
 	cursor.input_enabled = false
 	action_menu.close()
@@ -474,6 +482,18 @@ func _on_battle_ended(result: String) -> void:
 		stage_progress.mark_stage_cleared(player_profile.current_stage_id, turn_manager.turn_count)
 		var saved := save_manager.save_game()
 		growth_panel.show_results(unit_manager.get_player_units(), saved)
+	else:
+		_update_status("Defeat - Enter / Space / Click to retry")
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_battle_finished or battle_result != "Defeat": return
+	var retry_requested := event.is_action_pressed("ui_accept")
+	if event is InputEventMouseButton:
+		retry_requested = retry_requested or (event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
+	if retry_requested:
+		get_viewport().set_input_as_handled()
+		get_tree().reload_current_scene()
 
 
 func _on_save_status(message: String) -> void:

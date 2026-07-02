@@ -7,9 +7,12 @@ var attacks: AttackSystem
 var elements: ElementSystem
 var los: LineOfSight
 var status_calculator: Node
+var equipment_database: Node
+var weapon_power_calculator: Node
 
-func setup(source_grid: GridSystem, unit_manager: UnitManager, attack_system: AttackSystem, element_system: ElementSystem, line: LineOfSight, calculator: Node = null) -> void:
+func setup(source_grid: GridSystem, unit_manager: UnitManager, attack_system: AttackSystem, element_system: ElementSystem, line: LineOfSight, calculator: Node = null, equipment_db: Node = null, weapon_calculator: Node = null) -> void:
 	grid = source_grid; units = unit_manager; attacks = attack_system; elements = element_system; los = line; status_calculator = calculator
+	equipment_database = equipment_db; weapon_power_calculator = weapon_calculator
 
 func can_use_skill(user: BattleUnit, skill: SkillData) -> bool: return user.is_alive() and user.ap >= skill.ap_cost
 
@@ -73,13 +76,18 @@ func calculate_preview(user: BattleUnit, skill: SkillData, target_pos: Vector2i)
 			var magic_defense := target.build_stats.magic_defense if target.build_stats else target.mind
 			value = maxi(1, magic_attack + skill.power - magic_defense)
 		else:
-			value = maxi(1, user.attack_power + skill.power - target.defense - target.temporary_defense_bonus - terrain_defense)
+			var physical_weapon: WeaponData = equipment_database.get_weapon(user.equipped_weapon_id) if equipment_database else null
+			var physical_attack: int = weapon_power_calculator.calculate_weapon_attack_power(user, physical_weapon) if physical_weapon and weapon_power_calculator else user.attack_power
+			value = maxi(1, physical_attack + skill.power - target.defense - target.temporary_defense_bonus - terrain_defense)
 		value = elements.apply_element_modifiers(value, skill.element, target)
 		hit_rate = clampi(attacks.calculate_hit_rate(user, target) + skill.accuracy_modifier + elements.get_hit_modifier(skill.element, target.element), 5, 95)
 	elif skill.scaling_type == SkillData.ScalingType.HEALING:
 		var final_stats: Dictionary = status_calculator.calculate_final_base_stats(user) if status_calculator else {"mnd": user.mind}
 		value = skill.power + floori(int(final_stats.mnd) * 1.5)
-	return {"value": value, "hit_rate": hit_rate, "targets": targets, "ap_cost": skill.ap_cost, "is_heal": skill.skill_type == SkillData.SkillType.HEAL}
+	var preview_weapon: WeaponData = equipment_database.get_weapon(user.equipped_weapon_id) if equipment_database else null
+	var physical := skill.scaling_type == SkillData.ScalingType.PHYSICAL
+	var critical_rate := attacks.calculate_critical_rate(user, target, skill) if physical and target else 0
+	return {"value": value, "hit_rate": hit_rate, "critical_rate": critical_rate, "weapon_name": preview_weapon.equipment_name if physical and preview_weapon else "", "targets": targets, "ap_cost": skill.ap_cost, "is_heal": skill.skill_type == SkillData.SkillType.HEAL}
 
 func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> Dictionary:
 	if not can_use_skill(user, skill) or not can_target_skill(user, skill, target_pos): return {"success": false, "message": "Cannot use skill"}

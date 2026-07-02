@@ -70,7 +70,7 @@ func find_nearest_player_unit(enemy: BattleUnit) -> BattleUnit:
 
 
 func find_attackable_player_unit(enemy: BattleUnit) -> BattleUnit:
-	var best: BattleUnit
+	var best: BattleUnit = null
 	var best_hit_rate := -1
 	for player in unit_manager.get_player_units():
 		if attack_system.can_attack(enemy, player):

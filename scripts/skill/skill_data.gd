@@ -23,9 +23,9 @@ var requires_line_of_sight := true
 var scaling_type: ScalingType = ScalingType.PHYSICAL
 var critical_modifier := 0
 
-static func create(id: String, display_name: String, type: SkillType, target: TargetType, range: RangeType, affinity: BattleUnit.ElementType, cost: int, skill_power: int, accuracy: int, min_r: int, max_r: int, area: int = 0, los: bool = true) -> SkillData:
+static func create(id: String, display_name: String, type: SkillType, target: TargetType, range_kind: RangeType, affinity: BattleUnit.ElementType, cost: int, skill_power: int, accuracy: int, min_r: int, max_r: int, area: int = 0, los: bool = true) -> SkillData:
 	var skill := SkillData.new()
-	skill.skill_id = id; skill.skill_name = display_name; skill.skill_type = type; skill.target_type = target; skill.range_type = range
+	skill.skill_id = id; skill.skill_name = display_name; skill.skill_type = type; skill.target_type = target; skill.range_type = range_kind
 	skill.element = affinity; skill.ap_cost = cost; skill.power = skill_power; skill.accuracy_modifier = accuracy
 	skill.min_range = min_r; skill.max_range = max_r; skill.area_radius = area; skill.requires_line_of_sight = los
 	return skill

@@ -10,7 +10,7 @@ func _ready() -> void: $VBox/CancelButton.pressed.connect(func() -> void: cancel
 
 func open(unit: BattleUnit, skills: Array[SkillData]) -> void:
 	for child in list.get_children(): child.queue_free()
-	var first: Button
+	var first: Button = null
 	for skill in skills:
 		var button := Button.new()
 		button.text = "%s  AP %d" % [skill.skill_name, skill.ap_cost]

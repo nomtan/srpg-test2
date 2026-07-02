@@ -38,6 +38,7 @@ func _ready() -> void:
 	# Enemy-only compatibility jobs.
 	_add("bandit", "Bandit", JobData.JobRank.BASIC, {"str": 4, "dex": 1, "vit": 2, "mnd": 0, "int": 0, "agi": 2}, {}, [{"job_level": 1, "skill_id": "heavy_attack"}], false)
 	_add("enemy_archer", "Enemy Archer", JobData.JobRank.BASIC, {"str": 2, "dex": 4, "vit": 0, "mnd": 0, "int": 0, "agi": 2}, {}, [{"job_level": 1, "skill_id": "aimed_shot"}], false)
+	_configure_weapon_types()
 
 func _add(id: String, display_name: String, rank: JobData.JobRank, bonuses: Dictionary, requirements: Dictionary = {}, skills: Array[Dictionary] = [], selectable: bool = true) -> void:
 	var growth := {"max_hp": 5, "max_ap": 1, "attack_power": 1, "defense": 1, "accuracy": 1, "evasion": 1}
@@ -53,3 +54,21 @@ func get_all_job_ids() -> Array[String]:
 func get_growth(id: String) -> Dictionary:
 	var job := get_job(id)
 	return job.growth if job else {}
+
+func _configure_weapon_types() -> void:
+	var weapon_rules: Dictionary = {
+		"fighter": [9], "swordsman": [1], "lancer": [3], "axeman": [2], "archer": [4],
+		"dual_blader": [5, 6], "healer": [7, 8], "mage": [7], "monk": [9],
+		"holy_knight": [1, 8], "dragoon": [3, 1], "heavy_knight": [2, 3],
+		"sniper": [4, 5], "ninja": [5, 6], "priest": [7, 8], "sorcerer": [7],
+		"sword_saint": [1, 6], "paladin": [1, 8], "magic_swordsman": [1, 7],
+		"fortress_knight": [1, 2, 3], "spear_saint": [3], "gunslinger": [4],
+		"war_god": [2, 9], "fist_saint": [9], "assassin": [5, 6],
+		"alchemist": [7, 8], "scholar": [7], "necromancer": [7],
+		"bandit": [2, 5], "enemy_archer": [4]
+	}
+	for job_id: String in weapon_rules:
+		var job := get_job(job_id)
+		if job:
+			job.allowed_weapon_types.clear()
+			for type: int in weapon_rules[job_id]: job.allowed_weapon_types.append(type)

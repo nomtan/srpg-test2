@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=54 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -50,6 +50,9 @@
 [ext_resource type="Script" path="res://scripts/status/status_calculator.gd" id="48_status"]
 [ext_resource type="Script" path="res://scripts/job/job_unlock_system.gd" id="49_job_unlock"]
 [ext_resource type="Script" path="res://scripts/ui/turn_order_panel.gd" id="50_turn_order"]
+[ext_resource type="Script" path="res://scripts/equipment/equipment_database.gd" id="51_equipment_db"]
+[ext_resource type="Script" path="res://scripts/equipment/equipment_system.gd" id="52_equipment_system"]
+[ext_resource type="Script" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -71,6 +74,15 @@ script = ExtResource("48_status")
 
 [node name="JobUnlockSystem" type="Node" parent="."]
 script = ExtResource("49_job_unlock")
+
+[node name="EquipmentDatabase" type="Node" parent="."]
+script = ExtResource("51_equipment_db")
+
+[node name="EquipmentSystem" type="Node" parent="."]
+script = ExtResource("52_equipment_system")
+
+[node name="WeaponPowerCalculator" type="Node" parent="."]
+script = ExtResource("53_weapon_power")
 
 [node name="GridSystem" type="Node" parent="."]
 script = ExtResource("2_grid")
@@ -409,6 +421,16 @@ text = "Main Job"
 [node name="SubJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
 text = "Sub Job"
 [node name="SubJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+
+[node name="WeaponLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+text = "Weapon"
+[node name="Weapon" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="ArmorLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+text = "Armor"
+[node name="Armor" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="AccessoryLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+text = "Accessory"
+[node name="Accessory" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
 
 [node name="Skills" type="HBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail"]
 theme_override_constants/separation = 20

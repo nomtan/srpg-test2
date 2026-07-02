@@ -72,7 +72,8 @@ func check_result(turn_count: int) -> String:
 	if units.are_all_enemies_defeated(): return _finish("Victory")
 	var main_unit := units.get_unit_by_id(data.main_character_id)
 	if not main_unit or not main_unit.is_alive(): return _finish("Defeat")
-	if turn_count > data.turn_limit: return _finish("Defeat")
+	if data.defeat_condition == StageData.DefeatCondition.TURN_LIMIT and turn_count > data.turn_limit:
+		return _finish("Defeat")
 	return ""
 
 

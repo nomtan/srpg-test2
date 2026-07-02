@@ -44,6 +44,9 @@ func apply_progress_to_unit(unit: BattleUnit) -> void:
 	unit.learned_skill_ids = _string_array(saved.get("learned_skill_ids", unit.learned_skill_ids))
 	unit.equipped_skill_ids = _string_array(saved.get("equipped_skill_ids", unit.equipped_skill_ids))
 	unit.unlocked_job_ids = _string_array(saved.get("unlocked_job_ids", unit.unlocked_job_ids))
+	unit.equipped_weapon_id = str(saved.get("equipped_weapon_id", unit.equipped_weapon_id))
+	unit.equipped_armor_id = str(saved.get("equipped_armor_id", unit.equipped_armor_id))
+	unit.equipped_accessory_id = str(saved.get("equipped_accessory_id", unit.equipped_accessory_id))
 	_apply_job_names(unit)
 	unit.job_id = unit.main_job_id
 	unit.job_name = unit.main_job_name

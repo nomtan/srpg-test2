@@ -34,6 +34,9 @@ static func from_unit(unit: BattleUnit) -> UnitProgressData:
 		"learned_skill_ids": unit.learned_skill_ids.duplicate(),
 		"equipped_skill_ids": unit.equipped_skill_ids.duplicate(),
 		"unlocked_job_ids": unit.unlocked_job_ids.duplicate(),
+		"equipped_weapon_id": unit.equipped_weapon_id,
+		"equipped_armor_id": unit.equipped_armor_id,
+		"equipped_accessory_id": unit.equipped_accessory_id,
 	}
 	return progress
 

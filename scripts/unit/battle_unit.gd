@@ -45,6 +45,7 @@ var unlocked_job_ids: Array[String] = []
 var job_levels: Dictionary = {}
 var job_exps: Dictionary = {}
 var level := 1
+@warning_ignore("shadowed_global_identifier")
 var exp := 0
 var exp_to_next_level := 100
 var job_level := 1
@@ -65,6 +66,9 @@ var base_agi := 10
 var build_stats: BuildStats
 var ct := 0
 var is_current_actor := false
+var equipped_weapon_id := ""
+var equipped_armor_id := ""
+var equipped_accessory_id := ""
 var temporary_defense_bonus := 0
 
 var body_material: StandardMaterial3D

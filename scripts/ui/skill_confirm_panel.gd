@@ -12,7 +12,9 @@ func _ready() -> void:
 func open(user: BattleUnit, skill: SkillData, target_pos: Vector2i, preview: Dictionary) -> void:
 	var names: Array[String] = []
 	for target: BattleUnit in preview.targets: names.append(target.unit_name)
-	label.text = "Skill: %s\nUser: %s\nTarget: %s\nAP Cost: %d\n%s: %d\nHit Rate: %s\nArea: %d\nTargets: %s" % [skill.skill_name, user.unit_name, str(target_pos), skill.ap_cost, "Heal" if preview.is_heal else "Damage", preview.value, "Always" if preview.is_heal else "%d%%" % preview.hit_rate, skill.area_radius, ", ".join(names)]
+	var weapon_line := "\nWeapon: %s" % preview.weapon_name if not str(preview.get("weapon_name", "")).is_empty() else ""
+	var critical_line := "\nCritical: %d%%" % int(preview.get("critical_rate", 0)) if int(preview.get("critical_rate", 0)) > 0 else ""
+	label.text = "Skill: %s%s\nUser: %s\nTarget: %s\nAP Cost: %d\n%s: %d\nHit Rate: %s%s\nArea: %d\nTargets: %s" % [skill.skill_name, weapon_line, user.unit_name, str(target_pos), skill.ap_cost, "Heal" if preview.is_heal else "Damage", preview.value, "Always" if preview.is_heal else "%d%%" % preview.hit_rate, critical_line, skill.area_radius, ", ".join(names)]
 	visible = true
 	$VBox/Buttons/Confirm.grab_focus()
 

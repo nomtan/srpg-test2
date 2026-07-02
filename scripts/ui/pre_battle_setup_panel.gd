@@ -9,6 +9,8 @@ var skills: SkillDatabase
 var unlocks: SkillUnlockSystem
 var job_unlocks: JobUnlockSystem
 var status_calculator: Node
+var equipment_database: Node
+var equipment_system: Node
 var selected_unit: BattleUnit
 var refreshing := false
 
@@ -19,15 +21,22 @@ var refreshing := false
 @onready var equipped_list: VBoxContainer = $Layout/Detail/Skills/Equipped
 @onready var available_list: VBoxContainer = $Layout/Detail/Skills/Available
 @onready var message_label: Label = $Layout/Detail/Message
+@onready var weapon_selector: OptionButton = $Layout/Detail/Weapon
+@onready var armor_selector: OptionButton = $Layout/Detail/Armor
+@onready var accessory_selector: OptionButton = $Layout/Detail/Accessory
 
 func _ready() -> void:
 	main_selector.item_selected.connect(func(_index: int) -> void: _change_job(true))
 	sub_selector.item_selected.connect(func(_index: int) -> void: _change_job(false))
+	weapon_selector.item_selected.connect(func(_index: int) -> void: _change_equipment(EquipmentData.EquipmentType.WEAPON))
+	armor_selector.item_selected.connect(func(_index: int) -> void: _change_equipment(EquipmentData.EquipmentType.ARMOR))
+	accessory_selector.item_selected.connect(func(_index: int) -> void: _change_equipment(EquipmentData.EquipmentType.ACCESSORY))
 	$Layout/Detail/StartBattle.pressed.connect(_start_battle)
 
-func setup(player_units: Array[BattleUnit], job_database: JobDatabase, skill_database: SkillDatabase, unlock_system: SkillUnlockSystem, job_unlock_system: JobUnlockSystem = null, calculator: Node = null) -> void:
+func setup(player_units: Array[BattleUnit], job_database: JobDatabase, skill_database: SkillDatabase, unlock_system: SkillUnlockSystem, job_unlock_system: JobUnlockSystem = null, calculator: Node = null, equipment_db: Node = null, equip_system: Node = null) -> void:
 	units = player_units; jobs = job_database; skills = skill_database; unlocks = unlock_system
 	job_unlocks = job_unlock_system; status_calculator = calculator
+	equipment_database = equipment_db; equipment_system = equip_system
 	for child in unit_list.get_children(): child.queue_free()
 	for unit in units:
 		if job_unlocks: job_unlocks.unlock_available_jobs(unit)
@@ -42,10 +51,12 @@ func _select_unit(unit: BattleUnit) -> void:
 	selected_unit = unit; refreshing = true
 	unlocks.validate_equipped_skills(unit)
 	_ensure_distinct_jobs(unit)
+	_validate_equipped_weapon()
 	if status_calculator: unit.refresh_build_stats(status_calculator)
 	name_label.text = "%s  Lv %d" % [unit.unit_name, unit.level]
 	_populate_jobs(main_selector, unit.main_job_id)
 	_populate_jobs(sub_selector, unit.sub_job_id, unit.main_job_id)
+	_populate_equipment_selectors()
 	refreshing = false
 	_refresh_skills()
 
@@ -80,6 +91,8 @@ func _change_job(is_main: bool) -> void:
 	if job_unlocks: job_unlocks.unlock_available_jobs(selected_unit)
 	unlocks.validate_equipped_skills(selected_unit)
 	if status_calculator: selected_unit.refresh_build_stats(status_calculator)
+	_validate_equipped_weapon()
+	_populate_equipment_selectors()
 	_refresh_skills()
 
 func _ensure_distinct_jobs(unit: BattleUnit) -> void:
@@ -91,6 +104,40 @@ func _ensure_distinct_jobs(unit: BattleUnit) -> void:
 		unit.sub_job_id = candidate; unit.sub_job_name = job.job_name
 		return
 	unit.sub_job_id = ""; unit.sub_job_name = "None"
+
+func _populate_equipment_selectors() -> void:
+	if not equipment_database or not equipment_system: return
+	refreshing = true
+	_populate_equipment_selector(weapon_selector, EquipmentData.EquipmentType.WEAPON, selected_unit.equipped_weapon_id)
+	_populate_equipment_selector(armor_selector, EquipmentData.EquipmentType.ARMOR, selected_unit.equipped_armor_id)
+	_populate_equipment_selector(accessory_selector, EquipmentData.EquipmentType.ACCESSORY, selected_unit.equipped_accessory_id)
+	refreshing = false
+
+func _populate_equipment_selector(selector: OptionButton, type: EquipmentData.EquipmentType, selected_id: String) -> void:
+	selector.clear()
+	for equipment: EquipmentData in equipment_database.get_by_type(type):
+		if equipment is WeaponData and not equipment_system.can_equip_weapon(selected_unit, equipment): continue
+		selector.add_item(equipment.equipment_name)
+		selector.set_item_metadata(selector.item_count - 1, equipment.equipment_id)
+		if equipment.equipment_id == selected_id: selector.select(selector.item_count - 1)
+
+func _change_equipment(type: EquipmentData.EquipmentType) -> void:
+	if refreshing or not selected_unit: return
+	var selector := weapon_selector if type == EquipmentData.EquipmentType.WEAPON else (armor_selector if type == EquipmentData.EquipmentType.ARMOR else accessory_selector)
+	if selector.selected < 0: return
+	var equipment_id := str(selector.get_item_metadata(selector.selected))
+	if type == EquipmentData.EquipmentType.WEAPON: equipment_system.equip_weapon(selected_unit, equipment_id)
+	elif type == EquipmentData.EquipmentType.ARMOR: equipment_system.equip_armor(selected_unit, equipment_id)
+	else: equipment_system.equip_accessory(selected_unit, equipment_id)
+	_refresh_skills()
+
+func _validate_equipped_weapon() -> void:
+	if not equipment_system or selected_unit.equipped_weapon_id.is_empty(): return
+	var weapon: WeaponData = equipment_database.get_weapon(selected_unit.equipped_weapon_id)
+	if equipment_system.can_equip_weapon(selected_unit, weapon): return
+	selected_unit.equipped_weapon_id = ""
+	for candidate: WeaponData in equipment_database.get_all_weapons():
+		if equipment_system.equip_weapon(selected_unit, candidate.equipment_id): break
 
 func _refresh_skills() -> void:
 	for container in [equipped_list, available_list]:

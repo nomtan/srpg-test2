@@ -24,6 +24,17 @@ func spawn_initial_units() -> void:
 	get_unit_by_id("glen").configure_role("archer", "弓術師", BattleUnit.ElementType.WIND, 25, ["aimed_shot", "piercing_arrow"])
 	boss.configure_role("bandit", "盗賊", BattleUnit.ElementType.NONE, 15, ["heavy_attack"])
 	sniper.configure_role("enemy_archer", "敵弓兵", BattleUnit.ElementType.WIND, 20, ["aimed_shot"])
+	get_unit_by_id("vain").equipped_weapon_id = "iron_sword"
+	get_unit_by_id("vain").equipped_armor_id = "leather_armor"
+	get_unit_by_id("vain").equipped_accessory_id = "power_ring"
+	get_unit_by_id("acrea").equipped_weapon_id = "wooden_staff"
+	get_unit_by_id("acrea").equipped_armor_id = "mage_robe"
+	get_unit_by_id("acrea").equipped_accessory_id = "mind_charm"
+	get_unit_by_id("glen").equipped_weapon_id = "short_bow"
+	get_unit_by_id("glen").equipped_armor_id = "leather_armor"
+	get_unit_by_id("glen").equipped_accessory_id = "accuracy_lens"
+	boss.equipped_weapon_id = "iron_axe"; boss.equipped_armor_id = "leather_armor"
+	sniper.equipped_weapon_id = "short_bow"; sniper.equipped_armor_id = "leather_armor"
 	get_unit_by_id("vain").unlocked_job_ids = ["swordsman", "magic_swordsman"]
 	get_unit_by_id("acrea").unlocked_job_ids = ["magic_swordsman", "swordsman"]
 	get_unit_by_id("glen").unlocked_job_ids = ["archer", "swordsman"]
