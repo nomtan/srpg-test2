@@ -11,6 +11,7 @@ var top_colors := {
 	"rock":        Color("#4a4a4a"),
 	"forest":      Color("#2d5c25"),
 	"water":       Color("#3a7fd5"),
+	"lava":        Color("#ff5500"),
 	"high_ground": Color("#8ab870"),
 	"wall":        Color("#5a5a60"),
 }
@@ -23,6 +24,7 @@ var side_colors := {
 	"rock":        Color("#323232"),
 	"forest":      Color("#8c6040"),
 	"water":       Color("#2a5fa8"),
+	"lava":        Color("#1a0800"),
 	"high_ground": Color("#7a6050"),
 	"wall":        Color("#3a3a42"),
 }
@@ -45,6 +47,11 @@ func _create_block(grid_pos: Vector2i, level: int, cell: GridCell) -> void:
 	if cell.terrain == "water":
 		if is_top:
 			_create_water_surface(world_pos)
+		return
+
+	if cell.terrain == "lava":
+		if is_top:
+			_create_lava_surface(world_pos)
 		return
 
 	# Body block — sides use darker dirt/rock color
@@ -75,6 +82,35 @@ func _create_block(grid_pos: Vector2i, level: int, cell: GridCell) -> void:
 		tmat.roughness = 0.9
 		top.material_override = tmat
 		add_child(top)
+
+
+func _create_lava_surface(world_pos: Vector3) -> void:
+	# Dark obsidian base
+	var bed := MeshInstance3D.new()
+	var bed_mesh := BoxMesh.new()
+	bed_mesh.size = Vector3(0.96, 0.55, 0.96)
+	bed.mesh = bed_mesh
+	bed.position = world_pos + Vector3(0.0, -0.12, 0.0)
+	var bmat := StandardMaterial3D.new()
+	bmat.albedo_color = Color("#1a0800")
+	bmat.roughness = 1.0
+	bed.material_override = bmat
+	add_child(bed)
+
+	# Glowing lava surface
+	var lava := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(0.96, 0.96)
+	lava.mesh = plane
+	lava.position = world_pos + Vector3(0.0, 0.3, 0.0)
+	var lmat := StandardMaterial3D.new()
+	lmat.albedo_color = Color("#ff4400")
+	lmat.emission_enabled = true
+	lmat.emission = Color("#ff2200")
+	lmat.emission_energy_multiplier = 2.0
+	lmat.roughness = 0.0
+	lava.material_override = lmat
+	add_child(lava)
 
 
 func _create_water_surface(world_pos: Vector3) -> void:

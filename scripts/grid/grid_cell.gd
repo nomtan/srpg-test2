@@ -43,6 +43,9 @@ func _apply_terrain_effects() -> void:
 		"high_ground":
 			evasion_bonus = 5
 			defense_bonus = 1
+		"lava":
+			walkable = false
+			blocks_movement = true
 		"rock", "wall":
 			walkable = false
 			blocks_movement = true
