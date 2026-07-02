@@ -9,16 +9,23 @@ enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING, COMBAT_CO
 
 var grid: GridSystem
 var camera: Camera3D
+var camera_controller: CameraController
 var grid_position := Vector2i(1, 1)
 var cursor_mesh: MeshInstance3D
 var range_root: Node3D
 var input_enabled: bool = true
 var current_mode: CursorMode = CursorMode.IDLE
 
+const _DRAG_THRESHOLD := 6.0
+var _mouse_held := false
+var _drag_start_pos := Vector2.ZERO
+var _dragging := false
 
-func setup(source_grid: GridSystem, source_camera: Camera3D) -> void:
+
+func setup(source_grid: GridSystem, source_camera: Camera3D, cam_controller: CameraController = null) -> void:
 	grid = source_grid
 	camera = source_camera
+	camera_controller = cam_controller
 	cursor_mesh = _create_highlight(Color(1.0, 0.85, 0.15, 0.75))
 	add_child(cursor_mesh)
 	range_root = Node3D.new()
@@ -28,8 +35,48 @@ func setup(source_grid: GridSystem, source_camera: Camera3D) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		match event.button_index:
+			MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					_mouse_held = true
+					_drag_start_pos = event.position
+					_dragging = false
+				else:
+					if not _dragging and input_enabled:
+						_update_from_mouse(event.position)
+						confirm_pressed.emit()
+					_mouse_held = false
+					_dragging = false
+				get_viewport().set_input_as_handled()
+			MOUSE_BUTTON_RIGHT:
+				if event.pressed and input_enabled:
+					cancel_pressed.emit()
+					get_viewport().set_input_as_handled()
+			MOUSE_BUTTON_WHEEL_UP:
+				if camera_controller:
+					camera_controller.zoom_camera(1.5)
+					get_viewport().set_input_as_handled()
+			MOUSE_BUTTON_WHEEL_DOWN:
+				if camera_controller:
+					camera_controller.zoom_camera(-1.5)
+					get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventMouseMotion:
+		if _mouse_held and not _dragging:
+			if event.position.distance_to(_drag_start_pos) > _DRAG_THRESHOLD:
+				_dragging = true
+		if _dragging and camera_controller:
+			camera_controller.pan(event.relative)
+			get_viewport().set_input_as_handled()
+		elif input_enabled:
+			_update_from_mouse(event.position)
+		return
+
 	if not input_enabled:
 		return
+
 	var movement := Vector2i.ZERO
 	if event.is_action_pressed("ui_left") or _is_key(event, KEY_A): movement = Vector2i.LEFT
 	elif event.is_action_pressed("ui_right") or _is_key(event, KEY_D): movement = Vector2i.RIGHT
@@ -50,14 +97,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_cancel"):
 		cancel_pressed.emit()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseMotion:
-		_update_from_mouse(event.position)
-	elif event is InputEventMouseButton and event.pressed:
-		_update_from_mouse(event.position)
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			confirm_pressed.emit()
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			cancel_pressed.emit()
 
 
 func show_reachable(reachable: Dictionary, origin: Vector2i) -> void:

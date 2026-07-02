@@ -91,7 +91,7 @@ func _ready() -> void:
 	stage_manager.setup(stage_data, grid, unit_manager, trigger_manager, event_manager)
 	mission_ui.setup(stage_data.stage_name)
 	unit_info.setup(equipment_database)
-	cursor.setup(grid, camera_controller.setup())
+	cursor.setup(grid, camera_controller.setup(), camera_controller)
 	cursor.confirm_pressed.connect(_on_confirm)
 	cursor.cancel_pressed.connect(_on_cancel)
 	cursor.grid_position_changed.connect(_update_unit_info)

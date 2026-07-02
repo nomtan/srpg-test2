@@ -32,3 +32,17 @@ func focus_on_unit(unit: BattleUnit) -> void:
 	var tween := create_tween()
 	tween.tween_method(func(weight: float) -> void:
 		camera.look_at_from_position(start.lerp(destination, weight), target, Vector3.UP), 0.0, 1.0, 0.25)
+
+
+func pan(screen_delta: Vector2) -> void:
+	if not camera: return
+	var viewport_height := camera.get_viewport().get_visible_rect().size.y
+	var scale := camera.size / viewport_height
+	var right := camera.global_basis.x
+	var up := camera.global_basis.y
+	camera.position -= right * screen_delta.x * scale - up * screen_delta.y * scale
+
+
+func zoom_camera(delta: float) -> void:
+	if not camera: return
+	camera.size = clampf(camera.size - delta, 5.0, 30.0)
