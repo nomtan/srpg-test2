@@ -55,6 +55,7 @@ var selected_attack_target: BattleUnit
 var selected_skill: SkillData
 var selected_skill_target := Vector2i.ZERO
 var pending_wait_action := false
+var pending_move_path: Array[Vector2i] = []
 var battle_result := ""
 
 
@@ -153,6 +154,7 @@ func _select_unit(grid_pos: Vector2i) -> void:
 	unit.has_moved = false
 	unit.has_used_action = false
 	pending_wait_action = false
+	pending_move_path.clear()
 	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
 	cursor.input_enabled = false
 	action_menu.open(unit)
@@ -176,7 +178,9 @@ func _confirm_move(grid_pos: Vector2i) -> void:
 		return
 	var unit := unit_manager.selected_unit
 	var origin := Vector2i(unit.grid_x, unit.grid_z)
-	if grid_pos != origin: unit_manager.move_selected_to(grid_pos)
+	pending_move_path = pathfinding.find_path(grid, unit, grid_pos) if grid_pos != origin else []
+	if grid_pos != origin:
+		unit_manager.move_selected_to(grid_pos)
 	unit.has_moved = grid_pos != origin
 	var enemies: Array[BattleUnit] = threat_system.get_threatening_enemies_for_cell(unit, grid_pos)
 	if not enemies.is_empty(): threat_arrows.show_threat_arrows(enemies, unit)
@@ -226,6 +230,7 @@ func _confirm_skill_target(grid_pos: Vector2i) -> void:
 
 func _on_skill_confirmed() -> void:
 	skill_confirm.close()
+	await _play_pending_movement()
 	var result := skill_system.execute_skill(unit_manager.selected_unit, selected_skill, selected_skill_target)
 	var acting_unit := unit_manager.selected_unit
 	var total_exp := 0
@@ -274,6 +279,7 @@ func _on_combat_confirmed() -> void:
 	var attacker := unit_manager.selected_unit
 	var target := selected_attack_target
 	combat_confirm.close()
+	await _play_pending_movement()
 	camera_controller.pulse_focus()
 	var result := attack_system.execute_attack(attacker, target)
 	var gained_exp := experience_system.calculate_action_exp(attacker, target, bool(result.hit) and int(result.damage) > 0)
@@ -321,14 +327,31 @@ func _request_final_facing(message: String) -> void:
 
 
 func _on_facing_selected(direction: BattleUnit.FacingDirection) -> void:
-	unit_manager.selected_unit.set_facing(direction)
 	facing_selector.close()
+	await _play_pending_movement()
+	unit_manager.selected_unit.set_facing(direction)
 	_finish_action()
 
 
 func _on_facing_cancelled() -> void:
+	var direction := unit_manager.selected_unit.facing
 	facing_selector.close()
+	await _play_pending_movement()
+	unit_manager.selected_unit.set_facing(direction)
 	_finish_action()
+
+
+func _play_pending_movement() -> void:
+	if pending_move_path.is_empty():
+		return
+	var unit := unit_manager.selected_unit
+	if not unit:
+		pending_move_path.clear()
+		return
+	cursor.input_enabled = false
+	unit.position = grid.grid_to_world(original_grid_pos, 0.05)
+	await unit_mover.move_unit_along_path(unit, pending_move_path)
+	pending_move_path.clear()
 
 
 func _finish_action() -> void:
@@ -378,6 +401,7 @@ func _cancel_after_move() -> void:
 		return
 	if Vector2i(unit.grid_x, unit.grid_z) != original_grid_pos:
 		unit_manager.move_unit_to_grid(unit, original_grid_pos)
+	pending_move_path.clear()
 	unit.has_moved = false
 	unit.set_facing(original_facing)
 	cursor.set_grid_position(original_grid_pos)

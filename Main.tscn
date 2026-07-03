@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=3]
+[gd_scene load_steps=55 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -53,6 +53,24 @@
 [ext_resource type="Script" path="res://scripts/equipment/equipment_database.gd" id="51_equipment_db"]
 [ext_resource type="Script" path="res://scripts/equipment/equipment_system.gd" id="52_equipment_system"]
 [ext_resource type="Script" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
+
+[sub_resource type="Environment" id="Environment_atmo"]
+background_mode = 1
+background_color = Color(0.043, 0.055, 0.078, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.29, 0.35, 0.47, 1)
+ambient_light_energy = 0.35
+tonemap_mode = 4
+glow_enabled = true
+glow_intensity = 0.5
+glow_bloom = 0.05
+glow_hdr_threshold = 1.0
+fog_enabled = true
+fog_light_color = Color(0.05, 0.063, 0.09, 1)
+fog_density = 0.015
+adjustment_enabled = true
+adjustment_contrast = 1.05
+adjustment_saturation = 1.15
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -157,11 +175,15 @@ script = ExtResource("19_event")
 script = ExtResource("7_camera")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_atmo")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-52, -35, 0)
-light_energy = 1.2
+light_color = Color(1, 0.949, 0.839, 1)
+light_energy = 1.3
 shadow_enabled = true
+shadow_opacity = 0.5
+shadow_bias = 0.05
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -219,10 +241,17 @@ text = "Next:"
 
 [node name="ActionMenu" type="VBoxContainer" parent="UI"]
 visible = false
-offset_left = 820.0
-offset_top = 420.0
-offset_right = 1040.0
-offset_bottom = 540.0
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -146.0
+offset_right = -20.0
+offset_bottom = 146.0
+grow_horizontal = 0
+grow_vertical = 2
 theme_override_constants/separation = 8
 script = ExtResource("11_menu")
 

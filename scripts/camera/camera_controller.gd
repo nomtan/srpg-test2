@@ -30,10 +30,9 @@ func focus_on_unit(unit: BattleUnit) -> void:
 	if not camera or not unit: return
 	var target := unit.global_position
 	var destination := target + focus_offset
-	var start := camera.global_position
 	var tween := create_tween()
-	tween.tween_method(func(weight: float) -> void:
-		camera.look_at_from_position(start.lerp(destination, weight), target, Vector3.UP), 0.0, 1.0, 0.25)
+	# アクティブユニットへのフォーカスでは、回転とズームを維持して位置だけを動かす。
+	tween.tween_property(camera, "global_position", destination, 0.25)
 
 
 func pan(screen_delta: Vector2) -> void:
