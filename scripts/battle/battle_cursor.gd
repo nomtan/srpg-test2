@@ -74,6 +74,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			_update_from_mouse(event.position)
 		return
 
+	# Q/E rotate the quarter view even while cursor actions are disabled.
+	if _is_key(event, KEY_Q):
+		if camera_controller:
+			camera_controller.rotate_view(-1)
+			get_viewport().set_input_as_handled()
+		return
+	elif _is_key(event, KEY_E):
+		if camera_controller:
+			camera_controller.rotate_view(1)
+			get_viewport().set_input_as_handled()
+		return
+
 	if not input_enabled:
 		return
 
