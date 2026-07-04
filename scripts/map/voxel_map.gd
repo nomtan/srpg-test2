@@ -18,15 +18,15 @@ var top_colors := {
 
 # Side/body colors — dirt-like undersides as in Minecraft grass blocks
 var side_colors := {
-	"grass":       Color("#8c6040"),
-	"dirt":        Color("#7a5030"),
-	"stone":       Color("#787878"),
-	"rock":        Color("#323232"),
-	"forest":      Color("#8c6040"),
-	"water":       Color("#2a5fa8"),
-	"lava":        Color("#1a0800"),
-	"high_ground": Color("#7a6050"),
-	"wall":        Color("#3a3a42"),
+	"grass":       Color("#a87550"),
+	"dirt":        Color("#966744"),
+	"stone":       Color("#969696"),
+	"rock":        Color("#5e5e5e"),
+	"forest":      Color("#806044"),
+	"water":       Color("#3978c4"),
+	"lava":        Color("#6b2410"),
+	"high_ground": Color("#9b806c"),
+	"wall":        Color("#65656e"),
 }
 
 
@@ -62,9 +62,16 @@ func _create_block(grid_pos: Vector2i, level: int, cell: GridCell) -> void:
 	body.position = world_pos
 	var side_col: Color = side_colors.get(cell.terrain, Color.GRAY)
 	if cell.height > 1:
-		side_col = side_col.darkened(float(cell.height - level - 1) * 0.07)
+		# Keep lower blocks darker for depth, but do not let tall columns lose
+		# their terrain color before lighting and shadows are applied.
+		var depth_shade := minf(float(cell.height - level - 1) * 0.04, 0.14)
+		side_col = side_col.darkened(depth_shade)
 	var bmat := StandardMaterial3D.new()
 	bmat.albedo_color = side_col
+	# Keep the terrain hue readable even on faces turned away from the light.
+	bmat.emission_enabled = true
+	bmat.emission = side_col.darkened(0.65)
+	bmat.emission_energy_multiplier = 0.25
 	bmat.roughness = 0.95
 	body.material_override = bmat
 	add_child(body)

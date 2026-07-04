@@ -94,13 +94,13 @@ func configure(
 	name = unit_id
 
 
-func setup_visual() -> void:
-	var body := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.28
-	capsule.height = 0.9
-	body.mesh = capsule
-	body.position.y = 0.45
+const MODEL_SCALE := 1.0
+const FACING_MODEL_ANGLES := [180.0, -90.0, 0.0, 90.0]
+
+var model_instance: Node3D
+
+
+func setup_visual(model_path: String = "") -> void:
 	body_material = StandardMaterial3D.new()
 	if attack_type == AttackType.RANGED:
 		base_color = Color("#65c8a0") if team == "player" else Color("#d47a42")
@@ -108,8 +108,21 @@ func setup_visual() -> void:
 		base_color = Color("#4ba3ff") if team == "player" else Color("#dc4c4c")
 	body_material.albedo_color = base_color
 	body_material.metallic = 0.15
-	body.material_override = body_material
-	add_child(body)
+
+	if not model_path.is_empty():
+		var packed: PackedScene = load(model_path)
+		model_instance = packed.instantiate()
+		model_instance.scale = Vector3.ONE * MODEL_SCALE
+		add_child(model_instance)
+	else:
+		var body := MeshInstance3D.new()
+		var capsule := CapsuleMesh.new()
+		capsule.radius = 0.28
+		capsule.height = 0.9
+		body.mesh = capsule
+		body.position.y = 0.45
+		body.material_override = body_material
+		add_child(body)
 
 	var marker := MeshInstance3D.new()
 	direction_marker = marker
@@ -141,6 +154,8 @@ func update_facing_visual() -> void:
 	if not direction_marker: return
 	var offsets := [Vector3(0, 1.05, -0.28), Vector3(0.28, 1.05, 0), Vector3(0, 1.05, 0.28), Vector3(-0.28, 1.05, 0)]
 	direction_marker.position = offsets[int(facing)]
+	if model_instance:
+		model_instance.rotation_degrees.y = FACING_MODEL_ANGLES[int(facing)]
 
 
 func set_selected(selected: bool) -> void:

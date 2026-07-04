@@ -13,7 +13,7 @@ func setup(source_grid: GridSystem) -> void:
 
 func spawn_initial_units() -> void:
 	_spawn_unit("vain", "Vain", Vector2i(1, 1), "player", 120, 30, 8, 90, 10)
-	_spawn_unit("acrea", "Acrea", Vector2i(2, 1), "player", 90, 24, 5, 92, 15)
+	_spawn_unit("acrea", "Acrea", Vector2i(2, 1), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, "res://assets/characters/female/base/female_base.gltf")
 	_spawn_unit("glen", "Glen", Vector2i(1, 2), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3)
 	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(20, 38), "enemy", 80, 22, 4, 85, 8)
 	boss.enemy_type = BattleUnit.EnemyType.BOSS
@@ -54,12 +54,13 @@ func _spawn_unit(
 	evasion: int,
 	attack_type: BattleUnit.AttackType = BattleUnit.AttackType.MELEE,
 	min_range: int = 1,
-	max_range: int = 1
+	max_range: int = 1,
+	model_path: String = ""
 ) -> BattleUnit:
 	var unit := BattleUnit.new()
 	unit.configure(unit_id, display_name, grid_pos, team)
 	unit.set_combat_stats(max_hp, power, armor, accuracy, evasion, attack_type, min_range, max_range)
-	unit.setup_visual()
+	unit.setup_visual(model_path)
 	add_child(unit)
 	units.append(unit)
 	grid.set_occupied_unit(grid_pos, unit)
