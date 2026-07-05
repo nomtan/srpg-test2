@@ -23,14 +23,22 @@ func setup(stage_data: StageData, source_grid: GridSystem, unit_manager: UnitMan
 	_spawn_object("lever_1", StageObject.ObjectType.LEVER, Vector2i(3, 3))
 	_spawn_object("door_1", StageObject.ObjectType.DOOR, Vector2i(8, 8))
 	_set_door_blocked(true)
+	_spawn_obstacle("tree_1", Vector2i(20, 5), "res://assets/object/test/Meshy_AI_Ancient_Rooted_Tree_0705160133_texture.glb", 25.0)
 	stage_message.emit("Mission Start: %s" % data.stage_name)
 
 
-func _spawn_object(id: String, type: StageObject.ObjectType, grid_pos: Vector2i) -> void:
+func _spawn_object(id: String, type: StageObject.ObjectType, grid_pos: Vector2i, model_path: String = "", model_scale: float = 1.0) -> void:
 	var object := StageObject.new()
-	object.configure(id, type, grid_pos, grid)
+	object.configure(id, type, grid_pos, grid, model_path, model_scale)
 	add_child(object)
 	objects[grid_pos] = object
+
+
+func _spawn_obstacle(id: String, grid_pos: Vector2i, model_path: String = "", model_scale: float = 1.0) -> void:
+	_spawn_object(id, StageObject.ObjectType.OBSTACLE, grid_pos, model_path, model_scale)
+	var cell := grid.get_cell(grid_pos)
+	cell.walkable = false
+	cell.blocks_movement = true
 
 
 func interact_at(grid_pos: Vector2i) -> bool:

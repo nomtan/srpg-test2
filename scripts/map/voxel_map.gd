@@ -34,10 +34,28 @@ func build_from_grid(source_grid: GridSystem) -> void:
 	grid = source_grid
 	for child in get_children():
 		child.queue_free()
+	_create_background_plane()
 	for grid_pos: Vector2i in grid.cells:
 		var cell := grid.get_cell(grid_pos)
 		for level in cell.height:
 			_create_block(grid_pos, level, cell)
+
+
+func _create_background_plane() -> void:
+	# グリッド端(x/z=0や39付近)に視点が寄ると、カメラを回転・ズームしても
+	# 実グリッド外は何も描画されず背景色が見えて「マップが欠けた」ように見える。
+	# 実際のセルより一回り低い位置に大きな地面を敷いて、その見た目の空白を埋める。
+	var margin := 60.0
+	var bg := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(GridSystem.WIDTH + margin * 2.0, GridSystem.DEPTH + margin * 2.0)
+	bg.mesh = plane
+	bg.position = Vector3(GridSystem.WIDTH * 0.5, 0.97, GridSystem.DEPTH * 0.5)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = top_colors.get("grass", Color("#5a9e3a"))
+	mat.roughness = 1.0
+	bg.material_override = mat
+	add_child(bg)
 
 
 func _create_block(grid_pos: Vector2i, level: int, cell: GridCell) -> void:

@@ -2,9 +2,9 @@ class_name CameraController
 extends Node3D
 
 var camera: Camera3D
-# 元の斜め視点と同じ x/y オフセットで z 成分だけ反転。
-# カメラをマップ手前 (z<0) に置くことで z=0〜39 全体が正面に収まる。
-var focus_offset := Vector3(7.5, 11.7, -9.5)
+# 正投影なので、同じ方向のままカメラを遠ざけても表示倍率は変わらない。
+# 回転中も40x40マップの端がカメラ背面へ回り込まない距離を確保する。
+var focus_offset := Vector3(30.0, 46.8, -38.0)
 var focus_target := Vector3.ZERO
 var rotation_tween: Tween
 
@@ -14,6 +14,7 @@ func setup() -> Camera3D:
 	camera.name = "Camera3D"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 18.0
+	camera.far = 200.0
 	focus_target = Vector3(2.0, 0.8, 2.0)
 	camera.position = focus_target + focus_offset
 	camera.look_at_from_position(camera.position, focus_target, Vector3.UP)
@@ -24,9 +25,9 @@ func setup() -> Camera3D:
 func pulse_focus() -> void:
 	if not camera: return
 	var tween := create_tween()
-	tween.tween_property(camera, "size", 16.0, 0.15)
+	tween.tween_property(camera, "size", 22.0, 0.15)
 	tween.tween_interval(0.25)
-	tween.tween_property(camera, "size", 18.0, 0.2)
+	tween.tween_property(camera, "size", 24.0, 0.2)
 
 func focus_on_unit(unit: BattleUnit) -> void:
 	if not camera or not unit: return
@@ -75,4 +76,4 @@ func _apply_orbit_rotation(angle: float, start_offset: Vector3, target: Vector3)
 
 func zoom_camera(delta: float) -> void:
 	if not camera: return
-	camera.size = clampf(camera.size - delta, 5.0, 30.0)
+	camera.size = clampf(camera.size - delta, 5.0, 36.0)
