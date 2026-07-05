@@ -13,7 +13,7 @@ func setup(source_grid: GridSystem) -> void:
 
 func spawn_initial_units() -> void:
 	_spawn_unit("vain", "Vain", Vector2i(1, 1), "player", 120, 30, 8, 90, 10)
-	_spawn_unit("acrea", "Acrea", Vector2i(2, 1), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, "res://assets/characters/female/base/female_base.gltf")
+	_spawn_unit("acrea", "Acrea", Vector2i(2, 1), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, "res://assets/characters/test/chibi-figure.glb")
 	_spawn_unit("glen", "Glen", Vector2i(1, 2), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3)
 	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(20, 38), "enemy", 80, 22, 4, 85, 8)
 	boss.enemy_type = BattleUnit.EnemyType.BOSS

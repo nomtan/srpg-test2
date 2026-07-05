@@ -94,7 +94,7 @@ func configure(
 	name = unit_id
 
 
-const MODEL_SCALE := 1.0
+const MODEL_SCALE := 7.5
 const FACING_MODEL_ANGLES := [180.0, -90.0, 0.0, 90.0]
 
 var model_instance: Node3D
