@@ -1,5 +1,5 @@
 class_name VoxelMap
-extends Node3D
+extends MapRenderer
 
 const DIRECTIONS := [
 	{"offset": Vector2i(0, -1), "yaw": 0.0},
@@ -12,35 +12,35 @@ const DIRECTIONS := [
 @export var decorations: Array[MapDecorationData] = []
 
 var grid: GridSystem
-var _generated_root: Node3D
 
 func build_from_grid(source_grid: GridSystem) -> void:
 	grid = source_grid
-	if is_instance_valid(_generated_root): _generated_root.free()
-	_generated_root = Node3D.new()
-	_generated_root.name = "GeneratedVisuals"
-	add_child(_generated_root)
+	build_from_map_data(MapData.from_grid(source_grid, decorations))
+
+func build_from_map_data(data: MapData) -> void:
+	begin_render(data)
 	_create_background_plane()
-	for grid_pos: Vector2i in grid.cells:
-		var cell := grid.get_cell(grid_pos)
-		_create_top(grid_pos, cell)
-		_create_cliff_sides(grid_pos, cell)
+	for cell: MapCellVisualData in data.cells:
+		_create_top(cell)
+		_create_cliff_sides(cell)
 	_create_decorations()
 
-func _create_top(grid_pos: Vector2i, cell: GridCell) -> void:
+func _create_top(cell: MapCellVisualData) -> void:
+	var grid_pos := cell.position
 	var scene := visual_theme.top_scene_for(cell.terrain) if visual_theme else null
 	var top := _instantiate(scene)
 	if top:
 		top.position = Vector3(grid_pos.x + 0.5, float(cell.height), grid_pos.y + 0.5)
-		_generated_root.add_child(top)
+		add_to_layer(top, WATER_LAYER if cell.terrain == "water" else TOP_LAYER)
 	else:
 		_create_fallback_top(grid_pos, cell)
 
-func _create_cliff_sides(grid_pos: Vector2i, cell: GridCell) -> void:
+func _create_cliff_sides(cell: MapCellVisualData) -> void:
 	if cell.terrain in ["water", "lava"]: return
+	var grid_pos := cell.position
 	for direction: Dictionary in DIRECTIONS:
 		var neighbor_pos: Vector2i = grid_pos + direction.offset
-		var neighbor := grid.get_cell(neighbor_pos) if grid.is_in_bounds(neighbor_pos) else null
+		var neighbor := map_data.get_cell(neighbor_pos) if map_data.is_in_bounds(neighbor_pos) else null
 		var neighbor_height: int = neighbor.height if neighbor else 0
 		for level in cell.height - neighbor_height:
 			var side_scene := visual_theme.cliff_side if visual_theme else null
@@ -49,18 +49,21 @@ func _create_cliff_sides(grid_pos: Vector2i, cell: GridCell) -> void:
 			var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)
 			side.position = Vector3(grid_pos.x + 0.5, neighbor_height + level + 0.5, grid_pos.y + 0.5) + normal * 0.495
 			side.rotation_degrees.y = float(direction.yaw)
-			_generated_root.add_child(side)
+			add_to_layer(side, CLIFF_LAYER)
 
 func _create_decorations() -> void:
-	for data: MapDecorationData in decorations:
-		if not grid.is_in_bounds(data.grid_position): continue
-		var scene := visual_theme.decoration_scene_for(data.kind) if visual_theme else null
-		var decoration := _instantiate(scene)
-		if not decoration: decoration = _make_fallback_decoration(data.kind)
-		decoration.position = grid.grid_to_world(data.grid_position, data.height_offset)
-		decoration.rotation_degrees.y = data.rotation_degrees
-		decoration.scale = data.scale
-		_generated_root.add_child(decoration)
+	for cell: MapCellVisualData in map_data.cells:
+		for data: MapDecorationData in cell.props:
+			_create_decoration(data, cell.height)
+
+func _create_decoration(data: MapDecorationData, cell_height: int) -> void:
+	var scene := visual_theme.decoration_scene_for(data.kind) if visual_theme else null
+	var decoration := _instantiate(scene)
+	if not decoration: decoration = _make_fallback_decoration(data.kind)
+	decoration.position = Vector3(data.grid_position.x + 0.5, cell_height + data.height_offset, data.grid_position.y + 0.5)
+	decoration.rotation_degrees.y = data.rotation_degrees
+	decoration.scale = data.scale
+	add_to_layer(decoration, PROP_LAYER)
 
 func _instantiate(scene: PackedScene) -> Node3D:
 	if not scene: return null
@@ -70,7 +73,7 @@ func _instantiate(scene: PackedScene) -> Node3D:
 	push_warning("MapVisualTheme scenes must have a Node3D root")
 	return null
 
-func _create_fallback_top(grid_pos: Vector2i, cell: GridCell) -> void:
+func _create_fallback_top(grid_pos: Vector2i, cell: MapCellVisualData) -> void:
 	var part := MeshInstance3D.new()
 	if cell.terrain == "water":
 		var plane := PlaneMesh.new()
@@ -80,15 +83,16 @@ func _create_fallback_top(grid_pos: Vector2i, cell: GridCell) -> void:
 		var stair_base := BoxMesh.new()
 		stair_base.size = Vector3(0.96, 0.18, 0.96)
 		part.mesh = stair_base
-		part.position.y = 0.09
+		# Grid height is the walkable surface, so geometry must extend downward.
+		part.position.y = -stair_base.size.y * 0.5
 	else:
 		var tile := BoxMesh.new()
 		tile.size = Vector3(0.96, 0.2 if cell.terrain == "bridge" else 0.12, 0.96)
 		part.mesh = tile
-		part.position.y = tile.size.y * 0.5
+		part.position.y = -tile.size.y * 0.5
 	part.material_override = _material_for(cell.terrain)
 	part.position += Vector3(grid_pos.x + 0.5, cell.height, grid_pos.y + 0.5)
-	_generated_root.add_child(part)
+	add_to_layer(part, WATER_LAYER if cell.terrain == "water" else TOP_LAYER)
 	if cell.terrain == "stair": _add_stair_steps(grid_pos, cell.height)
 
 func _add_stair_steps(grid_pos: Vector2i, height: int) -> void:
@@ -101,7 +105,7 @@ func _add_stair_steps(grid_pos: Vector2i, height: int) -> void:
 		step.mesh = box
 		step.material_override = _material_for("stair")
 		step.position = Vector3(grid_pos.x + 0.5, height - 0.9 + index * 0.2, grid_pos.y + 0.1 + index * 0.2)
-		_generated_root.add_child(step)
+		add_to_layer(step, TOP_LAYER)
 
 func _make_fallback_cliff(terrain: String) -> Node3D:
 	var side := MeshInstance3D.new()
@@ -155,8 +159,8 @@ func _create_background_plane() -> void:
 	var background := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
 	var margin := 60.0
-	plane.size = Vector2(GridSystem.WIDTH + margin * 2.0, GridSystem.DEPTH + margin * 2.0)
+	plane.size = Vector2(map_data.width + margin * 2.0, map_data.depth + margin * 2.0)
 	background.mesh = plane
-	background.position = Vector3(GridSystem.WIDTH * 0.5, -0.02, GridSystem.DEPTH * 0.5)
+	background.position = Vector3(map_data.width * 0.5, -0.02, map_data.depth * 0.5)
 	background.material_override = _colored_material(Color("#527c3f"))
-	_generated_root.add_child(background)
+	add_to_layer(background, DEBUG_LAYER)

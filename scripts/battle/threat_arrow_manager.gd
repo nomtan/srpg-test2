@@ -7,8 +7,11 @@ var animated_orbs: Array[Dictionary] = []
 
 
 func show_threat_arrows(enemies: Array[BattleUnit], target: BattleUnit) -> void:
+	show_threat_arrows_to_position(enemies, target.global_position)
+
+func show_threat_arrows_to_position(enemies: Array[BattleUnit], target_position: Vector3) -> void:
 	clear_threat_arrows()
-	for enemy in enemies: _create_arrow(enemy.global_position, target.global_position)
+	for enemy in enemies: _create_arrow(enemy.global_position, target_position)
 	set_process(not animated_orbs.is_empty())
 
 func clear_threat_arrows() -> void:

@@ -56,6 +56,7 @@ var selected_skill: SkillData
 var selected_skill_target := Vector2i.ZERO
 var pending_wait_action := false
 var pending_move_path: Array[Vector2i] = []
+var is_move_destination_provisional := false
 var battle_result := ""
 
 
@@ -95,7 +96,7 @@ func _ready() -> void:
 	cursor.setup(grid, camera_controller.setup(), camera_controller)
 	cursor.confirm_pressed.connect(_on_confirm)
 	cursor.cancel_pressed.connect(_on_cancel)
-	cursor.grid_position_changed.connect(_update_unit_info)
+	cursor.grid_position_changed.connect(_on_cursor_grid_position_changed)
 	action_menu.attack_selected.connect(_on_attack_selected)
 	action_menu.wait_selected.connect(_on_wait_selected)
 	action_menu.cancel_selected.connect(_cancel_after_move)
@@ -141,6 +142,11 @@ func _on_confirm() -> void:
 		_confirm_attack(grid_pos)
 	elif cursor.current_mode == BattleCursor.CursorMode.SKILL_TARGETING:
 		_confirm_skill_target(grid_pos)
+	elif cursor.current_mode == BattleCursor.CursorMode.ACTION_MENU:
+		var selected := unit_manager.selected_unit
+		if selected and is_move_destination_provisional and reachable.has(grid_pos):
+			action_menu.close()
+			_confirm_move(grid_pos)
 
 
 func _select_unit(grid_pos: Vector2i) -> void:
@@ -155,6 +161,8 @@ func _select_unit(grid_pos: Vector2i) -> void:
 	unit.has_used_action = false
 	pending_wait_action = false
 	pending_move_path.clear()
+	is_move_destination_provisional = false
+	reachable.clear()
 	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
 	cursor.input_enabled = false
 	action_menu.open(unit)
@@ -164,11 +172,12 @@ func _select_unit(grid_pos: Vector2i) -> void:
 func _on_move_selected() -> void:
 	action_menu.close()
 	var unit := unit_manager.selected_unit
-	var grid_pos := Vector2i(unit.grid_x, unit.grid_z)
-	reachable = pathfinding.find_reachable(grid, grid_pos, unit.move_range, unit.jump_height)
-	_show_move_range(unit, grid_pos)
+	if reachable.is_empty():
+		reachable = pathfinding.find_reachable(grid, original_grid_pos, unit.move_range, unit.jump_height)
+	_show_move_range(unit, original_grid_pos)
 	cursor.current_mode = BattleCursor.CursorMode.MOVE_TARGETING
 	cursor.input_enabled = true
+	_update_move_threat_preview(cursor.grid_position)
 	_update_status("%sの移動先を選択" % unit.unit_name)
 
 
@@ -177,26 +186,28 @@ func _confirm_move(grid_pos: Vector2i) -> void:
 		_update_status("そこへは移動できません")
 		return
 	var unit := unit_manager.selected_unit
-	var origin := Vector2i(unit.grid_x, unit.grid_z)
-	pending_move_path = pathfinding.find_path(grid, unit, grid_pos) if grid_pos != origin else []
-	if grid_pos != origin:
+	var current_position := Vector2i(unit.grid_x, unit.grid_z)
+	pending_move_path = pathfinding.find_path_from(grid, unit, original_grid_pos, grid_pos) if grid_pos != original_grid_pos else []
+	if grid_pos != current_position:
 		unit_manager.move_selected_to(grid_pos)
-	unit.has_moved = grid_pos != origin
-	var enemies: Array[BattleUnit] = threat_system.get_threatening_enemies_for_cell(unit, grid_pos)
-	if not enemies.is_empty(): threat_arrows.show_threat_arrows(enemies, unit)
-	else: threat_arrows.clear_threat_arrows()
-	cursor.clear_reachable()
+	unit.has_moved = grid_pos != original_grid_pos
+	is_move_destination_provisional = true
 	if unit.has_used_action:
+		threat_arrows.clear_threat_arrows()
+		cursor.clear_reachable()
 		_request_final_facing("移動後の向きを選択してください")
 	else:
 		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
-		cursor.input_enabled = false
-		action_menu.open(unit)
-		_update_status("攻撃・スキル・待機を選択してください")
+		cursor.input_enabled = true
+		action_menu.open(unit, true)
+		_update_move_threat_preview(grid_pos)
+		_update_status("移動先は再選択できます / 攻撃・スキル・待機で確定")
 
 
 func _on_attack_selected() -> void:
 	action_menu.close()
+	threat_arrows.clear_threat_arrows()
+	cursor.clear_reachable()
 	var cells := attack_system.get_attackable_cells(unit_manager.selected_unit)
 	cursor.show_attack_range(cells)
 	cursor.current_mode = BattleCursor.CursorMode.ATTACK_TARGETING
@@ -205,6 +216,8 @@ func _on_attack_selected() -> void:
 
 func _on_skill_menu_requested() -> void:
 	action_menu.close()
+	threat_arrows.clear_threat_arrows()
+	cursor.clear_reachable()
 	skill_menu.open(unit_manager.selected_unit, skill_database.get_skills_for_unit(unit_manager.selected_unit))
 	cursor.current_mode = BattleCursor.CursorMode.SKILL_MENU
 
@@ -259,8 +272,7 @@ func _on_skill_confirm_cancelled() -> void:
 
 func _on_skill_menu_cancelled() -> void:
 	skill_menu.close()
-	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
-	action_menu.open(unit_manager.selected_unit)
+	_return_to_action_menu()
 
 
 func _confirm_attack(grid_pos: Vector2i) -> void:
@@ -315,6 +327,8 @@ func _on_combat_cancelled() -> void:
 
 func _on_wait_selected() -> void:
 	action_menu.close()
+	threat_arrows.clear_threat_arrows()
+	cursor.clear_reachable()
 	pending_wait_action = not unit_manager.selected_unit.has_used_action
 	_request_final_facing("待機後の向きを選択してください")
 
@@ -360,6 +374,8 @@ func _finish_action() -> void:
 	unit_manager.mark_unit_acted(finished_actor, finished_actor.has_moved)
 	unit_manager.clear_selection()
 	cursor.clear_reachable()
+	reachable.clear()
+	is_move_destination_provisional = false
 	cursor.current_mode = BattleCursor.CursorMode.IDLE
 	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
@@ -371,15 +387,16 @@ func _finish_action() -> void:
 
 func _on_cancel() -> void:
 	if cursor.current_mode == BattleCursor.CursorMode.ATTACK_TARGETING:
-		cursor.clear_reachable()
-		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
-		cursor.input_enabled = false
-		action_menu.open(unit_manager.selected_unit)
+		_return_to_action_menu()
 	elif cursor.current_mode == BattleCursor.CursorMode.MOVE_TARGETING:
-		cursor.clear_reachable()
-		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
-		cursor.input_enabled = false
-		action_menu.open(unit_manager.selected_unit)
+		if is_move_destination_provisional:
+			_return_to_action_menu()
+		else:
+			threat_arrows.clear_threat_arrows()
+			cursor.clear_reachable()
+			cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+			cursor.input_enabled = false
+			action_menu.open(unit_manager.selected_unit)
 	elif cursor.current_mode == BattleCursor.CursorMode.ACTION_MENU:
 		_cancel_after_move()
 	elif cursor.current_mode == BattleCursor.CursorMode.COMBAT_CONFIRM:
@@ -402,14 +419,31 @@ func _cancel_after_move() -> void:
 	if Vector2i(unit.grid_x, unit.grid_z) != original_grid_pos:
 		unit_manager.move_unit_to_grid(unit, original_grid_pos)
 	pending_move_path.clear()
+	is_move_destination_provisional = false
 	unit.has_moved = false
 	unit.set_facing(original_facing)
 	cursor.set_grid_position(original_grid_pos)
 	unit_manager.clear_selection()
 	cursor.clear_reachable()
+	reachable.clear()
 	cursor.current_mode = BattleCursor.CursorMode.IDLE
 	cursor.input_enabled = true
 	_update_status("行動選択を解除しました")
+
+
+func _return_to_action_menu() -> void:
+	var unit := unit_manager.selected_unit
+	cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
+	if unit and is_move_destination_provisional:
+		_show_move_range(unit, original_grid_pos)
+		_update_move_threat_preview(Vector2i(unit.grid_x, unit.grid_z))
+		cursor.input_enabled = true
+		action_menu.open(unit, true)
+		_update_status("移動先は再選択できます / 攻撃・スキル・待機で確定")
+	else:
+		cursor.clear_reachable()
+		cursor.input_enabled = false
+		action_menu.open(unit)
 
 
 func _on_phase_changed(turn_count: int, phase: TurnManager.TurnPhase) -> void:
@@ -470,6 +504,29 @@ func _update_unit_info(grid_pos: Vector2i) -> void:
 				unit_info.show_blocked_target(unit)
 				return
 	unit_info.show_cell(grid.get_cell(grid_pos), unit)
+
+
+func _on_cursor_grid_position_changed(grid_pos: Vector2i) -> void:
+	_update_unit_info(grid_pos)
+	if cursor.current_mode == BattleCursor.CursorMode.MOVE_TARGETING:
+		_update_move_threat_preview(grid_pos)
+	elif cursor.current_mode == BattleCursor.CursorMode.ACTION_MENU and is_move_destination_provisional:
+		# Keep showing the threat for the confirmed provisional destination.
+		pass
+	else:
+		threat_arrows.clear_threat_arrows()
+
+
+func _update_move_threat_preview(grid_pos: Vector2i) -> void:
+	var unit := unit_manager.selected_unit
+	if not unit or not reachable.has(grid_pos):
+		threat_arrows.clear_threat_arrows()
+		return
+	var enemies: Array[BattleUnit] = threat_system.get_threatening_enemies_for_cell(unit, grid_pos)
+	if enemies.is_empty():
+		threat_arrows.clear_threat_arrows()
+		return
+	threat_arrows.show_threat_arrows_to_position(enemies, grid.grid_to_world(grid_pos, 0.05))
 
 
 func _on_combat_message(message: String) -> void:

@@ -53,7 +53,9 @@ func _lowest_cost_index(frontier: Array[Vector2i], costs: Dictionary) -> int:
 	return best_index
 
 func find_path(grid: GridSystem, unit: BattleUnit, destination: Vector2i) -> Array[Vector2i]:
-	var start := Vector2i(unit.grid_x, unit.grid_z)
+	return find_path_from(grid, unit, Vector2i(unit.grid_x, unit.grid_z), destination)
+
+func find_path_from(grid: GridSystem, unit: BattleUnit, start: Vector2i, destination: Vector2i) -> Array[Vector2i]:
 	var frontier: Array[Vector2i] = [start]
 	var came_from: Dictionary = {start: start}
 	while not frontier.is_empty():
@@ -63,7 +65,8 @@ func find_path(grid: GridSystem, unit: BattleUnit, destination: Vector2i) -> Arr
 			var next_pos := current + direction
 			if not grid.is_in_bounds(next_pos) or came_from.has(next_pos): continue
 			var cell := grid.get_cell(next_pos)
-			if not cell.walkable or cell.blocks_movement or (cell.occupied_unit and next_pos != destination): continue
+			if not cell.walkable or cell.blocks_movement: continue
+			if cell.occupied_unit and cell.occupied_unit != unit and next_pos != destination: continue
 			if absi(cell.height - grid.get_cell(current).height) > unit.jump_height: continue
 			came_from[next_pos] = current
 			frontier.append(next_pos)

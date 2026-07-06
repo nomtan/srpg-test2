@@ -1,6 +1,8 @@
 class_name UnitManager
 extends Node3D
 
+const ENABLE_DEBUG_NEARBY_ENEMY := true
+
 var grid: GridSystem
 var units: Array[BattleUnit] = []
 var selected_unit: BattleUnit
@@ -15,6 +17,10 @@ func spawn_initial_units() -> void:
 	_spawn_unit("vain", "Vain", Vector2i(1, 1), "player", 120, 30, 8, 90, 10)
 	_spawn_unit("acrea", "Acrea", Vector2i(2, 1), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, "res://assets/characters/test/chibi-figure2.glb")
 	_spawn_unit("glen", "Glen", Vector2i(1, 2), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3)
+	var debug_enemy: BattleUnit
+	if ENABLE_DEBUG_NEARBY_ENEMY:
+		debug_enemy = _spawn_unit("debug_bandit", "Debug Bandit", Vector2i(5, 2), "enemy", 55, 16, 3, 80, 6)
+		debug_enemy.enemy_type = BattleUnit.EnemyType.AGGRESSIVE
 	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(20, 38), "enemy", 80, 22, 4, 85, 8)
 	boss.enemy_type = BattleUnit.EnemyType.BOSS
 	var sniper := _spawn_unit("bandit_b", "Bandit B", Vector2i(18, 38), "enemy", 70, 18, 3, 80, 10, BattleUnit.AttackType.RANGED, 2, 3)
@@ -24,6 +30,8 @@ func spawn_initial_units() -> void:
 	get_unit_by_id("glen").configure_role("archer", "弓術師", BattleUnit.ElementType.WIND, 25, ["aimed_shot", "piercing_arrow"])
 	boss.configure_role("bandit", "盗賊", BattleUnit.ElementType.NONE, 15, ["heavy_attack"])
 	sniper.configure_role("enemy_archer", "敵弓兵", BattleUnit.ElementType.WIND, 20, ["aimed_shot"])
+	if debug_enemy:
+		debug_enemy.configure_role("bandit", "盗賊", BattleUnit.ElementType.NONE, 10, ["heavy_attack"])
 	get_unit_by_id("vain").equipped_weapon_id = "iron_sword"
 	get_unit_by_id("vain").equipped_armor_id = "leather_armor"
 	get_unit_by_id("vain").equipped_accessory_id = "power_ring"
@@ -35,11 +43,16 @@ func spawn_initial_units() -> void:
 	get_unit_by_id("glen").equipped_accessory_id = "accuracy_lens"
 	boss.equipped_weapon_id = "iron_axe"; boss.equipped_armor_id = "leather_armor"
 	sniper.equipped_weapon_id = "short_bow"; sniper.equipped_armor_id = "leather_armor"
+	if debug_enemy:
+		debug_enemy.equipped_weapon_id = "iron_axe"
+		debug_enemy.equipped_armor_id = "leather_armor"
 	get_unit_by_id("vain").unlocked_job_ids = ["swordsman", "magic_swordsman"]
 	get_unit_by_id("acrea").unlocked_job_ids = ["magic_swordsman", "swordsman"]
 	get_unit_by_id("glen").unlocked_job_ids = ["archer", "swordsman"]
 	boss.unlocked_job_ids = ["bandit"]
 	sniper.unlocked_job_ids = ["enemy_archer"]
+	if debug_enemy:
+		debug_enemy.unlocked_job_ids = ["bandit"]
 
 
 func _spawn_unit(
