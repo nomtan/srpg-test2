@@ -1,166 +1,162 @@
 class_name VoxelMap
 extends Node3D
 
+const DIRECTIONS := [
+	{"offset": Vector2i(0, -1), "yaw": 0.0},
+	{"offset": Vector2i(1, 0), "yaw": 90.0},
+	{"offset": Vector2i(0, 1), "yaw": 180.0},
+	{"offset": Vector2i(-1, 0), "yaw": 270.0},
+]
+
+@export var visual_theme: MapVisualTheme
+@export var decorations: Array[MapDecorationData] = []
+
 var grid: GridSystem
-
-# Top face colors (visible surface) — Minecraft-style bright terrain
-var top_colors := {
-	"grass":       Color("#5a9e3a"),
-	"dirt":        Color("#9a7055"),
-	"stone":       Color("#909090"),
-	"rock":        Color("#4a4a4a"),
-	"forest":      Color("#2d5c25"),
-	"water":       Color("#3a7fd5"),
-	"lava":        Color("#ff5500"),
-	"high_ground": Color("#8ab870"),
-	"wall":        Color("#5a5a60"),
-}
-
-# Side/body colors — dirt-like undersides as in Minecraft grass blocks
-var side_colors := {
-	"grass":       Color("#a87550"),
-	"dirt":        Color("#966744"),
-	"stone":       Color("#969696"),
-	"rock":        Color("#5e5e5e"),
-	"forest":      Color("#806044"),
-	"water":       Color("#3978c4"),
-	"lava":        Color("#6b2410"),
-	"high_ground": Color("#9b806c"),
-	"wall":        Color("#65656e"),
-}
-
+var _generated_root: Node3D
 
 func build_from_grid(source_grid: GridSystem) -> void:
 	grid = source_grid
-	for child in get_children():
-		child.queue_free()
+	if is_instance_valid(_generated_root): _generated_root.free()
+	_generated_root = Node3D.new()
+	_generated_root.name = "GeneratedVisuals"
+	add_child(_generated_root)
 	_create_background_plane()
 	for grid_pos: Vector2i in grid.cells:
 		var cell := grid.get_cell(grid_pos)
-		for level in cell.height:
-			_create_block(grid_pos, level, cell)
+		_create_top(grid_pos, cell)
+		_create_cliff_sides(grid_pos, cell)
+	_create_decorations()
 
+func _create_top(grid_pos: Vector2i, cell: GridCell) -> void:
+	var scene := visual_theme.top_scene_for(cell.terrain) if visual_theme else null
+	var top := _instantiate(scene)
+	if top:
+		top.position = Vector3(grid_pos.x + 0.5, float(cell.height), grid_pos.y + 0.5)
+		_generated_root.add_child(top)
+	else:
+		_create_fallback_top(grid_pos, cell)
+
+func _create_cliff_sides(grid_pos: Vector2i, cell: GridCell) -> void:
+	if cell.terrain in ["water", "lava"]: return
+	for direction: Dictionary in DIRECTIONS:
+		var neighbor_pos: Vector2i = grid_pos + direction.offset
+		var neighbor := grid.get_cell(neighbor_pos) if grid.is_in_bounds(neighbor_pos) else null
+		var neighbor_height: int = neighbor.height if neighbor else 0
+		for level in cell.height - neighbor_height:
+			var side_scene := visual_theme.cliff_side if visual_theme else null
+			var side := _instantiate(side_scene)
+			if not side: side = _make_fallback_cliff(cell.terrain)
+			var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)
+			side.position = Vector3(grid_pos.x + 0.5, neighbor_height + level + 0.5, grid_pos.y + 0.5) + normal * 0.495
+			side.rotation_degrees.y = float(direction.yaw)
+			_generated_root.add_child(side)
+
+func _create_decorations() -> void:
+	for data: MapDecorationData in decorations:
+		if not grid.is_in_bounds(data.grid_position): continue
+		var scene := visual_theme.decoration_scene_for(data.kind) if visual_theme else null
+		var decoration := _instantiate(scene)
+		if not decoration: decoration = _make_fallback_decoration(data.kind)
+		decoration.position = grid.grid_to_world(data.grid_position, data.height_offset)
+		decoration.rotation_degrees.y = data.rotation_degrees
+		decoration.scale = data.scale
+		_generated_root.add_child(decoration)
+
+func _instantiate(scene: PackedScene) -> Node3D:
+	if not scene: return null
+	var instance := scene.instantiate()
+	if instance is Node3D: return instance
+	instance.free()
+	push_warning("MapVisualTheme scenes must have a Node3D root")
+	return null
+
+func _create_fallback_top(grid_pos: Vector2i, cell: GridCell) -> void:
+	var part := MeshInstance3D.new()
+	if cell.terrain == "water":
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(0.98, 0.98)
+		part.mesh = plane
+	elif cell.terrain == "stair":
+		var stair_base := BoxMesh.new()
+		stair_base.size = Vector3(0.96, 0.18, 0.96)
+		part.mesh = stair_base
+		part.position.y = 0.09
+	else:
+		var tile := BoxMesh.new()
+		tile.size = Vector3(0.96, 0.2 if cell.terrain == "bridge" else 0.12, 0.96)
+		part.mesh = tile
+		part.position.y = tile.size.y * 0.5
+	part.material_override = _material_for(cell.terrain)
+	part.position += Vector3(grid_pos.x + 0.5, cell.height, grid_pos.y + 0.5)
+	_generated_root.add_child(part)
+	if cell.terrain == "stair": _add_stair_steps(grid_pos, cell.height)
+
+func _add_stair_steps(grid_pos: Vector2i, height: int) -> void:
+	# The logical cell surface stays at `height`; these steps only bridge the
+	# visible one-level rise from the neighboring cell.
+	for index in 5:
+		var step := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(0.9, 0.12, 0.19)
+		step.mesh = box
+		step.material_override = _material_for("stair")
+		step.position = Vector3(grid_pos.x + 0.5, height - 0.9 + index * 0.2, grid_pos.y + 0.1 + index * 0.2)
+		_generated_root.add_child(step)
+
+func _make_fallback_cliff(terrain: String) -> Node3D:
+	var side := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.96, 0.96, 0.08)
+	side.mesh = box
+	side.material_override = _material_for("stone" if terrain in ["stone", "stone_road", "rock", "wall"] else "dirt")
+	return side
+
+func _make_fallback_decoration(kind: String) -> Node3D:
+	var part := MeshInstance3D.new()
+	if kind == "flag_placeholder":
+		var pole := BoxMesh.new()
+		pole.size = Vector3(0.08, 1.2, 0.08)
+		part.mesh = pole
+		part.position.y = 0.6
+		part.material_override = _colored_material(Color("#76503a"))
+	elif kind == "broken_stone":
+		var rock := SphereMesh.new()
+		rock.radius = 0.22
+		rock.height = 0.3
+		part.mesh = rock
+		part.position.y = 0.12
+		part.material_override = _colored_material(Color("#77736d"))
+	else:
+		var grass := CylinderMesh.new()
+		grass.top_radius = 0.05
+		grass.bottom_radius = 0.22
+		grass.height = 0.35
+		part.mesh = grass
+		part.position.y = 0.17
+		part.material_override = _colored_material(Color("#3f7d32"))
+	return part
+
+func _material_for(terrain: String) -> StandardMaterial3D:
+	var colors := {"grass": Color("#69a947"), "dirt": Color("#8c6748"), "forest": Color("#477b38"), "stone": Color("#817f78"), "stone_road": Color("#99958b"), "rock": Color("#55545a"), "wall": Color("#686872"), "high_ground": Color("#79a85e"), "water": Color("#3a83ce"), "lava": Color("#e64d18"), "bridge": Color("#9b6b3f"), "stair": Color("#aaa49a")}
+	var material := _colored_material(colors.get(terrain, Color.GRAY))
+	if terrain == "water":
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.albedo_color.a = 0.78
+		material.roughness = 0.08
+	return material
+
+func _colored_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 0.92
+	return material
 
 func _create_background_plane() -> void:
-	# グリッド端(x/z=0や39付近)に視点が寄ると、カメラを回転・ズームしても
-	# 実グリッド外は何も描画されず背景色が見えて「マップが欠けた」ように見える。
-	# 実際のセルより一回り低い位置に大きな地面を敷いて、その見た目の空白を埋める。
+	var background := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
 	var margin := 60.0
-	var bg := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
 	plane.size = Vector2(GridSystem.WIDTH + margin * 2.0, GridSystem.DEPTH + margin * 2.0)
-	bg.mesh = plane
-	bg.position = Vector3(GridSystem.WIDTH * 0.5, 0.97, GridSystem.DEPTH * 0.5)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = top_colors.get("grass", Color("#5a9e3a"))
-	mat.roughness = 1.0
-	bg.material_override = mat
-	add_child(bg)
-
-
-func _create_block(grid_pos: Vector2i, level: int, cell: GridCell) -> void:
-	var is_top := level == cell.height - 1
-	var world_pos := Vector3(grid_pos.x + 0.5, float(level) + 0.5, grid_pos.y + 0.5)
-
-	if cell.terrain == "water":
-		if is_top:
-			_create_water_surface(world_pos)
-		return
-
-	if cell.terrain == "lava":
-		if is_top:
-			_create_lava_surface(world_pos)
-		return
-
-	# Body block — sides use darker dirt/rock color
-	var body := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3.ONE * 0.96
-	body.mesh = box
-	body.position = world_pos
-	var side_col: Color = side_colors.get(cell.terrain, Color.GRAY)
-	if cell.height > 1:
-		# Keep lower blocks darker for depth, but do not let tall columns lose
-		# their terrain color before lighting and shadows are applied.
-		var depth_shade := minf(float(cell.height - level - 1) * 0.04, 0.14)
-		side_col = side_col.darkened(depth_shade)
-	var bmat := StandardMaterial3D.new()
-	bmat.albedo_color = side_col
-	# Keep the terrain hue readable even on faces turned away from the light.
-	bmat.emission_enabled = true
-	bmat.emission = side_col.darkened(0.65)
-	bmat.emission_energy_multiplier = 0.25
-	bmat.roughness = 0.95
-	body.material_override = bmat
-	add_child(body)
-
-	# Top face — bright terrain color, overlaid just above the box
-	if is_top:
-		var top := MeshInstance3D.new()
-		var plane := PlaneMesh.new()
-		plane.size = Vector2(0.96, 0.96)
-		top.mesh = plane
-		top.position = world_pos + Vector3(0.0, 0.481, 0.0)
-		var top_col: Color = top_colors.get(cell.terrain, Color.WHITE)
-		var tmat := StandardMaterial3D.new()
-		tmat.albedo_color = top_col
-		tmat.roughness = 0.9
-		top.material_override = tmat
-		add_child(top)
-
-
-func _create_lava_surface(world_pos: Vector3) -> void:
-	# Dark obsidian base
-	var bed := MeshInstance3D.new()
-	var bed_mesh := BoxMesh.new()
-	bed_mesh.size = Vector3(0.96, 0.55, 0.96)
-	bed.mesh = bed_mesh
-	bed.position = world_pos + Vector3(0.0, -0.12, 0.0)
-	var bmat := StandardMaterial3D.new()
-	bmat.albedo_color = Color("#1a0800")
-	bmat.roughness = 1.0
-	bed.material_override = bmat
-	add_child(bed)
-
-	# Glowing lava surface
-	var lava := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(0.96, 0.96)
-	lava.mesh = plane
-	lava.position = world_pos + Vector3(0.0, 0.3, 0.0)
-	var lmat := StandardMaterial3D.new()
-	lmat.albedo_color = Color("#ff4400")
-	lmat.emission_enabled = true
-	lmat.emission = Color("#ff2200")
-	lmat.emission_energy_multiplier = 2.0
-	lmat.roughness = 0.0
-	lava.material_override = lmat
-	add_child(lava)
-
-
-func _create_water_surface(world_pos: Vector3) -> void:
-	# Shallow river bed
-	var bed := MeshInstance3D.new()
-	var bed_mesh := BoxMesh.new()
-	bed_mesh.size = Vector3(0.96, 0.5, 0.96)
-	bed.mesh = bed_mesh
-	bed.position = world_pos + Vector3(0.0, -0.1, 0.0)
-	var bmat := StandardMaterial3D.new()
-	bmat.albedo_color = Color("#4a3828")
-	bmat.roughness = 1.0
-	bed.material_override = bmat
-	add_child(bed)
-
-	# Translucent water surface plane
-	var water := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(0.96, 0.96)
-	water.mesh = plane
-	water.position = world_pos + Vector3(0.0, 0.35, 0.0)
-	var wmat := StandardMaterial3D.new()
-	wmat.albedo_color = Color(0.23, 0.50, 0.84, 0.78)
-	wmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	wmat.roughness = 0.05
-	wmat.metallic = 0.1
-	water.material_override = wmat
-	add_child(water)
+	background.mesh = plane
+	background.position = Vector3(GridSystem.WIDTH * 0.5, -0.02, GridSystem.DEPTH * 0.5)
+	background.material_override = _colored_material(Color("#527c3f"))
+	_generated_root.add_child(background)

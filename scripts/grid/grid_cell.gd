@@ -33,7 +33,7 @@ func _init(
 
 func _apply_terrain_effects() -> void:
 	match terrain:
-		"stone": defense_bonus = 1
+		"stone", "stone_road", "bridge": defense_bonus = 1
 		"forest":
 			move_cost = 2
 			evasion_bonus = 15
@@ -41,6 +41,9 @@ func _apply_terrain_effects() -> void:
 			move_cost = 2
 			evasion_bonus = -10
 		"high_ground":
+			evasion_bonus = 5
+			defense_bonus = 1
+		"stair":
 			evasion_bonus = 5
 			defense_bonus = 1
 		"lava":

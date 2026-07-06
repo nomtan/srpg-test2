@@ -57,9 +57,9 @@ func generate_grid() -> void:
 				elif x in [30, 31] and z == 12:
 					terrain = "forest"
 				elif x == 15 and z == 10:
-					terrain = "stone"; height = 2
+					terrain = "stair"; height = 2
 				elif x == 24 and z == 10:
-					terrain = "stone"; height = 2
+					terrain = "stair"; height = 2
 				elif x in [11, 12] and z == 13:
 					terrain = "high_ground"; height = 2
 				elif x in [27, 28] and z == 13:
@@ -68,7 +68,7 @@ func generate_grid() -> void:
 			# ── RIVER (z=14) ───────────────────────────────────────────────
 			elif z == 14:
 				if x in [6, 19, 33]:
-					terrain = "grass"
+					terrain = "bridge"
 				else:
 					terrain = "water"; move_cost = 2
 
@@ -85,9 +85,9 @@ func generate_grid() -> void:
 				elif x == 29 and z == 16:
 					terrain = "rock"; height = 2; walkable = false
 				elif x in [16, 17] and z == 17:
-					terrain = "stone"; height = 2
+					terrain = "stone_road"; height = 2
 				elif x in [22, 23] and z == 17:
-					terrain = "stone"; height = 2
+					terrain = "stone_road"; height = 2
 				elif x in [7, 8] and z == 18:
 					terrain = "forest"
 				elif x in [31, 32] and z == 18:
