@@ -14,8 +14,8 @@ func setup() -> Camera3D:
 	camera.name = "Camera3D"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 18.0
-	camera.far = 200.0
-	focus_target = Vector3(2.0, 0.8, 2.0)
+	camera.far = 350.0
+	focus_target = Vector3(3.5, 0.8, 3.5)
 	camera.position = focus_target + focus_offset
 	camera.look_at_from_position(camera.position, focus_target, Vector3.UP)
 	add_child(camera)
@@ -76,4 +76,4 @@ func _apply_orbit_rotation(angle: float, start_offset: Vector3, target: Vector3)
 
 func zoom_camera(delta: float) -> void:
 	if not camera: return
-	camera.size = clampf(camera.size - delta, 5.0, 36.0)
+	camera.size = clampf(camera.size - delta, 5.0, 96.0)

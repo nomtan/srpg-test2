@@ -1,8 +1,12 @@
 class_name GridSystem
 extends Node
 
-const WIDTH := 40
-const DEPTH := 40
+const WIDTH := 120
+const DEPTH := 120
+const DESIGN_WIDTH := 40
+const DESIGN_DEPTH := 40
+const MIN_HEIGHT := 1
+const MAX_HEIGHT := 15
 const CELL_SIZE := 1.0
 
 var cells: Dictionary = {}
@@ -10,8 +14,10 @@ var cells: Dictionary = {}
 
 func generate_grid() -> void:
 	cells.clear()
-	for z in DEPTH:
-		for x in WIDTH:
+	for real_z in DEPTH:
+		for real_x in WIDTH:
+			var x := floori(float(real_x) * float(DESIGN_WIDTH) / float(WIDTH))
+			var z := floori(float(real_z) * float(DESIGN_DEPTH) / float(DEPTH))
 			var height := 1
 			var terrain := "grass"
 			var walkable := true
@@ -203,9 +209,19 @@ func generate_grid() -> void:
 					if x in [17, 18, 21, 22] and z == 38:
 						terrain = "stone"
 
-			cells[Vector2i(x, z)] = GridCell.new(
-				x, z, height, terrain, walkable, move_cost
+			height = max(height, _northwest_slope_height(real_x, real_z))
+			cells[Vector2i(real_x, real_z)] = GridCell.new(
+				real_x, real_z, height, terrain, walkable, move_cost
 			)
+
+
+func _northwest_slope_height(x: int, z: int) -> int:
+	var center_x := float(WIDTH - 1) * 0.5
+	var center_z := float(DEPTH - 1) * 0.5
+	var west_influence := clampf((center_x - float(x)) / center_x, 0.0, 1.0)
+	var north_influence := clampf((center_z - float(z)) / center_z, 0.0, 1.0)
+	var height_ratio := (west_influence + north_influence) * 0.5
+	return clampi(MIN_HEIGHT + int(round(height_ratio * float(MAX_HEIGHT - MIN_HEIGHT))), MIN_HEIGHT, MAX_HEIGHT)
 
 
 func is_in_bounds(position: Vector2i) -> bool:

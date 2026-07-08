@@ -10,7 +10,7 @@ enum CursorMode { IDLE, MOVE_TARGETING, ACTION_MENU, ATTACK_TARGETING, COMBAT_CO
 var grid: GridSystem
 var camera: Camera3D
 var camera_controller: CameraController
-var grid_position := Vector2i(1, 1)
+var grid_position := Vector2i(3, 3)
 var cursor_mesh: MeshInstance3D
 var range_root: Node3D
 var input_enabled: bool = true
@@ -177,7 +177,7 @@ func _update_from_mouse(screen_position: Vector2) -> void:
 	var ray_origin := camera.project_ray_origin(screen_position)
 	var ray_direction := camera.project_ray_normal(screen_position)
 	# 高い面から順に交差させ、その高さを実際の表面に持つ最初のマスを採用する。
-	for surface_height in range(3, 0, -1):
+	for surface_height in range(GridSystem.MAX_HEIGHT, GridSystem.MIN_HEIGHT - 1, -1):
 		var plane := Plane(Vector3.UP, float(surface_height))
 		var hit = plane.intersects_ray(ray_origin, ray_direction)
 		if hit == null:

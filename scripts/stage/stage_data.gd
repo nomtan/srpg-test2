@@ -11,6 +11,6 @@ enum DefeatCondition { ALL_PLAYER_DEAD, MAIN_CHARACTER_DEAD, TURN_LIMIT, NPC_DEA
 @export var main_character_id := "vain"
 @export var reinforcement_turn := 3
 @export var turn_limit := 12
-var player_spawn: Array[Vector2i] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(1, 2)]
-var enemy_spawn: Array[Vector2i] = [Vector2i(6, 6), Vector2i(5, 6)]
+var player_spawn: Array[Vector2i] = [Vector2i(3, 3), Vector2i(6, 3), Vector2i(3, 6)]
+var enemy_spawn: Array[Vector2i] = [Vector2i(18, 18), Vector2i(15, 18)]
 var event_list: Array[Dictionary] = [{"type": "reinforcement", "turn": 3}]

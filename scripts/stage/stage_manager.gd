@@ -11,6 +11,7 @@ var triggers: TriggerManager
 var events: EventManager
 var objects: Dictionary = {}
 var finished := false
+const DOOR_POSITION := Vector2i(24, 24)
 
 
 func setup(stage_data: StageData, source_grid: GridSystem, unit_manager: UnitManager, trigger_manager: TriggerManager, event_manager: EventManager) -> void:
@@ -19,11 +20,11 @@ func setup(stage_data: StageData, source_grid: GridSystem, unit_manager: UnitMan
 	units = unit_manager
 	triggers = trigger_manager
 	events = event_manager
-	_spawn_object("chest_1", StageObject.ObjectType.CHEST, Vector2i(11, 10))
-	_spawn_object("lever_1", StageObject.ObjectType.LEVER, Vector2i(3, 3))
-	_spawn_object("door_1", StageObject.ObjectType.DOOR, Vector2i(8, 8))
+	_spawn_object("chest_1", StageObject.ObjectType.CHEST, Vector2i(33, 30))
+	_spawn_object("lever_1", StageObject.ObjectType.LEVER, Vector2i(9, 9))
+	_spawn_object("door_1", StageObject.ObjectType.DOOR, DOOR_POSITION)
 	_set_door_blocked(true)
-	_spawn_obstacle("tree_1", Vector2i(20, 5), "res://assets/object/test/Meshy_AI_Ancient_Rooted_Tree_0705160133_texture.glb", 25.0)
+	_spawn_obstacle("tree_1", Vector2i(60, 15), "res://assets/object/test/Meshy_AI_Ancient_Rooted_Tree_0705160133_texture.glb", 25.0)
 	stage_message.emit("Mission Start: %s" % data.stage_name)
 
 
@@ -58,11 +59,11 @@ func interact_at(grid_pos: Vector2i) -> bool:
 
 
 func _set_door_blocked(blocked: bool) -> void:
-	var cell := grid.get_cell(Vector2i(8, 8))
+	var cell := grid.get_cell(DOOR_POSITION)
 	cell.walkable = not blocked
 	cell.blocks_movement = blocked
 	cell.blocks_line_of_sight = blocked
-	var door: StageObject = objects.get(Vector2i(8, 8))
+	var door: StageObject = objects.get(DOOR_POSITION)
 	if door:
 		door.visible = blocked
 		if not blocked: door.activated = true
@@ -70,7 +71,7 @@ func _set_door_blocked(blocked: bool) -> void:
 
 func on_turn_started(turn_count: int) -> void:
 	if triggers.should_fire("reinforcement", turn_count >= data.reinforcement_turn):
-		units.spawn_reinforcement("bandit_c", "Bandit C", Vector2i(7, 14), BattleUnit.EnemyType.GUARD)
+		units.spawn_reinforcement("bandit_c", "Bandit C", Vector2i(21, 42), BattleUnit.EnemyType.GUARD)
 		events.fire_event("Reinforcement")
 		stage_message.emit("Reinforcement!")
 

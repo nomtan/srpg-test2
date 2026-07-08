@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="MapVisualTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_visual_theme.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
