@@ -14,6 +14,8 @@ extends Resource
 @export var stair_block: PackedScene
 @export var stair_top: PackedScene
 @export var cliff_side: PackedScene
+@export var cliff_side_top: PackedScene
+@export var cliff_stone: PackedScene
 @export var cliff_corner: PackedScene
 @export var cliff_corner_outer: PackedScene
 @export var cliff_corner_inner: PackedScene

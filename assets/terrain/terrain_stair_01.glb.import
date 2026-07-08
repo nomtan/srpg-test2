@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ml5nr7r8btc1"
-path="res://.godot/imported/terrain_lava_plane_01.glb-57ef8eac41fd864db89b269dcf71191d.scn"
+uid="uid://b3cnu85hnbbqt"
+path="res://.godot/imported/terrain_stair_01.glb-d5176e1e0e660cfd11bced4544265ee2.scn"
 
 [deps]
 
-source_file="res://assets/terrain/terrain_lava_plane_01.glb"
-dest_files=["res://.godot/imported/terrain_lava_plane_01.glb-57ef8eac41fd864db89b269dcf71191d.scn"]
+source_file="res://assets/terrain/terrain_stair_01.glb"
+dest_files=["res://.godot/imported/terrain_stair_01.glb-d5176e1e0e660cfd11bced4544265ee2.scn"]
 
 [params]
 

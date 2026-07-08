@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ck3s5i86hm1pp"
-path="res://.godot/imported/terrain_water_plane_01.glb-6bf41077afc93a1c8cd464568658c710.scn"
+uid="uid://csbxki6d7p5al"
+path="res://.godot/imported/terrain_cliff_side_top_01.glb-202497aec974bd188d893228fd91e0e1.scn"
 
 [deps]
 
-source_file="res://assets/terrain/terrain_water_plane_01.glb"
-dest_files=["res://.godot/imported/terrain_water_plane_01.glb-6bf41077afc93a1c8cd464568658c710.scn"]
+source_file="res://assets/terrain/terrain_cliff_side_top_01.glb"
+dest_files=["res://.godot/imported/terrain_cliff_side_top_01.glb-202497aec974bd188d893228fd91e0e1.scn"]
 
 [params]
 

@@ -31,7 +31,7 @@ func _create_top(cell: MapCellVisualData) -> void:
 	var top := _instantiate(scene)
 	if top:
 		top.position = Vector3(grid_pos.x + 0.5, float(cell.height), grid_pos.y + 0.5)
-		add_to_layer(top, WATER_LAYER if cell.terrain == "water" else TOP_LAYER)
+		add_to_layer(top, WATER_LAYER if cell.terrain in ["water", "lava"] else TOP_LAYER)
 	else:
 		_create_fallback_top(grid_pos, cell)
 
@@ -42,8 +42,15 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 		var neighbor_pos: Vector2i = grid_pos + direction.offset
 		var neighbor := map_data.get_cell(neighbor_pos) if map_data.is_in_bounds(neighbor_pos) else null
 		var neighbor_height: int = neighbor.height if neighbor else 0
-		for level in cell.height - neighbor_height:
-			var side_scene := visual_theme.cliff_side if visual_theme else null
+		var levels_needed := cell.height - neighbor_height
+		var is_stone := cell.terrain in ["stone", "stone_road", "rock", "wall"]
+		for level in levels_needed:
+			var is_top_level := level == levels_needed - 1
+			var side_scene: PackedScene = null
+			if visual_theme:
+				side_scene = visual_theme.cliff_stone if is_stone else visual_theme.cliff_side
+				if is_top_level and not is_stone and visual_theme.cliff_side_top:
+					side_scene = visual_theme.cliff_side_top
 			var side := _instantiate(side_scene)
 			if not side: side = _make_fallback_cliff(cell.terrain)
 			var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)
