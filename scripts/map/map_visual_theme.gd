@@ -8,6 +8,7 @@ extends Resource
 @export var stone_road_top: PackedScene
 @export var water_plane: PackedScene
 @export var water_top: PackedScene
+@export var lava_plane: PackedScene
 @export var bridge_floor: PackedScene
 @export var bridge_top: PackedScene
 @export var stair_block: PackedScene
@@ -27,6 +28,7 @@ func top_scene_for(terrain: String) -> PackedScene:
 	match terrain:
 		"stone", "stone_road", "rock", "wall": return stone_top if stone_top else stone_road_top
 		"water": return water_plane if water_plane else water_top
+		"lava": return lava_plane if lava_plane else water_plane
 		"bridge": return bridge_floor if bridge_floor else bridge_top
 		"stair": return stair_block if stair_block else stair_top
 		"dirt", "forest": return dirt_top

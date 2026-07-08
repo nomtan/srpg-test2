@@ -53,7 +53,7 @@
 [ext_resource type="Script" path="res://scripts/equipment/equipment_database.gd" id="51_equipment_db"]
 [ext_resource type="Script" path="res://scripts/equipment/equipment_system.gd" id="52_equipment_system"]
 [ext_resource type="Script" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
-[ext_resource type="Resource" path="res://assets/map/themes/phase16_theme.tres" id="54_map_theme"]
+[ext_resource type="Resource" path="res://assets/terrain/theme_default.tres" id="54_map_theme"]
 
 [sub_resource type="Environment" id="Environment_atmo"]
 background_mode = 1

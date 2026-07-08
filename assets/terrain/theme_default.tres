@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MapVisualTheme" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/map_visual_theme.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/terrain/terrain_grass_top_01.glb" id="2_grass"]
+[ext_resource type="PackedScene" path="res://assets/terrain/terrain_dirt_top_01.glb" id="3_dirt"]
+[ext_resource type="PackedScene" path="res://assets/terrain/terrain_stone_top_01.glb" id="4_stone"]
+[ext_resource type="PackedScene" path="res://assets/terrain/terrain_water_plane_01.glb" id="5_water"]
+[ext_resource type="PackedScene" path="res://assets/terrain/terrain_lava_plane_01.glb" id="6_lava"]
+
+[resource]
+script = ExtResource("1_script")
+grass_top = ExtResource("2_grass")
+dirt_top = ExtResource("3_dirt")
+stone_top = ExtResource("4_stone")
+water_plane = ExtResource("5_water")
+lava_plane = ExtResource("6_lava")

@@ -1,6 +1,6 @@
 extends Node3D
 
-@export var visual_theme: MapVisualTheme = preload("res://assets/map/themes/phase16_theme.tres")
+@export var visual_theme: MapVisualTheme = preload("res://assets/terrain/theme_default.tres")
 
 
 func _ready() -> void:
