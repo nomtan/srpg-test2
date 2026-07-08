@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode blend_mix, cull_back, diffuse_lambert, specular_disabled;
 
-uniform sampler2D water_texture : source_color, filter_nearest;
+uniform sampler2D water_texture : source_color, filter_nearest_mipmap;
 uniform float scroll_speed_a : hint_range(0.0, 1.0) = 0.03;
 uniform float scroll_speed_b : hint_range(0.0, 1.0) = 0.05;
 uniform float distortion : hint_range(0.0, 0.1) = 0.015;

@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode cull_back, diffuse_lambert, specular_disabled;
 
-uniform sampler2D lava_texture : source_color, filter_nearest;
+uniform sampler2D lava_texture : source_color, filter_nearest_mipmap;
 uniform float scroll_speed : hint_range(0.0, 1.0) = 0.015;
 uniform float emission_strength : hint_range(0.0, 4.0) = 2.0;
 

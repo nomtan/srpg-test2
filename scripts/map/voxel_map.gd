@@ -75,10 +75,29 @@ func _create_decoration(data: MapDecorationData, cell_height: int) -> void:
 func _instantiate(scene: PackedScene) -> Node3D:
 	if not scene: return null
 	var instance := scene.instantiate()
-	if instance is Node3D: return instance
+	if instance is Node3D:
+		_apply_nearest_mipmap_filter(instance)
+		return instance
 	instance.free()
 	push_warning("MapVisualTheme scenes must have a Node3D root")
 	return null
+
+func _apply_nearest_mipmap_filter(node: Node3D) -> void:
+	# Production terrain textures are 32x32 Nearest-filtered pixel art. Without
+	# mipmaps, minifying them at normal gameplay camera distance aliases into
+	# moire/checkerboard noise; NEAREST_WITH_MIPMAPS keeps the crisp look up
+	# close while smoothing correctly at a distance.
+	if node is MeshInstance3D:
+		var mesh_instance := node as MeshInstance3D
+		var mesh := mesh_instance.mesh
+		if mesh:
+			for surface in mesh.get_surface_count():
+				var material := mesh_instance.get_active_material(surface)
+				if material is BaseMaterial3D:
+					material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	for child in node.get_children():
+		if child is Node3D:
+			_apply_nearest_mipmap_filter(child)
 
 func _create_fallback_top(grid_pos: Vector2i, cell: MapCellVisualData) -> void:
 	var part := MeshInstance3D.new()

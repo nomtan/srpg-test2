@@ -62,8 +62,12 @@
 
 すべてのピクセルテクスチャ・テクスチャ埋め込みGLBについて以下を確認する。
 
-- Filter: **Nearest**（Linearになっているとボケる。GLB内サンプラーはNEAREST指定済みだが、インポート後に必ず目視確認）
-- Mipmaps: **OFF**（遠景でグレーに濁るため）
+- Filter: **Nearest（Mipmap併用）**（Linearになっているとボケる。GLB内サンプラーはNEAREST指定済みだが、
+  インポート後に必ず目視確認。単純なNearest単体は本番カメラ距離でモアレ状にエイリアシングすることが
+  Phase16-Step3実機確認で判明したため、`texture_filter = NEAREST_WITH_MIPMAPS`
+  （`scripts/map/voxel_map.gd`の`_apply_nearest_mipmap_filter()`で自動適用、シェーダーは
+  `filter_nearest_mipmap`ヒント）を標準とする。近距離のドット感は維持しつつ遠距離のちらつきを抑える）
+- Mipmaps: **ON**（上記の理由によりMipmapは生成し使用する。OFFにすると遠景でモアレが出る）
 - Compress: Lossless（VRAM Compressedはドット絵と相性が悪い）
 
 ## 7. 受け入れ基準（チェックリスト）
@@ -73,4 +77,4 @@
 - [ ] terrainの場合、2×2で並べて継ぎ目が見えない
 - [ ] Godotのゲーム内カメラ距離で確認し、ノイズが細かすぎて「ざらつき」に見えない
   （細かすぎる場合は生成スクリプトのfbm octavesを下げて塊を大きくする）
-- [ ] Nearest / Mipmap OFF で表示されている
+- [ ] Nearest + Mipmap ON（NEAREST_WITH_MIPMAPS相当）で表示され、本番カメラ距離でモアレが出ていない
