@@ -24,7 +24,7 @@ func setup(stage_data: StageData, source_grid: GridSystem, unit_manager: UnitMan
 	_spawn_object("lever_1", StageObject.ObjectType.LEVER, Vector2i(9, 9))
 	_spawn_object("door_1", StageObject.ObjectType.DOOR, DOOR_POSITION)
 	_set_door_blocked(true)
-	_spawn_obstacle("tree_1", Vector2i(60, 15), "res://assets/object/test/Meshy_AI_Ancient_Rooted_Tree_0705160133_texture.glb", 25.0)
+	_spawn_obstacle("tree_1", Vector2i(60, 15))
 	stage_message.emit("Mission Start: %s" % data.stage_name)
 
 

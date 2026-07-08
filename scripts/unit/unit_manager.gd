@@ -15,7 +15,7 @@ func setup(source_grid: GridSystem) -> void:
 
 func spawn_initial_units() -> void:
 	_spawn_unit("vain", "Vain", Vector2i(3, 3), "player", 120, 30, 8, 90, 10)
-	_spawn_unit("acrea", "Acrea", Vector2i(6, 3), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, "res://assets/characters/test/chibi-figure2.glb")
+	_spawn_unit("acrea", "Acrea", Vector2i(6, 3), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1)
 	_spawn_unit("glen", "Glen", Vector2i(3, 6), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3)
 	var debug_enemy: BattleUnit
 	if ENABLE_DEBUG_NEARBY_ENEMY:
