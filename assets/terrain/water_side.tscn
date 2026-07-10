@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Shader" path="res://assets/terrain/materials/water.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/terrain/textures/terrain_water_top_01.png" id="2_tex"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_water_side"]
+shader = ExtResource("1_shader")
+shader_parameter/water_texture = ExtResource("2_tex")
+shader_parameter/scroll_speed_a = 0.5
+shader_parameter/scroll_speed_b = 0.65
+shader_parameter/distortion = 0.01
+shader_parameter/water_alpha = 0.85
+shader_parameter/flow_dir = Vector2(0, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_water_side"]
+size = Vector2(1, 1)
+
+[node name="WaterSide" type="Node3D"]
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("QuadMesh_water_side")
+material_override = SubResource("ShaderMaterial_water_side")

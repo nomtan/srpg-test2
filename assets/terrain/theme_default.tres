@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MapVisualTheme" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="MapVisualTheme" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/map/map_visual_theme.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/terrain/terrain_grass_top_01.glb" id="2_grass"]
@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://assets/terrain/terrain_cliff_side_top_01.glb" id="8_cliff_side_top"]
 [ext_resource type="PackedScene" path="res://assets/terrain/terrain_cliff_stone_01.glb" id="9_cliff_stone"]
 [ext_resource type="PackedScene" path="res://assets/terrain/terrain_stair_01.glb" id="10_stair"]
+[ext_resource type="PackedScene" path="res://assets/terrain/water_side.tscn" id="11_water_side"]
+[ext_resource type="PackedScene" path="res://assets/terrain/lava_side.tscn" id="12_lava_side"]
 
 [resource]
 script = ExtResource("1_script")
@@ -22,3 +24,5 @@ stair_block = ExtResource("10_stair")
 cliff_side = ExtResource("7_cliff_side")
 cliff_side_top = ExtResource("8_cliff_side_top")
 cliff_stone = ExtResource("9_cliff_stone")
+water_side = ExtResource("11_water_side")
+lava_side = ExtResource("12_lava_side")

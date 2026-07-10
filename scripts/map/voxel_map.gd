@@ -8,6 +8,11 @@ const DIRECTIONS := [
 	{"offset": Vector2i(-1, 0), "yaw": 270.0},
 ]
 
+# Water/lava tops sink this far below the cell's logical height (see
+# water_plane.tscn / lava_plane.tscn's Mesh transform); the top-level side
+# panel must sink by the same amount or it pokes above the surface.
+const SURFACE_OFFSET := 0.08
+
 @export var visual_theme: MapVisualTheme
 @export var decorations: Array[MapDecorationData] = []
 
@@ -36,8 +41,10 @@ func _create_top(cell: MapCellVisualData) -> void:
 		_create_fallback_top(grid_pos, cell)
 
 func _create_cliff_sides(cell: MapCellVisualData) -> void:
-	if cell.terrain in ["water", "lava"]: return
 	var grid_pos := cell.position
+	var is_water := cell.terrain == "water"
+	var is_lava := cell.terrain == "lava"
+	var is_fluid := is_water or is_lava
 	for direction: Dictionary in DIRECTIONS:
 		var neighbor_pos: Vector2i = grid_pos + direction.offset
 		var neighbor := map_data.get_cell(neighbor_pos) if map_data.is_in_bounds(neighbor_pos) else null
@@ -48,15 +55,22 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 			var is_top_level := level == levels_needed - 1
 			var side_scene: PackedScene = null
 			if visual_theme:
-				side_scene = visual_theme.cliff_stone if is_stone else visual_theme.cliff_side
-				if is_top_level and not is_stone and visual_theme.cliff_side_top:
-					side_scene = visual_theme.cliff_side_top
+				if is_water:
+					side_scene = visual_theme.water_side if visual_theme.water_side else visual_theme.cliff_side
+				elif is_lava:
+					side_scene = visual_theme.lava_side if visual_theme.lava_side else visual_theme.cliff_side
+				else:
+					side_scene = visual_theme.cliff_stone if is_stone else visual_theme.cliff_side
+					if is_top_level and not is_stone and visual_theme.cliff_side_top:
+						side_scene = visual_theme.cliff_side_top
 			var side := _instantiate(side_scene)
 			if not side: side = _make_fallback_cliff(cell.terrain)
 			var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)
 			side.position = Vector3(grid_pos.x + 0.5, neighbor_height + level + 0.5, grid_pos.y + 0.5) + normal * 0.495
+			if is_fluid and is_top_level:
+				side.position.y -= SURFACE_OFFSET
 			side.rotation_degrees.y = float(direction.yaw)
-			add_to_layer(side, CLIFF_LAYER)
+			add_to_layer(side, WATER_LAYER if is_fluid else CLIFF_LAYER)
 
 func _create_decorations() -> void:
 	for cell: MapCellVisualData in map_data.cells:
