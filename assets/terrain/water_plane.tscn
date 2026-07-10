@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Shader" path="res://assets/terrain/materials/water.gdshader" id="1_shader"]
 [ext_resource type="Texture2D" path="res://assets/terrain/textures/terrain_water_top_01.png" id="2_tex"]
@@ -14,9 +14,39 @@ shader_parameter/water_alpha = 0.8
 [sub_resource type="PlaneMesh" id="PlaneMesh_water"]
 size = Vector2(1, 1)
 
+; [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_water_skirt"]
+; albedo_texture = ExtResource("2_tex")
+; roughness = 0.9
+
+; [sub_resource type="BoxMesh" id="BoxMesh_water_skirt"]
+; size = Vector3(1, 0.08, 0.08)
+
 [node name="WaterPlane" type="Node3D"]
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0)
 mesh = SubResource("PlaneMesh_water")
 material_override = SubResource("ShaderMaterial_water")
+
+; [node name="SkirtNorth" type="MeshInstance3D" parent="."]
+; position = Vector3(0, -0.04, -0.46)
+; mesh = SubResource("BoxMesh_water_skirt")
+; material_override = SubResource("StandardMaterial3D_water_skirt")
+
+; [node name="SkirtEast" type="MeshInstance3D" parent="."]
+; position = Vector3(0.46, -0.04, 0)
+; rotation_degrees = Vector3(0, 90, 0)
+; mesh = SubResource("BoxMesh_water_skirt")
+; material_override = SubResource("StandardMaterial3D_water_skirt")
+
+; [node name="SkirtSouth" type="MeshInstance3D" parent="."]
+; position = Vector3(0, -0.04, 0.46)
+; rotation_degrees = Vector3(0, 180, 0)
+; mesh = SubResource("BoxMesh_water_skirt")
+; material_override = SubResource("StandardMaterial3D_water_skirt")
+
+; [node name="SkirtWest" type="MeshInstance3D" parent="."]
+; position = Vector3(-0.46, -0.04, 0)
+; rotation_degrees = Vector3(0, 270, 0)
+; mesh = SubResource("BoxMesh_water_skirt")
+; material_override = SubResource("StandardMaterial3D_water_skirt")

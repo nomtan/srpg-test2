@@ -94,3 +94,23 @@
   反復作業になる。Claude Codeでの機械的実行と、チャットでの見た目レビューを併用すること
 - ユニットの視認性はキャラクター本番化（Phase17以降）で再調整するため、
   ここでは「背景として完成しているか」を判断基準にする
+
+## 実施メモ（1回目セッション）
+
+詳細は `docs/dev/phase16-step4-log.md` を参照。
+
+- ライティング自体（WorldEnvironment / DirectionalLight）はStep4着手前の
+  非公式な調整で既に本番値がMain.tscnに入っていた（コミット履歴から再構成）。
+  今回はそれを `assets/environment/battle_atmosphere.tres` にリソース化し、
+  見本市用マップと共有するようにした（値そのものは変更していない）
+- スクリーンショット取得機能（F12、debugビルド限定）を
+  `scripts/debug/screenshot_capture.gd` として追加し、
+  `samples/Phase16AssetPreview.tscn` に組み込んだ。同シーンは実カメラ
+  （`CameraController`）と共有Environmentを使うようにし、Main.tscnと
+  同一構図で比較できるようにした
+- palette.jsonのstoneを彩度・色相方向に調整（明度は維持）し、対応する
+  GLB/テクスチャを再生成した。grass/dirtは現状で色相分離が十分と判断し
+  未変更
+- **このセッションではゲームの実機起動・スクリーンショット目視確認は
+  行っていない**（機械的実装のみ）。次回はユーザーが実機でF12撮影した
+  スクリーンショットを共有し、それを見ながらチャットで反復調整する
