@@ -177,6 +177,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_E:
 				camera_controller.rotate_view(1)
 				return
+			KEY_R:
+				camera_controller.tilt_view(1)
+				return
+			KEY_F:
+				camera_controller.tilt_view(-1)
+				return
 			_: return
 		get_viewport().set_input_as_handled()
 		return

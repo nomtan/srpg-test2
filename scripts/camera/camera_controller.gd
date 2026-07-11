@@ -8,6 +8,10 @@ var focus_offset := Vector3(30.0, 46.8, -38.0)
 var focus_target := Vector3.ZERO
 var rotation_tween: Tween
 
+const TILT_STEP_DEGREES := 10.0
+const MIN_ELEVATION_DEGREES := 20.0
+const MAX_ELEVATION_DEGREES := 75.0
+
 
 func setup() -> Camera3D:
 	camera = Camera3D.new()
@@ -52,25 +56,57 @@ func pan(screen_delta: Vector2) -> void:
 func rotate_view(direction: int) -> void:
 	if not camera or direction == 0:
 		return
-	if rotation_tween and rotation_tween.is_valid():
-		rotation_tween.kill()
 	var start_offset := camera.position - focus_target
 	var angle := deg_to_rad(90.0 * float(direction))
-	focus_offset = start_offset.rotated(Vector3.UP, angle)
+	var target_offset := start_offset.rotated(Vector3.UP, angle)
+	_start_orbit_tween(start_offset, target_offset)
+
+
+func tilt_view(direction: int) -> void:
+	if not camera or direction == 0:
+		return
+	var start_offset := camera.position - focus_target
+	var horizontal := Vector2(start_offset.x, start_offset.z)
+	if horizontal.is_zero_approx():
+		return
+	var radius := start_offset.length()
+	var elevation := rad_to_deg(atan2(start_offset.y, horizontal.length()))
+	var target_elevation := clampf(
+		elevation + TILT_STEP_DEGREES * float(direction),
+		MIN_ELEVATION_DEGREES,
+		MAX_ELEVATION_DEGREES
+	)
+	if is_equal_approx(target_elevation, elevation):
+		return
+	var elevation_radians := deg_to_rad(target_elevation)
+	var horizontal_direction := horizontal.normalized()
+	var horizontal_radius := cos(elevation_radians) * radius
+	var target_offset := Vector3(
+		horizontal_direction.x * horizontal_radius,
+		sin(elevation_radians) * radius,
+		horizontal_direction.y * horizontal_radius
+	)
+	_start_orbit_tween(start_offset, target_offset)
+
+
+func _start_orbit_tween(start_offset: Vector3, target_offset: Vector3) -> void:
+	if rotation_tween and rotation_tween.is_valid():
+		rotation_tween.kill()
+	focus_offset = target_offset
 	rotation_tween = create_tween()
 	rotation_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	rotation_tween.tween_method(
-		_apply_orbit_rotation.bind(start_offset, focus_target),
-		0.0,
-		angle,
+		_apply_orbit_offset.bind(focus_target),
+		start_offset,
+		target_offset,
 		0.3
 	)
 
 
-func _apply_orbit_rotation(angle: float, start_offset: Vector3, target: Vector3) -> void:
+func _apply_orbit_offset(offset: Vector3, target: Vector3) -> void:
 	if not camera:
 		return
-	camera.position = target + start_offset.rotated(Vector3.UP, angle)
+	camera.position = target + offset
 	camera.look_at(target, Vector3.UP)
 
 
