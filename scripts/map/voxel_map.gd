@@ -201,6 +201,9 @@ func _create_background_plane() -> void:
 	var margin := 60.0
 	plane.size = Vector2(map_data.width + margin * 2.0, map_data.depth + margin * 2.0)
 	background.mesh = plane
-	background.position = Vector3(map_data.width * 0.5, -0.02, map_data.depth * 0.5)
+	# Water/lava tops sink SURFACE_OFFSET below their cell height, so a
+	# height-0 water/lava cell surfaces at y=-0.08. Keep this well below that
+	# or the opaque background plane occludes the water surface from above.
+	background.position = Vector3(map_data.width * 0.5, -0.5, map_data.depth * 0.5)
 	background.material_override = _colored_material(Color("#313134"))
 	add_to_layer(background, DEBUG_LAYER)
