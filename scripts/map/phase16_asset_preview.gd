@@ -42,6 +42,18 @@ func _create_preview_map() -> MapData:
 				cell.height = 0
 				cell.terrain = "water"
 
+			# Middle walkway column: dirt/water/lava so all five terrain
+			# types are visible in one frame for palette review. Water and
+			# lava stay at the same height as their neighbors (not sunk
+			# into a pit next to a tall cliff) since that would sit in
+			# the camera's blind spot.
+			if x == 3 and z == 0:
+				cell.terrain = "dirt"
+			elif x == 3 and z == 1:
+				cell.terrain = "water"
+			elif x == 3 and z == 2:
+				cell.terrain = "lava"
+
 			# Right: stone floor with stairs connecting the one-level rise.
 			if x >= 4:
 				cell.terrain = "stone_road"

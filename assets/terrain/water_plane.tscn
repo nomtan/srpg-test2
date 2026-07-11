@@ -6,9 +6,9 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_water"]
 shader = ExtResource("1_shader")
 shader_parameter/water_texture = ExtResource("2_tex")
-shader_parameter/scroll_speed_a = 0.03
-shader_parameter/scroll_speed_b = 0.05
-shader_parameter/distortion = 0.015
+shader_parameter/scroll_speed_a = 0.3
+shader_parameter/scroll_speed_b = 0.405
+shader_parameter/distortion = 0.02
 shader_parameter/water_alpha = 0.8
 shader_parameter/flow_dir = Vector2(1, 0.6)
 

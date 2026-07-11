@@ -202,5 +202,5 @@ func _create_background_plane() -> void:
 	plane.size = Vector2(map_data.width + margin * 2.0, map_data.depth + margin * 2.0)
 	background.mesh = plane
 	background.position = Vector3(map_data.width * 0.5, -0.02, map_data.depth * 0.5)
-	background.material_override = _colored_material(Color("#527c3f"))
+	background.material_override = _colored_material(Color("#313134"))
 	add_to_layer(background, DEBUG_LAYER)

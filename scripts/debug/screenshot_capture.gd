@@ -10,6 +10,23 @@ extends Node
 const SAVE_DIR := "user://screenshots/"
 
 
+func _ready() -> void:
+	# CLI-driven capture for scripted iteration (e.g. `--auto-capture`),
+	# as an alternative to pressing capture_key interactively. Optional
+	# `--auto-capture-delay=<seconds>` controls how long to wait before
+	# capturing (useful for comparing shader animation at different TIME
+	# values across two runs).
+	if not (OS.is_debug_build() and "--auto-capture" in OS.get_cmdline_args()):
+		return
+	var delay := 0.5
+	for arg in OS.get_cmdline_args():
+		if arg.begins_with("--auto-capture-delay="):
+			delay = arg.get_slice("=", 1).to_float()
+	await get_tree().create_timer(delay).timeout
+	_capture()
+	get_tree().quit()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not OS.is_debug_build():
 		return
