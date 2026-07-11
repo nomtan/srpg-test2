@@ -9,11 +9,21 @@ const MIN_HEIGHT := 1
 const MAX_HEIGHT := 15
 const CELL_SIZE := 1.0
 
+@export var terrain_height_seed := 2718
+@export_range(0.01, 0.1, 0.005) var terrain_height_frequency := 0.035
+
 var cells: Dictionary = {}
 
 
 func generate_grid() -> void:
 	cells.clear()
+	var height_noise := FastNoiseLite.new()
+	height_noise.seed = terrain_height_seed
+	height_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	height_noise.frequency = terrain_height_frequency
+	height_noise.fractal_type = FastNoiseLite.FRACTAL_FBM
+	height_noise.fractal_octaves = 3
+	height_noise.fractal_gain = 0.5
 	for real_z in DEPTH:
 		for real_x in WIDTH:
 			var x := floori(float(real_x) * float(DESIGN_WIDTH) / float(WIDTH))
@@ -209,19 +219,22 @@ func generate_grid() -> void:
 					if x in [17, 18, 21, 22] and z == 38:
 						terrain = "stone"
 
-			height = max(height, _northwest_slope_height(real_x, real_z))
+			height = max(height, _natural_terrain_height(real_x, real_z, height_noise))
 			cells[Vector2i(real_x, real_z)] = GridCell.new(
 				real_x, real_z, height, terrain, walkable, move_cost
 			)
 
 
-func _northwest_slope_height(x: int, z: int) -> int:
+func _natural_terrain_height(x: int, z: int, noise: FastNoiseLite) -> int:
 	var center_x := float(WIDTH - 1) * 0.5
 	var center_z := float(DEPTH - 1) * 0.5
 	var west_influence := clampf((center_x - float(x)) / center_x, 0.0, 1.0)
 	var north_influence := clampf((center_z - float(z)) / center_z, 0.0, 1.0)
-	var height_ratio := (west_influence + north_influence) * 0.5
-	return clampi(MIN_HEIGHT + int(round(height_ratio * float(MAX_HEIGHT - MIN_HEIGHT))), MIN_HEIGHT, MAX_HEIGHT)
+	# Preserve the broad northwest highland, but break its straight contour bands
+	# into broad hills and depressions with deterministic low-frequency noise.
+	var slope_height := float(MIN_HEIGHT) + (west_influence + north_influence) * 0.5 * 10.0
+	var rolling_height := noise.get_noise_2d(float(x), float(z)) * 3.0
+	return clampi(int(round(slope_height + rolling_height)), MIN_HEIGHT, MAX_HEIGHT)
 
 
 func is_in_bounds(position: Vector2i) -> bool:

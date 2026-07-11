@@ -25,6 +25,8 @@ extends Resource
 
 @export_group("Decoration scenes")
 @export var grass_patch: PackedScene
+@export var grass_short: PackedScene
+@export var grass_tall: PackedScene
 @export var broken_stone: PackedScene
 @export var flag_placeholder: PackedScene
 
@@ -41,6 +43,8 @@ func top_scene_for(terrain: String) -> PackedScene:
 func decoration_scene_for(kind: String) -> PackedScene:
 	match kind:
 		"grass_patch": return grass_patch
+		"grass_short": return grass_short
+		"grass_tall": return grass_tall
 		"broken_stone": return broken_stone
 		"flag_placeholder": return flag_placeholder
 		_: return null

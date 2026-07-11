@@ -1,5 +1,27 @@
 # tools/asset_gen
 
+## Windows setup
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-asset-gen.txt
+```
+
+`bpy` and `bmesh` are bundled with Blender and are intentionally not included in the requirements file.
+
+## Grass props
+
+```powershell
+python tools\asset_gen\gen_grass_props.py
+
+& "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" --background `
+  --python tools\asset_gen\build_grass_props.py -- `
+  --tex assets\texture\grass --out assets\props\grass
+```
+
+Both output directories are created automatically. `--out` may be supplied to the PNG generator to choose another directory.
+
 Phase16-Step2の地形アセット生成パイプライン。`palette.json` の色定義だけを唯一の
 真実とし、テクスチャ・GLBのどちらもコマンド一発で再生成できる。
 

@@ -15,6 +15,9 @@ const SURFACE_OFFSET := 0.08
 
 @export var visual_theme: MapVisualTheme
 @export var decorations: Array[MapDecorationData] = []
+@export_group("Automatic grass props")
+@export_range(0.20, 0.35, 0.025) var grass_prop_chance := 0.275
+@export var grass_prop_seed := 1601
 
 var grid: GridSystem
 
@@ -76,27 +79,57 @@ func _create_decorations() -> void:
 	for cell: MapCellVisualData in map_data.cells:
 		for data: MapDecorationData in cell.props:
 			_create_decoration(data, cell.height)
+		_create_random_grass(cell)
 
 func _create_decoration(data: MapDecorationData, cell_height: int) -> void:
 	var scene := visual_theme.decoration_scene_for(data.kind) if visual_theme else null
-	var decoration := _instantiate(scene)
+	var decoration := _instantiate(scene, not data.kind in ["grass_short", "grass_tall"])
 	if not decoration: decoration = _make_fallback_decoration(data.kind)
 	decoration.position = Vector3(data.grid_position.x + 0.5, cell_height + data.height_offset, data.grid_position.y + 0.5)
 	decoration.rotation_degrees.y = data.rotation_degrees
 	decoration.scale = data.scale
 	add_to_layer(decoration, PROP_LAYER)
 
-func _instantiate(scene: PackedScene) -> Node3D:
+func _create_random_grass(cell: MapCellVisualData) -> void:
+	if cell.terrain != "grass" or not cell.props.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	# Coordinate mixing keeps the result stable regardless of cell iteration order.
+	rng.seed = grass_prop_seed + cell.position.x * 73856093 + cell.position.y * 19349663
+	if rng.randf() >= grass_prop_chance:
+		return
+	var type_roll := rng.randf()
+	var kind := "grass_short"
+	var height_scale := 1.0
+	if type_roll >= 0.90:
+		kind = "grass_tall" # Long: 10%
+	elif type_roll >= 0.65:
+		kind = "grass_tall" # Medium: 25%, derived from the tall asset.
+		height_scale = 0.70
+	var scene := visual_theme.decoration_scene_for(kind) if visual_theme else null
+	var grass := _instantiate(scene, false)
+	if not grass:
+		grass = _make_fallback_decoration(kind)
+	grass.scale.y = height_scale
+	grass.position = Vector3(
+		cell.position.x + rng.randf_range(0.28, 0.72),
+		float(cell.height),
+		cell.position.y + rng.randf_range(0.28, 0.72)
+	)
+	grass.rotation_degrees.y = rng.randf_range(0.0, 360.0)
+	add_to_layer(grass, PROP_LAYER)
+
+func _instantiate(scene: PackedScene, use_mipmaps := true) -> Node3D:
 	if not scene: return null
 	var instance := scene.instantiate()
 	if instance is Node3D:
-		_apply_nearest_mipmap_filter(instance)
+		_apply_nearest_filter(instance, use_mipmaps)
 		return instance
 	instance.free()
 	push_warning("MapVisualTheme scenes must have a Node3D root")
 	return null
 
-func _apply_nearest_mipmap_filter(node: Node3D) -> void:
+func _apply_nearest_filter(node: Node3D, use_mipmaps := true) -> void:
 	# Production terrain textures are 32x32 Nearest-filtered pixel art. Without
 	# mipmaps, minifying them at normal gameplay camera distance aliases into
 	# moire/checkerboard noise; NEAREST_WITH_MIPMAPS keeps the crisp look up
@@ -108,10 +141,13 @@ func _apply_nearest_mipmap_filter(node: Node3D) -> void:
 			for surface in mesh.get_surface_count():
 				var material := mesh_instance.get_active_material(surface)
 				if material is BaseMaterial3D:
-					material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+					material.texture_filter = (
+						BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+						if use_mipmaps else BaseMaterial3D.TEXTURE_FILTER_NEAREST
+					)
 	for child in node.get_children():
 		if child is Node3D:
-			_apply_nearest_mipmap_filter(child)
+			_apply_nearest_filter(child, use_mipmaps)
 
 func _create_fallback_top(grid_pos: Vector2i, cell: MapCellVisualData) -> void:
 	var part := MeshInstance3D.new()
