@@ -5,6 +5,57 @@
   "stone": ["#52565f", "#454951", "#606572", "#363a41", "#6d7280"],
   "water": ["#0f264d", "#122d5c", "#0d2040", "#153368", "#0b1c38"],
   "lava": ["#3a1410", "#5c2015", "#7a2e12", "#961f0d", "#4a1a0d"],
+  "jungle_log": {
+    "end_grain": ["#c18b55", "#d39c62", "#ad7545", "#e0ad70"],
+    "ring": "#8d6238",
+    "heart": "#7c512f",
+    "bark": ["#49351a", "#5a4020", "#6a4b25", "#79562b"],
+    "bark_shadow": "#382815",
+    "bark_highlight": "#8d6934"
+  },
+  "oak_log": {
+    "end_grain": ["#d0a15f", "#ddb574", "#c28e4f", "#e6c486"],
+    "ring": "#a8793f",
+    "heart": "#956433",
+    "bark": ["#6a4b29", "#795936", "#896844", "#9a774d"],
+    "bark_shadow": "#4c351f",
+    "bark_highlight": "#b18b58"
+  },
+  "acacia_log": {
+    "end_grain": ["#b84d2d", "#cb5b32", "#a84028", "#db6a3a"],
+    "ring": "#843526",
+    "heart": "#713026",
+    "bark": ["#45413c", "#504a44", "#5c544c", "#665c52"],
+    "bark_shadow": "#34322f",
+    "bark_highlight": "#79695c"
+  },
+  "stone_bricks": {
+    "stone": ["#565a5e", "#62666a", "#6e7276", "#797d80", "#4d5155"],
+    "mortar": "#363a3e",
+    "edge_light": "#8a8e91",
+    "crack": "#292d30",
+    "pit": "#414549"
+  },
+  "bricks": {
+    "brick": ["#783b2d", "#8b4431", "#9b4d35", "#ad5a3e", "#6c3329"],
+    "mortar": "#a39b91",
+    "edge_light": "#c0b5a8",
+    "chip": "#5b2b24"
+  },
+  "cobblestone": {
+    "stone": ["#5b5f62", "#666a6d", "#707477", "#7b7f82", "#85898b"],
+    "crevice": "#4b4f52",
+    "edge_light": "#929698",
+    "pit": "#55595c"
+  },
+  "oak_leaves": {
+    "leaf": ["#245b1d", "#2f6c24", "#397d2b", "#468f34", "#1d4b18"],
+    "highlight": "#58a640"
+  },
+  "acacia_leaves": {
+    "leaf": ["#304922", "#3b5728", "#48652f", "#567438", "#273d1d"],
+    "highlight": "#698548"
+  },
   "accent": {
     "lava_core": "#ffb238",
     "stone_crack": "#232326"

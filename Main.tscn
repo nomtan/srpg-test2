@@ -1,4 +1,4 @@
-[gd_scene load_steps=56 format=3]
+[gd_scene load_steps=57 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -55,6 +55,7 @@
 [ext_resource type="Script" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
 [ext_resource type="Resource" path="res://assets/terrain/theme_default.tres" id="54_map_theme"]
 [ext_resource type="Environment" path="res://assets/environment/battle_atmosphere.tres" id="55_env"]
+[ext_resource type="Script" path="res://scripts/ui/direction_compass.gd" id="56_compass"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -171,6 +172,22 @@ shadow_opacity = 0.35
 shadow_bias = 0.05
 
 [node name="UI" type="CanvasLayer" parent="."]
+
+[node name="DirectionCompass" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -174.0
+offset_top = -380.0
+offset_right = -24.0
+offset_bottom = -230.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("56_compass")
 
 [node name="MarginContainer" type="MarginContainer" parent="UI"]
 offset_left = 20.0

@@ -13,6 +13,12 @@ const DIRECTIONS := [
 # panel must sink by the same amount or it pokes above the surface.
 const SURFACE_OFFSET := 0.08
 
+const SELECTABLE_BLOCK_TERRAINS := [
+	"stone_brick", "infested_cracked_stone_bricks", "chiseled_stone_brick",
+	"stone_brick_stairs", "bricks", "brick_stairs", "cobblestone",
+	"cobblestone_stairs",
+]
+
 const GRASS_SHORT_VARIANTS: Array[PackedScene] = [
 	preload("res://assets/props/grass/prop_grass_short_01.tscn"),
 	preload("res://assets/props/grass/prop_grass_short_02.tscn"),
@@ -61,7 +67,7 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 	var is_fluid := is_water or is_lava
 	var full_block_terrain := cell.terrain in [
 		"grass", "dirt", "forest", "stone", "stone_road", "rock", "wall", "high_ground"
-	]
+	] or cell.terrain in SELECTABLE_BLOCK_TERRAINS
 	var has_full_top_block := (
 		full_block_terrain
 		and visual_theme != null
@@ -72,7 +78,10 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 		var neighbor := map_data.get_cell(neighbor_pos) if map_data.is_in_bounds(neighbor_pos) else null
 		var neighbor_height: int = neighbor.height if neighbor else 0
 		var levels_needed := cell.height - neighbor_height
-		var is_stone := cell.terrain in ["stone", "stone_road", "rock", "wall"]
+		var is_stone := (
+			cell.terrain in ["stone", "stone_road", "rock", "wall"]
+			or cell.terrain in SELECTABLE_BLOCK_TERRAINS
+		)
 		for level in levels_needed:
 			var is_top_level := level == levels_needed - 1
 			# The terrain asset itself now supplies all four sides of its top block.

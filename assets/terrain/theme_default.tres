@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MapVisualTheme" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="MapVisualTheme" load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://scripts/map/map_visual_theme.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/terrain/terrain_grass_top_01.glb" id="2_grass"]
@@ -14,6 +14,17 @@
 [ext_resource type="PackedScene" path="res://assets/terrain/lava_side.tscn" id="12_lava_side"]
 [ext_resource type="PackedScene" path="res://assets/props/grass/prop_grass_short_01.tscn" id="13_grass_short"]
 [ext_resource type="PackedScene" path="res://assets/props/grass/prop_grass_tall_01.tscn" id="14_grass_tall"]
+[ext_resource type="PackedScene" path="res://assets/props/log/prop_jungle_log_column_06.tscn" id="15_jungle_log_column"]
+[ext_resource type="PackedScene" path="res://assets/props/log/prop_oak_log_column_06.tscn" id="16_oak_log_column"]
+[ext_resource type="PackedScene" path="res://assets/props/log/prop_acacia_log_column_06.tscn" id="17_acacia_log_column"]
+[ext_resource type="PackedScene" path="res://assets/props/stone_bricks/stone_brick.glb" id="18_stone_brick"]
+[ext_resource type="PackedScene" path="res://assets/props/stone_bricks/infested_cracked_stone_bricks.glb" id="19_infested_cracked"]
+[ext_resource type="PackedScene" path="res://assets/props/stone_bricks/chiseled_stone_brick.glb" id="20_chiseled"]
+[ext_resource type="PackedScene" path="res://assets/props/stone_bricks/stone_brick_stairs.glb" id="21_stone_stairs"]
+[ext_resource type="PackedScene" path="res://assets/props/masonry/bricks.glb" id="22_bricks"]
+[ext_resource type="PackedScene" path="res://assets/props/masonry/brick_stairs.glb" id="23_brick_stairs"]
+[ext_resource type="PackedScene" path="res://assets/props/masonry/cobblestone.glb" id="24_cobblestone"]
+[ext_resource type="PackedScene" path="res://assets/props/masonry/cobblestone_stairs.glb" id="25_cobblestone_stairs"]
 
 [resource]
 script = ExtResource("1_script")
@@ -30,3 +41,14 @@ water_side = ExtResource("11_water_side")
 lava_side = ExtResource("12_lava_side")
 grass_short = ExtResource("13_grass_short")
 grass_tall = ExtResource("14_grass_tall")
+jungle_log_column = ExtResource("15_jungle_log_column")
+oak_log_column = ExtResource("16_oak_log_column")
+acacia_log_column = ExtResource("17_acacia_log_column")
+stone_brick = ExtResource("18_stone_brick")
+infested_cracked_stone_bricks = ExtResource("19_infested_cracked")
+chiseled_stone_brick = ExtResource("20_chiseled")
+stone_brick_stairs = ExtResource("21_stone_stairs")
+bricks = ExtResource("22_bricks")
+brick_stairs = ExtResource("23_brick_stairs")
+cobblestone = ExtResource("24_cobblestone")
+cobblestone_stairs = ExtResource("25_cobblestone_stairs")

@@ -1,5 +1,30 @@
 extends Node3D
 
+const PLAYER_START_WEST_LOG_COLUMN := 2
+const PLAYER_START_NORTH_LOG_ROW := 2
+const JUNGLE_LOG_COLUMN_POSITION := Vector2i(
+	PLAYER_START_WEST_LOG_COLUMN,
+	PLAYER_START_NORTH_LOG_ROW
+)
+const OAK_LOG_COLUMN_POSITION := Vector2i(
+	PLAYER_START_WEST_LOG_COLUMN,
+	PLAYER_START_NORTH_LOG_ROW + 3
+)
+const ACACIA_LOG_COLUMN_POSITION := Vector2i(
+	PLAYER_START_WEST_LOG_COLUMN,
+	PLAYER_START_NORTH_LOG_ROW + 6
+)
+const MASONRY_SHOWCASE: Array[Dictionary] = [
+	{"kind": "stone_brick", "position": Vector2i(12, 2)},
+	{"kind": "infested_cracked_stone_bricks", "position": Vector2i(12, 5)},
+	{"kind": "chiseled_stone_brick", "position": Vector2i(12, 8)},
+	{"kind": "stone_brick_stairs", "position": Vector2i(12, 11)},
+	{"kind": "bricks", "position": Vector2i(15, 2)},
+	{"kind": "brick_stairs", "position": Vector2i(15, 5)},
+	{"kind": "cobblestone", "position": Vector2i(15, 8)},
+	{"kind": "cobblestone_stairs", "position": Vector2i(15, 11)},
+]
+
 @onready var grid: GridSystem = $GridSystem
 @onready var voxel_map: VoxelMap = $VoxelMap
 @onready var unit_manager: UnitManager = $UnitManager
@@ -46,6 +71,7 @@ extends Node3D
 @onready var equipment_database: Node = $EquipmentDatabase
 @onready var equipment_system: Node = $EquipmentSystem
 @onready var weapon_power_calculator: Node = $WeaponPowerCalculator
+@onready var direction_compass: DirectionCompass = $UI/DirectionCompass
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -62,6 +88,10 @@ var battle_result := ""
 
 func _ready() -> void:
 	grid.generate_grid()
+	_add_jungle_log_column_near_player_start()
+	_add_oak_log_column_near_player_start()
+	_add_acacia_log_column_near_player_start()
+	_apply_masonry_showcase_to_grid()
 	voxel_map.build_from_grid(grid)
 	unit_manager.setup(grid)
 	unit_progress.setup(job_database)
@@ -94,6 +124,7 @@ func _ready() -> void:
 	mission_ui.setup(stage_data.stage_name)
 	unit_info.setup(equipment_database)
 	cursor.setup(grid, camera_controller.setup(), camera_controller)
+	direction_compass.setup(camera_controller)
 	cursor.confirm_pressed.connect(_on_confirm)
 	cursor.cancel_pressed.connect(_on_cancel)
 	cursor.grid_position_changed.connect(_on_cursor_grid_position_changed)
@@ -120,6 +151,37 @@ func _ready() -> void:
 	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system, job_unlock_system, status_calculator, equipment_database, equipment_system)
 	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
+
+
+func _add_jungle_log_column_near_player_start() -> void:
+	var decoration := MapDecorationData.new()
+	decoration.kind = "jungle_log_column"
+	decoration.grid_position = JUNGLE_LOG_COLUMN_POSITION
+	voxel_map.decorations.append(decoration)
+
+
+func _add_oak_log_column_near_player_start() -> void:
+	var decoration := MapDecorationData.new()
+	decoration.kind = "oak_log_column"
+	decoration.grid_position = OAK_LOG_COLUMN_POSITION
+	voxel_map.decorations.append(decoration)
+
+
+func _add_acacia_log_column_near_player_start() -> void:
+	var decoration := MapDecorationData.new()
+	decoration.kind = "acacia_log_column"
+	decoration.grid_position = ACACIA_LOG_COLUMN_POSITION
+	voxel_map.decorations.append(decoration)
+
+
+func _apply_masonry_showcase_to_grid() -> void:
+	for entry: Dictionary in MASONRY_SHOWCASE:
+		var grid_position: Vector2i = entry.position
+		var cell: GridCell = grid.get_cell(grid_position)
+		if cell:
+			var approach_cell: GridCell = grid.get_cell(grid_position + Vector2i.LEFT)
+			var surface_height := approach_cell.height + 1 if approach_cell else cell.height + 1
+			cell.set_surface(entry.kind, surface_height)
 
 func _on_pre_battle_started() -> void:
 	unit_progress.update_progress_from_units(unit_manager.get_player_units())

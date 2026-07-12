@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/map/tree_leaf_canopy.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/props/leaves/acacia_leaves.glb" id="2_leaves"]
+
+[node name="AcaciaLeafCanopy" type="Node3D"]
+script = ExtResource("1_script")
+leaf_scene = ExtResource("2_leaves")

@@ -29,6 +29,19 @@ extends Resource
 @export var grass_tall: PackedScene
 @export var broken_stone: PackedScene
 @export var flag_placeholder: PackedScene
+@export var jungle_log_column: PackedScene
+@export var oak_log_column: PackedScene
+@export var acacia_log_column: PackedScene
+
+@export_group("Selectable block scenes")
+@export var stone_brick: PackedScene
+@export var infested_cracked_stone_bricks: PackedScene
+@export var chiseled_stone_brick: PackedScene
+@export var stone_brick_stairs: PackedScene
+@export var bricks: PackedScene
+@export var brick_stairs: PackedScene
+@export var cobblestone: PackedScene
+@export var cobblestone_stairs: PackedScene
 
 func top_scene_for(terrain: String) -> PackedScene:
 	match terrain:
@@ -37,6 +50,14 @@ func top_scene_for(terrain: String) -> PackedScene:
 		"lava": return lava_plane if lava_plane else water_plane
 		"bridge": return bridge_floor if bridge_floor else bridge_top
 		"stair": return stair_block if stair_block else stair_top
+		"stone_brick": return stone_brick
+		"infested_cracked_stone_bricks": return infested_cracked_stone_bricks
+		"chiseled_stone_brick": return chiseled_stone_brick
+		"stone_brick_stairs": return stone_brick_stairs
+		"bricks": return bricks
+		"brick_stairs": return brick_stairs
+		"cobblestone": return cobblestone
+		"cobblestone_stairs": return cobblestone_stairs
 		"dirt", "forest": return dirt_top
 		_: return grass_top
 
@@ -47,4 +68,7 @@ func decoration_scene_for(kind: String) -> PackedScene:
 		"grass_tall": return grass_tall
 		"broken_stone": return broken_stone
 		"flag_placeholder": return flag_placeholder
+		"jungle_log_column": return jungle_log_column
+		"oak_log_column": return oak_log_column
+		"acacia_log_column": return acacia_log_column
 		_: return null

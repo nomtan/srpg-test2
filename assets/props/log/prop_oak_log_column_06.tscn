@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/props/log/prop_oak_log_block_01.glb" id="1_log"]
+[ext_resource type="PackedScene" path="res://assets/props/leaves/oak_leaf_canopy.tscn" id="2_canopy"]
+
+[node name="PropOakLogColumn06" type="Node3D"]
+
+[node name="Log1" parent="." instance=ExtResource("1_log")]
+
+[node name="Log2" parent="." instance=ExtResource("1_log")]
+position = Vector3(0, 1, 0)
+
+[node name="Log3" parent="." instance=ExtResource("1_log")]
+position = Vector3(0, 2, 0)
+
+[node name="Log4" parent="." instance=ExtResource("1_log")]
+position = Vector3(0, 3, 0)
+
+[node name="Log5" parent="." instance=ExtResource("1_log")]
+position = Vector3(0, 4, 0)
+
+[node name="Log6" parent="." instance=ExtResource("1_log")]
+position = Vector3(0, 5, 0)
+
+[node name="Canopy" parent="." instance=ExtResource("2_canopy")]
