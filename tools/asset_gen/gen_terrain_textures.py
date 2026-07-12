@@ -22,7 +22,8 @@ OUT_DIR = ROOT / "assets" / "terrain" / "textures"
 SIZE = 32
 LATTICE_FINE = 8    # 32 / 8 = 4px blocks
 LATTICE_COARSE = 4  # 32 / 4 = 8px blocks
-CLIFF_TOP_BAND_ROWS = int(SIZE * 0.26)  # grass overhang band for cliff_side_top
+CLIFF_GRASS_SOLID_ROWS = 5
+CLIFF_GRASS_FRINGE_ROWS = 5
 
 
 def _lattice(seed: int, resolution: int) -> list:
@@ -183,13 +184,34 @@ def _generate_cliff_side(palette: dict, seed: int) -> Image.Image:
 
 
 def _generate_cliff_side_top(palette: dict, seed: int) -> Image.Image:
+    """Minecraft-like grass block side: green cap, irregular grassy fringe,
+    then exposed dirt. The wrapped depth noise keeps horizontal tile edges
+    seamless while avoiding a perfectly straight repeated boundary."""
     img = _layered_image(palette["dirt"], seed)
     grass_img = _base_image(palette["grass"], seed + 10)
     pixels = img.load()
     grass_pixels = grass_img.load()
-    for y in range(CLIFF_TOP_BAND_ROWS):
-        for x in range(SIZE):
+    rng = Random(seed + 31)
+    fringe_noise = [rng.random() for _ in range(SIZE)]
+    grass_depths = []
+    for x in range(SIZE):
+        # Smooth adjacent columns, wrapping at both edges for seamless tiling.
+        value = (
+            fringe_noise[(x - 1) % SIZE]
+            + fringe_noise[x]
+            + fringe_noise[(x + 1) % SIZE]
+        ) / 3.0
+        grass_depths.append(
+            CLIFF_GRASS_SOLID_ROWS + round(value * CLIFF_GRASS_FRINGE_ROWS)
+        )
+
+    darkest_grass = _hex_to_rgb(_sorted_by_luma(palette["grass"])[0])
+    for x, depth in enumerate(grass_depths):
+        for y in range(depth):
             pixels[x, y] = grass_pixels[x, y]
+        # A dark green lower edge separates the hanging turf from the soil.
+        if depth > CLIFF_GRASS_SOLID_ROWS:
+            pixels[x, depth - 1] = darkest_grass
     return img
 
 

@@ -9,8 +9,10 @@ Geometry conventions (must match scripts/map/voxel_map.gd / MapVisualTheme):
 - Top-face origin: the walkable surface sits at local Y=0 (Blender Z=0
   before the glTF Y-up conversion); solid geometry extends downward from
   there, never upward, since VoxelMap places tops at `Vector3(x+.5, cell.height, y+.5)`.
-- TOP_THICKNESS = 0.2 for the grass/dirt/stone top slabs (thin plate, not a
-  full cube - cliffs handle the vertical face separately).
+- Grass/dirt/stone assets are full blocks. Their top and side faces use
+  separate textures: grass has a grassy top and grass-over-dirt sides,
+  while a dirt block has no grass. Lower exposed height levels are still
+  filled by cliff panels in VoxelMap.
 - Cliff panels are centered at the panel's own origin (VoxelMap already
   positions them at `neighbor_height + level + 0.5`, offset by
   `normal * 0.495`), thickness PANEL_THICKNESS, matching the size of the
@@ -34,18 +36,21 @@ from pathlib import Path
 
 import bpy
 
+ROOT = Path(__file__).resolve().parent.parent.parent
+GRASS_SIDE_TEXTURE = ROOT / "assets" / "texture" / "grass" / "grass_side_01.png"
+
 CELL = 1.0
-TOP_THICKNESS = 0.2
 PANEL_THICKNESS = 0.08
 
 ASSETS = [
-    ("terrain_grass_top_01", "box", "terrain_grass_top_01.png"),
-    ("terrain_dirt_top_01", "box", "terrain_dirt_top_01.png"),
-    ("terrain_stone_top_01", "box", "terrain_stone_top_01.png"),
-    ("terrain_cliff_side_01", "panel", "terrain_cliff_side_01.png"),
-    ("terrain_cliff_side_top_01", "panel", "terrain_cliff_side_top_01.png"),
-    ("terrain_cliff_stone_01", "panel", "terrain_cliff_stone_01.png"),
-    ("terrain_stair_01", "stair", "terrain_stone_top_01.png"),
+    # stem, kind, top/main texture, side texture for full blocks
+    ("terrain_grass_top_01", "box", "terrain_grass_top_01.png", GRASS_SIDE_TEXTURE),
+    ("terrain_dirt_top_01", "box", "terrain_dirt_top_01.png", "terrain_cliff_side_01.png"),
+    ("terrain_stone_top_01", "box", "terrain_stone_top_01.png", "terrain_cliff_stone_01.png"),
+    ("terrain_cliff_side_01", "panel", "terrain_cliff_side_01.png", None),
+    ("terrain_cliff_side_top_01", "panel", "terrain_cliff_side_top_01.png", None),
+    ("terrain_cliff_stone_01", "panel", "terrain_cliff_stone_01.png", None),
+    ("terrain_stair_01", "stair", "terrain_stone_top_01.png", None),
 ]
 
 
@@ -68,7 +73,11 @@ def reset_scene() -> None:
             blocks.remove(block)
 
 
-def make_material(name: str, texture_path: Path) -> bpy.types.Material:
+def make_material(
+    name: str,
+    texture_path: Path,
+    emission_strength: float = 0.0,
+) -> bpy.types.Material:
     material = bpy.data.materials.new(name)
     material.use_nodes = True
     nodes = material.node_tree.nodes
@@ -80,36 +89,67 @@ def make_material(name: str, texture_path: Path) -> bpy.types.Material:
     tex_node.image = image
     tex_node.interpolation = "Closest"
     links.new(tex_node.outputs["Color"], bsdf.inputs["Base Color"])
+    if emission_strength > 0.0:
+        emission = bsdf.inputs.get("Emission Color")
+        if emission is None:
+            emission = bsdf.inputs.get("Emission")
+        if emission is not None:
+            links.new(tex_node.outputs["Color"], emission)
+        strength = bsdf.inputs.get("Emission Strength")
+        if strength is not None:
+            strength.default_value = emission_strength
     return material
 
 
-def remap_side_uvs(mesh: bpy.types.Mesh) -> None:
-    """Side faces reuse the texture's top 0.2 V-band instead of the full image."""
+def resolve_texture(tex_dir: Path, texture_ref) -> Path:
+    texture_path = Path(texture_ref)
+    return texture_path if texture_path.is_absolute() else tex_dir / texture_path
+
+
+def map_box_side_uvs(mesh: bpy.types.Mesh) -> None:
+    """Map the complete 0..1 texture rectangle onto each vertical face.
+
+    Blender's primitive cube uses a six-face atlas layout by default. That
+    makes each side sample only a small section when given a standalone tile.
+    The horizontal faces intentionally retain their original UVs so the top
+    surface keeps the established appearance.
+    """
     uv_layer = mesh.uv_layers.active.data
     for polygon in mesh.polygons:
-        if abs(polygon.normal.z) > 0.5:
-            continue  # top/bottom face, keep full 0..1 UV
+        normal = polygon.normal
+        if abs(normal.z) > 0.5:
+            continue
         for loop_index in polygon.loop_indices:
-            uv = uv_layer[loop_index].uv
-            uv.y = 0.8 + uv.y * 0.2
+            vertex = mesh.vertices[mesh.loops[loop_index].vertex_index].co
+            if abs(normal.x) > 0.5:
+                uv = (vertex.y + 0.5, vertex.z + 0.5)
+            else:
+                uv = (vertex.x + 0.5, vertex.z + 0.5)
+            uv_layer[loop_index].uv = uv
 
 
-def build_box(name: str, material: bpy.types.Material) -> bpy.types.Object:
+def build_box(
+    name: str,
+    top_material: bpy.types.Material,
+    side_material: bpy.types.Material,
+) -> bpy.types.Object:
     bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 0.0, 0.0))
     obj = bpy.context.object
     obj.name = name
-    obj.scale.z = TOP_THICKNESS
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    obj.location.z = -TOP_THICKNESS / 2.0
+    # Local Z=0 is the walkable surface; the block extends one cell downward.
+    obj.location.z = -0.5
     obj.scale.x = CELL
     obj.scale.y = CELL
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     mesh = obj.data
-    mesh.materials.append(material)
-    remap_side_uvs(mesh)
+    mesh.materials.append(top_material)
+    mesh.materials.append(side_material)
+    map_box_side_uvs(mesh)
     for polygon in mesh.polygons:
         polygon.use_smooth = False
+        # Only the upward face is grass/topsoil; sides and hidden bottom use
+        # the block's side material.
+        polygon.material_index = 0 if polygon.normal.z > 0.5 else 1
     return obj
 
 
@@ -168,11 +208,18 @@ def main() -> None:
     out_dir = Path(args.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    for stem, kind, texture_name in ASSETS:
+    for stem, kind, texture_name, side_texture_name in ASSETS:
         reset_scene()
-        material = make_material(f"MAT_{stem}", tex_dir / texture_name)
+        material = make_material(
+            f"MAT_{stem}", resolve_texture(tex_dir, texture_name)
+        )
         if kind == "box":
-            build_box(stem, material)
+            side_material = make_material(
+                f"MAT_{stem}_side",
+                resolve_texture(tex_dir, side_texture_name),
+                0.16 if stem == "terrain_grass_top_01" else 0.0,
+            )
+            build_box(stem, material, side_material)
         elif kind == "panel":
             build_panel(stem, material)
         else:

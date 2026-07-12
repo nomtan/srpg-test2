@@ -59,6 +59,14 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 	var is_water := cell.terrain == "water"
 	var is_lava := cell.terrain == "lava"
 	var is_fluid := is_water or is_lava
+	var full_block_terrain := cell.terrain in [
+		"grass", "dirt", "forest", "stone", "stone_road", "rock", "wall", "high_ground"
+	]
+	var has_full_top_block := (
+		full_block_terrain
+		and visual_theme != null
+		and visual_theme.top_scene_for(cell.terrain) != null
+	)
 	for direction: Dictionary in DIRECTIONS:
 		var neighbor_pos: Vector2i = grid_pos + direction.offset
 		var neighbor := map_data.get_cell(neighbor_pos) if map_data.is_in_bounds(neighbor_pos) else null
@@ -67,6 +75,9 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 		var is_stone := cell.terrain in ["stone", "stone_road", "rock", "wall"]
 		for level in levels_needed:
 			var is_top_level := level == levels_needed - 1
+			# The terrain asset itself now supplies all four sides of its top block.
+			if is_top_level and has_full_top_block:
+				continue
 			var side_scene: PackedScene = null
 			if visual_theme:
 				if is_water:
@@ -75,8 +86,6 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 					side_scene = visual_theme.lava_side if visual_theme.lava_side else visual_theme.cliff_side
 				else:
 					side_scene = visual_theme.cliff_stone if is_stone else visual_theme.cliff_side
-					if is_top_level and not is_stone and visual_theme.cliff_side_top:
-						side_scene = visual_theme.cliff_side_top
 			var side := _instantiate(side_scene)
 			if not side: side = _make_fallback_cliff(cell.terrain)
 			var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)

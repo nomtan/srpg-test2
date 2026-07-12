@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctkl8xthr68es"
-path.s3tc="res://.godot/imported/terrain_cliff_side_top_01_terrain_cliff_side_top_01.png-cb2d28bd5e6dc5589e9351e000ae3030.s3tc.ctex"
+uid="uid://dmwbg46dqrmq4"
+path.s3tc="res://.godot/imported/terrain_dirt_top_01_terrain_cliff_side_01.png-1f033a2c6194d389da90373df811855e.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "8753a7a09fe11827537fe78c29511580"
+"md5": "edd821d5d9ff110e0400706336f994f0"
 }
 
 [deps]
 
-source_file="res://assets/terrain/terrain_cliff_side_top_01_terrain_cliff_side_top_01.png"
-dest_files=["res://.godot/imported/terrain_cliff_side_top_01_terrain_cliff_side_top_01.png-cb2d28bd5e6dc5589e9351e000ae3030.s3tc.ctex"]
+source_file="res://assets/terrain/terrain_dirt_top_01_terrain_cliff_side_01.png"
+dest_files=["res://.godot/imported/terrain_dirt_top_01_terrain_cliff_side_01.png-1f033a2c6194d389da90373df811855e.s3tc.ctex"]
 
 [params]
 

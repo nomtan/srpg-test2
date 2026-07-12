@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctkl8xthr68es"
-path.s3tc="res://.godot/imported/terrain_cliff_side_top_01_terrain_cliff_side_top_01.png-cb2d28bd5e6dc5589e9351e000ae3030.s3tc.ctex"
+uid="uid://lgjc7p526g6l"
+path.s3tc="res://.godot/imported/terrain_grass_top_01_grass_side_01.png-8a7ca99f42ff025b6a0e0b436f4fea93.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "8753a7a09fe11827537fe78c29511580"
+"md5": "8c80ce46057313b9f8b40cba0da7c41d"
 }
 
 [deps]
 
-source_file="res://assets/terrain/terrain_cliff_side_top_01_terrain_cliff_side_top_01.png"
-dest_files=["res://.godot/imported/terrain_cliff_side_top_01_terrain_cliff_side_top_01.png-cb2d28bd5e6dc5589e9351e000ae3030.s3tc.ctex"]
+source_file="res://assets/terrain/terrain_grass_top_01_grass_side_01.png"
+dest_files=["res://.godot/imported/terrain_grass_top_01_grass_side_01.png-8a7ca99f42ff025b6a0e0b436f4fea93.s3tc.ctex"]
 
 [params]
 
