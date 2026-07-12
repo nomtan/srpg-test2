@@ -13,6 +13,17 @@ const DIRECTIONS := [
 # panel must sink by the same amount or it pokes above the surface.
 const SURFACE_OFFSET := 0.08
 
+const GRASS_SHORT_VARIANTS: Array[PackedScene] = [
+	preload("res://assets/props/grass/prop_grass_short_01.tscn"),
+	preload("res://assets/props/grass/prop_grass_short_02.tscn"),
+	preload("res://assets/props/grass/prop_grass_short_03.tscn"),
+]
+const GRASS_MID_VARIANTS: Array[PackedScene] = [
+	preload("res://assets/props/grass/prop_grass_mid_01.tscn"),
+	preload("res://assets/props/grass/prop_grass_mid_02.tscn"),
+	preload("res://assets/props/grass/prop_grass_mid_03.tscn"),
+]
+
 @export var visual_theme: MapVisualTheme
 @export var decorations: Array[MapDecorationData] = []
 @export_group("Automatic grass props")
@@ -100,17 +111,19 @@ func _create_random_grass(cell: MapCellVisualData) -> void:
 		return
 	var type_roll := rng.randf()
 	var kind := "grass_short"
-	var height_scale := 1.0
+	var scene: PackedScene
 	if type_roll >= 0.90:
 		kind = "grass_tall" # Long: 10%
+		scene = visual_theme.decoration_scene_for(kind) if visual_theme else null
 	elif type_roll >= 0.65:
-		kind = "grass_tall" # Medium: 25%, derived from the tall asset.
-		height_scale = 0.70
-	var scene := visual_theme.decoration_scene_for(kind) if visual_theme else null
+		# Medium: 25%, evenly choose one of the dedicated variants.
+		scene = GRASS_MID_VARIANTS[rng.randi_range(0, GRASS_MID_VARIANTS.size() - 1)]
+	else:
+		# Short: 65%, evenly choose one of the dedicated variants.
+		scene = GRASS_SHORT_VARIANTS[rng.randi_range(0, GRASS_SHORT_VARIANTS.size() - 1)]
 	var grass := _instantiate(scene, false)
 	if not grass:
 		grass = _make_fallback_decoration(kind)
-	grass.scale.y = height_scale
 	grass.position = Vector3(
 		cell.position.x + rng.randf_range(0.28, 0.72),
 		float(cell.height),

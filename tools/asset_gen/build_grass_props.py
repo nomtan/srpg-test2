@@ -10,6 +10,11 @@ import bpy
 
 PROPS = (
     ("prop_grass_short_01", "prop_grass_short_01.png", 0.9, 0.45),
+    ("prop_grass_short_02", "prop_grass_short_02.png", 0.9, 0.45),
+    ("prop_grass_short_03", "prop_grass_short_03.png", 0.9, 0.45),
+    ("prop_grass_mid_01", "prop_grass_mid_01.png", 0.9, 0.65),
+    ("prop_grass_mid_02", "prop_grass_mid_02.png", 0.9, 0.65),
+    ("prop_grass_mid_03", "prop_grass_mid_03.png", 0.9, 0.65),
     ("prop_grass_tall_01", "prop_grass_tall_01.png", 0.9, 0.85),
 )
 
@@ -61,6 +66,16 @@ def make_material(name: str, texture_path: Path) -> bpy.types.Material:
     links.new(texture.outputs["Color"], bsdf.inputs["Base Color"])
     links.new(texture.outputs["Alpha"], alpha_clip.inputs[0])
     links.new(alpha_clip.outputs[0], bsdf.inputs["Alpha"])
+    # Preserve normal lighting while preventing the unlit side of each
+    # crossed plane from becoming almost black in Godot.
+    emission = bsdf.inputs.get("Emission Color")
+    if emission is None:
+        emission = bsdf.inputs.get("Emission")
+    if emission is not None:
+        links.new(texture.outputs["Color"], emission)
+    emission_strength = bsdf.inputs.get("Emission Strength")
+    if emission_strength is not None:
+        emission_strength.default_value = 0.18
     return material
 
 

@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwkuftgqal5ri"
-path.s3tc="res://.godot/imported/prop_grass_tall_01_prop_grass_tall_01.png-7ed0fc9118c2f1318eaa1795a07cb57b.s3tc.ctex"
+uid="uid://fxlxvmd7eb8s"
+path.s3tc="res://.godot/imported/prop_grass_mid_03_prop_grass_mid_03.png-be9d6cb084eddf723f5f886646e7c4a8.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "07099793c9cb3a0f4a92dac9ed0d870d"
+"md5": "f9cd8b3e9b391a567bbff0482d7d4bbd"
 }
 
 [deps]
 
-source_file="res://assets/props/grass/prop_grass_tall_01_prop_grass_tall_01.png"
-dest_files=["res://.godot/imported/prop_grass_tall_01_prop_grass_tall_01.png-7ed0fc9118c2f1318eaa1795a07cb57b.s3tc.ctex"]
+source_file="res://assets/props/grass/prop_grass_mid_03_prop_grass_mid_03.png"
+dest_files=["res://.godot/imported/prop_grass_mid_03_prop_grass_mid_03.png-be9d6cb084eddf723f5f886646e7c4a8.s3tc.ctex"]
 
 [params]
 
