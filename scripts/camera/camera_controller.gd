@@ -7,6 +7,7 @@ var camera: Camera3D
 var focus_offset := Vector3(30.0, 46.8, -38.0)
 var focus_target := Vector3.ZERO
 var rotation_tween: Tween
+var focus_tween: Tween
 
 const TILT_STEP_DEGREES := 10.0
 const MIN_ELEVATION_DEGREES := 20.0
@@ -27,19 +28,22 @@ func setup() -> Camera3D:
 
 
 func pulse_focus() -> void:
-	if not camera: return
-	var tween := create_tween()
-	tween.tween_property(camera, "size", 22.0, 0.15)
-	tween.tween_interval(0.25)
-	tween.tween_property(camera, "size", 24.0, 0.2)
+	# Battle feedback must not change player-controlled zoom.
+	return
 
 func focus_on_unit(unit: BattleUnit) -> void:
 	if not camera or not unit: return
+	var current_offset := camera.global_position - focus_target
+	if current_offset.is_zero_approx():
+		current_offset = focus_offset
+	focus_offset = current_offset
 	focus_target = unit.global_position
-	var destination := focus_target + focus_offset
-	var tween := create_tween()
+	var destination := focus_target + current_offset
+	if focus_tween and focus_tween.is_valid():
+		focus_tween.kill()
+	focus_tween = create_tween()
+	focus_tween.tween_property(camera, "global_position", destination, 0.25)
 	# アクティブユニットへのフォーカスでは、回転とズームを維持して位置だけを動かす。
-	tween.tween_property(camera, "global_position", destination, 0.25)
 
 
 func pan(screen_delta: Vector2) -> void:

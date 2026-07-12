@@ -94,13 +94,13 @@ func configure(
 	name = unit_id
 
 
-const MODEL_SCALE := 7.5
 const FACING_MODEL_ANGLES := [180.0, -90.0, 0.0, 90.0]
 
 var model_instance: Node3D
+var animation_player: AnimationPlayer
 
 
-func setup_visual(model_path: String = "") -> void:
+func setup_visual(model_path: String = "", model_scale: float = 1.0) -> void:
 	body_material = StandardMaterial3D.new()
 	if attack_type == AttackType.RANGED:
 		base_color = Color("#65c8a0") if team == "player" else Color("#d47a42")
@@ -112,8 +112,11 @@ func setup_visual(model_path: String = "") -> void:
 	if not model_path.is_empty():
 		var packed: PackedScene = load(model_path)
 		model_instance = packed.instantiate()
-		model_instance.scale = Vector3.ONE * MODEL_SCALE
+		model_instance.scale = Vector3.ONE * model_scale
 		add_child(model_instance)
+		var players := model_instance.find_children("*", "AnimationPlayer", true, false)
+		if not players.is_empty():
+			animation_player = players[0] as AnimationPlayer
 	else:
 		var body := MeshInstance3D.new()
 		var capsule := CapsuleMesh.new()
@@ -134,6 +137,18 @@ func setup_visual(model_path: String = "") -> void:
 	add_child(marker)
 	update_visual_state()
 	update_facing_visual()
+
+
+func play_walk_animation() -> void:
+	if animation_player and animation_player.has_animation("walk"):
+		animation_player.get_animation("walk").loop_mode = Animation.LOOP_LINEAR
+		animation_player.play("walk")
+
+
+func stop_walk_animation() -> void:
+	if animation_player:
+		animation_player.stop()
+		animation_player.seek(0.0, true)
 
 
 func face_toward(target_pos: Vector2i) -> void:
