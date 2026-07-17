@@ -98,6 +98,8 @@ const FACING_MODEL_ANGLES := [180.0, -90.0, 0.0, 90.0]
 
 var model_instance: Node3D
 var animation_player: AnimationPlayer
+var weapon_attachment: BoneAttachment3D
+var weapon_instance: Node3D
 
 
 func setup_visual(model_path: String = "", model_scale: float = 1.0) -> void:
@@ -149,6 +151,44 @@ func stop_walk_animation() -> void:
 	if animation_player:
 		animation_player.stop()
 		animation_player.seek(0.0, true)
+
+
+func equip_weapon_visual(
+	model_path: String,
+	bone_name: String = "hand_R",
+	local_rotation_degrees: Vector3 = Vector3(0.0, 0.0, 180.0),
+	local_scale: float = 0.78
+) -> void:
+	if weapon_attachment:
+		weapon_attachment.queue_free()
+		weapon_attachment = null
+		weapon_instance = null
+	if not model_instance or model_path.is_empty():
+		return
+
+	var skeletons := model_instance.find_children("*", "Skeleton3D", true, false)
+	if skeletons.is_empty():
+		push_warning("Cannot equip weapon: character model has no Skeleton3D")
+		return
+	var skeleton := skeletons[0] as Skeleton3D
+	if skeleton.find_bone(bone_name) < 0:
+		push_warning("Cannot equip weapon: bone '%s' was not found" % bone_name)
+		return
+
+	weapon_attachment = BoneAttachment3D.new()
+	weapon_attachment.name = "WeaponAttachment"
+	weapon_attachment.bone_name = bone_name
+	skeleton.add_child(weapon_attachment)
+
+	var packed: PackedScene = load(model_path)
+	if not packed:
+		push_warning("Cannot equip weapon: failed to load '%s'" % model_path)
+		return
+	weapon_instance = packed.instantiate()
+	weapon_instance.name = "EquippedWeapon"
+	weapon_instance.rotation_degrees = local_rotation_degrees
+	weapon_instance.scale = Vector3.ONE * local_scale
+	weapon_attachment.add_child(weapon_instance)
 
 
 func face_toward(target_pos: Vector2i) -> void:

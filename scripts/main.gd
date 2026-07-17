@@ -72,6 +72,7 @@ const MASONRY_SHOWCASE: Array[Dictionary] = [
 @onready var equipment_system: Node = $EquipmentSystem
 @onready var weapon_power_calculator: Node = $WeaponPowerCalculator
 @onready var direction_compass: DirectionCompass = $UI/DirectionCompass
+@onready var coordinate_label: Label = $UI/CoordinateLabel
 
 var reachable: Dictionary = {}
 var original_grid_pos := Vector2i.ZERO
@@ -128,6 +129,7 @@ func _ready() -> void:
 	cursor.confirm_pressed.connect(_on_confirm)
 	cursor.cancel_pressed.connect(_on_cancel)
 	cursor.grid_position_changed.connect(_on_cursor_grid_position_changed)
+	_update_coordinate_label(cursor.grid_position)
 	action_menu.attack_selected.connect(_on_attack_selected)
 	action_menu.wait_selected.connect(_on_wait_selected)
 	action_menu.cancel_selected.connect(_cancel_after_move)
@@ -569,6 +571,7 @@ func _update_unit_info(grid_pos: Vector2i) -> void:
 
 
 func _on_cursor_grid_position_changed(grid_pos: Vector2i) -> void:
+	_update_coordinate_label(grid_pos)
 	_update_unit_info(grid_pos)
 	if cursor.current_mode == BattleCursor.CursorMode.MOVE_TARGETING:
 		_update_move_threat_preview(grid_pos)
@@ -577,6 +580,12 @@ func _on_cursor_grid_position_changed(grid_pos: Vector2i) -> void:
 		pass
 	else:
 		threat_arrows.clear_threat_arrows()
+
+
+func _update_coordinate_label(grid_pos: Vector2i) -> void:
+	var cell := grid.get_cell(grid_pos)
+	var height := cell.height if cell else 0
+	coordinate_label.text = "%d:%d:%d" % [grid_pos.x, height, grid_pos.y]
 
 
 func _update_move_threat_preview(grid_pos: Vector2i) -> void:

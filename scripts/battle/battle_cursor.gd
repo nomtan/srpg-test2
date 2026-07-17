@@ -17,6 +17,7 @@ var input_enabled: bool = true
 var current_mode: CursorMode = CursorMode.IDLE
 
 const _DRAG_THRESHOLD := 6.0
+const _KEYBOARD_ORBIT_SPEED := 105.0
 var _mouse_held := false
 var _drag_start_pos := Vector2.ZERO
 var _dragging := false
@@ -32,6 +33,30 @@ func setup(source_grid: GridSystem, source_camera: Camera3D, cam_controller: Cam
 	range_root.name = "MoveRange"
 	add_child(range_root)
 	_update_cursor_visual()
+
+
+func _process(delta: float) -> void:
+	if not camera_controller:
+		return
+	var orbit_direction := 0.0
+	if Input.is_key_pressed(KEY_Q):
+		orbit_direction -= 1.0
+	if Input.is_key_pressed(KEY_E):
+		orbit_direction += 1.0
+	if not is_zero_approx(orbit_direction):
+		camera_controller.orbit_view(orbit_direction * _KEYBOARD_ORBIT_SPEED * delta)
+
+	var pan_direction := Vector2.ZERO
+	if Input.is_key_pressed(KEY_LEFT):
+		pan_direction.x -= 1.0
+	if Input.is_key_pressed(KEY_RIGHT):
+		pan_direction.x += 1.0
+	if Input.is_key_pressed(KEY_UP):
+		pan_direction.y -= 1.0
+	if Input.is_key_pressed(KEY_DOWN):
+		pan_direction.y += 1.0
+	if not pan_direction.is_zero_approx():
+		camera_controller.pan_keyboard(pan_direction.normalized(), delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -68,24 +93,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			if event.position.distance_to(_drag_start_pos) > _DRAG_THRESHOLD:
 				_dragging = true
 		if _dragging and camera_controller:
-			camera_controller.pan(event.relative)
+			camera_controller.orbit_from_mouse(event.relative)
 			get_viewport().set_input_as_handled()
-		elif input_enabled:
+		elif not _dragging:
 			_update_from_mouse(event.position)
 		return
 
-	# Q/E orbit horizontally; R/F raise and lower the viewing angle.
-	if _is_key(event, KEY_Q):
-		if camera_controller:
-			camera_controller.rotate_view(-1)
-			get_viewport().set_input_as_handled()
-		return
-	elif _is_key(event, KEY_E):
-		if camera_controller:
-			camera_controller.rotate_view(1)
-			get_viewport().set_input_as_handled()
-		return
-	elif _is_key(event, KEY_R):
+	# R/F remain available for keyboard-only elevation adjustments.
+	if _is_key(event, KEY_R):
 		if camera_controller:
 			camera_controller.tilt_view(1)
 			get_viewport().set_input_as_handled()
@@ -100,10 +115,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	var movement := Vector2i.ZERO
-	if event.is_action_pressed("ui_left") or _is_key(event, KEY_A): movement = Vector2i.LEFT
-	elif event.is_action_pressed("ui_right") or _is_key(event, KEY_D): movement = Vector2i.RIGHT
-	elif event.is_action_pressed("ui_up") or _is_key(event, KEY_W): movement = Vector2i.UP
-	elif event.is_action_pressed("ui_down") or _is_key(event, KEY_S): movement = Vector2i.DOWN
+	if _is_key(event, KEY_A): movement = Vector2i.LEFT
+	elif _is_key(event, KEY_D): movement = Vector2i.RIGHT
+	elif _is_key(event, KEY_W): movement = Vector2i.UP
+	elif _is_key(event, KEY_S): movement = Vector2i.DOWN
 
 	if movement != Vector2i.ZERO:
 		grid_position = Vector2i(
