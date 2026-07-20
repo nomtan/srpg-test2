@@ -428,7 +428,7 @@ func _play_pending_movement() -> void:
 		return
 	cursor.input_enabled = false
 	unit.position = grid.grid_to_world(original_grid_pos, 0.05)
-	await unit_mover.move_unit_along_path(unit, pending_move_path)
+	await unit_mover.move_unit_along_path(unit, pending_move_path, original_grid_pos)
 	pending_move_path.clear()
 
 

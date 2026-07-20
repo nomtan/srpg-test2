@@ -124,6 +124,7 @@ func get_battle_preview(attacker: BattleUnit, target: BattleUnit) -> Dictionary:
 func execute_attack(attacker: BattleUnit, target: BattleUnit) -> Dictionary:
 	if not can_attack(attacker, target): return {"success": false, "hit": false, "damage": 0, "message": "Cannot attack", "defeated": false}
 	attacker.face_toward(Vector2i(target.grid_x, target.grid_z))
+	attacker.play_attack_animation()
 	var hit_rate := calculate_hit_rate(attacker, target)
 	if randi_range(1, 100) > hit_rate: return {"success": true, "hit": false, "damage": 0, "message": "Miss!", "defeated": false, "hit_rate": hit_rate}
 	var damage := calculate_damage(attacker, target)

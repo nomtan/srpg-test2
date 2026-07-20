@@ -2,7 +2,11 @@ class_name UnitManager
 extends Node3D
 
 const ENABLE_DEBUG_NEARBY_ENEMY := true
-const VEIN_CHARACTER_MODEL := "res://assets/characters/hero/hero_guard.glb"
+const VEIN_CHARACTER_MODEL := "res://assets/characters/py/base_body.glb"
+const VEIN_CHARACTER_SCALE := 1.02
+const VEIN_CHARACTER_Y_OFFSET := -0.045
+const VEIN_CHARACTER_FACING_OFFSET := -90.0
+const VEIN_USE_CEL_SHADING := true
 
 var grid: GridSystem
 var units: Array[BattleUnit] = []
@@ -15,7 +19,7 @@ func setup(source_grid: GridSystem) -> void:
 
 
 func spawn_initial_units() -> void:
-	_spawn_unit("vain", "Vain", Vector2i(10, 10), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, 0.34)
+	_spawn_unit("vain", "Vain", Vector2i(10, 10), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_CEL_SHADING)
 	_spawn_unit("acrea", "Acrea", Vector2i(6, 3), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1)
 	_spawn_unit("glen", "Glen", Vector2i(3, 6), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3)
 	var debug_enemy: BattleUnit
@@ -70,12 +74,15 @@ func _spawn_unit(
 	min_range: int = 1,
 	max_range: int = 1,
 	model_path: String = "",
-	model_scale: float = 1.0
+	model_scale: float = 1.0,
+	model_y_offset: float = 0.0,
+	model_facing_offset: float = 0.0,
+	use_cel_shading: bool = false
 ) -> BattleUnit:
 	var unit := BattleUnit.new()
 	unit.configure(unit_id, display_name, grid_pos, team)
 	unit.set_combat_stats(max_hp, power, armor, accuracy, evasion, attack_type, min_range, max_range)
-	unit.setup_visual(model_path, model_scale)
+	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_cel_shading)
 	add_child(unit)
 	units.append(unit)
 	grid.set_occupied_unit(grid_pos, unit)

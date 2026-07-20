@@ -94,15 +94,48 @@ func configure(
 	name = unit_id
 
 
-const FACING_MODEL_ANGLES := [180.0, -90.0, 0.0, 90.0]
+const FACING_MODEL_ANGLES := [180.0, 90.0, 0.0, -90.0]
 
 var model_instance: Node3D
 var animation_player: AnimationPlayer
 var weapon_attachment: BoneAttachment3D
 var weapon_instance: Node3D
+var attack_animation_name: StringName
+var model_facing_offset_degrees := 0.0
+
+const IDLE_ANIMATION_NAMES: Array[StringName] = [
+	&"animation_onehand_sword_idle",
+	&"animation.onehand_sword_idle",
+	&"onehand_sword_idle",
+	&"idle",
+]
+const RUN_ANIMATION_NAMES: Array[StringName] = [
+	&"animation_onehand_sword_run",
+	&"animation.onehand_sword_run",
+	&"animation_run",
+	&"animation.run",
+	&"onehand_sword_run",
+	&"run",
+	&"walk",
+]
+const ATTACK_ANIMATION_NAMES: Array[StringName] = [
+	&"animation_onehand_sword_attack",
+	&"animation.onehand_sword_attack",
+	&"onehand_sword_attack",
+	&"attack",
+]
+const CHARACTER_CEL_SHADER := preload("res://assets/shaders/character_cel.gdshader")
+const CHARACTER_OUTLINE_SHADER := preload("res://assets/shaders/character_outline.gdshader")
 
 
-func setup_visual(model_path: String = "", model_scale: float = 1.0) -> void:
+func setup_visual(
+	model_path: String = "",
+	model_scale: float = 1.0,
+	model_y_offset: float = 0.0,
+	facing_offset_degrees: float = 0.0,
+	use_cel_shading: bool = false
+) -> void:
+	model_facing_offset_degrees = facing_offset_degrees
 	body_material = StandardMaterial3D.new()
 	if attack_type == AttackType.RANGED:
 		base_color = Color("#65c8a0") if team == "player" else Color("#d47a42")
@@ -115,10 +148,14 @@ func setup_visual(model_path: String = "", model_scale: float = 1.0) -> void:
 		var packed: PackedScene = load(model_path)
 		model_instance = packed.instantiate()
 		model_instance.scale = Vector3.ONE * model_scale
+		model_instance.position = Vector3(0.0, model_y_offset, 0.0)
 		add_child(model_instance)
+		if use_cel_shading:
+			_apply_cel_shading(model_instance)
 		var players := model_instance.find_children("*", "AnimationPlayer", true, false)
 		if not players.is_empty():
 			animation_player = players[0] as AnimationPlayer
+			animation_player.animation_finished.connect(_on_animation_finished)
 	else:
 		var body := MeshInstance3D.new()
 		var capsule := CapsuleMesh.new()
@@ -139,18 +176,82 @@ func setup_visual(model_path: String = "", model_scale: float = 1.0) -> void:
 	add_child(marker)
 	update_visual_state()
 	update_facing_visual()
+	play_idle_animation()
+
+
+func _apply_cel_shading(root: Node) -> void:
+	var meshes := root.find_children("*", "MeshInstance3D", true, false)
+	for child in meshes:
+		var mesh_instance := child as MeshInstance3D
+		if not mesh_instance or not mesh_instance.mesh:
+			continue
+		for surface_index in range(mesh_instance.mesh.get_surface_count()):
+			var source_material := mesh_instance.get_active_material(surface_index)
+			var surface_color := Color.WHITE
+			if source_material is BaseMaterial3D:
+				surface_color = (source_material as BaseMaterial3D).albedo_color
+
+			var outline_material := ShaderMaterial.new()
+			outline_material.shader = CHARACTER_OUTLINE_SHADER
+			outline_material.set_shader_parameter("outline_color", Color("#050506"))
+			outline_material.set_shader_parameter("outline_width", 0.012)
+
+			var cel_material := ShaderMaterial.new()
+			cel_material.shader = CHARACTER_CEL_SHADER
+			cel_material.set_shader_parameter("base_color", surface_color)
+			cel_material.set_shader_parameter("shadow_tone", 0.42)
+			cel_material.set_shader_parameter("band_split", 0.5)
+			cel_material.next_pass = outline_material
+			mesh_instance.set_surface_override_material(surface_index, cel_material)
 
 
 func play_walk_animation() -> void:
-	if animation_player and animation_player.has_animation("walk"):
-		animation_player.get_animation("walk").loop_mode = Animation.LOOP_LINEAR
-		animation_player.play("walk")
+	_play_animation(RUN_ANIMATION_NAMES, Animation.LOOP_LINEAR)
 
 
 func stop_walk_animation() -> void:
-	if animation_player:
-		animation_player.stop()
-		animation_player.seek(0.0, true)
+	play_idle_animation()
+
+
+func play_idle_animation() -> void:
+	attack_animation_name = &""
+	_play_animation(IDLE_ANIMATION_NAMES, Animation.LOOP_LINEAR)
+
+
+func play_attack_animation() -> void:
+	attack_animation_name = _find_animation(ATTACK_ANIMATION_NAMES)
+	if attack_animation_name.is_empty():
+		return
+	var animation := animation_player.get_animation(attack_animation_name)
+	animation.loop_mode = Animation.LOOP_NONE
+	animation_player.play(attack_animation_name)
+
+
+func _play_animation(candidates: Array[StringName], loop_mode: Animation.LoopMode) -> void:
+	var animation_name := _find_animation(candidates)
+	if animation_name.is_empty():
+		return
+	var animation := animation_player.get_animation(animation_name)
+	animation.loop_mode = loop_mode
+	animation_player.play(animation_name)
+
+
+func _find_animation(candidates: Array[StringName]) -> StringName:
+	if not animation_player:
+		return &""
+	for candidate in candidates:
+		if animation_player.has_animation(candidate):
+			return candidate
+	for available in animation_player.get_animation_list():
+		for candidate in candidates:
+			if String(available).ends_with("/" + String(candidate)):
+				return available
+	return &""
+
+
+func _on_animation_finished(finished_animation: StringName) -> void:
+	if not attack_animation_name.is_empty() and finished_animation == attack_animation_name:
+		play_idle_animation()
 
 
 func equip_weapon_visual(
@@ -193,6 +294,10 @@ func equip_weapon_visual(
 
 func face_toward(target_pos: Vector2i) -> void:
 	var delta := target_pos - Vector2i(grid_x, grid_z)
+	face_along_grid_delta(delta)
+
+
+func face_along_grid_delta(delta: Vector2i) -> void:
 	if absi(delta.x) >= absi(delta.y) and delta.x != 0:
 		facing = FacingDirection.EAST if delta.x > 0 else FacingDirection.WEST
 	elif delta.y != 0:
@@ -210,7 +315,7 @@ func update_facing_visual() -> void:
 	var offsets := [Vector3(0, 1.05, -0.28), Vector3(0.28, 1.05, 0), Vector3(0, 1.05, 0.28), Vector3(-0.28, 1.05, 0)]
 	direction_marker.position = offsets[int(facing)]
 	if model_instance:
-		model_instance.rotation_degrees.y = FACING_MODEL_ANGLES[int(facing)]
+		model_instance.rotation_degrees.y = FACING_MODEL_ANGLES[int(facing)] + model_facing_offset_degrees
 
 
 func set_selected(selected: bool) -> void:

@@ -1,0 +1,48 @@
+{
+  "skin": {
+    "colors": [
+      2
+    ],
+    "hex": "#d9a17e"
+  },
+  "tunic": {
+    "colors": [
+      6
+    ],
+    "hex": "#4e5a63"
+  },
+  "boots": {
+    "colors": [
+      5
+    ],
+    "hex": "#3a2e27"
+  },
+  "accent": {
+    "colors": [
+      9
+    ],
+    "hex": "#a98c4a"
+  },
+  "metal": {
+    "colors": [
+      1
+    ],
+    "hex": "#b7c0c9"
+  },
+  "leather": {
+    "colors": [
+      4
+    ],
+    "hex": "#6e4b32"
+  },
+  "darkmetal": {
+    "colors": [
+      7
+    ],
+    "hex": "#40474d"
+  },
+  "wood": {
+    "colors": [],
+    "hex": "#7a5a3a"
+  }
+}
