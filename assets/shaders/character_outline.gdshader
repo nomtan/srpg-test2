@@ -2,7 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_front, depth_draw_opaque;
 
 uniform vec4 outline_color : source_color = vec4(0.02, 0.02, 0.025, 1.0);
-uniform float outline_width : hint_range(0.0, 0.05) = 0.012;
+uniform float outline_width : hint_range(0.0, 0.05) = 0.048;
 
 void vertex() {
 	VERTEX += NORMAL * outline_width;

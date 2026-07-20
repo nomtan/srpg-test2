@@ -74,6 +74,7 @@ var temporary_defense_bonus := 0
 var body_material: StandardMaterial3D
 var base_color: Color
 var direction_marker: MeshInstance3D
+var status_bars: Sprite3D
 
 
 func configure(
@@ -102,6 +103,7 @@ var weapon_attachment: BoneAttachment3D
 var weapon_instance: Node3D
 var attack_animation_name: StringName
 var model_facing_offset_degrees := 0.0
+var animation_profile := "onehand_sword"
 
 const IDLE_ANIMATION_NAMES: Array[StringName] = [
 	&"animation_onehand_sword_idle",
@@ -124,8 +126,25 @@ const ATTACK_ANIMATION_NAMES: Array[StringName] = [
 	&"onehand_sword_attack",
 	&"attack",
 ]
+const BOW_IDLE_ANIMATION_NAMES: Array[StringName] = [
+	&"animation_bow_idle",
+	&"animation.bow_idle",
+	&"bow_idle",
+]
+const BOW_RUN_ANIMATION_NAMES: Array[StringName] = [
+	&"animation_bow_run",
+	&"animation.bow_run",
+	&"bow_run",
+	&"run",
+]
+const BOW_ATTACK_ANIMATION_NAMES: Array[StringName] = [
+	&"animation_bow_attack",
+	&"animation.bow_attack",
+	&"bow_attack",
+]
 const CHARACTER_CEL_SHADER := preload("res://assets/shaders/character_cel.gdshader")
 const CHARACTER_OUTLINE_SHADER := preload("res://assets/shaders/character_outline.gdshader")
+const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd")
 
 
 func setup_visual(
@@ -133,9 +152,13 @@ func setup_visual(
 	model_scale: float = 1.0,
 	model_y_offset: float = 0.0,
 	facing_offset_degrees: float = 0.0,
-	use_cel_shading: bool = false
+	use_cel_shading: bool = false,
+	requested_animation_profile: String = "onehand_sword",
+	tunic_color: Color = Color.TRANSPARENT,
+	accent_color: Color = Color.TRANSPARENT
 ) -> void:
 	model_facing_offset_degrees = facing_offset_degrees
+	animation_profile = requested_animation_profile
 	body_material = StandardMaterial3D.new()
 	if attack_type == AttackType.RANGED:
 		base_color = Color("#65c8a0") if team == "player" else Color("#d47a42")
@@ -151,7 +174,7 @@ func setup_visual(
 		model_instance.position = Vector3(0.0, model_y_offset, 0.0)
 		add_child(model_instance)
 		if use_cel_shading:
-			_apply_cel_shading(model_instance)
+			_apply_cel_shading(model_instance, tunic_color, accent_color)
 		var players := model_instance.find_children("*", "AnimationPlayer", true, false)
 		if not players.is_empty():
 			animation_player = players[0] as AnimationPlayer
@@ -174,12 +197,17 @@ func setup_visual(
 	marker.position = Vector3(0, 1.05, -0.05)
 	marker.material_override = body_material
 	add_child(marker)
+	status_bars = UNIT_STATUS_BAR_SCRIPT.new()
+	status_bars.configure(team)
+	status_bars.position.y = 2.05 if model_instance else 1.45
+	add_child(status_bars)
 	update_visual_state()
 	update_facing_visual()
+	refresh_status_bars()
 	play_idle_animation()
 
 
-func _apply_cel_shading(root: Node) -> void:
+func _apply_cel_shading(root: Node, tunic_color: Color, accent_color: Color) -> void:
 	var meshes := root.find_children("*", "MeshInstance3D", true, false)
 	for child in meshes:
 		var mesh_instance := child as MeshInstance3D
@@ -190,6 +218,10 @@ func _apply_cel_shading(root: Node) -> void:
 			var surface_color := Color.WHITE
 			if source_material is BaseMaterial3D:
 				surface_color = (source_material as BaseMaterial3D).albedo_color
+				if source_material.resource_name == "tunic" and tunic_color.a > 0.0:
+					surface_color = tunic_color
+				elif source_material.resource_name == "accent" and accent_color.a > 0.0:
+					surface_color = accent_color
 
 			var outline_material := ShaderMaterial.new()
 			outline_material.shader = CHARACTER_OUTLINE_SHADER
@@ -206,7 +238,7 @@ func _apply_cel_shading(root: Node) -> void:
 
 
 func play_walk_animation() -> void:
-	_play_animation(RUN_ANIMATION_NAMES, Animation.LOOP_LINEAR)
+	_play_animation(BOW_RUN_ANIMATION_NAMES if animation_profile == "bow" else RUN_ANIMATION_NAMES, Animation.LOOP_LINEAR)
 
 
 func stop_walk_animation() -> void:
@@ -215,11 +247,12 @@ func stop_walk_animation() -> void:
 
 func play_idle_animation() -> void:
 	attack_animation_name = &""
-	_play_animation(IDLE_ANIMATION_NAMES, Animation.LOOP_LINEAR)
+	_play_animation(BOW_IDLE_ANIMATION_NAMES if animation_profile == "bow" else IDLE_ANIMATION_NAMES, Animation.LOOP_LINEAR)
 
 
 func play_attack_animation() -> void:
-	attack_animation_name = _find_animation(ATTACK_ANIMATION_NAMES)
+	var candidates := BOW_ATTACK_ANIMATION_NAMES if animation_profile == "bow" else ATTACK_ANIMATION_NAMES
+	attack_animation_name = _find_animation(candidates)
 	if attack_animation_name.is_empty():
 		return
 	var animation := animation_player.get_animation(attack_animation_name)
@@ -351,6 +384,7 @@ func take_damage(amount: int) -> void:
 	if hp == 0:
 		die()
 	update_visual_state()
+	refresh_status_bars()
 
 
 func die() -> void:
@@ -380,6 +414,7 @@ func configure_role(id: String, display_name: String, affinity: ElementType, new
 	equipped_skill_ids = skills.duplicate()
 	job_levels[id] = job_level
 	job_exps[id] = job_exp
+	refresh_status_bars()
 
 func get_job_level_for(id: String) -> int: return int(job_levels.get(id, 1))
 func get_job_exp_for(id: String) -> int: return int(job_exps.get(id, 0))
@@ -414,6 +449,7 @@ func apply_level_growth(growth: Dictionary) -> Dictionary:
 	base_int += int(growth.get("int", 1))
 	base_agi += int(growth.get("agi", growth.get("evasion", 1)))
 	hp = max_hp; ap = max_ap
+	refresh_status_bars()
 	return growth
 
 func refresh_build_stats(status_calculator: Node) -> void:
@@ -427,6 +463,12 @@ func refresh_build_stats(status_calculator: Node) -> void:
 	accuracy = build_stats.accuracy; evasion = build_stats.evasion
 	move_range = build_stats.move_range; jump_height = build_stats.jump_height
 	hp = clampi(roundi(max_hp * hp_ratio), 1, max_hp) if not is_dead else 0
+	refresh_status_bars()
+
+
+func refresh_status_bars() -> void:
+	if status_bars:
+		status_bars.update_values(hp, max_hp, ap, max_ap)
 
 func add_job_exp(amount: int) -> Array[Dictionary]:
 	var target_job := main_job_id if not main_job_id.is_empty() else job_id

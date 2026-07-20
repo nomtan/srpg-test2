@@ -93,6 +93,7 @@ func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> 
 	if not can_use_skill(user, skill) or not can_target_skill(user, skill, target_pos): return {"success": false, "message": "Cannot use skill"}
 	var preview := calculate_preview(user, skill, target_pos)
 	user.ap = maxi(0, user.ap - skill.ap_cost)
+	user.refresh_status_bars()
 	var messages: Array[String] = ["%s uses %s" % [user.unit_name, skill.skill_name]]
 	var target_results: Array[Dictionary] = []
 	for target: BattleUnit in preview.targets:
@@ -103,6 +104,7 @@ func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> 
 		elif preview.is_heal:
 			var healed := mini(int(preview.value), target.max_hp - target.hp)
 			target.hp += healed
+			target.refresh_status_bars()
 			messages.append("%s recovers %d HP" % [target.unit_name, healed])
 			target_results.append({"target": target, "hit": true, "damage": 0, "heal": healed, "defeated": false, "result_type": "heal"})
 		elif randi_range(1, 100) <= int(preview.hit_rate):
