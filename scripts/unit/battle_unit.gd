@@ -101,6 +101,8 @@ var model_instance: Node3D
 var animation_player: AnimationPlayer
 var weapon_attachment: BoneAttachment3D
 var weapon_instance: Node3D
+var face_attachment: BoneAttachment3D
+var face_instance: MeshInstance3D
 var attack_animation_name: StringName
 var model_facing_offset_degrees := 0.0
 var animation_profile := "onehand_sword"
@@ -144,6 +146,7 @@ const BOW_ATTACK_ANIMATION_NAMES: Array[StringName] = [
 ]
 const CHARACTER_CEL_SHADER := preload("res://assets/shaders/character_cel.gdshader")
 const CHARACTER_OUTLINE_SHADER := preload("res://assets/shaders/character_outline.gdshader")
+const CHARACTER_FACE_SHADER := preload("res://assets/shaders/character_face.gdshader")
 const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd")
 
 
@@ -235,6 +238,51 @@ func _apply_cel_shading(root: Node, tunic_color: Color, accent_color: Color) -> 
 			cel_material.set_shader_parameter("band_split", 0.5)
 			cel_material.next_pass = outline_material
 			mesh_instance.set_surface_override_material(surface_index, cel_material)
+
+
+func attach_face_texture(texture_path: String, bone_name: String = "ganmen") -> void:
+	if face_attachment:
+		face_attachment.queue_free()
+		face_attachment = null
+		face_instance = null
+	if not model_instance or texture_path.is_empty():
+		return
+
+	var skeletons := model_instance.find_children("*", "Skeleton3D", true, false)
+	if skeletons.is_empty():
+		push_warning("Cannot attach face texture: character model has no Skeleton3D")
+		return
+	var skeleton := skeletons[0] as Skeleton3D
+	if skeleton.find_bone(bone_name) < 0:
+		push_warning("Cannot attach face texture: bone '%s' was not found" % bone_name)
+		return
+
+	var face_texture := load(texture_path) as Texture2D
+	if not face_texture:
+		push_warning("Cannot attach face texture: failed to load '%s'" % texture_path)
+		return
+
+	face_attachment = BoneAttachment3D.new()
+	face_attachment.name = "FaceAttachment"
+	face_attachment.bone_name = bone_name
+	skeleton.add_child(face_attachment)
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.4375, 0.375)
+	var face_material := ShaderMaterial.new()
+	face_material.shader = CHARACTER_FACE_SHADER
+	face_material.set_shader_parameter("albedo_texture", face_texture)
+	face_material.set_shader_parameter("shadow_tone", 0.42)
+	face_material.set_shader_parameter("band_split", 0.5)
+	quad.material = face_material
+
+	face_instance = MeshInstance3D.new()
+	face_instance.name = "AnimeFace"
+	face_instance.mesh = quad
+	# Place the facial features slightly below the geometric center of the head.
+	face_instance.position = Vector3(0.2525, 0.19, 0.0)
+	face_instance.rotation_degrees.y = 90.0
+	face_attachment.add_child(face_instance)
 
 
 func play_walk_animation() -> void:
