@@ -23,7 +23,22 @@ func can_equip_weapon(unit: BattleUnit, weapon: WeaponData) -> bool:
 func equip_weapon(unit: BattleUnit, weapon_id: String) -> bool:
 	var weapon: WeaponData = equipment_database.get_weapon(weapon_id)
 	if not can_equip_weapon(unit, weapon): return false
-	unit.equipped_weapon_id = weapon_id; unit.refresh_build_stats(status_calculator); return true
+	unit.equipped_weapon_id = weapon_id
+	refresh_weapon_visual(unit)
+	unit.refresh_build_stats(status_calculator)
+	return true
+
+func refresh_weapon_visual(unit: BattleUnit) -> void:
+	var weapon: WeaponData = equipment_database.get_weapon(unit.equipped_weapon_id)
+	if not weapon:
+		unit.equip_weapon_visual("")
+		return
+	unit.equip_weapon_visual(
+		weapon.visual_model_path,
+		"hand_right_te",
+		weapon.visual_rotation_degrees,
+		weapon.visual_scale
+	)
 
 func equip_armor(unit: BattleUnit, armor_id: String) -> bool:
 	var equipment: EquipmentData = equipment_database.get_equipment(armor_id)

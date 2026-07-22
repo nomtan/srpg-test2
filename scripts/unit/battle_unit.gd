@@ -337,7 +337,7 @@ func _on_animation_finished(finished_animation: StringName) -> void:
 
 func equip_weapon_visual(
 	model_path: String,
-	bone_name: String = "hand_R",
+	bone_name: String = "hand_right_te",
 	local_rotation_degrees: Vector3 = Vector3(0.0, 0.0, 180.0),
 	local_scale: float = 0.78
 ) -> void:

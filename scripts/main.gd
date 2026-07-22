@@ -107,6 +107,7 @@ func _ready() -> void:
 	skill_database.configure_phase_11_5_scaling()
 	for unit: BattleUnit in unit_manager.units:
 		if unit.team == "player": job_unlock_system.unlock_available_jobs(unit)
+		equipment_system.refresh_weapon_visual(unit)
 		unit.refresh_build_stats(status_calculator)
 	line_of_sight.setup(grid)
 	attack_system.setup(grid, line_of_sight, equipment_database, weapon_power_calculator)

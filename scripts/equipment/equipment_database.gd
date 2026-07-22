@@ -4,13 +4,13 @@ extends Node
 var equipments: Dictionary = {}
 
 func _ready() -> void:
-	_register(WeaponData.create_weapon("iron_sword", "Iron Sword", WeaponData.WeaponType.SWORD, 5, 0, 0, Vector2i(1, 1), {"str": 1, "dex": 1}))
+	_register(WeaponData.create_weapon("iron_sword", "Iron Sword", WeaponData.WeaponType.SWORD, 5, 0, 0, Vector2i(1, 1), {"str": 1, "dex": 1}, false, "res://assets/weapons/sword/hero_voxel_sword.glb"))
 	_register(WeaponData.create_weapon("iron_axe", "Iron Axe", WeaponData.WeaponType.AXE, 8, -10, 0, Vector2i(1, 1), {"str": 2, "agi": -1}))
 	_register(WeaponData.create_weapon("iron_spear", "Iron Spear", WeaponData.WeaponType.SPEAR, 5, 0, 0, Vector2i(1, 2), {"str": 1, "agi": 1}))
-	_register(WeaponData.create_weapon("short_bow", "Short Bow", WeaponData.WeaponType.BOW, 4, 5, 5, Vector2i(2, 4), {"dex": 2}, true))
+	_register(WeaponData.create_weapon("short_bow", "Short Bow", WeaponData.WeaponType.BOW, 4, 5, 5, Vector2i(2, 4), {"dex": 2}, true, "res://assets/weapons/bow/bow.glb", 0.92))
 	_register(WeaponData.create_weapon("dagger", "Dagger", WeaponData.WeaponType.DAGGER, 3, 5, 10, Vector2i(1, 1), {"dex": 1, "agi": 1}))
 	_register(WeaponData.create_weapon("twin_blades", "Twin Blades", WeaponData.WeaponType.DUAL_BLADE, 4, 0, 8, Vector2i(1, 1), {"dex": 1, "agi": 2}))
-	_register(WeaponData.create_weapon("wooden_staff", "Wooden Staff", WeaponData.WeaponType.STAFF, 3, 0, 0, Vector2i(1, 2), {"int": 2, "mnd": 1}))
+	_register(WeaponData.create_weapon("wooden_staff", "Wooden Staff", WeaponData.WeaponType.STAFF, 3, 0, 0, Vector2i(1, 2), {"int": 2, "mnd": 1}, false, "res://assets/weapons/staff/staff.glb", 0.82))
 	_register(WeaponData.create_weapon("iron_mace", "Iron Mace", WeaponData.WeaponType.MACE, 5, -5, 0, Vector2i(1, 1), {"str": 1, "mnd": 1}))
 	_register(WeaponData.create_weapon("leather_glove", "Leather Glove", WeaponData.WeaponType.FIST, 4, 0, 5, Vector2i(1, 1), {"str": 1, "agi": 1}))
 	_register(ArmorData.create_armor("leather_armor", "Leather Armor", "light", {"vit": 1, "agi": 1}))
