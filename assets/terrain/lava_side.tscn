@@ -6,9 +6,13 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lava_side"]
 shader = ExtResource("1_shader")
 shader_parameter/lava_texture = ExtResource("2_tex")
-shader_parameter/scroll_speed = 0.008
+shader_parameter/scroll_speed_a = 0.08
+shader_parameter/scroll_speed_b = 0.12
+shader_parameter/distortion = 0.01
 shader_parameter/emission_strength = 2.0
 shader_parameter/flow_dir = Vector2(0, 1)
+shader_parameter/tile_size = 0.25
+shader_parameter/hue_jitter = 0.025
 
 [sub_resource type="QuadMesh" id="QuadMesh_lava_side"]
 size = Vector2(1, 1)

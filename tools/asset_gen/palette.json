@@ -18,8 +18,8 @@
     "cliff_side":                     { "base": "#6b4030" },
     "cliff_side_top":                 { "base": "#8f7a34" },
     "cliff_stone":                    { "base": "#4a5866" },
-    "water":                          { "base": "#2d5a80" },
-    "lava":                           { "base": "#d1501e" },
+    "water":                          { "base": "#397bb3", "resolved": "#397bb3" },
+    "lava":                           { "base": "#d18c51", "resolved": "#d18c51" },
     "bridge":                         { "base": "#b8935e" },
     "stone_brick":                    { "base": "#9c5040" },
     "infested_cracked_stone_bricks":  { "base": "#3d6b45" },
@@ -30,9 +30,10 @@
   "grass": ["#3c5c2e", "#476b35", "#2f4a24", "#547a3d", "#284020", "#5c8449"],
   "grass_prop_tip": ["#6b9455", "#7aa661"],
   "dirt": ["#5a4530", "#4d3a28", "#664e37", "#40301f", "#71583e"],
+  "dirt_side": ["#664a2e", "#6c4f33", "#745639", "#7a5b3e", "#805f42"],
   "stone": ["#52565f", "#454951", "#606572", "#363a41", "#6d7280"],
-  "water": ["#0f264d", "#122d5c", "#0d2040", "#153368", "#0b1c38"],
-  "lava": ["#3a1410", "#5c2015", "#7a2e12", "#961f0d", "#4a1a0d"],
+  "water": ["#1a578f", "#21629c", "#2b6ea9", "#397bb3", "#4e86ba"],
+  "lava": ["#b63b01", "#c74f17", "#d06f35", "#d18c51", "#cdb575"],
   "jungle_log": {
     "end_grain": ["#c18b55", "#d39c62", "#ad7545", "#e0ad70"],
     "ring": "#8d6238",
@@ -85,7 +86,7 @@
     "highlight": "#698548"
   },
   "accent": {
-    "lava_core": "#ffb238",
+    "lava_core": "#f2d58d",
     "stone_crack": "#232326"
   }
 }

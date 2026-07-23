@@ -11,6 +11,8 @@ shader_parameter/scroll_speed_b = 0.405
 shader_parameter/distortion = 0.01
 shader_parameter/water_alpha = 0.85
 shader_parameter/flow_dir = Vector2(0, 1)
+shader_parameter/tile_size = 0.2
+shader_parameter/hue_jitter = 0.04
 
 [sub_resource type="QuadMesh" id="QuadMesh_water_side"]
 size = Vector2(1, 1)

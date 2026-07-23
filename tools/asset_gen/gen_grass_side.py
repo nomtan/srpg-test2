@@ -16,18 +16,12 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_OUT = ROOT / "assets" / "texture" / "grass" / "grass_side_01.png"
 
-# Dark -> light. These are the only values to edit when adjusting the grass.
-GRASS_COLORS = (
-    "#3c6e2c",
-    "#437a32",
-    "#4f8f3b"
-)
-
-# Dark -> light dirt colors.
+# Dark -> light side colors. The grass top is a separate material, so every
+# pixel on this vertical face intentionally stays brown.
 DIRT_COLORS = (
-    "#64482d",
-    "#6e5033",
-    "#7a5a3a"
+    "#664a2e",
+    "#745639",
+    "#805f42"
 )
 
 # Pattern levels 0-4 are grass; 5-9 are dirt. They are automatically remapped
@@ -59,16 +53,14 @@ def hex_to_rgb(value: str) -> tuple[int, int, int]:
 
 
 def generate(output_path: Path) -> None:
-    grass_palette = tuple(hex_to_rgb(color) for color in GRASS_COLORS)
     dirt_palette = tuple(hex_to_rgb(color) for color in DIRT_COLORS)
-    if not grass_palette or not dirt_palette:
-        raise ValueError("GRASS_COLORS and DIRT_COLORS must not be empty")
+    if not dirt_palette:
+        raise ValueError("DIRT_COLORS must not be empty")
 
     def pattern_color(pattern_index: int) -> tuple[int, int, int]:
         source_level = pattern_index if pattern_index < 5 else pattern_index - 5
-        palette = grass_palette if pattern_index < 5 else dirt_palette
-        target_index = round(source_level / 4 * (len(palette) - 1))
-        return palette[target_index]
+        target_index = round(source_level / 4 * (len(dirt_palette) - 1))
+        return dirt_palette[target_index]
 
     image = Image.new("RGB", (16, 16))
     pixels = image.load()

@@ -2,24 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cw5t8gv7dslhr"
-path.s3tc="res://.godot/imported/terrain_cliff_side_01_terrain_cliff_side_01.png-42d5cba2ea73e115c39d52d2c61aead1.s3tc.ctex"
+uid="uid://ccnanmsyqjlr7"
+path="res://.godot/imported/tall_grass_dense_04_rgba.png-450e51a5334648abef741ed0e6e6d734.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
-}
-generator_parameters={
-"md5": "2da3a0de4a99918867fb3ab29d71ac4a"
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/terrain/terrain_cliff_side_01_terrain_cliff_side_01.png"
-dest_files=["res://.godot/imported/terrain_cliff_side_01_terrain_cliff_side_01.png-42d5cba2ea73e115c39d52d2c61aead1.s3tc.ctex"]
+source_file="res://tmp/imagegen/tall_grass_dense_04_rgba.png"
+dest_files=["res://.godot/imported/tall_grass_dense_04_rgba.png-450e51a5334648abef741ed0e6e6d734.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -27,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -41,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

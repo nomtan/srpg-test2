@@ -12,6 +12,9 @@ const DIRECTIONS := [
 # water_plane.tscn / lava_plane.tscn's Mesh transform); the top-level side
 # panel must sink by the same amount or it pokes above the surface.
 const SURFACE_OFFSET := 0.08
+# Capless cliff panels are 0.08 thick. Centering them at 0.46 places their
+# outward face at exactly 0.50, flush with the full block side above.
+const CLIFF_PANEL_CENTER_OFFSET := 0.46
 
 const SELECTABLE_BLOCK_TERRAINS := [
 	"stone_brick", "infested_cracked_stone_bricks", "chiseled_stone_brick",
@@ -237,11 +240,63 @@ func _create_grass_transition_overlay(
 	overlay.set_meta("terrain_transition", "grass_to_dirt")
 	add_to_layer(overlay, TOP_LAYER)
 
+
+func _grass_dirt_boundary_flags(cell: MapCellVisualData) -> Dictionary:
+	var position := cell.position
+	var edge_n := _is_same_height_dirt(position + Vector2i(0, -1), cell.height)
+	var edge_e := _is_same_height_dirt(position + Vector2i(1, 0), cell.height)
+	var edge_s := _is_same_height_dirt(position + Vector2i(0, 1), cell.height)
+	var edge_w := _is_same_height_dirt(position + Vector2i(-1, 0), cell.height)
+	return {
+		"edge_n": edge_n,
+		"edge_e": edge_e,
+		"edge_s": edge_s,
+		"edge_w": edge_w,
+		"corner_ne": (
+			not edge_n
+			and not edge_e
+			and _is_same_height_dirt(position + Vector2i(1, -1), cell.height)
+		),
+		"corner_se": (
+			not edge_s
+			and not edge_e
+			and _is_same_height_dirt(position + Vector2i(1, 1), cell.height)
+		),
+		"corner_sw": (
+			not edge_s
+			and not edge_w
+			and _is_same_height_dirt(position + Vector2i(-1, 1), cell.height)
+		),
+		"corner_nw": (
+			not edge_n
+			and not edge_w
+			and _is_same_height_dirt(position + Vector2i(-1, -1), cell.height)
+		),
+	}
+
+
+func _is_same_height_dirt(position: Vector2i, height: int) -> bool:
+	if not map_data.is_in_bounds(position):
+		return false
+	var neighbor := map_data.get_cell(position)
+	return (
+		neighbor != null
+		and neighbor.height == height
+		and neighbor.terrain in GRASS_TRANSITION_TARGET_TERRAINS
+		and not _uses_micro_height_profile(neighbor)
+	)
+
+
 func _create_top(cell: MapCellVisualData) -> void:
 	var grid_pos := cell.position
 	var scene := visual_theme.top_scene_for(cell.terrain) if visual_theme else null
 	var top := _instantiate(scene)
 	if top:
+		if cell.terrain in GRASS_TRANSITION_SOURCE_TERRAINS:
+			top.set_meta(
+				"grass_dirt_boundary_flags",
+				_grass_dirt_boundary_flags(cell)
+			)
 		var surface_y := float(cell.height)
 		if cell.terrain in ["water", "lava"]:
 			surface_y += fluid_surface_fill_offset
@@ -303,6 +358,8 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 	var is_water := cell.terrain == "water"
 	var is_lava := cell.terrain == "lava"
 	var is_fluid := is_water or is_lava
+	if is_fluid and fluid_surface_fill_offset > SURFACE_OFFSET:
+		_create_fluid_fill_sides(cell)
 	var full_block_terrain := cell.terrain in [
 		"grass", "dirt", "forest", "stone", "stone_road", "rock", "wall", "high_ground"
 	] or cell.terrain in SELECTABLE_BLOCK_TERRAINS
@@ -335,12 +392,70 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 					side_scene = visual_theme.cliff_stone if is_stone else visual_theme.cliff_side
 			var side := _instantiate(side_scene)
 			if not side: side = _make_fallback_cliff(cell.terrain)
+			if not is_fluid:
+				# Preserve the owning block family across separately instanced
+				# lower side panels. Validation uses this to keep grass-column
+				# and dirt-column side parameters continuous at level seams.
+				var side_block_key := "dirt"
+				if cell.terrain in ["grass", "forest", "high_ground"]:
+					side_block_key = "grass"
+				elif (
+					cell.terrain in ["stone", "stone_road", "rock", "wall"]
+					or cell.terrain in SELECTABLE_BLOCK_TERRAINS
+				):
+					side_block_key = "stone"
+				side.set_meta("terrain_side_block_key", side_block_key)
 			var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)
-			side.position = Vector3(grid_pos.x + 0.5, neighbor_height + level + 0.5, grid_pos.y + 0.5) + normal * 0.495
+			var panel_offset := 0.495 if is_fluid else CLIFF_PANEL_CENTER_OFFSET
+			side.position = Vector3(grid_pos.x + 0.5, neighbor_height + level + 0.5, grid_pos.y + 0.5) + normal * panel_offset
 			if is_fluid and is_top_level:
 				side.position.y -= SURFACE_OFFSET
 			side.rotation_degrees.y = float(direction.yaw)
 			add_to_layer(side, WATER_LAYER if is_fluid else CLIFF_LAYER)
+
+
+func _create_fluid_fill_sides(cell: MapCellVisualData) -> void:
+	# Validation can lift a logically lowered fluid surface toward the rim.
+	# Fill that lifted interval with animated vertical quads so map edges and
+	# gaps no longer reveal an infinitely thin water/lava plane.
+	var side_height := fluid_surface_fill_offset - SURFACE_OFFSET
+	var side_scene: PackedScene = null
+	if visual_theme:
+		side_scene = (
+			visual_theme.water_side
+			if cell.terrain == "water"
+			else visual_theme.lava_side
+		)
+	for direction: Dictionary in DIRECTIONS:
+		var neighbor_pos: Vector2i = cell.position + direction.offset
+		var neighbor := (
+			map_data.get_cell(neighbor_pos)
+			if map_data.is_in_bounds(neighbor_pos)
+			else null
+		)
+		# Adjacent cells of the same fluid form one continuous volume and do
+		# not need an internal side face.
+		if (
+			neighbor
+			and neighbor.terrain == cell.terrain
+			and neighbor.height == cell.height
+		):
+			continue
+		var side := _instantiate(side_scene)
+		if not side:
+			side = _make_fallback_cliff(cell.terrain)
+		var normal := Vector3(direction.offset.x, 0.0, direction.offset.y)
+		side.position = (
+			Vector3(
+				cell.position.x + 0.5,
+				float(cell.height) + side_height * 0.5,
+				cell.position.y + 0.5
+			)
+			+ normal * 0.495
+		)
+		side.rotation_degrees.y = float(direction.yaw)
+		side.scale.y = side_height
+		add_to_layer(side, WATER_LAYER)
 
 func _create_decorations() -> void:
 	for cell: MapCellVisualData in map_data.cells:

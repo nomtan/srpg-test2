@@ -154,15 +154,37 @@ def build_box(
 
 
 def build_panel(name: str, material: bpy.types.Material) -> bpy.types.Object:
-    """A thin vertical 1x1 cliff panel, centered at its own origin (no offset -
-    VoxelMap positions the instance directly at the panel's world center)."""
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 0.0, 0.0))
-    obj = bpy.context.object
-    obj.name = name
-    obj.scale.y = PANEL_THICKNESS  # Blender Y (thin) -> Godot Z (depth) after yup export
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    mesh = obj.data
+    """A capless two-sided vertical panel.
+
+    The previous thin cube exposed its narrow top and end faces as bright
+    seam lines. Keep only the two large vertical faces; VoxelMap aligns the
+    outward face exactly with the full block above it.
+    """
+    half_thickness = PANEL_THICKNESS * 0.5
+    vertices = [
+        (-0.5, -half_thickness, -0.5),
+        (0.5, -half_thickness, -0.5),
+        (0.5, -half_thickness, 0.5),
+        (-0.5, -half_thickness, 0.5),
+        (-0.5, half_thickness, -0.5),
+        (0.5, half_thickness, -0.5),
+        (0.5, half_thickness, 0.5),
+        (-0.5, half_thickness, 0.5),
+    ]
+    faces = [
+        (0, 1, 2, 3),
+        (7, 6, 5, 4),
+    ]
+    mesh = bpy.data.meshes.new(f"{name}_mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    uv_layer = mesh.uv_layers.new(name="UVMap")
+    for polygon in mesh.polygons:
+        for loop_index in polygon.loop_indices:
+            vertex = mesh.vertices[mesh.loops[loop_index].vertex_index].co
+            uv_layer.data[loop_index].uv = (vertex.x + 0.5, vertex.z + 0.5)
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
     mesh.materials.append(material)
     for polygon in mesh.polygons:
         polygon.use_smooth = False

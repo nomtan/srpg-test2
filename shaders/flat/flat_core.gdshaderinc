@@ -14,7 +14,7 @@ group_uniforms variation;
 uniform float tile_size : hint_range(0.1, 4.0) = 1.0;
 uniform float hue_jitter : hint_range(0.0, 0.15) = 0.04;
 uniform float sat_jitter : hint_range(0.0, 0.3) = 0.08;
-uniform float val_jitter : hint_range(0.0, 0.1) = 0.02;  // keep small
+uniform float val_jitter : hint_range(0.0, 0.1) = 0.06;
 group_uniforms;
 
 group_uniforms strata;
@@ -91,8 +91,34 @@ float hash21(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
 
-// Per-tile hue/sat/val jitter. Pass floor(world_pos().xz / tile_size) as
-// tile_id. val_jitter defaults small on purpose - see design rule 3.
+// Select the two axes that lie on the current face. Horizontal faces use XZ;
+// X-facing sides use ZY; Z-facing sides use XY. This makes tile_size create
+// two-dimensional patches on vertical block faces instead of long stripes.
+vec2 variation_tile_id(vec3 world_position, vec3 world_face_normal) {
+    vec3 n = abs(world_face_normal);
+    vec2 face_position;
+    if (n.y >= n.x && n.y >= n.z) {
+        face_position = world_position.xz;
+    } else if (n.x >= n.z) {
+        face_position = world_position.zy;
+    } else {
+        face_position = world_position.xy;
+    }
+    return floor(face_position / max(tile_size, 0.001));
+}
+
+// Continuous one-repeat-per-world-unit UVs for vertical terrain faces.
+// Imported full blocks and separately instanced cliff panels otherwise restart
+// their mesh UVs at every level, exposing a horizontal seam between them.
+vec2 world_side_uv(vec3 world_position, vec3 world_face_normal) {
+    vec3 n = abs(world_face_normal);
+    if (n.x >= n.z) {
+        return vec2(world_position.z, -world_position.y);
+    }
+    return vec2(world_position.x, -world_position.y);
+}
+
+// Per-face-tile hue/sat/val jitter.
 vec3 apply_variation(vec3 base, vec2 tile_id) {
     float h1 = hash21(tile_id);
     float h2 = hash21(tile_id + vec2(37.0, 91.0));

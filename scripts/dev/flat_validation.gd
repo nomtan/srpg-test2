@@ -35,9 +35,13 @@ const PAINTED_CHARACTER_TEXTURES := {}
 
 const FLAT_TERRAIN_SOLID_SHADER := preload("res://shaders/flat/flat_terrain_solid.gdshader")
 const FLAT_TERRAIN_TEX_SHADER := preload("res://shaders/flat/flat_terrain_tex.gdshader")
+const FLAT_TERRAIN_HYBRID_SHADER := preload("res://shaders/flat/flat_terrain_hybrid.gdshader")
 const FLAT_CHARACTER_SHADER := preload("res://shaders/flat/flat_character.gdshader")
 const FLAT_VEGETATION_SHADER := preload("res://shaders/flat/flat_vegetation.gdshader")
 const FLAT_GRASS_TRANSITION_SHADER := preload("res://shaders/flat/flat_grass_transition.gdshader")
+const FLAT_PAINTED_GRASS_OVERLAY_SHADER := preload("res://shaders/flat/flat_painted_grass_overlay.gdshader")
+const WATER_SHADER := preload("res://assets/terrain/materials/water.gdshader")
+const LAVA_SHADER := preload("res://assets/terrain/materials/lava.gdshader")
 
 const PALETTE_RESOLVED_PATH := "res://tools/asset_gen/palette_resolved.json"
 const EXPORT_PATH := "res://scenes/dev/flat_preset_export.json"
@@ -59,8 +63,8 @@ const TERRAIN_ASSET_TO_PALETTE_KEY := {
 	"terrain_dirt_top_01.glb": "dirt",
 	"terrain_stone_top_01.glb": "stone",
 	"terrain_stair_01.glb": "stone", # build_terrain_glb.py bakes the stone-top texture onto the stair asset
-	"terrain_cliff_side_01.glb": "cliff_side",
-	"terrain_cliff_side_top_01.glb": "cliff_side_top",
+	"terrain_cliff_side_01.glb": "dirt",
+	"terrain_cliff_side_top_01.glb": "dirt",
 	"terrain_cliff_stone_01.glb": "cliff_stone",
 	"water_plane.tscn": "water",
 	"water_side.tscn": "water",
@@ -93,6 +97,7 @@ const TERRAIN_STYLE_TINTS := {
 	"cliff_side_top": Vector3(1.12, 1.06, 0.82),
 	"cliff_stone": Vector3(1.05, 1.03, 0.91),
 }
+const TALL_GRASS_STYLE_TINT := Vector3(1.35, 1.30, 0.95)
 
 var params := {
 	"face_top": 1.01,
@@ -101,10 +106,30 @@ var params := {
 	"face_bottom": 0.58,
 	"tile_size": 0.2,
 	"hue_jitter": 0.035,
+	"grass_top_tile_size": 0.2,
+	"grass_side_tile_size": 0.2,
+	"grass_side_brightness": 0.7,
 	"grass_hue_jitter": 0.08,
+	"grass_texture_opacity": 0.35,
+	"grass_texture_tile_size": 1.0,
+	"grass_texture_brightness": 1.0,
+	"grass_boundary_width": 0.18,
+	"dirt_top_tile_size": 0.2,
+	"dirt_side_tile_size": 0.2,
+	"dirt_side_brightness": 0.7,
 	"dirt_hue_jitter": 0.01,
+	"stone_top_tile_size": 0.2,
+	"stone_side_tile_size": 0.2,
+	"stone_hue_jitter": 0.035,
+	"water_top_tile_size": 0.2,
+	"water_side_tile_size": 0.2,
+	"water_hue_jitter": 0.04,
+	"lava_top_tile_size": 0.25,
+	"lava_side_tile_size": 0.25,
+	"lava_hue_jitter": 0.025,
+	"tall_grass_brightness": 1.25,
 	"sat_jitter": 0.11,
-	"val_jitter": 0.014,
+	"val_jitter": 0.06,
 	"strata_enabled": true,
 	"strata_height": 0.5,
 	"strata_hue_jitter": 0.015,
@@ -127,6 +152,8 @@ var validation_map: MapData
 # Each entry: {mesh_instance, surface_index, solid_material, tex_material}
 var terrain_entries: Array = []
 var transition_entries: Array = []
+var painted_grass_entries: Array = []
+var fluid_material_entries: Array = []
 var character_materials: Array[ShaderMaterial] = []
 var vegetation_materials: Array[ShaderMaterial] = []
 var reference_prop_materials: Array[ShaderMaterial] = []
@@ -237,12 +264,16 @@ func _build_terrain() -> void:
 	renderer.visual_theme = VISUAL_THEME
 	renderer.grass_prop_chance = 0.0
 	renderer.grass_prop_seed = 4171
-	renderer.grass_transitions_enabled = true
+	# Grass tops no longer overlap dirt with a separate transition image.
+	# Their shared edge is handled by the terrain surfaces themselves.
+	renderer.grass_transitions_enabled = false
 	renderer.grass_transition_fringe_width = 0.20
 	# Water/lava cells have logical height 0 (the upper cube is removed), while
 	# the liquid fills the resulting cavity to slightly below the height-1 rim.
 	renderer.fluid_surface_fill_offset = 0.88
-	renderer.painted_grass_overlays_enabled = true
+	# Temporarily hide the transparent painted top layer so the lower green
+	# tile and its grass-to-dirt boundary can be evaluated on their own.
+	renderer.painted_grass_overlays_enabled = false
 	renderer.painted_grass_overlay_seed = 8123
 	renderer.painted_grass_edge_fringe_width = 0.18
 	add_child(renderer)
@@ -259,21 +290,13 @@ func _create_validation_map() -> MapData:
 		for x in data.width:
 			var cell := MapCellVisualData.new()
 			cell.position = Vector2i(x, z)
-			cell.height = 1
-			cell.terrain = "grass"
+			cell.height = _terrace_height_for_position(cell.position)
+			# The lowest foreground terrace is actual dirt terrain, not a
+			# grass block recolored brown. Keeping its top and supporting block
+			# on the same terrain material avoids a visible material boundary.
+			cell.terrain = "dirt" if cell.height == 1 else "grass"
 			data.cells.append(cell)
 	data.rebuild_lookup()
-
-	# Raised grassy shelves frame the play space instead of forming a square
-	# material showcase. Their uneven fronts create the diorama silhouette.
-	for z in range(0, 4):
-		for x in range(0, 13):
-			if z < 3 or x in range(2, 11):
-				data.get_cell(Vector2i(x, z)).height = 2
-	for z in range(0, 6):
-		for x in range(15, MAP_WIDTH):
-			if z < 5 or x >= 16:
-				data.get_cell(Vector2i(x, z)).height = 2
 
 	# A broad, irregular dirt clearing gives units and props a readable stage.
 	var clearing_center := Vector2(9.3, 7.5)
@@ -294,14 +317,6 @@ func _create_validation_map() -> MapData:
 			var cell := data.get_cell(Vector2i(x, z))
 			if cell:
 				cell.terrain = "dirt"
-
-	# In this camera orientation the south-west area projects to the back of
-	# the screen. Raise a spacious test terrace there, replacing the water inlet
-	# while the micro-height gallery is under evaluation.
-	for z in range(4, MAP_DEPTH):
-		for x in range(0, 8):
-			var gallery_base := data.get_cell(Vector2i(x, z))
-			gallery_base.height = 2
 
 	# 3^9 exhaustive combinations would be 19,683 cells. This gallery instead
 	# covers all useful canonical forms and their directional rotations.
@@ -338,38 +353,74 @@ func _create_validation_map() -> MapData:
 	for index in mini(micro_patterns.size(), gallery_positions.size()):
 		var pattern_cell := data.get_cell(gallery_positions[index])
 		pattern_cell.terrain = "dirt"
-		# The base of each pattern starts flush with the height-2 rear terrace;
-		# its three micro stages then rise visibly to height 3.
-		pattern_cell.height = 3
+		# Keep every pattern on its camera-depth terrace so the gallery never
+		# creates a tall foreground wall.
+		pattern_cell.height = _terrace_height_for_position(gallery_positions[index])
 		pattern_cell.set_micro_height_profile(micro_patterns[index])
 
 	# Actual terrain stone blocks for palette/material tuning. These use the
 	# production terrain_stone_top_01.glb rather than procedural round rocks.
 	for stone_data in [
-		[Vector2i(12, 7), 2],
-		[Vector2i(14, 8), 2],
-		[Vector2i(15, 8), 2],
-		[Vector2i(13, 10), 2],
-		[Vector2i(14, 10), 3],
+		[Vector2i(12, 7), 0],
+		[Vector2i(14, 8), 0],
+		[Vector2i(15, 8), 0],
+		[Vector2i(13, 10), 0],
+		[Vector2i(14, 10), 1],
 	]:
 		var stone_cell := data.get_cell(stone_data[0])
 		stone_cell.terrain = "stone"
-		stone_cell.height = stone_data[1]
+		stone_cell.height = (
+			_terrace_height_for_position(stone_data[0])
+			+ stone_data[1]
+		)
 
-	# Both pools are 2x3 and one full cube layer below the surrounding ground.
-	# Neighboring dirt blocks therefore expose the recessed pool walls.
-	for z in range(3, 6):
-		for x in range(10, 12):
+	# Extend both pools diagonally toward the camera (+X/-Z) so their animated
+	# surfaces remain visible all the way to the foreground terrace.
+	const WATER_FRONT_X_BY_Z := [13, 12, 11, 10, 10, 10]
+	const LAVA_FRONT_X_BY_Z := [16, 16, 15, 14, 14, 14]
+	for z in range(WATER_FRONT_X_BY_Z.size()):
+		for x in range(WATER_FRONT_X_BY_Z[z], WATER_FRONT_X_BY_Z[z] + 2):
 			var water_cell := data.get_cell(Vector2i(x, z))
-			water_cell.terrain = "water"
-			water_cell.height = 0
-	for z in range(3, 6):
-		for x in range(14, 16):
+			if water_cell:
+				water_cell.terrain = "water"
+				water_cell.height = 0
+	for z in range(LAVA_FRONT_X_BY_Z.size()):
+		for x in range(LAVA_FRONT_X_BY_Z[z], LAVA_FRONT_X_BY_Z[z] + 2):
 			var lava_cell := data.get_cell(Vector2i(x, z))
-			lava_cell.terrain = "lava"
-			lava_cell.height = 0
+			if lava_cell:
+				lava_cell.terrain = "lava"
+				lava_cell.height = 0
+
+	# Dense tall-grass cluster using the production asset, inspired by the
+	# reference image's long grass along the left map edge.
+	for grass_data in [
+		[Vector2i(0, 1), -12.0, Vector3(1.10, 1.18, 1.10)],
+		[Vector2i(1, 1), 18.0, Vector3(1.00, 1.08, 1.00)],
+		[Vector2i(2, 1), -28.0, Vector3(1.08, 1.22, 1.08)],
+		[Vector2i(0, 2), 32.0, Vector3(1.14, 1.28, 1.14)],
+		[Vector2i(1, 2), -4.0, Vector3(0.96, 1.12, 0.96)],
+		[Vector2i(2, 2), 24.0, Vector3(1.06, 1.20, 1.06)],
+		[Vector2i(0, 3), -20.0, Vector3(1.02, 1.16, 1.02)],
+	]:
+		_add_map_decoration(
+			data,
+			grass_data[0],
+			"grass_tall",
+			grass_data[1],
+			grass_data[2]
+		)
 
 	return data
+
+
+func _terrace_height_for_position(position: Vector2i) -> int:
+	# The camera sits toward +X/-Z, so screen depth increases toward -X/+Z.
+	# Quantize that projected depth into four broad diagonal terraces: the
+	# foreground stays at height 1 and the far corner reaches height 4.
+	var x_depth := float(MAP_WIDTH - 1 - position.x) / float(MAP_WIDTH - 1)
+	var z_depth := float(position.y) / float(MAP_DEPTH - 1)
+	var camera_depth := (x_depth * 30.0 + z_depth * 38.0) / 68.0
+	return 1 + mini(int(floor(camera_depth * 4.0)), 3)
 
 
 func _add_map_decoration(data: MapData, position: Vector2i, kind: String, rotation: float, scale: Vector3) -> void:
@@ -390,7 +441,12 @@ func _collect_terrain_materials(root: Node) -> void:
 		if mesh_instance.mesh:
 			for i in mesh_instance.mesh.get_surface_count():
 				var source := mesh_instance.get_active_material(i)
-				if source is ShaderMaterial and (source as ShaderMaterial).shader == FLAT_GRASS_TRANSITION_SHADER:
+				if source is ShaderMaterial and (source as ShaderMaterial).shader == FLAT_PAINTED_GRASS_OVERLAY_SHADER:
+					painted_grass_entries.append({
+						"mesh_instance": mesh_instance,
+						"material": source as ShaderMaterial,
+					})
+				elif source is ShaderMaterial and (source as ShaderMaterial).shader == FLAT_GRASS_TRANSITION_SHADER:
 					var transition_material := source as ShaderMaterial
 					transition_material.set_shader_parameter("style_tint", Vector3.ONE)
 					transition_material.set_shader_parameter("grass_tex", REFERENCE_TERRAIN_TEXTURES.grass)
@@ -398,6 +454,17 @@ func _collect_terrain_materials(root: Node) -> void:
 						"mesh_instance": mesh_instance,
 						"material": transition_material,
 					})
+				elif source is ShaderMaterial and (
+					(source as ShaderMaterial).shader == WATER_SHADER
+					or (source as ShaderMaterial).shader == LAVA_SHADER
+				):
+					var fluid_owner_path := _resolve_owner_path(mesh_instance)
+					_register_fluid_surface(
+						mesh_instance,
+						i,
+						source as ShaderMaterial,
+						fluid_owner_path.get_file()
+					)
 				elif source is BaseMaterial3D:
 					_route_terrain_surface(mesh_instance, i, source as BaseMaterial3D)
 	for child in root.get_children():
@@ -421,13 +488,31 @@ func _resolve_owner_path(mesh_instance: MeshInstance3D) -> String:
 	return node.scene_file_path
 
 
+func _resolve_side_block_key(mesh_instance: MeshInstance3D) -> String:
+	var node: Node = mesh_instance
+	while node and node != self:
+		if node.has_meta("terrain_side_block_key"):
+			return str(node.get_meta("terrain_side_block_key"))
+		node = node.get_parent()
+	return ""
+
+
+func _resolve_grass_dirt_boundary_flags(mesh_instance: MeshInstance3D) -> Dictionary:
+	var node: Node = mesh_instance
+	while node and node != self:
+		if node.has_meta("grass_dirt_boundary_flags"):
+			return node.get_meta("grass_dirt_boundary_flags") as Dictionary
+		node = node.get_parent()
+	return {}
+
+
 func _route_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int, source: BaseMaterial3D) -> void:
 	var asset_name := str(mesh_instance.get_meta("terrain_asset_name", ""))
 	if asset_name.is_empty():
 		var owner_path := _resolve_owner_path(mesh_instance)
 		asset_name = owner_path.get_file()
 
-	if asset_name in VEGETATION_ASSET_NAMES:
+	if _is_vegetation_asset(asset_name):
 		_register_vegetation_surface(mesh_instance, surface_index, source)
 		return
 
@@ -444,6 +529,34 @@ func _route_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int, s
 		return
 
 	_register_terrain_surface(mesh_instance, surface_index, source, asset_name)
+
+
+func _is_vegetation_asset(asset_name: String) -> bool:
+	# Grass wrapper scenes instance GLBs, so the collected MeshInstance3D may
+	# identify as either prop_grass_*.tscn or prop_grass_*.glb.
+	return (
+		asset_name in VEGETATION_ASSET_NAMES
+		or asset_name.begins_with("prop_grass_")
+	)
+
+
+func _register_fluid_surface(
+	mesh_instance: MeshInstance3D,
+	surface_index: int,
+	source: ShaderMaterial,
+	asset_name: String
+) -> void:
+	# Scene materials are resources shared by every fluid tile. Duplicate them
+	# for this validation scene so per-fluid sliders never mutate production.
+	var material := source.duplicate() as ShaderMaterial
+	var palette_key := "water" if source.shader == WATER_SHADER else "lava"
+	mesh_instance.set_surface_override_material(surface_index, material)
+	fluid_material_entries.append({
+		"material": material,
+		"palette_key": palette_key,
+		"block_key": palette_key,
+		"is_side_surface": "_side.tscn" in asset_name,
+	})
 
 
 const FLATTENED_TEX_DIR := "res://assets/terrain/flattened/"
@@ -471,10 +584,22 @@ func _load_flattened_texture(original_path: String) -> Texture2D:
 
 func _register_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int, source: BaseMaterial3D, asset_name: String) -> void:
 	var palette_key: String = TERRAIN_ASSET_TO_PALETTE_KEY.get(asset_name, "")
-	# Grass is now painted as a separate top overlay. The supporting box itself
-	# is exposed soil on every face, matching the dirt bucket exactly.
+	var block_key := _block_key_for_asset(asset_name)
+	var owning_side_block_key := _resolve_side_block_key(mesh_instance)
+	if not owning_side_block_key.is_empty():
+		block_key = owning_side_block_key
+	var grass_dirt_boundary_flags := _resolve_grass_dirt_boundary_flags(mesh_instance)
+	var source_texture_name := (
+		source.albedo_texture.resource_path.get_file()
+		if source.albedo_texture
+		else ""
+	)
+	var is_side_surface := "side" in source_texture_name
+	# Grass top and side share one imported block but need different flat
+	# buckets: the horizontal surface is solid green with grass tile variation,
+	# while the complete vertical face remains exposed dirt.
 	if asset_name == "terrain_grass_top_01.glb":
-		palette_key = "dirt"
+		palette_key = "dirt" if is_side_surface else "grass"
 	var bucket_color: Color = bucket_colors.get(palette_key, UNDEFINED_TILE_COLOR) if not palette_key.is_empty() else UNDEFINED_TILE_COLOR
 
 	if palette_key.is_empty() or not bucket_colors.has(palette_key):
@@ -491,25 +616,60 @@ func _register_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int
 
 	var tex_material := ShaderMaterial.new()
 	tex_material.shader = FLAT_TERRAIN_TEX_SHADER
+
+	# Hybrid preview (Plan A+): flat top like Plan A, but the side faces sample
+	# whatever albedo Plan B would have used for this same surface, so soil/
+	# grass block sides read as textured (see the F5 mode this powers below).
+	var hybrid_material := ShaderMaterial.new()
+	hybrid_material.shader = FLAT_TERRAIN_HYBRID_SHADER
+	hybrid_material.set_shader_parameter("base_color", bucket_color)
+
 	if source.albedo_texture:
 		var reference_texture := _reference_terrain_texture_for(source.albedo_texture.resource_path.get_file())
 		if reference_texture:
 			tex_material.set_shader_parameter("albedo_tex", reference_texture)
 			tex_material.set_shader_parameter("style_tint", Vector3.ONE)
+			hybrid_material.set_shader_parameter("side_tex", reference_texture)
+			hybrid_material.set_shader_parameter("side_tint", Vector3.ONE)
 		else:
 			# Surfaces outside the reference set keep the brightness-flattened
 			# comparison texture and the palette-specific style tint.
 			var flattened := _load_flattened_texture(source.albedo_texture.resource_path)
-			tex_material.set_shader_parameter("albedo_tex", flattened if flattened else source.albedo_texture)
-			tex_material.set_shader_parameter("style_tint", TERRAIN_STYLE_TINTS.get(palette_key, Vector3.ONE))
+			var fallback_tex := flattened if flattened else source.albedo_texture
+			var fallback_tint: Vector3 = TERRAIN_STYLE_TINTS.get(palette_key, Vector3.ONE)
+			tex_material.set_shader_parameter("albedo_tex", fallback_tex)
+			tex_material.set_shader_parameter("style_tint", fallback_tint)
+			hybrid_material.set_shader_parameter("side_tex", fallback_tex)
+			hybrid_material.set_shader_parameter("side_tint", fallback_tint)
 
 	terrain_entries.append({
 		"mesh_instance": mesh_instance,
 		"surface_index": surface_index,
 		"palette_key": palette_key,
+		"block_key": block_key,
+		"is_side_surface": is_side_surface,
+		"grass_dirt_boundary_flags": grass_dirt_boundary_flags,
 		"solid_material": solid_material,
 		"tex_material": tex_material,
+		"hybrid_material": hybrid_material,
 	})
+
+
+func _block_key_for_asset(asset_name: String) -> String:
+	if asset_name == "terrain_grass_top_01.glb":
+		return "grass"
+	if asset_name == "terrain_dirt_top_01.glb":
+		return "dirt"
+	if asset_name in ["terrain_stone_top_01.glb", "terrain_stair_01.glb"]:
+		return "stone"
+	if asset_name in [
+		"terrain_cliff_side_01.glb",
+		"terrain_cliff_side_top_01.glb",
+	]:
+		return "dirt"
+	if asset_name == "terrain_cliff_stone_01.glb":
+		return "stone"
+	return ""
 
 
 func _reference_terrain_texture_for(source_name: String) -> Texture2D:
@@ -519,9 +679,9 @@ func _reference_terrain_texture_for(source_name: String) -> Texture2D:
 	if "grass_side" in source_name:
 		return REFERENCE_TERRAIN_TEXTURES.dirt
 	if "cliff_side_top" in source_name:
-		return REFERENCE_TERRAIN_TEXTURES.cliff_grass
+		return REFERENCE_TERRAIN_TEXTURES.dirt
 	if "cliff_side" in source_name:
-		return REFERENCE_TERRAIN_TEXTURES.cliff
+		return REFERENCE_TERRAIN_TEXTURES.dirt
 	if "cliff_stone" in source_name:
 		return REFERENCE_TERRAIN_TEXTURES.stone
 	if "grass_top" in source_name:
@@ -533,10 +693,17 @@ func _reference_terrain_texture_for(source_name: String) -> Texture2D:
 	return null
 
 
-func _register_vegetation_surface(mesh_instance: MeshInstance3D, surface_index: int, source: BaseMaterial3D) -> void:
+func _register_vegetation_surface(
+	mesh_instance: MeshInstance3D,
+	surface_index: int,
+	source: BaseMaterial3D
+) -> void:
 	var vegetation_material := ShaderMaterial.new()
 	vegetation_material.shader = FLAT_VEGETATION_SHADER
-	vegetation_material.set_shader_parameter("style_tint", Vector3(1.12, 1.08, 0.72))
+	vegetation_material.set_shader_parameter(
+		"style_tint",
+		TALL_GRASS_STYLE_TINT * float(params.tall_grass_brightness)
+	)
 	if source.albedo_texture:
 		vegetation_material.set_shader_parameter("albedo_tex", source.albedo_texture)
 	mesh_instance.set_surface_override_material(surface_index, vegetation_material)
@@ -830,7 +997,12 @@ func _build_characters() -> void:
 	var units := Node3D.new()
 	units.name = "Units"
 	add_child(units)
-	_spawn_character(units, "vain_validation", Vector2i(9, 7), 1)
+	# Place the unit roughly four rows in from the back edge. Read the actual
+	# terrace height so the model remains on the surface after layout changes.
+	var grid_pos := Vector2i(11, MAP_DEPTH - 4)
+	var cell := validation_map.get_cell(grid_pos)
+	var surface_height: int = cell.height if cell else 1
+	_spawn_character(units, "vain_validation", grid_pos, surface_height)
 
 
 func _add_painted_character(parent: Node3D, kind: String, point: Vector2, scale_value: float) -> void:
@@ -889,13 +1061,22 @@ func _collect_character_materials(node: Node) -> void:
 
 # ----------------------------------------------------------------- Params
 
+const TERRAIN_MODE_MATERIAL_KEYS := {
+	"A": "solid_material",
+	"B": "tex_material",
+	"C": "hybrid_material",
+}
+
 func _apply_terrain_mode(mode: String) -> void:
 	terrain_mode = mode
+	var material_key: String = TERRAIN_MODE_MATERIAL_KEYS.get(mode, "solid_material")
 	for entry in terrain_entries:
-		var material: ShaderMaterial = entry.solid_material if mode == "A" else entry.tex_material
+		var material: ShaderMaterial = entry[material_key]
 		(entry.mesh_instance as MeshInstance3D).set_surface_override_material(entry.surface_index, material)
 	for entry in transition_entries:
 		(entry.mesh_instance as MeshInstance3D).visible = mode == "B"
+	for entry in painted_grass_entries:
+		(entry.mesh_instance as MeshInstance3D).visible = mode != "B"
 	_push_terrain_params()
 	_update_status()
 
@@ -903,26 +1084,111 @@ func _apply_terrain_mode(mode: String) -> void:
 func _push_terrain_params() -> void:
 	for entry in terrain_entries:
 		var surface_hue_jitter := _hue_jitter_for_palette(entry.get("palette_key", ""))
-		for material in [entry.solid_material, entry.tex_material]:
+		var surface_uses_strata: bool = (
+			bool(params.strata_enabled)
+			and not (entry.get("palette_key", "") in [
+				"dirt", "grass"
+			])
+		)
+		var surface_tile_size := _tile_size_for_surface(
+			entry.get("block_key", ""),
+			entry.get("palette_key", ""),
+			entry.get("is_side_surface", false)
+		)
+		var surface_side_brightness := _side_brightness_for_surface(
+			entry.get("block_key", ""),
+			entry.get("is_side_surface", false)
+		)
+		for material in [entry.solid_material, entry.tex_material, entry.hybrid_material]:
 			material.set_shader_parameter("face_top", params.face_top)
 			material.set_shader_parameter("face_side_x", params.face_side_x)
 			material.set_shader_parameter("face_side_z", params.face_side_z)
 			material.set_shader_parameter("face_bottom", params.face_bottom)
-			material.set_shader_parameter("tile_size", params.tile_size)
+			material.set_shader_parameter("tile_size", surface_tile_size)
+			material.set_shader_parameter("side_brightness", surface_side_brightness)
 			material.set_shader_parameter("hue_jitter", surface_hue_jitter)
 			material.set_shader_parameter("sat_jitter", params.sat_jitter)
 			material.set_shader_parameter("val_jitter", params.val_jitter)
-			material.set_shader_parameter("strata_enabled", params.strata_enabled)
+			material.set_shader_parameter("strata_enabled", surface_uses_strata)
 			material.set_shader_parameter("strata_height", params.strata_height)
 			material.set_shader_parameter("strata_hue_jitter", params.strata_hue_jitter)
 			material.set_shader_parameter("strata_val_jitter", params.strata_val_jitter)
+		var is_grass_top: bool = (
+			entry.get("block_key", "") == "grass"
+			and entry.get("palette_key", "") == "grass"
+			and not entry.get("is_side_surface", false)
+		)
+		var boundary_flags: Dictionary = entry.get(
+			"grass_dirt_boundary_flags",
+			{}
+		)
+		var boundary_enabled := false
+		for flag_value in boundary_flags.values():
+			if bool(flag_value):
+				boundary_enabled = true
+				break
+		var dirt_color: Color = bucket_colors.get("dirt", Color("#8c6638"))
+		for grass_material in [entry.solid_material, entry.hybrid_material]:
+			grass_material.set_shader_parameter(
+				"grass_dirt_boundary_enabled",
+				is_grass_top and boundary_enabled
+			)
+			grass_material.set_shader_parameter(
+				"grass_dirt_color",
+				Vector3(dirt_color.r, dirt_color.g, dirt_color.b)
+			)
+			grass_material.set_shader_parameter(
+				"grass_dirt_boundary_width",
+				params.grass_boundary_width
+			)
+			grass_material.set_shader_parameter(
+				"grass_dirt_tile_size",
+				params.dirt_top_tile_size
+			)
+			grass_material.set_shader_parameter(
+				"grass_dirt_hue_jitter",
+				params.dirt_hue_jitter
+			)
+			grass_material.set_shader_parameter(
+				"grass_dirt_sat_jitter",
+				params.sat_jitter
+			)
+			grass_material.set_shader_parameter(
+				"grass_dirt_val_jitter",
+				params.val_jitter
+			)
+			for flag_name in [
+				"edge_n", "edge_e", "edge_s", "edge_w",
+				"corner_ne", "corner_se", "corner_sw", "corner_nw",
+			]:
+				grass_material.set_shader_parameter(
+					"grass_dirt_%s" % flag_name,
+					bool(boundary_flags.get(flag_name, false))
+				)
+	for entry in painted_grass_entries:
+		var material: ShaderMaterial = entry.material
+		material.set_shader_parameter("texture_opacity", params.grass_texture_opacity)
+		material.set_shader_parameter("texture_tile_size", params.grass_texture_tile_size)
+		material.set_shader_parameter("texture_brightness", params.grass_texture_brightness)
 	for entry in transition_entries:
 		var material: ShaderMaterial = entry.material
 		material.set_shader_parameter("face_top", params.face_top)
-		material.set_shader_parameter("tile_size", params.tile_size)
+		material.set_shader_parameter("tile_size", params.grass_top_tile_size)
 		material.set_shader_parameter("hue_jitter", params.grass_hue_jitter)
 		material.set_shader_parameter("sat_jitter", params.sat_jitter)
 		material.set_shader_parameter("val_jitter", params.val_jitter)
+	for entry in fluid_material_entries:
+		var material: ShaderMaterial = entry.material
+		var palette_key: String = entry.palette_key
+		material.set_shader_parameter(
+			"tile_size",
+			_tile_size_for_surface(
+				entry.get("block_key", ""),
+				palette_key,
+				entry.get("is_side_surface", false)
+			)
+		)
+		material.set_shader_parameter("hue_jitter", _hue_jitter_for_palette(palette_key))
 
 
 func _hue_jitter_for_palette(palette_key: String) -> float:
@@ -931,8 +1197,45 @@ func _hue_jitter_for_palette(palette_key: String) -> float:
 			return params.grass_hue_jitter
 		"dirt":
 			return params.dirt_hue_jitter
+		"stone", "cliff_stone":
+			return params.stone_hue_jitter
+		"water":
+			return params.water_hue_jitter
+		"lava":
+			return params.lava_hue_jitter
 		_:
 			return params.hue_jitter
+
+
+func _tile_size_for_surface(block_key: String, palette_key: String, is_side_surface := false) -> float:
+	match block_key:
+		"grass":
+			return params.grass_side_tile_size if is_side_surface else params.grass_top_tile_size
+		"dirt":
+			return params.dirt_side_tile_size if is_side_surface else params.dirt_top_tile_size
+		"stone":
+			return params.stone_side_tile_size if is_side_surface else params.stone_top_tile_size
+		"water":
+			return params.water_side_tile_size if is_side_surface else params.water_top_tile_size
+		"lava":
+			return params.lava_side_tile_size if is_side_surface else params.lava_top_tile_size
+	match palette_key:
+		"stone", "cliff_stone":
+			return params.stone_side_tile_size if is_side_surface else params.stone_top_tile_size
+		_:
+			return params.tile_size
+
+
+func _side_brightness_for_surface(block_key: String, is_side_surface: bool) -> float:
+	if not is_side_surface:
+		return 1.0
+	match block_key:
+		"grass":
+			return params.grass_side_brightness
+		"dirt":
+			return params.dirt_side_brightness
+		_:
+			return 1.0
 
 
 func _push_character_params() -> void:
@@ -953,7 +1256,11 @@ func _push_vegetation_params() -> void:
 	# only face_top/tile_size/hue_jitter/sat_jitter/val_jitter are read.
 	for material in vegetation_materials:
 		material.set_shader_parameter("face_top", params.face_top)
-		material.set_shader_parameter("tile_size", params.tile_size)
+		material.set_shader_parameter(
+			"style_tint",
+			TALL_GRASS_STYLE_TINT * float(params.tall_grass_brightness)
+		)
+		material.set_shader_parameter("tile_size", params.grass_top_tile_size)
 		material.set_shader_parameter("hue_jitter", params.grass_hue_jitter)
 		material.set_shader_parameter("sat_jitter", params.sat_jitter)
 		material.set_shader_parameter("val_jitter", params.val_jitter)
@@ -973,7 +1280,7 @@ func _build_ui() -> void:
 	add_child(ui_layer)
 
 	var info := Label.new()
-	info.text = "F1: Plan A  F2: Plan B  F3: capture  F4: presentation  Tab: free orbit  Ctrl+S: export"
+	info.text = "F1: Plan A  F2: Plan B  F5: Plan A+ (textured sides)  F3: capture  F4: presentation  Tab: free orbit  Ctrl+S: export"
 	info.add_theme_color_override("font_color", Color.WHITE)
 	info.position = Vector2(12, 8)
 	ui_layer.add_child(info)
@@ -1005,23 +1312,71 @@ func _build_ui() -> void:
 	list.custom_minimum_size = Vector2(280, 0)
 	scroll.add_child(list)
 
+	_add_ui_section(list, "面の明るさ")
 	_add_float_slider(list, "face_top", 0.0, 1.5, 0.01, _on_terrain_param_changed)
 	_add_float_slider(list, "face_side_x", 0.0, 1.5, 0.01, _on_terrain_param_changed)
 	_add_float_slider(list, "face_side_z", 0.0, 1.5, 0.01, _on_terrain_param_changed)
 	_add_float_slider(list, "face_bottom", 0.0, 1.5, 0.01, _on_terrain_param_changed)
+
+	_add_ui_section(list, "草ブロック")
+	_add_float_slider(list, "grass_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_side_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_side_brightness", 0.3, 1.5, 0.01, _on_terrain_param_changed)
 	_add_float_slider(list, "grass_hue_jitter", 0.0, 0.15, 0.005, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_texture_opacity", 0.0, 1.0, 0.01, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_texture_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_texture_brightness", 0.3, 2.0, 0.01, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_boundary_width", 0.04, 0.4, 0.01, _on_terrain_param_changed)
+
+	_add_ui_section(list, "縦長の草")
+	_add_float_slider(list, "tall_grass_brightness", 0.5, 2.0, 0.01, _on_terrain_param_changed)
+
+	_add_ui_section(list, "土ブロック")
+	_add_float_slider(list, "dirt_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "dirt_side_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "dirt_side_brightness", 0.3, 1.5, 0.01, _on_terrain_param_changed)
 	_add_float_slider(list, "dirt_hue_jitter", 0.0, 0.15, 0.005, _on_terrain_param_changed)
+
+	_add_ui_section(list, "石ブロック")
+	_add_float_slider(list, "stone_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "stone_side_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "stone_hue_jitter", 0.0, 0.15, 0.005, _on_terrain_param_changed)
+
+	_add_ui_section(list, "水")
+	_add_float_slider(list, "water_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "water_side_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "water_hue_jitter", 0.0, 0.15, 0.005, _on_terrain_param_changed)
+
+	_add_ui_section(list, "溶岩")
+	_add_float_slider(list, "lava_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "lava_side_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "lava_hue_jitter", 0.0, 0.15, 0.005, _on_terrain_param_changed)
+
+	_add_ui_section(list, "共通の色むら")
 	_add_float_slider(list, "sat_jitter", 0.0, 0.3, 0.005, _on_terrain_param_changed)
 	_add_float_slider(list, "val_jitter", 0.0, 0.1, 0.002, _on_terrain_param_changed)
-	_add_float_slider(list, "tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
+
+	_add_ui_section(list, "地層")
 	_add_bool_toggle(list, "strata_enabled")
 	_add_float_slider(list, "strata_height", 0.1, 4.0, 0.05, _on_terrain_param_changed)
 	_add_float_slider(list, "strata_hue_jitter", 0.0, 0.15, 0.005, _on_terrain_param_changed)
 	_add_float_slider(list, "strata_val_jitter", 0.0, 0.1, 0.002, _on_terrain_param_changed)
+
+	_add_ui_section(list, "キャラクター・環境")
 	_add_float_slider(list, "character_face_top_boost", 0.8, 1.5, 0.01, _on_character_param_changed)
 	_add_color_picker(list, "background_color")
 	_add_float_slider(list, "fog_density", 0.0, 0.03, 0.001, _on_environment_param_changed)
 	_add_color_picker(list, "fog_color")
+
+
+func _add_ui_section(parent: VBoxContainer, title: String) -> void:
+	if parent.get_child_count() > 0:
+		parent.add_child(HSeparator.new())
+	var label := Label.new()
+	label.text = title
+	label.add_theme_color_override("font_color", Color("#f0c674"))
+	label.add_theme_font_size_override("font_size", 16)
+	parent.add_child(label)
 
 
 func _add_float_slider(parent: VBoxContainer, param_name: String, min_value: float, max_value: float, step: float, callback: Callable) -> void:
@@ -1124,8 +1479,28 @@ func _export_preset() -> void:
 		"face_bottom": params.face_bottom,
 		"tile_size": params.tile_size,
 		"hue_jitter": params.hue_jitter,
+		"grass_top_tile_size": params.grass_top_tile_size,
+		"grass_side_tile_size": params.grass_side_tile_size,
+		"grass_side_brightness": params.grass_side_brightness,
 		"grass_hue_jitter": params.grass_hue_jitter,
+		"grass_texture_opacity": params.grass_texture_opacity,
+		"grass_texture_tile_size": params.grass_texture_tile_size,
+		"grass_texture_brightness": params.grass_texture_brightness,
+		"grass_boundary_width": params.grass_boundary_width,
+		"dirt_top_tile_size": params.dirt_top_tile_size,
+		"dirt_side_tile_size": params.dirt_side_tile_size,
+		"dirt_side_brightness": params.dirt_side_brightness,
 		"dirt_hue_jitter": params.dirt_hue_jitter,
+		"stone_top_tile_size": params.stone_top_tile_size,
+		"stone_side_tile_size": params.stone_side_tile_size,
+		"stone_hue_jitter": params.stone_hue_jitter,
+		"water_top_tile_size": params.water_top_tile_size,
+		"water_side_tile_size": params.water_side_tile_size,
+		"water_hue_jitter": params.water_hue_jitter,
+		"lava_top_tile_size": params.lava_top_tile_size,
+		"lava_side_tile_size": params.lava_side_tile_size,
+		"lava_hue_jitter": params.lava_hue_jitter,
+		"tall_grass_brightness": params.tall_grass_brightness,
 		"sat_jitter": params.sat_jitter,
 		"val_jitter": params.val_jitter,
 		"strata_enabled": params.strata_enabled,
@@ -1193,6 +1568,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F2: _apply_terrain_mode("B")
 			KEY_F3: _capture_ab_pair()
 			KEY_F4: _toggle_presentation_mode()
+			KEY_F5: _apply_terrain_mode("C")
 			KEY_TAB:
 				free_orbit = not free_orbit
 				_update_status()
