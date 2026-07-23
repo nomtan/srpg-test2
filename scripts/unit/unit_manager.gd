@@ -6,7 +6,7 @@ const VEIN_CHARACTER_MODEL := "res://assets/characters/py/base_body.glb"
 const VEIN_CHARACTER_SCALE := 1.02
 const VEIN_CHARACTER_Y_OFFSET := -0.045
 const VEIN_CHARACTER_FACING_OFFSET := -90.0
-const VEIN_USE_CEL_SHADING := true
+const VEIN_USE_FLAT_SHADING := true
 const VEIN_FACE_TEXTURE := "res://assets/characters/textures/anime_face_vain.png"
 const ACREA_TUNIC_COLOR := Color("#497b9b")
 const ACREA_ACCENT_COLOR := Color("#65c9d5")
@@ -24,10 +24,10 @@ func setup(source_grid: GridSystem) -> void:
 
 
 func spawn_initial_units() -> void:
-	var vain := _spawn_unit("vain", "Vain", Vector2i(10, 10), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_CEL_SHADING)
+	var vain := _spawn_unit("vain", "Vain", Vector2i(10, 10), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING)
 	vain.attach_face_texture(VEIN_FACE_TEXTURE)
-	_spawn_unit("acrea", "Acrea", Vector2i(6, 3), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_CEL_SHADING, "onehand_sword", ACREA_TUNIC_COLOR, ACREA_ACCENT_COLOR)
-	_spawn_unit("glen", "Glen", Vector2i(3, 6), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_CEL_SHADING, "bow", GLEN_TUNIC_COLOR, GLEN_ACCENT_COLOR)
+	_spawn_unit("acrea", "Acrea", Vector2i(6, 3), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", ACREA_TUNIC_COLOR, ACREA_ACCENT_COLOR)
+	_spawn_unit("glen", "Glen", Vector2i(3, 6), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "bow", GLEN_TUNIC_COLOR, GLEN_ACCENT_COLOR)
 	var debug_enemy: BattleUnit
 	if ENABLE_DEBUG_NEARBY_ENEMY:
 		debug_enemy = _spawn_unit("debug_bandit", "Debug Bandit", Vector2i(15, 6), "enemy", 55, 16, 3, 80, 6)
@@ -83,7 +83,7 @@ func _spawn_unit(
 	model_scale: float = 1.0,
 	model_y_offset: float = 0.0,
 	model_facing_offset: float = 0.0,
-	use_cel_shading: bool = false,
+	use_flat_shading: bool = false,
 	animation_profile: String = "onehand_sword",
 	tunic_color: Color = Color.TRANSPARENT,
 	accent_color: Color = Color.TRANSPARENT
@@ -91,7 +91,7 @@ func _spawn_unit(
 	var unit := BattleUnit.new()
 	unit.configure(unit_id, display_name, grid_pos, team)
 	unit.set_combat_stats(max_hp, power, armor, accuracy, evasion, attack_type, min_range, max_range)
-	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_cel_shading, animation_profile, tunic_color, accent_color)
+	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_flat_shading, animation_profile, tunic_color, accent_color)
 	add_child(unit)
 	units.append(unit)
 	grid.set_occupied_unit(grid_pos, unit)

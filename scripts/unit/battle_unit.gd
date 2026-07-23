@@ -75,6 +75,7 @@ var body_material: StandardMaterial3D
 var base_color: Color
 var direction_marker: MeshInstance3D
 var status_bars: Sprite3D
+var blob_shadow: Decal
 
 
 func configure(
@@ -144,10 +145,19 @@ const BOW_ATTACK_ANIMATION_NAMES: Array[StringName] = [
 	&"animation.bow_attack",
 	&"bow_attack",
 ]
-const CHARACTER_CEL_SHADER := preload("res://assets/shaders/character_cel.gdshader")
-const CHARACTER_OUTLINE_SHADER := preload("res://assets/shaders/character_outline.gdshader")
-const CHARACTER_FACE_SHADER := preload("res://assets/shaders/character_face.gdshader")
+const CHARACTER_FLAT_SHADER := preload("res://shaders/flat/flat_character.gdshader")
+const CHARACTER_FACE_SHADER := preload("res://shaders/flat/flat_character_face.gdshader")
 const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd")
+
+# T5 (docs/dev/phase/phase17-step1.md): flat shading has no realtime shadow,
+# so a blob shadow is the only ground-contact cue. Multiply-blend isn't a
+# Decal blend mode in Godot 4 - a black radial texture blended via
+# albedo/modulate alpha reads the same (darkens the ground) so that's what
+# this uses instead.
+const BLOB_SHADOW_TEXTURE_SIZE := 32
+const BLOB_SHADOW_SIZE := Vector3(0.85, 0.6, 0.85)
+const BLOB_SHADOW_MAX_ALPHA := 0.55
+static var _blob_shadow_texture_cache: ImageTexture
 
 
 func setup_visual(
@@ -155,7 +165,7 @@ func setup_visual(
 	model_scale: float = 1.0,
 	model_y_offset: float = 0.0,
 	facing_offset_degrees: float = 0.0,
-	use_cel_shading: bool = false,
+	use_flat_shading: bool = false,
 	requested_animation_profile: String = "onehand_sword",
 	tunic_color: Color = Color.TRANSPARENT,
 	accent_color: Color = Color.TRANSPARENT
@@ -176,8 +186,8 @@ func setup_visual(
 		model_instance.scale = Vector3.ONE * model_scale
 		model_instance.position = Vector3(0.0, model_y_offset, 0.0)
 		add_child(model_instance)
-		if use_cel_shading:
-			_apply_cel_shading(model_instance, tunic_color, accent_color)
+		if use_flat_shading:
+			_apply_flat_shading(model_instance, tunic_color, accent_color)
 		var players := model_instance.find_children("*", "AnimationPlayer", true, false)
 		if not players.is_empty():
 			animation_player = players[0] as AnimationPlayer
@@ -204,13 +214,14 @@ func setup_visual(
 	status_bars.configure(team)
 	status_bars.position.y = 2.05 if model_instance else 1.45
 	add_child(status_bars)
+	_create_blob_shadow()
 	update_visual_state()
 	update_facing_visual()
 	refresh_status_bars()
 	play_idle_animation()
 
 
-func _apply_cel_shading(root: Node, tunic_color: Color, accent_color: Color) -> void:
+func _apply_flat_shading(root: Node, tunic_color: Color, accent_color: Color) -> void:
 	var meshes := root.find_children("*", "MeshInstance3D", true, false)
 	for child in meshes:
 		var mesh_instance := child as MeshInstance3D
@@ -226,18 +237,46 @@ func _apply_cel_shading(root: Node, tunic_color: Color, accent_color: Color) -> 
 				elif source_material.resource_name == "accent" and accent_color.a > 0.0:
 					surface_color = accent_color
 
-			var outline_material := ShaderMaterial.new()
-			outline_material.shader = CHARACTER_OUTLINE_SHADER
-			outline_material.set_shader_parameter("outline_color", Color("#050506"))
-			outline_material.set_shader_parameter("outline_width", 0.012)
+			var flat_material := ShaderMaterial.new()
+			flat_material.shader = CHARACTER_FLAT_SHADER
+			flat_material.set_shader_parameter("albedo_color", surface_color)
+			mesh_instance.set_surface_override_material(surface_index, flat_material)
 
-			var cel_material := ShaderMaterial.new()
-			cel_material.shader = CHARACTER_CEL_SHADER
-			cel_material.set_shader_parameter("base_color", surface_color)
-			cel_material.set_shader_parameter("shadow_tone", 0.42)
-			cel_material.set_shader_parameter("band_split", 0.5)
-			cel_material.next_pass = outline_material
-			mesh_instance.set_surface_override_material(surface_index, cel_material)
+
+static func _blob_shadow_texture() -> ImageTexture:
+	if _blob_shadow_texture_cache:
+		return _blob_shadow_texture_cache
+	var size := BLOB_SHADOW_TEXTURE_SIZE
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center := Vector2(size, size) * 0.5
+	var radius := size * 0.5
+	for y in size:
+		for x in size:
+			var dist := Vector2(x + 0.5, y + 0.5).distance_to(center) / radius
+			var alpha := (1.0 - smoothstep(0.55, 1.0, dist)) * BLOB_SHADOW_MAX_ALPHA
+			image.set_pixel(x, y, Color(0.0, 0.0, 0.0, alpha))
+	_blob_shadow_texture_cache = ImageTexture.create_from_image(image)
+	return _blob_shadow_texture_cache
+
+
+func _create_blob_shadow() -> void:
+	blob_shadow = Decal.new()
+	blob_shadow.name = "BlobShadow"
+	blob_shadow.texture_albedo = _blob_shadow_texture()
+	blob_shadow.size = BLOB_SHADOW_SIZE
+	blob_shadow.position = Vector3(0.0, BLOB_SHADOW_SIZE.y * 0.5 - 0.05, 0.0)
+	add_child(blob_shadow)
+
+
+## Shrinks and fades the blob shadow as the unit rises off the ground
+## (jump/float). Not yet wired to any movement animation - call this once
+## the mover/skill systems track real-time height above ground.
+func update_blob_shadow(height_above_ground: float) -> void:
+	if not blob_shadow:
+		return
+	var falloff: float = clamp(1.0 - height_above_ground / 3.0, 0.15, 1.0)
+	blob_shadow.size = Vector3(BLOB_SHADOW_SIZE.x, BLOB_SHADOW_SIZE.y, BLOB_SHADOW_SIZE.z) * Vector3(falloff, 1.0, falloff)
+	blob_shadow.modulate.a = falloff
 
 
 func attach_face_texture(texture_path: String, bone_name: String = "ganmen") -> void:
@@ -272,8 +311,6 @@ func attach_face_texture(texture_path: String, bone_name: String = "ganmen") -> 
 	var face_material := ShaderMaterial.new()
 	face_material.shader = CHARACTER_FACE_SHADER
 	face_material.set_shader_parameter("albedo_texture", face_texture)
-	face_material.set_shader_parameter("shadow_tone", 0.42)
-	face_material.set_shader_parameter("band_split", 0.5)
 	quad.material = face_material
 
 	face_instance = MeshInstance3D.new()

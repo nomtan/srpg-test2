@@ -1,0 +1,261 @@
+{
+  "flat_params": {
+    "value_range": {
+      "min": 0.15,
+      "max": 0.45
+    },
+    "saturation_scale": 0.72
+  },
+  "reference_target": {
+    "grass": [
+      "#819647",
+      "#8fa34f",
+      "#9daf59",
+      "#aabb64",
+      "#b8c674",
+      "#c6d285"
+    ],
+    "grass_blade": [
+      "#d2dc91",
+      "#829346"
+    ],
+    "dirt": [
+      "#a78d59",
+      "#ae9660",
+      "#b69f69",
+      "#bea873",
+      "#c6b17d"
+    ],
+    "dirt_detail": [
+      "#d1bf8a",
+      "#8e7449"
+    ],
+    "cliff": [
+      "#604b3b",
+      "#6a5542",
+      "#745f49",
+      "#7e6951",
+      "#88745a"
+    ],
+    "stone": [
+      "#747f80",
+      "#818b8a",
+      "#8e9793",
+      "#9ba29c",
+      "#a8ada4"
+    ]
+  },
+  "colors": {
+    "grass": {
+      "base": "#5a8a3c",
+      "resolved": "#aabb64"
+    },
+    "dirt": {
+      "base": "#8a6a3f",
+      "resolved": "#c6b17d"
+    },
+    "stone": {
+      "base": "#8a8a92",
+      "resolved": "#4f4f52"
+    },
+    "cliff_side": {
+      "base": "#6b4030",
+      "resolved": "#46322a"
+    },
+    "cliff_side_top": {
+      "base": "#8f7a34",
+      "resolved": "#51492c"
+    },
+    "cliff_stone": {
+      "base": "#4a5866",
+      "resolved": "#373e45"
+    },
+    "water": {
+      "base": "#2d5a80",
+      "resolved": "#293c4d"
+    },
+    "lava": {
+      "base": "#d1501e",
+      "resolved": "#653827"
+    },
+    "bridge": {
+      "base": "#b8935e",
+      "resolved": "#5d503d"
+    },
+    "stone_brick": {
+      "base": "#9c5040",
+      "resolved": "#553731"
+    },
+    "infested_cracked_stone_bricks": {
+      "base": "#3d6b45",
+      "resolved": "#314634"
+    },
+    "chiseled_stone_brick": {
+      "base": "#c2bcae",
+      "resolved": "#605e59"
+    },
+    "bricks": {
+      "base": "#b8402c",
+      "resolved": "#5d322a"
+    },
+    "cobblestone": {
+      "base": "#5f5f78",
+      "resolved": "#3f3f4a"
+    }
+  },
+  "grass": [
+    "#3c5c2e",
+    "#476b35",
+    "#2f4a24",
+    "#547a3d",
+    "#284020",
+    "#5c8449"
+  ],
+  "grass_prop_tip": [
+    "#6b9455",
+    "#7aa661"
+  ],
+  "dirt": [
+    "#5a4530",
+    "#4d3a28",
+    "#664e37",
+    "#40301f",
+    "#71583e"
+  ],
+  "stone": [
+    "#52565f",
+    "#454951",
+    "#606572",
+    "#363a41",
+    "#6d7280"
+  ],
+  "water": [
+    "#0f264d",
+    "#122d5c",
+    "#0d2040",
+    "#153368",
+    "#0b1c38"
+  ],
+  "lava": [
+    "#3a1410",
+    "#5c2015",
+    "#7a2e12",
+    "#961f0d",
+    "#4a1a0d"
+  ],
+  "jungle_log": {
+    "end_grain": [
+      "#c18b55",
+      "#d39c62",
+      "#ad7545",
+      "#e0ad70"
+    ],
+    "ring": "#8d6238",
+    "heart": "#7c512f",
+    "bark": [
+      "#49351a",
+      "#5a4020",
+      "#6a4b25",
+      "#79562b"
+    ],
+    "bark_shadow": "#382815",
+    "bark_highlight": "#8d6934"
+  },
+  "oak_log": {
+    "end_grain": [
+      "#d0a15f",
+      "#ddb574",
+      "#c28e4f",
+      "#e6c486"
+    ],
+    "ring": "#a8793f",
+    "heart": "#956433",
+    "bark": [
+      "#6a4b29",
+      "#795936",
+      "#896844",
+      "#9a774d"
+    ],
+    "bark_shadow": "#4c351f",
+    "bark_highlight": "#b18b58"
+  },
+  "acacia_log": {
+    "end_grain": [
+      "#b84d2d",
+      "#cb5b32",
+      "#a84028",
+      "#db6a3a"
+    ],
+    "ring": "#843526",
+    "heart": "#713026",
+    "bark": [
+      "#45413c",
+      "#504a44",
+      "#5c544c",
+      "#665c52"
+    ],
+    "bark_shadow": "#34322f",
+    "bark_highlight": "#79695c"
+  },
+  "stone_bricks": {
+    "stone": [
+      "#565a5e",
+      "#62666a",
+      "#6e7276",
+      "#797d80",
+      "#4d5155"
+    ],
+    "mortar": "#363a3e",
+    "edge_light": "#8a8e91",
+    "crack": "#292d30",
+    "pit": "#414549"
+  },
+  "bricks": {
+    "brick": [
+      "#783b2d",
+      "#8b4431",
+      "#9b4d35",
+      "#ad5a3e",
+      "#6c3329"
+    ],
+    "mortar": "#a39b91",
+    "edge_light": "#c0b5a8",
+    "chip": "#5b2b24"
+  },
+  "cobblestone": {
+    "stone": [
+      "#5b5f62",
+      "#666a6d",
+      "#707477",
+      "#7b7f82",
+      "#85898b"
+    ],
+    "crevice": "#4b4f52",
+    "edge_light": "#929698",
+    "pit": "#55595c"
+  },
+  "oak_leaves": {
+    "leaf": [
+      "#245b1d",
+      "#2f6c24",
+      "#397d2b",
+      "#468f34",
+      "#1d4b18"
+    ],
+    "highlight": "#58a640"
+  },
+  "acacia_leaves": {
+    "leaf": [
+      "#304922",
+      "#3b5728",
+      "#48652f",
+      "#567438",
+      "#273d1d"
+    ],
+    "highlight": "#698548"
+  },
+  "accent": {
+    "lava_core": "#ffb238",
+    "stone_crack": "#232326"
+  }
+}
