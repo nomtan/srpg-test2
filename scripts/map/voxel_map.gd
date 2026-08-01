@@ -39,6 +39,32 @@ const GRASS_MID_VARIANTS: Array[PackedScene] = [
 	preload("res://assets/props/grass/prop_grass_mid_02.tscn"),
 	preload("res://assets/props/grass/prop_grass_mid_03.tscn"),
 ]
+const SHORT_GRASS_CLUSTER_PATTERNS := [
+	[
+		{"variant": 0, "offset": Vector2(-0.14, -0.08), "rotation": -18.0, "scale": 0.90},
+		{"variant": 1, "offset": Vector2(0.13, -0.05), "rotation": 24.0, "scale": 1.00},
+		{"variant": 2, "offset": Vector2(0.00, 0.15), "rotation": 68.0, "scale": 0.86},
+	],
+	[
+		{"variant": 2, "offset": Vector2(-0.16, -0.11), "rotation": 8.0, "scale": 0.88},
+		{"variant": 0, "offset": Vector2(0.12, -0.14), "rotation": 42.0, "scale": 0.96},
+		{"variant": 1, "offset": Vector2(0.16, 0.11), "rotation": 86.0, "scale": 0.84},
+		{"variant": 0, "offset": Vector2(-0.10, 0.15), "rotation": 126.0, "scale": 0.92},
+	],
+	[
+		{"variant": 1, "offset": Vector2(-0.18, 0.02), "rotation": -36.0, "scale": 0.82},
+		{"variant": 2, "offset": Vector2(0.00, -0.04), "rotation": 12.0, "scale": 1.00},
+		{"variant": 0, "offset": Vector2(0.18, 0.05), "rotation": 52.0, "scale": 0.88},
+	],
+	[
+		{"variant": 0, "offset": Vector2(-0.15, -0.15), "rotation": -12.0, "scale": 0.94},
+		{"variant": 2, "offset": Vector2(0.06, -0.13), "rotation": 34.0, "scale": 0.82},
+		{"variant": 1, "offset": Vector2(0.16, 0.08), "rotation": 74.0, "scale": 0.98},
+		{"variant": 2, "offset": Vector2(-0.08, 0.16), "rotation": 118.0, "scale": 0.86},
+	],
+]
+const SHORT_GRASS_LARGE_CLUSTER_COUNTS := [5, 6, 7, 8, 9, 10, 11, 12]
+const SHORT_GRASS_GOLDEN_ANGLE := 2.399963229728653
 
 const GRASS_TRANSITION_SHADER := preload("res://shaders/flat/flat_grass_transition.gdshader")
 const PAINTED_GRASS_OVERLAY_SHADER := preload("res://shaders/flat/flat_painted_grass_overlay.gdshader")
@@ -55,11 +81,19 @@ const PAINTED_GRASS_OVERLAY_VARIANTS: Array[Texture2D] = [
 @export var visual_theme: MapVisualTheme
 @export var decorations: Array[MapDecorationData] = []
 @export_group("Automatic grass props")
-@export_range(0.20, 0.35, 0.025) var grass_prop_chance := 0.275
+@export_range(0.0, 0.90, 0.025) var grass_prop_chance := 0.275
 @export var grass_prop_seed := 1601
+@export_range(0.0, 1.0, 0.01) var grass_short_weight := 0.65
+@export_range(0.0, 1.0, 0.01) var grass_mid_weight := 0.25
+@export_range(0.0, 1.0, 0.01) var grass_tall_weight := 0.10
+@export_range(0.0, 1.0, 0.01) var grass_short_cluster_chance := 0.0
+@export_range(0.0, 1.0, 0.01) var grass_short_large_cluster_chance := 0.0
 @export_group("Terrain transitions")
 @export var grass_transitions_enabled := false
 @export_range(0.08, 0.40, 0.01) var grass_transition_fringe_width := 0.20
+@export_group("Grass cliff overhangs")
+@export var grass_cliff_overhangs_enabled := true
+@export_range(0.04, 0.24, 0.01) var grass_cliff_overhang_width := 0.12
 @export_group("Fluid surfaces")
 # Optional visual fill inside a logically lowered water/lava cell. Production
 # remains at 0; validation can remove a full cube while keeping its liquid
@@ -71,6 +105,7 @@ const PAINTED_GRASS_OVERLAY_VARIANTS: Array[Texture2D] = [
 @export_range(0.08, 0.40, 0.01) var painted_grass_edge_fringe_width := 0.18
 
 var grid: GridSystem
+var _grass_overhang_source_material: StandardMaterial3D
 
 func build_from_grid(source_grid: GridSystem) -> void:
 	grid = source_grid
@@ -85,6 +120,7 @@ func build_from_map_data(data: MapData) -> void:
 		else:
 			_create_top(cell)
 		_create_cliff_sides(cell)
+	_create_grass_cliff_overhangs()
 	_create_painted_grass_overlays()
 	_create_terrain_transitions()
 	_create_decorations()
@@ -287,6 +323,211 @@ func _is_same_height_dirt(position: Vector2i, height: int) -> bool:
 	)
 
 
+func _create_grass_cliff_overhangs() -> void:
+	if not grass_cliff_overhangs_enabled:
+		return
+	for cell: MapCellVisualData in map_data.cells:
+		if not cell.terrain in GRASS_TRANSITION_SOURCE_TERRAINS:
+			continue
+		if _uses_micro_height_profile(cell):
+			continue
+		var flags := _grass_cliff_edge_flags(cell)
+		if not (flags.n or flags.e or flags.s or flags.w):
+			continue
+		_create_grass_cliff_overhang(cell, flags)
+
+
+func _grass_cliff_edge_flags(cell: MapCellVisualData) -> Dictionary:
+	var position := cell.position
+	return {
+		"n": _is_lower_grass_neighbor(position + Vector2i(0, -1), cell.height),
+		"e": _is_lower_grass_neighbor(position + Vector2i(1, 0), cell.height),
+		"s": _is_lower_grass_neighbor(position + Vector2i(0, 1), cell.height),
+		"w": _is_lower_grass_neighbor(position + Vector2i(-1, 0), cell.height),
+	}
+
+
+func _is_lower_grass_neighbor(position: Vector2i, height: int) -> bool:
+	if not map_data.is_in_bounds(position):
+		return true
+	var neighbor := map_data.get_cell(position)
+	if neighbor == null:
+		return true
+	if neighbor.height < height:
+		return true
+	return neighbor.height == height and neighbor.terrain in ["water", "lava"]
+
+
+func _create_grass_cliff_overhang(cell: MapCellVisualData, flags: Dictionary) -> void:
+	var vertices: Array[Vector3] = []
+	var normals: Array[Vector3] = []
+	var uvs: Array[Vector2] = []
+	const EDGE_SEGMENTS := 8
+	if flags.n:
+		_append_grass_overhang_strip(
+			vertices, normals, uvs, cell, 0,
+			Vector3(0.0, 0.0, 0.0),
+			Vector3(1.0, 0.0, 0.0),
+			Vector3(0.0, 0.0, -1.0),
+			EDGE_SEGMENTS
+		)
+	if flags.e:
+		_append_grass_overhang_strip(
+			vertices, normals, uvs, cell, 1,
+			Vector3(1.0, 0.0, 0.0),
+			Vector3(0.0, 0.0, 1.0),
+			Vector3(1.0, 0.0, 0.0),
+			EDGE_SEGMENTS
+		)
+	if flags.s:
+		_append_grass_overhang_strip(
+			vertices, normals, uvs, cell, 2,
+			Vector3(0.0, 0.0, 1.0),
+			Vector3(1.0, 0.0, 0.0),
+			Vector3(0.0, 0.0, 1.0),
+			EDGE_SEGMENTS
+		)
+	if flags.w:
+		_append_grass_overhang_strip(
+			vertices, normals, uvs, cell, 3,
+			Vector3(0.0, 0.0, 0.0),
+			Vector3(0.0, 0.0, 1.0),
+			Vector3(-1.0, 0.0, 0.0),
+			EDGE_SEGMENTS
+		)
+
+	# Adjacent exposed edges form a convex outer corner. Fill their gap with a
+	# small rounded fan; concave inner corners are formed by the overlap of the
+	# two neighboring cells' straight lips.
+	if flags.n and flags.e:
+		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(1.0, 0.0), -90.0)
+	if flags.e and flags.s:
+		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(1.0, 1.0), 0.0)
+	if flags.s and flags.w:
+		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(0.0, 1.0), 90.0)
+	if flags.w and flags.n:
+		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(0.0, 0.0), 180.0)
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+	arrays[Mesh.ARRAY_NORMAL] = PackedVector3Array(normals)
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array(uvs)
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var overhang := MeshInstance3D.new()
+	overhang.name = "GrassCliffOverhang_%d_%d" % [cell.position.x, cell.position.y]
+	overhang.mesh = mesh
+	overhang.material_override = _grass_cliff_overhang_material()
+	var layer_order := (cell.position.x * 3 + cell.position.y * 5) % 11
+	overhang.position = Vector3(
+		cell.position.x,
+		float(cell.height) + 0.024 + float(layer_order) * 0.00015,
+		cell.position.y
+	)
+	# flat_validation routes this procedural surface through the same grass
+	# material pipeline as the imported production grass top.
+	overhang.set_meta("terrain_asset_name", "terrain_grass_top_01.glb")
+	overhang.set_meta("grass_cliff_overhang", true)
+	add_to_layer(overhang, TOP_LAYER)
+
+
+func _append_grass_overhang_strip(
+	vertices: Array[Vector3],
+	normals: Array[Vector3],
+	uvs: Array[Vector2],
+	cell: MapCellVisualData,
+	edge_index: int,
+	start: Vector3,
+	tangent: Vector3,
+	outward: Vector3,
+	segments: int
+) -> void:
+	for segment in segments:
+		var t0 := float(segment) / float(segments)
+		var t1 := float(segment + 1) / float(segments)
+		var inner_0 := start + tangent * t0
+		var inner_1 := start + tangent * t1
+		var outer_0 := inner_0 + outward * _grass_overhang_depth(
+			cell.position, edge_index, segment, segments
+		)
+		var outer_1 := inner_1 + outward * _grass_overhang_depth(
+			cell.position, edge_index, segment + 1, segments
+		)
+		_append_grass_overhang_triangle(vertices, normals, uvs, inner_0, inner_1, outer_1)
+		_append_grass_overhang_triangle(vertices, normals, uvs, inner_0, outer_1, outer_0)
+
+
+func _grass_overhang_depth(
+	position: Vector2i,
+	edge_index: int,
+	sample_index: int,
+	segments: int
+) -> float:
+	if sample_index == 0 or sample_index == segments:
+		return grass_cliff_overhang_width
+	var seed := float(
+		position.x * 73856093
+		+ position.y * 19349663
+		+ edge_index * 83492791
+		+ sample_index * 26544357
+	)
+	var variation := fposmod(sin(seed) * 43758.5453, 1.0)
+	return grass_cliff_overhang_width * lerpf(0.82, 1.12, variation)
+
+
+func _append_grass_overhang_corner(
+	vertices: Array[Vector3],
+	normals: Array[Vector3],
+	uvs: Array[Vector2],
+	corner: Vector2,
+	start_angle_degrees: float
+) -> void:
+	const CORNER_SEGMENTS := 4
+	var center := Vector3(corner.x, 0.0, corner.y)
+	for segment in CORNER_SEGMENTS:
+		var angle_0 := deg_to_rad(
+			start_angle_degrees + 90.0 * float(segment) / float(CORNER_SEGMENTS)
+		)
+		var angle_1 := deg_to_rad(
+			start_angle_degrees + 90.0 * float(segment + 1) / float(CORNER_SEGMENTS)
+		)
+		var point_0 := center + Vector3(cos(angle_0), 0.0, sin(angle_0)) * grass_cliff_overhang_width
+		var point_1 := center + Vector3(cos(angle_1), 0.0, sin(angle_1)) * grass_cliff_overhang_width
+		_append_grass_overhang_triangle(vertices, normals, uvs, center, point_0, point_1)
+
+
+func _append_grass_overhang_triangle(
+	vertices: Array[Vector3],
+	normals: Array[Vector3],
+	uvs: Array[Vector2],
+	a: Vector3,
+	b: Vector3,
+	c: Vector3
+) -> void:
+	# Keep every triangle front-facing from above regardless of edge direction.
+	if (b - a).cross(c - a).y < 0.0:
+		var swap := b
+		b = c
+		c = swap
+	for point in [a, b, c]:
+		vertices.append(point)
+		normals.append(Vector3.UP)
+		uvs.append(Vector2(point.x, point.z))
+
+
+func _grass_cliff_overhang_material() -> StandardMaterial3D:
+	if _grass_overhang_source_material:
+		return _grass_overhang_source_material
+	_grass_overhang_source_material = StandardMaterial3D.new()
+	_grass_overhang_source_material.albedo_texture = GRASS_TRANSITION_TEXTURE
+	_grass_overhang_source_material.texture_filter = (
+		BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	)
+	_grass_overhang_source_material.roughness = 0.92
+	return _grass_overhang_source_material
+
+
 func _create_top(cell: MapCellVisualData) -> void:
 	var grid_pos := cell.position
 	var scene := visual_theme.top_scene_for(cell.terrain) if visual_theme else null
@@ -480,18 +721,28 @@ func _create_random_grass(cell: MapCellVisualData) -> void:
 	rng.seed = grass_prop_seed + cell.position.x * 73856093 + cell.position.y * 19349663
 	if rng.randf() >= grass_prop_chance:
 		return
-	var type_roll := rng.randf()
+	var total_weight := grass_short_weight + grass_mid_weight + grass_tall_weight
+	var type_roll := rng.randf() * maxf(total_weight, 0.001)
 	var kind := "grass_short"
 	var scene: PackedScene
-	if type_roll >= 0.90:
-		kind = "grass_tall" # Long: 10%
-		scene = visual_theme.decoration_scene_for(kind) if visual_theme else null
-	elif type_roll >= 0.65:
-		# Medium: 25%, evenly choose one of the dedicated variants.
+	if type_roll < grass_short_weight:
+		var cluster_roll := rng.randf()
+		if cluster_roll < grass_short_large_cluster_chance:
+			_create_large_short_grass_cluster(cell, rng)
+			return
+		if (
+			cluster_roll
+			< grass_short_large_cluster_chance + grass_short_cluster_chance
+		):
+			_create_short_grass_cluster(cell, rng)
+			return
+		scene = GRASS_SHORT_VARIANTS[rng.randi_range(0, GRASS_SHORT_VARIANTS.size() - 1)]
+	elif type_roll < grass_short_weight + grass_mid_weight:
+		# Evenly choose one of the dedicated medium variants.
 		scene = GRASS_MID_VARIANTS[rng.randi_range(0, GRASS_MID_VARIANTS.size() - 1)]
 	else:
-		# Short: 65%, evenly choose one of the dedicated variants.
-		scene = GRASS_SHORT_VARIANTS[rng.randi_range(0, GRASS_SHORT_VARIANTS.size() - 1)]
+		kind = "grass_tall"
+		scene = visual_theme.decoration_scene_for(kind) if visual_theme else null
 	var grass := _instantiate(scene, false)
 	if not grass:
 		grass = _make_fallback_decoration(kind)
@@ -502,6 +753,115 @@ func _create_random_grass(cell: MapCellVisualData) -> void:
 	)
 	grass.rotation_degrees.y = rng.randf_range(0.0, 360.0)
 	add_to_layer(grass, PROP_LAYER)
+
+
+func _create_short_grass_cluster(
+	cell: MapCellVisualData,
+	rng: RandomNumberGenerator
+) -> void:
+	var pattern: Array = SHORT_GRASS_CLUSTER_PATTERNS[
+		rng.randi_range(0, SHORT_GRASS_CLUSTER_PATTERNS.size() - 1)
+	]
+	var center := Vector2(
+		rng.randf_range(0.42, 0.58),
+		rng.randf_range(0.42, 0.58)
+	)
+	var cluster_rotation := rng.randf_range(0.0, TAU)
+	for member: Dictionary in pattern:
+		var variant_index: int = member.variant
+		var grass := _instantiate(GRASS_SHORT_VARIANTS[variant_index], false)
+		if not grass:
+			grass = _make_fallback_decoration("grass_short")
+		var offset: Vector2 = (member.offset as Vector2).rotated(cluster_rotation)
+		grass.position = Vector3(
+			cell.position.x + center.x + offset.x,
+			float(cell.height),
+			cell.position.y + center.y + offset.y
+		)
+		grass.rotation_degrees.y = (
+			float(member.rotation)
+			+ rad_to_deg(cluster_rotation)
+			+ rng.randf_range(-8.0, 8.0)
+		)
+		var scale_value := float(member.scale) * rng.randf_range(0.92, 1.08)
+		grass.scale *= scale_value
+		add_to_layer(grass, PROP_LAYER)
+
+
+func _create_large_short_grass_cluster(
+	cell: MapCellVisualData,
+	rng: RandomNumberGenerator
+) -> void:
+	var pattern_index := rng.randi_range(
+		0,
+		SHORT_GRASS_LARGE_CLUSTER_COUNTS.size() - 1
+	)
+	var grass_count: int = SHORT_GRASS_LARGE_CLUSTER_COUNTS[pattern_index]
+	var center := Vector2(
+		rng.randf_range(0.46, 0.54),
+		rng.randf_range(0.46, 0.54)
+	)
+	var cluster_rotation := rng.randf_range(0.0, TAU)
+	var variant_offset := rng.randi_range(0, GRASS_SHORT_VARIANTS.size() - 1)
+	# Keep the total at 5-12 blades while replacing one short blade in the
+	# smaller patterns, or two in the larger patterns, with tall grass.
+	var tall_count := 1 if grass_count <= 8 else 2
+	var first_tall_index := (pattern_index * 3 + variant_offset) % grass_count
+	var second_tall_index := (
+		(first_tall_index + grass_count / 2) % grass_count
+		if tall_count == 2
+		else -1
+	)
+	for index in grass_count:
+		var normalized_index := (
+			float(index) / float(maxi(grass_count - 1, 1))
+		)
+		var radius := 0.035 + sqrt(normalized_index) * 0.225
+		var angle := (
+			float(index) * SHORT_GRASS_GOLDEN_ANGLE
+			+ cluster_rotation
+			+ float(pattern_index) * 0.17
+		)
+		var offset := Vector2(cos(angle), sin(angle)) * radius
+		offset += Vector2(
+			rng.randf_range(-0.018, 0.018),
+			rng.randf_range(-0.018, 0.018)
+		)
+		var variant_index := (
+			index + variant_offset + pattern_index
+		) % GRASS_SHORT_VARIANTS.size()
+		var is_tall := (
+			index == first_tall_index
+			or index == second_tall_index
+		)
+		var scene: PackedScene = (
+			visual_theme.decoration_scene_for("grass_tall")
+			if is_tall and visual_theme
+			else GRASS_SHORT_VARIANTS[variant_index]
+		)
+		var grass := _instantiate(scene, false)
+		if not grass:
+			grass = _make_fallback_decoration(
+				"grass_tall" if is_tall else "grass_short"
+			)
+		grass.position = Vector3(
+			cell.position.x + center.x + offset.x,
+			float(cell.height),
+			cell.position.y + center.y + offset.y
+		)
+		grass.rotation_degrees.y = (
+			rad_to_deg(angle)
+			+ float((index * 37 + pattern_index * 19) % 120)
+			+ rng.randf_range(-7.0, 7.0)
+		)
+		var scale_value := (
+			rng.randf_range(0.68, 0.82)
+			if is_tall
+			else rng.randf_range(0.72, 0.94)
+		)
+		grass.scale *= scale_value
+		add_to_layer(grass, PROP_LAYER)
+
 
 func _instantiate(scene: PackedScene, use_mipmaps := true) -> Node3D:
 	if not scene: return null

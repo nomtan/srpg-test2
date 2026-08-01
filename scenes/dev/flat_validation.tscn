@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c6wocbap1q68i"]
 
-[ext_resource type="Script" path="res://scripts/dev/flat_validation.gd" id="1_validation"]
+[ext_resource type="Script" uid="uid://fewr8obppa3j" path="res://scripts/dev/flat_validation.gd" id="1_validation"]
 
-[node name="FlatValidation" type="Node3D"]
+[node name="FlatValidation" type="Node3D" unique_id=406064583]
 script = ExtResource("1_validation")

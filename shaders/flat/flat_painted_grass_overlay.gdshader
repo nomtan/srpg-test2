@@ -13,6 +13,7 @@ uniform int texture_turn : hint_range(0, 3) = 0;
 uniform float texture_opacity : hint_range(0.0, 1.0) = 0.35;
 uniform float texture_tile_size : hint_range(0.1, 4.0) = 1.0;
 uniform float texture_brightness : hint_range(0.3, 2.0) = 1.0;
+uniform float texture_saturation : hint_range(0.0, 2.0) = 1.0;
 
 uniform bool trim_n = false;
 uniform bool trim_e = false;
@@ -67,7 +68,9 @@ void fragment() {
     vec2 texture_uv = rotate_texture_uv(UV);
     texture_uv = (texture_uv - vec2(0.5)) / max(texture_tile_size, 0.001) + vec2(0.5);
     vec4 tex = texture(grass_tex, texture_uv);
-    ALBEDO = tex.rgb * texture_brightness;
+    vec3 overlay_col = tex.rgb * texture_brightness;
+    float overlay_luma = dot(overlay_col, vec3(0.299, 0.587, 0.114));
+    ALBEDO = mix(vec3(overlay_luma), overlay_col, texture_saturation);
     ALPHA = tex.a * keep * texture_opacity;
     ALPHA_SCISSOR_THRESHOLD = 0.05;
 }

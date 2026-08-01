@@ -106,13 +106,14 @@ var params := {
 	"face_bottom": 0.58,
 	"tile_size": 0.2,
 	"hue_jitter": 0.035,
-	"grass_top_tile_size": 0.2,
+	"grass_top_tile_size": 0.1,
 	"grass_side_tile_size": 0.2,
 	"grass_side_brightness": 0.7,
 	"grass_hue_jitter": 0.08,
-	"grass_texture_opacity": 0.35,
+	"grass_texture_opacity": 0.22,
 	"grass_texture_tile_size": 1.0,
 	"grass_texture_brightness": 1.0,
+	"grass_texture_saturation": 1.35,
 	"grass_boundary_width": 0.18,
 	"dirt_top_tile_size": 0.2,
 	"dirt_side_tile_size": 0.2,
@@ -127,7 +128,11 @@ var params := {
 	"lava_top_tile_size": 0.25,
 	"lava_side_tile_size": 0.25,
 	"lava_hue_jitter": 0.025,
-	"tall_grass_brightness": 1.25,
+	"tall_grass_brightness": 1.0,
+	"grass_antialiasing": 0.35,
+	"grass_mip_bias": 0.0,
+	"grass_tint": Color("#7aad52"),
+	"grass_tint_blend": 0.0,
 	"sat_jitter": 0.11,
 	"val_jitter": 0.06,
 	"strata_enabled": true,
@@ -262,8 +267,16 @@ func _build_terrain() -> void:
 	var renderer := VoxelMap.new()
 	renderer.name = "MapRenderer"
 	renderer.visual_theme = VISUAL_THEME
-	renderer.grass_prop_chance = 0.0
+	# Scatter the seven production grass variants across open grass cells.
+	# VoxelMap skips dirt/water and cells that already contain an explicit
+	# prop, preserving paths and the authored tall cluster.
+	renderer.grass_prop_chance = 0.70
 	renderer.grass_prop_seed = 4171
+	renderer.grass_short_weight = 0.85
+	renderer.grass_mid_weight = 0.12
+	renderer.grass_tall_weight = 0.03
+	renderer.grass_short_cluster_chance = 0.30
+	renderer.grass_short_large_cluster_chance = 0.25
 	# Grass tops no longer overlap dirt with a separate transition image.
 	# Their shared edge is handled by the terrain surfaces themselves.
 	renderer.grass_transitions_enabled = false
@@ -271,9 +284,9 @@ func _build_terrain() -> void:
 	# Water/lava cells have logical height 0 (the upper cube is removed), while
 	# the liquid fills the resulting cavity to slightly below the height-1 rim.
 	renderer.fluid_surface_fill_offset = 0.88
-	# Temporarily hide the transparent painted top layer so the lower green
-	# tile and its grass-to-dirt boundary can be evaluated on their own.
-	renderer.painted_grass_overlays_enabled = false
+	# A low painted ground-cover layer gives grass tiles the dense illustrated
+	# brushwork seen in the visual reference without adding more upright props.
+	renderer.painted_grass_overlays_enabled = true
 	renderer.painted_grass_overlay_seed = 8123
 	renderer.painted_grass_edge_fringe_width = 0.18
 	add_child(renderer)
@@ -705,7 +718,14 @@ func _register_vegetation_surface(
 		TALL_GRASS_STYLE_TINT * float(params.tall_grass_brightness)
 	)
 	if source.albedo_texture:
-		vegetation_material.set_shader_parameter("albedo_tex", source.albedo_texture)
+		vegetation_material.set_shader_parameter(
+			"albedo_tex_nearest",
+			source.albedo_texture
+		)
+		vegetation_material.set_shader_parameter(
+			"albedo_tex_linear",
+			source.albedo_texture
+		)
 	mesh_instance.set_surface_override_material(surface_index, vegetation_material)
 	vegetation_materials.append(vegetation_material)
 
@@ -1170,6 +1190,10 @@ func _push_terrain_params() -> void:
 		material.set_shader_parameter("texture_opacity", params.grass_texture_opacity)
 		material.set_shader_parameter("texture_tile_size", params.grass_texture_tile_size)
 		material.set_shader_parameter("texture_brightness", params.grass_texture_brightness)
+		material.set_shader_parameter(
+			"texture_saturation",
+			params.grass_texture_saturation
+		)
 	for entry in transition_entries:
 		var material: ShaderMaterial = entry.material
 		material.set_shader_parameter("face_top", params.face_top)
@@ -1264,6 +1288,17 @@ func _push_vegetation_params() -> void:
 		material.set_shader_parameter("hue_jitter", params.grass_hue_jitter)
 		material.set_shader_parameter("sat_jitter", params.sat_jitter)
 		material.set_shader_parameter("val_jitter", params.val_jitter)
+		material.set_shader_parameter(
+			"antialiasing_strength",
+			params.grass_antialiasing
+		)
+		material.set_shader_parameter("mip_bias", params.grass_mip_bias)
+		var grass_tint: Color = params.grass_tint
+		material.set_shader_parameter(
+			"user_tint",
+			Vector3(grass_tint.r, grass_tint.g, grass_tint.b)
+		)
+		material.set_shader_parameter("tint_blend", params.grass_tint_blend)
 
 
 func _push_environment_params() -> void:
@@ -1326,10 +1361,19 @@ func _build_ui() -> void:
 	_add_float_slider(list, "grass_texture_opacity", 0.0, 1.0, 0.01, _on_terrain_param_changed)
 	_add_float_slider(list, "grass_texture_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
 	_add_float_slider(list, "grass_texture_brightness", 0.3, 2.0, 0.01, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_texture_saturation", 0.0, 2.0, 0.05, _on_terrain_param_changed)
 	_add_float_slider(list, "grass_boundary_width", 0.04, 0.4, 0.01, _on_terrain_param_changed)
 
 	_add_ui_section(list, "縦長の草")
 	_add_float_slider(list, "tall_grass_brightness", 0.5, 2.0, 0.01, _on_terrain_param_changed)
+
+	_add_ui_section(list, "草のアンチエイリアス")
+	_add_float_slider(list, "grass_antialiasing", 0.0, 1.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "grass_mip_bias", 0.0, 2.0, 0.05, _on_terrain_param_changed)
+
+	_add_ui_section(list, "草の色味")
+	_add_color_picker(list, "grass_tint", _on_terrain_param_changed)
+	_add_float_slider(list, "grass_tint_blend", 0.0, 1.0, 0.05, _on_terrain_param_changed)
 
 	_add_ui_section(list, "土ブロック")
 	_add_float_slider(list, "dirt_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)
@@ -1414,7 +1458,11 @@ func _add_bool_toggle(parent: VBoxContainer, param_name: String) -> void:
 	sliders[param_name] = check
 
 
-func _add_color_picker(parent: VBoxContainer, param_name: String) -> void:
+func _add_color_picker(
+	parent: VBoxContainer,
+	param_name: String,
+	callback := Callable()
+) -> void:
 	var row := HBoxContainer.new()
 	var label := Label.new()
 	label.text = param_name
@@ -1427,7 +1475,10 @@ func _add_color_picker(parent: VBoxContainer, param_name: String) -> void:
 	picker.custom_minimum_size = Vector2(120, 24)
 	picker.color_changed.connect(func(color: Color) -> void:
 		params[param_name] = color
-		_on_environment_param_changed()
+		if callback.is_valid():
+			callback.call()
+		else:
+			_on_environment_param_changed()
 	)
 	row.add_child(picker)
 	parent.add_child(row)
@@ -1486,6 +1537,7 @@ func _export_preset() -> void:
 		"grass_texture_opacity": params.grass_texture_opacity,
 		"grass_texture_tile_size": params.grass_texture_tile_size,
 		"grass_texture_brightness": params.grass_texture_brightness,
+		"grass_texture_saturation": params.grass_texture_saturation,
 		"grass_boundary_width": params.grass_boundary_width,
 		"dirt_top_tile_size": params.dirt_top_tile_size,
 		"dirt_side_tile_size": params.dirt_side_tile_size,
@@ -1501,6 +1553,10 @@ func _export_preset() -> void:
 		"lava_side_tile_size": params.lava_side_tile_size,
 		"lava_hue_jitter": params.lava_hue_jitter,
 		"tall_grass_brightness": params.tall_grass_brightness,
+		"grass_antialiasing": params.grass_antialiasing,
+		"grass_mip_bias": params.grass_mip_bias,
+		"grass_tint": "#" + params.grass_tint.to_html(false),
+		"grass_tint_blend": params.grass_tint_blend,
 		"sat_jitter": params.sat_jitter,
 		"val_jitter": params.val_jitter,
 		"strata_enabled": params.strata_enabled,
