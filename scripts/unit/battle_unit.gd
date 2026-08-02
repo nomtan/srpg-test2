@@ -148,6 +148,7 @@ const BOW_ATTACK_ANIMATION_NAMES: Array[StringName] = [
 const CHARACTER_FLAT_SHADER := preload("res://shaders/flat/flat_character.gdshader")
 const CHARACTER_FACE_SHADER := preload("res://shaders/flat/flat_character_face.gdshader")
 const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd")
+const CHARACTER_VISUAL_SCALE := 0.85
 
 # T5 (docs/dev/phase/phase17-step1.md): flat shading has no realtime shadow,
 # so a blob shadow is the only ground-contact cue. Multiply-blend isn't a
@@ -155,7 +156,11 @@ const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd"
 # albedo/modulate alpha reads the same (darkens the ground) so that's what
 # this uses instead.
 const BLOB_SHADOW_TEXTURE_SIZE := 32
-const BLOB_SHADOW_SIZE := Vector3(0.85, 0.6, 0.85)
+const BLOB_SHADOW_SIZE := Vector3(
+	0.85 * CHARACTER_VISUAL_SCALE,
+	0.6,
+	0.85 * CHARACTER_VISUAL_SCALE
+)
 const BLOB_SHADOW_MAX_ALPHA := 0.55
 static var _blob_shadow_texture_cache: ImageTexture
 
@@ -183,8 +188,10 @@ func setup_visual(
 	if not model_path.is_empty():
 		var packed: PackedScene = load(model_path)
 		model_instance = packed.instantiate()
-		model_instance.scale = Vector3.ONE * model_scale
-		model_instance.position = Vector3(0.0, model_y_offset, 0.0)
+		model_instance.scale = Vector3.ONE * model_scale * CHARACTER_VISUAL_SCALE
+		model_instance.position = Vector3(
+			0.0, model_y_offset * CHARACTER_VISUAL_SCALE, 0.0
+		)
 		add_child(model_instance)
 		if use_flat_shading:
 			_apply_flat_shading(model_instance, tunic_color, accent_color)
@@ -195,10 +202,10 @@ func setup_visual(
 	else:
 		var body := MeshInstance3D.new()
 		var capsule := CapsuleMesh.new()
-		capsule.radius = 0.28
-		capsule.height = 0.9
+		capsule.radius = 0.28 * CHARACTER_VISUAL_SCALE
+		capsule.height = 0.9 * CHARACTER_VISUAL_SCALE
 		body.mesh = capsule
-		body.position.y = 0.45
+		body.position.y = 0.45 * CHARACTER_VISUAL_SCALE
 		body.material_override = body_material
 		add_child(body)
 
@@ -207,12 +214,16 @@ func setup_visual(
 	var cone := PrismMesh.new()
 	cone.size = Vector3(0.22, 0.25, 0.22)
 	marker.mesh = cone
-	marker.position = Vector3(0, 1.05, -0.05)
+	marker.position = Vector3(0, 1.05 * CHARACTER_VISUAL_SCALE, -0.05)
 	marker.material_override = body_material
 	add_child(marker)
 	status_bars = UNIT_STATUS_BAR_SCRIPT.new()
 	status_bars.configure(team)
-	status_bars.position.y = 2.05 if model_instance else 1.45
+	status_bars.position.y = (
+		2.05 * CHARACTER_VISUAL_SCALE
+		if model_instance
+		else 1.45 * CHARACTER_VISUAL_SCALE
+	)
 	add_child(status_bars)
 	_create_blob_shadow()
 	update_visual_state()
@@ -430,7 +441,14 @@ func set_facing(direction: FacingDirection) -> void:
 
 func update_facing_visual() -> void:
 	if not direction_marker: return
-	var offsets := [Vector3(0, 1.05, -0.28), Vector3(0.28, 1.05, 0), Vector3(0, 1.05, 0.28), Vector3(-0.28, 1.05, 0)]
+	var marker_height := 1.05 * CHARACTER_VISUAL_SCALE
+	var marker_offset := 0.28 * CHARACTER_VISUAL_SCALE
+	var offsets := [
+		Vector3(0, marker_height, -marker_offset),
+		Vector3(marker_offset, marker_height, 0),
+		Vector3(0, marker_height, marker_offset),
+		Vector3(-marker_offset, marker_height, 0),
+	]
 	direction_marker.position = offsets[int(facing)]
 	if model_instance:
 		model_instance.rotation_degrees.y = FACING_MODEL_ANGLES[int(facing)] + model_facing_offset_degrees
