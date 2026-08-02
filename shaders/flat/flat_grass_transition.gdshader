@@ -56,9 +56,9 @@ void fragment() {
     if (corner_se) mask = max(mask, corner_fill(vec2(1.0 - uv.x, 1.0 - uv.y), 7.0));
     if (corner_sw) mask = max(mask, corner_fill(vec2(uv.x, 1.0 - uv.y), 8.0));
 
-    vec4 tex = texture(grass_tex, UV);
-    ALPHA = tex.a * mask;
+    ALPHA = mask;
     ALPHA_SCISSOR_THRESHOLD = 0.5;
-    vec3 col = apply_variation(tex.rgb * style_tint, floor(world_pos().xz / tile_size));
+    vec3 base_color = vec3(0.48, 0.68, 0.32) * style_tint;
+    vec3 col = apply_variation(base_color, floor(world_pos().xz / tile_size));
     ALBEDO = col * face_top;
 }

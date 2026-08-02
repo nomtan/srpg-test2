@@ -7,12 +7,43 @@ const MICRO_CELL_COUNT := MICRO_GRID_SIZE * MICRO_GRID_SIZE
 
 @export var position := Vector2i.ZERO
 @export var height := 1
+# Gameplay/legacy terrain identity. New visual data should also specify the
+# physical block and optional surface cover below.
 @export var terrain := "grass"
+@export var base_terrain := ""
+@export var surface_cover := ""
 @export var props: Array[MapDecorationData] = []
 # Optional row-major 3x3 visual height profile. Empty keeps the legacy
 # one-block renderer. Values 0/1/2 divide the cell's top logical level into
 # lower, middle, and upper thirds without changing gameplay occupancy.
 @export var micro_heights := PackedInt32Array()
+
+
+func resolved_base_terrain() -> String:
+	if not base_terrain.is_empty():
+		return base_terrain
+	# Legacy covered cells migrate visually to a dirt foundation plus a cover.
+	return (
+		"dirt"
+		if terrain in ["grass", "high_ground", "stone", "stone_road"]
+		else terrain
+	)
+
+
+func resolved_surface_cover() -> String:
+	if surface_cover == "none":
+		return ""
+	if not surface_cover.is_empty():
+		return surface_cover
+	if terrain == "high_ground":
+		return "grass_dark"
+	if terrain in ["stone", "stone_road"]:
+		return "stone_floor"
+	return "grass" if terrain == "grass" else ""
+
+
+func has_surface_cover(kind: String) -> bool:
+	return resolved_surface_cover() == kind
 
 
 func has_micro_height_profile() -> bool:

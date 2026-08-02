@@ -14,6 +14,56 @@ const ACACIA_LOG_COLUMN_POSITION := Vector2i(
 	PLAYER_START_WEST_LOG_COLUMN,
 	PLAYER_START_NORTH_LOG_ROW + 6
 )
+const STONE_FLOOR_COVER_POSITIONS: Array[Vector2i] = [
+	Vector2i(63, 15),
+	Vector2i(64, 15),
+	Vector2i(65, 15),
+	Vector2i(63, 16),
+	Vector2i(64, 16),
+	Vector2i(63, 17),
+	Vector2i(63, 21),
+	Vector2i(63, 22),
+	Vector2i(63, 23),
+	Vector2i(63, 24),
+	Vector2i(64, 23),
+	Vector2i(65, 23),
+	Vector2i(65, 24),
+	Vector2i(66, 24),
+	Vector2i(69, 24),
+	Vector2i(71, 24),
+	Vector2i(75, 24),
+	Vector2i(76, 23),
+	Vector2i(76, 22),
+	Vector2i(76, 24),
+	Vector2i(81, 24),
+	Vector2i(82, 24),
+	Vector2i(82, 23),
+	Vector2i(82, 22),
+]
+const DARK_GRASS_COVER_POSITIONS: Array[Vector2i] = [
+	Vector2i(72, 30),
+	Vector2i(72, 31),
+	Vector2i(72, 32),
+	Vector2i(73, 30),
+	Vector2i(74, 30),
+	Vector2i(75, 30),
+	Vector2i(76, 30),
+	Vector2i(77, 30),
+	Vector2i(78, 30),
+	Vector2i(79, 30),
+	Vector2i(73, 31),
+	Vector2i(73, 32),
+	Vector2i(73, 33),
+	Vector2i(73, 34),
+	Vector2i(73, 35),
+	Vector2i(74, 35),
+	Vector2i(75, 35),
+	Vector2i(76, 35),
+	Vector2i(77, 35),
+	Vector2i(78, 35),
+	Vector2i(79, 35),
+	Vector2i(80, 35),
+]
 const MASONRY_SHOWCASE: Array[Dictionary] = [
 	{"kind": "stone_brick", "position": Vector2i(12, 2)},
 	{"kind": "infested_cracked_stone_bricks", "position": Vector2i(12, 5)},
@@ -89,6 +139,9 @@ var battle_result := ""
 
 func _ready() -> void:
 	grid.generate_grid()
+	grid.flatten_centered_rectangle(Vector2i(73, 20), 20, 10, 3)
+	_apply_stone_floor_covers()
+	_apply_dark_grass_covers()
 	_add_jungle_log_column_near_player_start()
 	_add_oak_log_column_near_player_start()
 	_add_acacia_log_column_near_player_start()
@@ -154,6 +207,21 @@ func _ready() -> void:
 	pre_battle_setup.setup(unit_manager.get_player_units(), job_database, skill_database, skill_unlock_system, job_unlock_system, status_calculator, equipment_database, equipment_system)
 	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
+
+
+func _apply_stone_floor_covers() -> void:
+	for grid_position: Vector2i in STONE_FLOOR_COVER_POSITIONS:
+		var cell := grid.get_cell(grid_position)
+		if cell:
+			cell.set_visual_layers("dirt", "stone_floor")
+
+
+func _apply_dark_grass_covers() -> void:
+	for grid_position: Vector2i in DARK_GRASS_COVER_POSITIONS:
+		var cell := grid.get_cell(grid_position)
+		if cell:
+			cell.height = 3
+			cell.set_visual_layers("dirt", "grass_dark")
 
 
 func _add_jungle_log_column_near_player_start() -> void:

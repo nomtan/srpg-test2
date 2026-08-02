@@ -67,15 +67,46 @@ const SHORT_GRASS_LARGE_CLUSTER_COUNTS := [5, 6, 7, 8, 9, 10, 11, 12]
 const SHORT_GRASS_GOLDEN_ANGLE := 2.399963229728653
 
 const GRASS_TRANSITION_SHADER := preload("res://shaders/flat/flat_grass_transition.gdshader")
-const PAINTED_GRASS_OVERLAY_SHADER := preload("res://shaders/flat/flat_painted_grass_overlay.gdshader")
 const GRASS_TRANSITION_TEXTURE := preload("res://assets/terrain/textures/terrain_grass_top_01.png")
-const GRASS_TRANSITION_SOURCE_TERRAINS := ["grass", "high_ground"]
+const GRASS_COVER_SOLID_COLOR := Color("#69a947")
+const DARK_GRASS_COVER_SOLID_COLOR := Color("#507a38")
+const STONE_FLOOR_SOLID_COLOR := Color("#d8d99a")
+const STONE_FLOOR_LINE_COLOR := Color("#d99f86")
+const SURFACE_COVER_OFFSET := 0.006
+const LEAF_SHAPE_SIZE_MULTIPLIER := 2.2
 const GRASS_TRANSITION_TARGET_TERRAINS := ["dirt", "forest"]
-const PAINTED_GRASS_OVERLAY_VARIANTS: Array[Texture2D] = [
-	preload("res://assets/terrain/reference/grass_overlay_01.png"),
-	preload("res://assets/terrain/reference/grass_overlay_02.png"),
-	preload("res://assets/terrain/reference/grass_overlay_03.png"),
-	preload("res://assets/terrain/reference/grass_overlay_04.png"),
+const LEAF_PATTERN_COLORS: Array[Color] = [
+	Color("#c6d273"),
+	Color("#b6c969"),
+	Color("#9fbd5c"),
+	Color("#aeca62"),
+]
+const DARK_LEAF_PATTERN_COLORS: Array[Color] = [
+	Color("#3f6b2a"),
+	Color("#365c24"),
+	Color("#4a7a33"),
+	Color("#2e551f"),
+]
+const STONE_EDGE_GRASS_COLORS: Array[Color] = [
+	Color("#789d4c"),
+	Color("#668d43"),
+	Color("#527b39"),
+	Color("#91ae58"),
+]
+const STONE_FRAGMENT_COLORS: Array[Color] = [
+	Color("#d8d99a"),
+	Color("#e1dfa4"),
+	Color("#cbcf8e"),
+]
+const GRASS_STONE_CHIP_COLORS: Array[Color] = [
+	Color("#69a947"),
+	Color("#70ad4b"),
+	Color("#639f42"),
+]
+const DARK_GRASS_STONE_CHIP_COLORS: Array[Color] = [
+	Color("#507a38"),
+	Color("#567f3c"),
+	Color("#486f34"),
 ]
 
 @export var visual_theme: MapVisualTheme
@@ -99,13 +130,31 @@ const PAINTED_GRASS_OVERLAY_VARIANTS: Array[Texture2D] = [
 # remains at 0; validation can remove a full cube while keeping its liquid
 # surface visible just below the surrounding rim.
 @export_range(0.0, 0.90, 0.01) var fluid_surface_fill_offset := 0.0
+@export_group("Stone floor cover")
+@export_range(0.0, 1.0, 0.025) var stone_floor_seam_grass_chance := 0.46
+@export_range(0.0, 1.0, 0.025) var stone_floor_damage_chance := 0.28
 @export_group("Painted grass top overlays")
-@export var painted_grass_overlays_enabled := false
+@export var painted_grass_overlays_enabled := true
 @export var painted_grass_overlay_seed := 8123
+@export_range(0.0, 1.0, 0.025) var painted_grass_overlay_chance := 0.30
+@export_range(0.0, 1.0, 0.025) var dark_leaf_overlay_chance := 0.26
+# Multiplies painted_grass_overlay_chance for dark-grass cells only. Both
+# variants otherwise follow identical rules (size, required-at-boundary
+# placement); this just makes the dark leaf pattern show up a bit less often
+# away from boundaries.
+@export_range(0.0, 1.0, 0.025) var dark_leaf_pattern_chance_scale := 0.7
+@export_range(0.15, 0.70, 0.01) var painted_grass_overlay_min_size := 0.26
+@export_range(0.15, 0.70, 0.01) var painted_grass_overlay_max_size := 0.46
+# Kept for compatibility with existing preview scenes; sparse clusters no
+# longer need edge-fringe trimming because they remain inside their cell.
 @export_range(0.08, 0.40, 0.01) var painted_grass_edge_fringe_width := 0.18
 
 var grid: GridSystem
-var _grass_overhang_source_material: StandardMaterial3D
+var _solid_grass_cover_material: StandardMaterial3D
+var _solid_dark_grass_cover_material: StandardMaterial3D
+var _solid_stone_floor_material: StandardMaterial3D
+var _stone_floor_line_material: StandardMaterial3D
+var _leaf_pattern_material: StandardMaterial3D
 
 func build_from_grid(source_grid: GridSystem) -> void:
 	grid = source_grid
@@ -120,85 +169,575 @@ func build_from_map_data(data: MapData) -> void:
 		else:
 			_create_top(cell)
 		_create_cliff_sides(cell)
+	_create_stone_floor_boundaries()
 	_create_grass_cliff_overhangs()
 	_create_painted_grass_overlays()
+	_create_dark_leaf_overlays()
 	_create_terrain_transitions()
 	_create_decorations()
+
+
+func _base_terrain(cell: MapCellVisualData) -> String:
+	return cell.resolved_base_terrain()
+
+
+func _has_grass_cover(cell: MapCellVisualData) -> bool:
+	return cell.resolved_surface_cover() in ["grass", "grass_dark"]
+
+
+func _has_regular_grass_cover(cell: MapCellVisualData) -> bool:
+	return cell.has_surface_cover("grass")
+
+
+func _has_dark_grass_cover(cell: MapCellVisualData) -> bool:
+	return cell.has_surface_cover("grass_dark")
+
+
+func _has_stone_floor_cover(cell: MapCellVisualData) -> bool:
+	return cell.resolved_surface_cover() in ["stone_floor", "stone_floor_worn"]
+
+
+func _has_worn_stone_floor_cover(cell: MapCellVisualData) -> bool:
+	return cell.has_surface_cover("stone_floor_worn")
+
+
+func _create_stone_floor_boundaries() -> void:
+	for cell: MapCellVisualData in map_data.cells:
+		if not _has_stone_floor_cover(cell) or _uses_micro_height_profile(cell):
+			continue
+		for edge_index in DIRECTIONS.size():
+			var direction: Dictionary = DIRECTIONS[edge_index]
+			var neighbor_position: Vector2i = cell.position + direction.offset
+			if not map_data.is_in_bounds(neighbor_position):
+				continue
+			var neighbor := map_data.get_cell(neighbor_position)
+			if (
+				neighbor == null
+				or neighbor.height != cell.height
+				or not _has_grass_cover(neighbor)
+				or _uses_micro_height_profile(neighbor)
+			):
+				continue
+			_create_stone_floor_boundary(
+				cell,
+				direction.offset,
+				edge_index,
+				neighbor.resolved_surface_cover()
+			)
+
+
+func _create_stone_floor_boundary(
+	cell: MapCellVisualData,
+	edge_offset: Vector2i,
+	edge_index: int,
+	neighbor_cover_kind: String
+) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = (
+		painted_grass_overlay_seed
+		+ cell.position.x * 92837111
+		+ cell.position.y * 689287499
+		+ edge_index * 283923481
+	)
+	var outward := Vector2(edge_offset)
+	var tangent := Vector2(-outward.y, outward.x)
+	_create_stone_edge_chips(
+		cell, rng, outward, tangent, edge_index, neighbor_cover_kind
+	)
+	# Kept small and close to the seam: this remnant band represents a worn
+	# tile edge, not a spray of rubble, so fragments stay near the boundary
+	# line and grass clumps (below) carry most of the transition's visual
+	# weight, matching the reference's soft grass-over-stone look.
+	var fragment_count := rng.randi_range(1, 3)
+	var large_fragment_index := rng.randi_range(0, fragment_count - 1)
+	for segment in fragment_count:
+		var edge_progress := (float(segment) + 0.5) / float(fragment_count) - 0.5
+		var tangent_offset := edge_progress * 0.92
+		tangent_offset += rng.randf_range(-0.06, 0.06)
+		var fragment := MeshInstance3D.new()
+		fragment.name = "StoneEdgeFragment_%d_%d_%d_%d" % [
+			cell.position.x, cell.position.y, edge_index, segment
+		]
+		var fragment_size: float
+		if segment == large_fragment_index:
+			fragment_size = rng.randf_range(0.16, 0.26)
+		elif rng.randf() < 0.28:
+			fragment_size = rng.randf_range(0.10, 0.18)
+		else:
+			fragment_size = rng.randf_range(0.05, 0.11)
+		fragment.mesh = _build_stone_fragment_mesh(
+			rng, fragment_size, STONE_FRAGMENT_COLORS
+		)
+		# Stays on the stone side of the seam (outward < 0.5 is still inside
+		# this cell) so it reads as a worn tile edge, not rubble scattered
+		# across the grass.
+		var fragment_center := (
+			Vector2(cell.position)
+			+ Vector2(0.5, 0.5)
+			+ outward * rng.randf_range(0.30, 0.45)
+			+ tangent * tangent_offset
+		)
+		fragment.position = Vector3(
+			fragment_center.x,
+			float(cell.height) + SURFACE_COVER_OFFSET + 0.006,
+			fragment_center.y
+		)
+		fragment.material_override = _leaf_pattern_surface_material()
+		fragment.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		fragment.set_meta("stone_floor_boundary", true)
+		add_to_layer(fragment, TOP_LAYER)
+
+		var grass_marks := MeshInstance3D.new()
+		grass_marks.name = "StoneEdgeGrass_%d_%d_%d_%d" % [
+			cell.position.x, cell.position.y, edge_index, segment
+		]
+		grass_marks.mesh = _build_leaf_pattern_mesh(
+			rng,
+			rng.randf_range(0.20, 0.32),
+			STONE_EDGE_GRASS_COLORS
+		)
+		var grass_center := (
+			Vector2(cell.position)
+			+ Vector2(0.5, 0.5)
+			+ outward * rng.randf_range(0.16, 0.42)
+			+ tangent * tangent_offset
+		)
+		grass_marks.position = Vector3(
+			grass_center.x,
+			float(cell.height) + SURFACE_COVER_OFFSET + 0.009,
+			grass_center.y
+		)
+		grass_marks.material_override = _leaf_pattern_surface_material()
+		grass_marks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		grass_marks.set_meta("stone_floor_edge_grass", true)
+		add_to_layer(grass_marks, TOP_LAYER)
+
+
+func _create_stone_edge_chips(
+	cell: MapCellVisualData,
+	rng: RandomNumberGenerator,
+	outward: Vector2,
+	tangent: Vector2,
+	edge_index: int,
+	neighbor_cover_kind: String
+) -> void:
+	var chip_palette := (
+		DARK_GRASS_STONE_CHIP_COLORS
+		if neighbor_cover_kind == "grass_dark"
+		else GRASS_STONE_CHIP_COLORS
+	)
+	var chip_count := rng.randi_range(2, 4)
+	for chip_index in chip_count:
+		var chip := MeshInstance3D.new()
+		chip.name = "StoneEdgeChip_%d_%d_%d_%d" % [
+			cell.position.x, cell.position.y, edge_index, chip_index
+		]
+		var chip_size := rng.randf_range(0.05, 0.16)
+		chip.mesh = _build_stone_fragment_mesh(rng, chip_size, chip_palette)
+		var edge_progress := (
+			(float(chip_index) + rng.randf_range(0.25, 0.75))
+			/ float(chip_count)
+			- 0.5
+		)
+		var center := (
+			Vector2(cell.position)
+			+ Vector2(0.5, 0.5)
+			+ outward * rng.randf_range(0.24, 0.42)
+			+ tangent * (edge_progress * 0.92 + rng.randf_range(-0.10, 0.10))
+		)
+		chip.position = Vector3(
+			center.x,
+			float(cell.height) + SURFACE_COVER_OFFSET + 0.011,
+			center.y
+		)
+		chip.material_override = _leaf_pattern_surface_material()
+		chip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		chip.set_meta("stone_floor_chipped_edge", true)
+		add_to_layer(chip, TOP_LAYER)
+
+
+func _build_stone_fragment_mesh(
+	rng: RandomNumberGenerator,
+	size: float,
+	palette: Array[Color]
+) -> ArrayMesh:
+	var vertices: Array[Vector3] = []
+	var colors: Array[Color] = []
+	var indices: Array[int] = []
+	var point_count := 3 if rng.randf() < 0.10 else 4
+	var rotation: float
+	if rng.randf() < 0.55:
+		rotation = PI * 0.25 + float(rng.randi_range(0, 3)) * PI * 0.5
+		rotation += rng.randf_range(-0.08, 0.08)
+	else:
+		rotation = float(rng.randi_range(0, 3)) * PI * 0.5
+		rotation += rng.randf_range(-0.18, 0.18)
+	var color := palette[
+		rng.randi_range(0, palette.size() - 1)
+	]
+	var half_width := size * rng.randf_range(0.38, 0.58)
+	var half_height := size * rng.randf_range(0.25, 0.48)
+	var skew := size * rng.randf_range(-0.20, 0.20)
+	var long_axis := Vector2(half_width, 0.0)
+	var short_axis := Vector2(skew, half_height)
+	var local_points := [
+		-long_axis - short_axis,
+		long_axis - short_axis,
+		long_axis + short_axis,
+		-long_axis + short_axis,
+	]
+	if point_count == 3:
+		local_points.remove_at(rng.randi_range(0, local_points.size() - 1))
+	for local_point: Vector2 in local_points:
+		if point_count == 3:
+			local_point.x *= rng.randf_range(0.88, 1.10)
+			local_point.y *= rng.randf_range(0.88, 1.10)
+		var point := local_point.rotated(rotation)
+		vertices.append(Vector3(point.x, 0.0, point.y))
+		colors.append(color)
+	if point_count == 3:
+		indices.append_array([0, 2, 1])
+	else:
+		indices.append_array([0, 2, 1, 0, 3, 2])
+	var mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+	arrays[Mesh.ARRAY_COLOR] = PackedColorArray(colors)
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(indices)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
 
 
 func _create_painted_grass_overlays() -> void:
 	if not painted_grass_overlays_enabled:
 		return
-	const OVERLAY_SCALE := 1.48
 	for cell: MapCellVisualData in map_data.cells:
-		if not cell.terrain in GRASS_TRANSITION_SOURCE_TERRAINS:
+		if not _has_grass_cover(cell):
 			continue
-		if _uses_micro_height_profile(cell):
-			continue
+		var is_dark := _has_dark_grass_cover(cell)
+		var palette := DARK_LEAF_PATTERN_COLORS if is_dark else LEAF_PATTERN_COLORS
+		var boundary_edges := _grass_boundary_leaf_edges(cell, is_dark)
+		var is_required_boundary := not boundary_edges.is_empty()
 		var rng := RandomNumberGenerator.new()
-		# Coordinate mixing makes variant selection stable across rebuilds and
-		# independent of MapData iteration order.
 		rng.seed = (
 			painted_grass_overlay_seed
 			+ cell.position.x * 73856093
 			+ cell.position.y * 19349663
 		)
-		var variant := PAINTED_GRASS_OVERLAY_VARIANTS[
-			rng.randi_range(0, PAINTED_GRASS_OVERLAY_VARIANTS.size() - 1)
-		]
-		var position := cell.position
-		var trim_n := _should_trim_painted_grass(position + Vector2i(0, -1), cell.height)
-		var trim_e := _should_trim_painted_grass(position + Vector2i(1, 0), cell.height)
-		var trim_s := _should_trim_painted_grass(position + Vector2i(0, 1), cell.height)
-		var trim_w := _should_trim_painted_grass(position + Vector2i(-1, 0), cell.height)
-		var trim_ne := not trim_n and not trim_e and _should_trim_painted_grass(position + Vector2i(1, -1), cell.height)
-		var trim_se := not trim_s and not trim_e and _should_trim_painted_grass(position + Vector2i(1, 1), cell.height)
-		var trim_sw := not trim_s and not trim_w and _should_trim_painted_grass(position + Vector2i(-1, 1), cell.height)
-		var trim_nw := not trim_n and not trim_w and _should_trim_painted_grass(position + Vector2i(-1, -1), cell.height)
-		var overlay := MeshInstance3D.new()
-		overlay.name = "PaintedGrassTop_%d_%d" % [cell.position.x, cell.position.y]
-		var plane := PlaneMesh.new()
-		# Neighboring grass decals overlap into one carpet. The shader clips the
-		# enlarged plane back at dirt, cliffs, and the outside of the map.
-		plane.size = Vector2(OVERLAY_SCALE, OVERLAY_SCALE)
-		overlay.mesh = plane
-		overlay.position = Vector3(
-			cell.position.x + 0.5,
-			# A tiny deterministic height order prevents coplanar overlap seams
-			# without lifting the carpet visibly above the soil.
-			float(cell.height) + 0.021 + rng.randi_range(0, 15) * 0.00025,
-			cell.position.y + 0.5
+		# Boundary cells always receive leaves. Other grass cells use the
+		# original sparse random chance, restoring patterns across open
+		# grassland; dark grass uses that same chance scaled down a bit.
+		var scatter_chance := (
+			painted_grass_overlay_chance * dark_leaf_pattern_chance_scale
+			if is_dark
+			else painted_grass_overlay_chance
 		)
-		var material := ShaderMaterial.new()
-		material.shader = PAINTED_GRASS_OVERLAY_SHADER
-		material.set_shader_parameter("grass_tex", variant)
-		material.set_shader_parameter("fringe_width", painted_grass_edge_fringe_width)
-		material.set_shader_parameter("overlay_scale", OVERLAY_SCALE)
-		material.set_shader_parameter("texture_turn", rng.randi_range(0, 3))
-		material.set_shader_parameter("pattern_seed", float(rng.randi()))
-		material.set_shader_parameter("trim_n", trim_n)
-		material.set_shader_parameter("trim_e", trim_e)
-		material.set_shader_parameter("trim_s", trim_s)
-		material.set_shader_parameter("trim_w", trim_w)
-		material.set_shader_parameter("trim_ne", trim_ne)
-		material.set_shader_parameter("trim_se", trim_se)
-		material.set_shader_parameter("trim_sw", trim_sw)
-		material.set_shader_parameter("trim_nw", trim_nw)
-		overlay.material_override = material
-		overlay.set_meta("painted_grass_overlay", true)
-		add_to_layer(overlay, TOP_LAYER)
+		if not is_required_boundary and rng.randf() >= scatter_chance:
+			continue
+		if _uses_micro_height_profile(cell):
+			_create_micro_leaf_patterns(cell, rng, palette)
+		else:
+			var cluster_count := 2 if rng.randf() < 0.18 else 1
+			for cluster_index in cluster_count:
+				if is_required_boundary:
+					var edge_offset: Vector2i = boundary_edges[
+						rng.randi_range(0, boundary_edges.size() - 1)
+					]
+					_create_leaf_pattern(
+						cell,
+						rng,
+						Vector2(cell.position)
+							+ Vector2(0.5, 0.5)
+							+ Vector2(edge_offset) * 0.31,
+						0.42,
+						float(cell.height),
+						cluster_index,
+						palette
+					)
+				else:
+					_create_leaf_pattern(
+						cell,
+						rng,
+						Vector2(cell.position) + Vector2(0.5, 0.5),
+						0.90,
+						float(cell.height),
+						cluster_index,
+						palette
+					)
 
 
-func _should_trim_painted_grass(position: Vector2i, height: int) -> bool:
-	if not map_data.is_in_bounds(position):
-		return true
-	var neighbor := map_data.get_cell(position)
-	return not (
-		neighbor != null
-		and neighbor.height == height
-		and neighbor.terrain in GRASS_TRANSITION_SOURCE_TERRAINS
-		and not _uses_micro_height_profile(neighbor)
+func _create_dark_leaf_overlays() -> void:
+	if not painted_grass_overlays_enabled:
+		return
+	for cell: MapCellVisualData in map_data.cells:
+		if not _has_regular_grass_cover(cell):
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = (
+			painted_grass_overlay_seed
+			+ cell.position.x * 83492791
+			+ cell.position.y * 19349669
+			+ 149417
+		)
+		if rng.randf() >= dark_leaf_overlay_chance:
+			continue
+		var cluster_count := 2 if rng.randf() < 0.16 else 1
+		for cluster_index in cluster_count:
+			if _uses_micro_height_profile(cell):
+				var sub_x := rng.randi_range(0, MICRO_GRID_SIZE - 1)
+				var sub_z := rng.randi_range(0, MICRO_GRID_SIZE - 1)
+				_create_leaf_pattern(
+					cell,
+					rng,
+					Vector2(
+						cell.position.x + (float(sub_x) + 0.5) * MICRO_CELL_SIZE,
+						cell.position.y + (float(sub_z) + 0.5) * MICRO_CELL_SIZE
+					),
+					MICRO_CELL_SIZE,
+					cell.micro_surface_height(sub_x, sub_z),
+					cluster_index,
+					DARK_LEAF_PATTERN_COLORS,
+					"dark"
+				)
+			else:
+				_create_leaf_pattern(
+					cell,
+					rng,
+					Vector2(cell.position) + Vector2(0.5, 0.5),
+					0.90,
+					float(cell.height),
+					cluster_index,
+					DARK_LEAF_PATTERN_COLORS,
+					"dark"
+				)
+
+
+func _grass_boundary_leaf_edges(
+	cell: MapCellVisualData, is_dark: bool = false
+) -> Array[Vector2i]:
+	var boundary_edges: Array[Vector2i] = []
+	if not _has_grass_cover(cell):
+		return boundary_edges
+	# Regular grass marks its boundary with dark grass or stone floor. Dark
+	# grass only marks its boundary with regular grass - stone floor already
+	# gets its own grass-spilling-from-the-seam treatment in
+	# _create_stone_floor_seam_grass, so dark leaf marks would be redundant
+	# (and wrong-colored) sitting on the stone side.
+	var target_covers := (
+		["grass"] if is_dark else ["stone_floor", "stone_floor_worn", "grass_dark"]
 	)
+	for direction: Dictionary in DIRECTIONS:
+		var neighbor_position: Vector2i = cell.position + direction.offset
+		if not map_data.is_in_bounds(neighbor_position):
+			continue
+		var neighbor := map_data.get_cell(neighbor_position)
+		if (
+			neighbor != null
+			and neighbor.height == cell.height
+			and neighbor.resolved_surface_cover() in target_covers
+		):
+			boundary_edges.append(direction.offset)
+	return boundary_edges
+
+
+func _create_micro_leaf_patterns(
+	cell: MapCellVisualData,
+	rng: RandomNumberGenerator,
+	palette: Array[Color]
+) -> void:
+	var required_index := rng.randi_range(0, MICRO_GRID_SIZE * MICRO_GRID_SIZE - 1)
+	for sub_z in MICRO_GRID_SIZE:
+		for sub_x in MICRO_GRID_SIZE:
+			var sub_index := sub_z * MICRO_GRID_SIZE + sub_x
+			if (
+				sub_index != required_index
+				and rng.randf() >= painted_grass_overlay_chance * 0.42
+			):
+				continue
+			_create_leaf_pattern(
+				cell,
+				rng,
+				Vector2(
+					cell.position.x + (float(sub_x) + 0.5) * MICRO_CELL_SIZE,
+					cell.position.y + (float(sub_z) + 0.5) * MICRO_CELL_SIZE
+				),
+				MICRO_CELL_SIZE,
+				cell.micro_surface_height(sub_x, sub_z),
+				sub_index,
+				palette
+			)
+
+
+func _create_leaf_pattern(
+	cell: MapCellVisualData,
+	rng: RandomNumberGenerator,
+	area_center: Vector2,
+	area_size: float,
+	surface_height: float,
+	cluster_index: int,
+	palette: Array[Color],
+	pattern_kind := "pale"
+) -> void:
+	var min_size := minf(
+		painted_grass_overlay_min_size,
+		painted_grass_overlay_max_size
+	) * area_size
+	var max_size := maxf(
+		painted_grass_overlay_min_size,
+		painted_grass_overlay_max_size
+	) * area_size
+	var pattern_size := rng.randf_range(min_size, max_size)
+	var offset_limit := maxf(area_size * 0.5 - pattern_size * 0.5 - 0.02, 0.0)
+	var overlay := MeshInstance3D.new()
+	overlay.name = "Grass%sLeafPattern_%d_%d_%d" % [
+		pattern_kind.capitalize(), cell.position.x, cell.position.y, cluster_index
+	]
+	overlay.mesh = _build_leaf_pattern_mesh(
+		rng, pattern_size, palette
+	)
+	overlay.position = Vector3(
+		area_center.x + rng.randf_range(-offset_limit, offset_limit),
+		surface_height + SURFACE_COVER_OFFSET + 0.006 + cluster_index * 0.0002,
+		area_center.y + rng.randf_range(-offset_limit, offset_limit)
+	)
+	overlay.material_override = _leaf_pattern_surface_material()
+	overlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	overlay.set_meta("painted_grass_overlay", true)
+	overlay.set_meta("dark_leaf_pattern", pattern_kind == "dark")
+	add_to_layer(overlay, TOP_LAYER)
+
+
+func _build_leaf_pattern_mesh(
+	rng: RandomNumberGenerator,
+	pattern_size: float,
+	palette: Array[Color]
+) -> ArrayMesh:
+	var vertices: Array[Vector3] = []
+	var colors: Array[Color] = []
+	var indices: Array[int] = []
+	var leaf_count := rng.randi_range(5, 11)
+	for leaf_index in leaf_count:
+		var angle := rng.randf_range(0.0, TAU)
+		var distance := sqrt(rng.randf()) * pattern_size * 0.40
+		var center := Vector2(cos(angle), sin(angle)) * distance
+		center += Vector2(
+			rng.randf_range(-0.018, 0.018),
+			rng.randf_range(-0.018, 0.018)
+		) * pattern_size
+		var leaf_angle: float
+		var angle_style := rng.randf()
+		if angle_style < 0.58:
+			leaf_angle = float(rng.randi_range(0, 3) * 2 + 1) * PI * 0.25
+			leaf_angle += rng.randf_range(-0.07, 0.07)
+		elif angle_style < 0.82:
+			leaf_angle = float(rng.randi_range(0, 3)) * PI * 0.5
+			leaf_angle += rng.randf_range(-0.07, 0.07)
+		else:
+			leaf_angle = rng.randf_range(0.0, TAU)
+		var direction := Vector2(cos(leaf_angle), sin(leaf_angle))
+		var side := Vector2(-direction.y, direction.x)
+		var length := (
+			pattern_size
+			* rng.randf_range(0.055, 0.145)
+			* LEAF_SHAPE_SIZE_MULTIPLIER
+		)
+		var width := length * rng.randf_range(0.42, 0.92)
+		var color := palette[
+			rng.randi_range(0, palette.size() - 1)
+		]
+		if rng.randf() < 0.10:
+			_append_triangle_leaf(
+				vertices, colors, indices, center,
+				direction, side, length, width, color, rng
+			)
+		else:
+			_append_quad_leaf(
+				vertices, colors, indices, center,
+				direction, side, length, width, color, rng
+			)
+	var mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+	arrays[Mesh.ARRAY_COLOR] = PackedColorArray(colors)
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(indices)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+func _append_triangle_leaf(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2,
+	direction: Vector2,
+	side: Vector2,
+	length: float,
+	width: float,
+	color: Color,
+	rng: RandomNumberGenerator
+) -> void:
+	var base_index := vertices.size()
+	var points := [
+		center + direction * length * rng.randf_range(0.45, 0.68),
+		center - direction * length * rng.randf_range(0.25, 0.52)
+			+ side * width * rng.randf_range(0.35, 0.62),
+		center - direction * length * rng.randf_range(0.25, 0.52)
+			- side * width * rng.randf_range(0.35, 0.62),
+	]
+	for point: Vector2 in points:
+		vertices.append(Vector3(point.x, 0.0, point.y))
+		colors.append(color)
+	indices.append_array([
+		base_index, base_index + 2, base_index + 1
+	])
+
+
+func _append_quad_leaf(
+	vertices: Array[Vector3],
+	colors: Array[Color],
+	indices: Array[int],
+	center: Vector2,
+	direction: Vector2,
+	side: Vector2,
+	length: float,
+	width: float,
+	color: Color,
+	rng: RandomNumberGenerator
+) -> void:
+	var base_index := vertices.size()
+	var half_length := length * rng.randf_range(0.38, 0.62)
+	var half_width := width * rng.randf_range(0.30, 0.56)
+	var skew := length * rng.randf_range(-0.28, 0.28)
+	var long_axis := direction * half_length
+	var short_axis := side * half_width + direction * skew
+	var points := [
+		center - long_axis - short_axis,
+		center + long_axis - short_axis,
+		center + long_axis + short_axis,
+		center - long_axis + short_axis,
+	]
+	for point: Vector2 in points:
+		vertices.append(Vector3(point.x, 0.0, point.y))
+		colors.append(color)
+	indices.append_array([
+		base_index, base_index + 2, base_index + 1,
+		base_index, base_index + 3, base_index + 2,
+	])
+
+
+func _leaf_pattern_surface_material() -> StandardMaterial3D:
+	if _leaf_pattern_material:
+		return _leaf_pattern_material
+	_leaf_pattern_material = StandardMaterial3D.new()
+	_leaf_pattern_material.vertex_color_use_as_albedo = true
+	_leaf_pattern_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_leaf_pattern_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_leaf_pattern_material.roughness = 1.0
+	return _leaf_pattern_material
 
 
 func _create_terrain_transitions() -> void:
@@ -237,7 +776,7 @@ func _is_same_height_grass(position: Vector2i, height: int) -> bool:
 	return (
 		neighbor != null
 		and neighbor.height == height
-		and neighbor.terrain in GRASS_TRANSITION_SOURCE_TERRAINS
+		and _has_grass_cover(neighbor)
 		and not _uses_micro_height_profile(neighbor)
 	)
 
@@ -327,7 +866,7 @@ func _create_grass_cliff_overhangs() -> void:
 	if not grass_cliff_overhangs_enabled:
 		return
 	for cell: MapCellVisualData in map_data.cells:
-		if not cell.terrain in GRASS_TRANSITION_SOURCE_TERRAINS:
+		if not _has_grass_cover(cell):
 			continue
 		if _uses_micro_height_profile(cell):
 			continue
@@ -418,7 +957,9 @@ func _create_grass_cliff_overhang(cell: MapCellVisualData, flags: Dictionary) ->
 	var overhang := MeshInstance3D.new()
 	overhang.name = "GrassCliffOverhang_%d_%d" % [cell.position.x, cell.position.y]
 	overhang.mesh = mesh
-	overhang.material_override = _grass_cliff_overhang_material()
+	overhang.material_override = _grass_cliff_overhang_material(
+		cell.resolved_surface_cover()
+	)
 	var layer_order := (cell.position.x * 3 + cell.position.y * 5) % 11
 	overhang.position = Vector3(
 		cell.position.x,
@@ -516,48 +1057,479 @@ func _append_grass_overhang_triangle(
 		uvs.append(Vector2(point.x, point.z))
 
 
-func _grass_cliff_overhang_material() -> StandardMaterial3D:
-	if _grass_overhang_source_material:
-		return _grass_overhang_source_material
-	_grass_overhang_source_material = StandardMaterial3D.new()
-	_grass_overhang_source_material.albedo_texture = GRASS_TRANSITION_TEXTURE
-	_grass_overhang_source_material.texture_filter = (
-		BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
-	)
-	_grass_overhang_source_material.roughness = 0.92
-	return _grass_overhang_source_material
+func _grass_cliff_overhang_material(cover_kind: String) -> StandardMaterial3D:
+	return _solid_grass_cover_surface_material(cover_kind)
 
 
 func _create_top(cell: MapCellVisualData) -> void:
 	var grid_pos := cell.position
-	var scene := visual_theme.top_scene_for(cell.terrain) if visual_theme else null
+	var base_terrain := _base_terrain(cell)
+	var scene := visual_theme.top_scene_for(base_terrain) if visual_theme else null
 	var top := _instantiate(scene)
 	if top:
-		if cell.terrain in GRASS_TRANSITION_SOURCE_TERRAINS:
-			top.set_meta(
-				"grass_dirt_boundary_flags",
-				_grass_dirt_boundary_flags(cell)
-			)
 		var surface_y := float(cell.height)
-		if cell.terrain in ["water", "lava"]:
+		if base_terrain in ["water", "lava"]:
 			surface_y += fluid_surface_fill_offset
 		top.position = Vector3(grid_pos.x + 0.5, surface_y, grid_pos.y + 0.5)
-		add_to_layer(top, WATER_LAYER if cell.terrain in ["water", "lava"] else TOP_LAYER)
+		add_to_layer(top, WATER_LAYER if base_terrain in ["water", "lava"] else TOP_LAYER)
 	else:
-		_create_fallback_top(grid_pos, cell)
+		_create_fallback_top(grid_pos, cell, base_terrain)
+	if _has_grass_cover(cell):
+		_create_grass_surface_cover(cell)
+	elif _has_stone_floor_cover(cell):
+		_create_stone_floor_cover(cell)
+
+
+func _create_grass_surface_cover(cell: MapCellVisualData) -> void:
+	var cover := MeshInstance3D.new()
+	var cover_kind := cell.resolved_surface_cover()
+	cover.name = "%sCover_%d_%d" % [
+		"DarkGrass" if cover_kind == "grass_dark" else "Grass",
+		cell.position.x,
+		cell.position.y,
+	]
+	var plane := PlaneMesh.new()
+	plane.size = Vector2.ONE
+	plane.material = _solid_grass_cover_surface_material(cover_kind)
+	cover.mesh = plane
+	cover.position = Vector3(
+		cell.position.x + 0.5,
+		float(cell.height) + SURFACE_COVER_OFFSET,
+		cell.position.y + 0.5
+	)
+	cover.set_meta(
+		"terrain_asset_name",
+		"terrain_grass_dark_cover" if cover_kind == "grass_dark" else "terrain_grass_top_01.glb"
+	)
+	cover.set_meta("surface_cover", cover_kind)
+	cover.set_meta("grass_dirt_boundary_flags", _grass_dirt_boundary_flags(cell))
+	add_to_layer(cover, TOP_LAYER)
+
+
+func _solid_grass_cover_surface_material(
+	cover_kind := "grass"
+) -> StandardMaterial3D:
+	if cover_kind == "grass_dark":
+		if _solid_dark_grass_cover_material:
+			return _solid_dark_grass_cover_material
+		_solid_dark_grass_cover_material = StandardMaterial3D.new()
+		_solid_dark_grass_cover_material.albedo_color = DARK_GRASS_COVER_SOLID_COLOR
+		_solid_dark_grass_cover_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_solid_dark_grass_cover_material.roughness = 0.92
+		return _solid_dark_grass_cover_material
+	if _solid_grass_cover_material:
+		return _solid_grass_cover_material
+	_solid_grass_cover_material = StandardMaterial3D.new()
+	_solid_grass_cover_material.albedo_color = GRASS_COVER_SOLID_COLOR
+	_solid_grass_cover_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_solid_grass_cover_material.roughness = 0.92
+	return _solid_grass_cover_material
+
+
+func _create_stone_floor_cover(cell: MapCellVisualData) -> void:
+	var cover_kind := cell.resolved_surface_cover()
+	# A backing plane sits beneath four separate slabs. At a grass boundary it
+	# uses the neighboring grass color, so missing stones never expose pink grout.
+	var grout := MeshInstance3D.new()
+	grout.name = "StoneFloorGrout_%d_%d" % [cell.position.x, cell.position.y]
+	var grout_plane := PlaneMesh.new()
+	grout_plane.size = Vector2.ONE
+	var boundary_grass_kind := _stone_floor_boundary_grass_kind(cell)
+	if boundary_grass_kind.is_empty():
+		grout_plane.material = _stone_floor_line_surface_material()
+	else:
+		grout_plane.material = _solid_grass_cover_surface_material(
+			boundary_grass_kind
+		)
+	grout.mesh = grout_plane
+	grout.position = Vector3(
+		cell.position.x + 0.5,
+		float(cell.height) + SURFACE_COVER_OFFSET,
+		cell.position.y + 0.5
+	)
+	grout.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_to_layer(grout, TOP_LAYER)
+
+	var slabs := MeshInstance3D.new()
+	slabs.name = "StoneFloorSlabs_%d_%d" % [cell.position.x, cell.position.y]
+	slabs.mesh = _build_four_stone_slab_mesh(cell)
+	slabs.material_override = _leaf_pattern_surface_material()
+	slabs.position = grout.position + Vector3(0.0, 0.002, 0.0)
+	slabs.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	slabs.set_meta(
+		"terrain_asset_name",
+		"terrain_stone_floor_worn_cover"
+		if cover_kind == "stone_floor_worn"
+		else "terrain_stone_floor_cover"
+	)
+	slabs.set_meta("surface_cover", cover_kind)
+	add_to_layer(slabs, TOP_LAYER)
+	if _has_worn_stone_floor_cover(cell):
+		_create_stone_floor_seam_grass(cell)
+		_create_stone_floor_damage(cell)
+
+
+func _build_four_stone_slab_mesh(cell: MapCellVisualData) -> ArrayMesh:
+	var vertices: Array[Vector3] = []
+	var colors: Array[Color] = []
+	var indices: Array[int] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = cell.position.x * 73856093 + cell.position.y * 19349663 + 97003
+	var boundary_flags := _stone_floor_grass_boundary_flags(cell)
+	const OUTER_EDGE := 0.49
+	const HALF_GAP := 0.018
+	var rectangles := [
+		Rect2(Vector2(-OUTER_EDGE, -OUTER_EDGE), Vector2(OUTER_EDGE - HALF_GAP, OUTER_EDGE - HALF_GAP)),
+		Rect2(Vector2(HALF_GAP, -OUTER_EDGE), Vector2(OUTER_EDGE - HALF_GAP, OUTER_EDGE - HALF_GAP)),
+		Rect2(Vector2(-OUTER_EDGE, HALF_GAP), Vector2(OUTER_EDGE - HALF_GAP, OUTER_EDGE - HALF_GAP)),
+		Rect2(Vector2(HALF_GAP, HALF_GAP), Vector2(OUTER_EDGE - HALF_GAP, OUTER_EDGE - HALF_GAP)),
+	]
+	var emitted_slab_count := 0
+	for slab_index in rectangles.size():
+		var rectangle: Rect2 = rectangles[slab_index]
+		var min_point := rectangle.position
+		var max_point := rectangle.position + rectangle.size
+		var touches_boundary := (
+			(bool(boundary_flags.n) and slab_index in [0, 1])
+			or (bool(boundary_flags.s) and slab_index in [2, 3])
+			or (bool(boundary_flags.w) and slab_index in [0, 2])
+			or (bool(boundary_flags.e) and slab_index in [1, 3])
+		)
+		# A small, occasional edge slab loss keeps the paving from reading as
+		# perfectly machine-cut, but stays rare - the reference keeps its
+		# tile grid intact right up to the grass, with the transition
+		# carried by grass clumps overlaid on top rather than missing tiles.
+		var dropout_chance := rng.randf_range(0.03, 0.12)
+		if (
+			touches_boundary
+			and rng.randf() < dropout_chance
+			and not (slab_index == rectangles.size() - 1 and emitted_slab_count == 0)
+		):
+			continue
+		# Boundary slabs recede by a small amount, enough to read as worn
+		# corners without breaking up the regular grid.
+		if bool(boundary_flags.n) and slab_index in [0, 1]:
+			min_point.y += rng.randf_range(0.02, 0.08)
+		if bool(boundary_flags.s) and slab_index in [2, 3]:
+			max_point.y -= rng.randf_range(0.02, 0.08)
+		if bool(boundary_flags.w) and slab_index in [0, 2]:
+			min_point.x += rng.randf_range(0.02, 0.08)
+		if bool(boundary_flags.e) and slab_index in [1, 3]:
+			max_point.x -= rng.randf_range(0.02, 0.08)
+		if (
+			touches_boundary
+			and rng.randf() < 0.35
+		):
+			min_point += Vector2(
+				rng.randf_range(0.0, 0.04),
+				rng.randf_range(0.0, 0.04)
+			)
+			max_point -= Vector2(
+				rng.randf_range(0.0, 0.04),
+				rng.randf_range(0.0, 0.04)
+			)
+		# Give each surviving boundary stone its own width and depth. The center
+		# also drifts slightly so large and tiny remnants do not form a regular row.
+		if touches_boundary:
+			var slab_center := (min_point + max_point) * 0.5
+			var slab_half_size := (max_point - min_point) * 0.5
+			slab_half_size *= Vector2(
+				rng.randf_range(0.78, 1.0),
+				rng.randf_range(0.72, 1.0)
+			)
+			slab_center += Vector2(
+				rng.randf_range(-0.02, 0.02),
+				rng.randf_range(-0.02, 0.02)
+			)
+			min_point = slab_center - slab_half_size
+			max_point = slab_center + slab_half_size
+		var slab_points := [
+			min_point,
+			Vector2(max_point.x, min_point.y),
+			max_point,
+			Vector2(min_point.x, max_point.y),
+		]
+		var corner_jitter_x := minf(0.19, (max_point.x - min_point.x) * 0.46)
+		var corner_jitter_y := minf(0.19, (max_point.y - min_point.y) * 0.46)
+		# Move the two corners on a grass-facing side independently. This keeps
+		# the four-slab layout but avoids repeating straight, equally deep cuts.
+		if bool(boundary_flags.n) and slab_index in [0, 1]:
+			slab_points[0].y += rng.randf_range(0.0, corner_jitter_y)
+			slab_points[1].y += rng.randf_range(0.0, corner_jitter_y)
+		if bool(boundary_flags.s) and slab_index in [2, 3]:
+			slab_points[2].y -= rng.randf_range(0.0, corner_jitter_y)
+			slab_points[3].y -= rng.randf_range(0.0, corner_jitter_y)
+		if bool(boundary_flags.w) and slab_index in [0, 2]:
+			slab_points[0].x += rng.randf_range(0.0, corner_jitter_x)
+			slab_points[3].x += rng.randf_range(0.0, corner_jitter_x)
+		if bool(boundary_flags.e) and slab_index in [1, 3]:
+			slab_points[1].x -= rng.randf_range(0.0, corner_jitter_x)
+			slab_points[2].x -= rng.randf_range(0.0, corner_jitter_x)
+		var base_index := vertices.size()
+		var color := STONE_FRAGMENT_COLORS[
+			rng.randi_range(0, STONE_FRAGMENT_COLORS.size() - 1)
+		]
+		for point: Vector2 in slab_points:
+			vertices.append(Vector3(point.x, 0.0, point.y))
+			colors.append(color)
+		indices.append_array([
+			base_index, base_index + 2, base_index + 1,
+			base_index, base_index + 3, base_index + 2,
+		])
+		emitted_slab_count += 1
+	var mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+	arrays[Mesh.ARRAY_COLOR] = PackedColorArray(colors)
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(indices)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+func _stone_floor_grass_boundary_flags(cell: MapCellVisualData) -> Dictionary:
+	var result := {"n": false, "e": false, "s": false, "w": false}
+	for edge_index in DIRECTIONS.size():
+		var direction: Dictionary = DIRECTIONS[edge_index]
+		var neighbor_position: Vector2i = cell.position + direction.offset
+		if not map_data.is_in_bounds(neighbor_position):
+			continue
+		var neighbor := map_data.get_cell(neighbor_position)
+		if (
+			neighbor != null
+			and neighbor.height == cell.height
+			and _has_grass_cover(neighbor)
+		):
+			result[["n", "e", "s", "w"][edge_index]] = true
+	return result
+
+
+func _stone_floor_boundary_grass_kind(cell: MapCellVisualData) -> String:
+	var found_regular_grass := false
+	for direction: Dictionary in DIRECTIONS:
+		var neighbor_position: Vector2i = cell.position + direction.offset
+		if not map_data.is_in_bounds(neighbor_position):
+			continue
+		var neighbor := map_data.get_cell(neighbor_position)
+		if neighbor == null or neighbor.height != cell.height:
+			continue
+		var cover_kind := neighbor.resolved_surface_cover()
+		if cover_kind == "grass_dark":
+			return "grass_dark"
+		if cover_kind == "grass":
+			found_regular_grass = true
+	return "grass" if found_regular_grass else ""
+
+
+func _create_stone_floor_seam_grass(cell: MapCellVisualData) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = cell.position.x * 92837111 + cell.position.y * 689287499 + 54163
+	if rng.randf() >= stone_floor_seam_grass_chance:
+		return
+	var cluster_count := rng.randi_range(1, 3)
+	for cluster_index in cluster_count:
+		var grass_marks := MeshInstance3D.new()
+		grass_marks.name = "StoneSeamGrass_%d_%d_%d" % [
+			cell.position.x, cell.position.y, cluster_index
+		]
+		grass_marks.mesh = _build_leaf_pattern_mesh(
+			rng,
+			rng.randf_range(0.08, 0.14),
+			STONE_EDGE_GRASS_COLORS
+		)
+		var use_vertical_seam := rng.randf() < 0.5
+		var local_position := Vector2.ZERO
+		if use_vertical_seam:
+			local_position.y = rng.randf_range(-0.36, 0.36)
+		else:
+			local_position.x = rng.randf_range(-0.36, 0.36)
+		grass_marks.position = Vector3(
+			cell.position.x + 0.5 + local_position.x,
+			float(cell.height) + SURFACE_COVER_OFFSET + 0.006,
+			cell.position.y + 0.5 + local_position.y
+		)
+		grass_marks.material_override = _leaf_pattern_surface_material()
+		grass_marks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		grass_marks.set_meta("stone_floor_seam_grass", true)
+		add_to_layer(grass_marks, TOP_LAYER)
+
+
+func _create_stone_floor_damage(cell: MapCellVisualData) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = cell.position.x * 19349663 + cell.position.y * 83492791 + 73129
+	if rng.randf() >= stone_floor_damage_chance:
+		return
+	var boundary_grass_kind := _stone_floor_boundary_grass_kind(cell)
+	var damage_palette: Array[Color] = (
+		DARK_GRASS_STONE_CHIP_COLORS
+		if boundary_grass_kind == "grass_dark"
+		else GRASS_STONE_CHIP_COLORS
+	)
+	var damage_count := 2 if rng.randf() < 0.24 else 1
+	for damage_index in damage_count:
+		var local_position := Vector2(
+			rng.randf_range(-0.38, 0.38),
+			rng.randf_range(-0.38, 0.38)
+		)
+		# Most missing pieces touch a grout seam, making the green area look as
+		# though grass has pushed up between paving stones.
+		if rng.randf() < 0.72:
+			if rng.randf() < 0.5:
+				local_position.x = rng.randf_range(-0.035, 0.035)
+			else:
+				local_position.y = rng.randf_range(-0.035, 0.035)
+		var damage_size := (
+			rng.randf_range(0.28, 0.42)
+			if rng.randf() < 0.20
+			else rng.randf_range(0.11, 0.28)
+		)
+		var damage := MeshInstance3D.new()
+		damage.name = "StoneFloorDamage_%d_%d_%d" % [
+			cell.position.x, cell.position.y, damage_index
+		]
+		damage.mesh = _build_stone_fragment_mesh(rng, damage_size, damage_palette)
+		damage.position = Vector3(
+			cell.position.x + 0.5 + local_position.x,
+			float(cell.height) + SURFACE_COVER_OFFSET + 0.011,
+			cell.position.y + 0.5 + local_position.y
+		)
+		damage.material_override = _leaf_pattern_surface_material()
+		damage.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		damage.set_meta("stone_floor_missing_piece", true)
+		add_to_layer(damage, TOP_LAYER)
+
+		if rng.randf() < 0.68:
+			var grass_marks := MeshInstance3D.new()
+			grass_marks.name = "StoneDamageGrass_%d_%d_%d" % [
+				cell.position.x, cell.position.y, damage_index
+			]
+			grass_marks.mesh = _build_leaf_pattern_mesh(
+				rng,
+				rng.randf_range(0.07, 0.13),
+				STONE_EDGE_GRASS_COLORS
+			)
+			grass_marks.position = damage.position + Vector3(
+				rng.randf_range(-0.06, 0.06),
+				0.002,
+				rng.randf_range(-0.06, 0.06)
+			)
+			grass_marks.material_override = _leaf_pattern_surface_material()
+			grass_marks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			grass_marks.set_meta("stone_floor_damage_grass", true)
+			add_to_layer(grass_marks, TOP_LAYER)
+
+
+func _create_stone_floor_lines(
+	cell: MapCellVisualData,
+	cover_size: Vector2,
+	surface_height: float
+) -> void:
+	var vertices: Array[Vector3] = []
+	var indices: Array[int] = []
+	var half_size := cover_size * 0.5
+	var line_width := minf(cover_size.x, cover_size.y) * 0.018
+	_append_floor_line(
+		vertices, indices,
+		Vector2(-half_size.x, -half_size.y),
+		Vector2(half_size.x, -half_size.y),
+		line_width
+	)
+	_append_floor_line(
+		vertices, indices,
+		Vector2(-half_size.x, -half_size.y),
+		Vector2(-half_size.x, half_size.y),
+		line_width
+	)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = cell.position.x * 73856093 + cell.position.y * 19349663 + 46021
+	if rng.randf() < 0.42:
+		var crack_start := Vector2(
+			rng.randf_range(-half_size.x * 0.32, half_size.x * 0.32),
+			rng.randf_range(-half_size.y * 0.32, half_size.y * 0.32)
+		)
+		var crack_angle := rng.randf_range(0.0, TAU)
+		var crack_length := minf(cover_size.x, cover_size.y) * rng.randf_range(0.12, 0.26)
+		_append_floor_line(
+			vertices, indices,
+			crack_start,
+			crack_start + Vector2(cos(crack_angle), sin(crack_angle)) * crack_length,
+			line_width * 0.72
+		)
+	if vertices.is_empty():
+		return
+	var mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(indices)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var lines := MeshInstance3D.new()
+	lines.name = "StoneFloorLines_%d_%d" % [cell.position.x, cell.position.y]
+	lines.mesh = mesh
+	lines.material_override = _stone_floor_line_surface_material()
+	lines.position = Vector3(
+		cell.position.x + 0.5,
+		surface_height + SURFACE_COVER_OFFSET + 0.003,
+		cell.position.y + 0.5
+	)
+	lines.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_to_layer(lines, TOP_LAYER)
+
+
+func _append_floor_line(
+	vertices: Array[Vector3],
+	indices: Array[int],
+	start: Vector2,
+	end: Vector2,
+	width: float
+) -> void:
+	var delta := end - start
+	if delta.length_squared() <= 0.000001:
+		return
+	var side := Vector2(-delta.y, delta.x).normalized() * width * 0.5
+	var base_index := vertices.size()
+	for point: Vector2 in [start + side, end + side, end - side, start - side]:
+		vertices.append(Vector3(point.x, 0.0, point.y))
+	indices.append_array([
+		base_index, base_index + 2, base_index + 1,
+		base_index, base_index + 3, base_index + 2,
+	])
+
+
+func _solid_stone_floor_surface_material() -> StandardMaterial3D:
+	if _solid_stone_floor_material:
+		return _solid_stone_floor_material
+	_solid_stone_floor_material = StandardMaterial3D.new()
+	_solid_stone_floor_material.albedo_color = STONE_FLOOR_SOLID_COLOR
+	_solid_stone_floor_material.roughness = 0.94
+	return _solid_stone_floor_material
+
+
+func _stone_floor_line_surface_material() -> StandardMaterial3D:
+	if _stone_floor_line_material:
+		return _stone_floor_line_material
+	_stone_floor_line_material = StandardMaterial3D.new()
+	_stone_floor_line_material.albedo_color = STONE_FLOOR_LINE_COLOR
+	_stone_floor_line_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_stone_floor_line_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_stone_floor_line_material.roughness = 1.0
+	return _stone_floor_line_material
 
 
 func _uses_micro_height_profile(cell: MapCellVisualData) -> bool:
 	return (
 		cell.has_micro_height_profile()
-		and (cell.terrain in MICRO_HEIGHT_TERRAINS or cell.terrain in SELECTABLE_BLOCK_TERRAINS)
+		and (
+			_base_terrain(cell) in MICRO_HEIGHT_TERRAINS
+			or _base_terrain(cell) in SELECTABLE_BLOCK_TERRAINS
+		)
 	)
 
 
 func _create_micro_height_top(cell: MapCellVisualData) -> void:
 	var base_height := float(cell.height - 1)
-	var material_terrain := "dirt" if cell.terrain == "grass" else cell.terrain
-	var asset_name := _micro_terrain_asset_name(cell.terrain)
+	var material_terrain := _base_terrain(cell)
+	var asset_name := _micro_terrain_asset_name(material_terrain)
 	for sub_z in MICRO_GRID_SIZE:
 		for sub_x in MICRO_GRID_SIZE:
 			var surface_height := cell.micro_surface_height(sub_x, sub_z)
@@ -583,11 +1555,75 @@ func _create_micro_height_top(cell: MapCellVisualData) -> void:
 			column.set_meta("terrain_asset_name", asset_name)
 			column.set_meta("micro_height_stage", cell.micro_height_at(sub_x, sub_z))
 			add_to_layer(column, TOP_LAYER)
+			if _has_grass_cover(cell):
+				_create_micro_grass_surface_cover(cell, sub_x, sub_z, surface_height)
+			elif _has_stone_floor_cover(cell):
+				_create_micro_stone_floor_cover(cell, sub_x, sub_z, surface_height)
+
+
+func _create_micro_grass_surface_cover(
+	cell: MapCellVisualData,
+	sub_x: int,
+	sub_z: int,
+	surface_height: float
+) -> void:
+	var cover := MeshInstance3D.new()
+	var cover_kind := cell.resolved_surface_cover()
+	cover.name = "Micro%sCover_%d_%d_%d_%d" % [
+		"DarkGrass" if cover_kind == "grass_dark" else "Grass",
+		cell.position.x, cell.position.y, sub_x, sub_z
+	]
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(MICRO_CELL_SIZE, MICRO_CELL_SIZE)
+	plane.material = _solid_grass_cover_surface_material(cover_kind)
+	cover.mesh = plane
+	cover.position = Vector3(
+		cell.position.x + (float(sub_x) + 0.5) * MICRO_CELL_SIZE,
+		surface_height + SURFACE_COVER_OFFSET,
+		cell.position.y + (float(sub_z) + 0.5) * MICRO_CELL_SIZE
+	)
+	cover.set_meta(
+		"terrain_asset_name",
+		"terrain_grass_dark_cover" if cover_kind == "grass_dark" else "terrain_grass_top_01.glb"
+	)
+	cover.set_meta("surface_cover", cover_kind)
+	cover.set_meta("micro_height_stage", cell.micro_height_at(sub_x, sub_z))
+	add_to_layer(cover, TOP_LAYER)
+
+
+func _create_micro_stone_floor_cover(
+	cell: MapCellVisualData,
+	sub_x: int,
+	sub_z: int,
+	surface_height: float
+) -> void:
+	var cover_kind := cell.resolved_surface_cover()
+	var cover := MeshInstance3D.new()
+	cover.name = "Micro%sStoneFloorCover_%d_%d_%d_%d" % [
+		"Worn" if cover_kind == "stone_floor_worn" else "",
+		cell.position.x, cell.position.y, sub_x, sub_z
+	]
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(MICRO_CELL_SIZE, MICRO_CELL_SIZE)
+	plane.material = _solid_stone_floor_surface_material()
+	cover.mesh = plane
+	cover.position = Vector3(
+		cell.position.x + (float(sub_x) + 0.5) * MICRO_CELL_SIZE,
+		surface_height + SURFACE_COVER_OFFSET,
+		cell.position.y + (float(sub_z) + 0.5) * MICRO_CELL_SIZE
+	)
+	cover.set_meta(
+		"terrain_asset_name",
+		"terrain_stone_floor_worn_cover"
+		if cover_kind == "stone_floor_worn"
+		else "terrain_stone_floor_cover"
+	)
+	cover.set_meta("surface_cover", cover_kind)
+	cover.set_meta("micro_height_stage", cell.micro_height_at(sub_x, sub_z))
+	add_to_layer(cover, TOP_LAYER)
 
 
 func _micro_terrain_asset_name(terrain: String) -> String:
-	if terrain == "grass" or terrain == "high_ground" or terrain == "forest":
-		return "terrain_grass_top_01.glb"
 	if terrain in ["stone", "stone_road", "rock", "wall"]:
 		return "terrain_stone_top_01.glb"
 	if terrain in SELECTABLE_BLOCK_TERRAINS:
@@ -596,18 +1632,19 @@ func _micro_terrain_asset_name(terrain: String) -> String:
 
 func _create_cliff_sides(cell: MapCellVisualData) -> void:
 	var grid_pos := cell.position
-	var is_water := cell.terrain == "water"
-	var is_lava := cell.terrain == "lava"
+	var base_terrain := _base_terrain(cell)
+	var is_water := base_terrain == "water"
+	var is_lava := base_terrain == "lava"
 	var is_fluid := is_water or is_lava
 	if is_fluid and fluid_surface_fill_offset > SURFACE_OFFSET:
 		_create_fluid_fill_sides(cell)
-	var full_block_terrain := cell.terrain in [
-		"grass", "dirt", "forest", "stone", "stone_road", "rock", "wall", "high_ground"
-	] or cell.terrain in SELECTABLE_BLOCK_TERRAINS
+	var full_block_terrain := base_terrain in [
+		"dirt", "forest", "stone", "stone_road", "rock", "wall"
+	] or base_terrain in SELECTABLE_BLOCK_TERRAINS
 	var has_full_top_block := (
 		full_block_terrain
 		and visual_theme != null
-		and visual_theme.top_scene_for(cell.terrain) != null
+		and visual_theme.top_scene_for(base_terrain) != null
 	)
 	for direction: Dictionary in DIRECTIONS:
 		var neighbor_pos: Vector2i = grid_pos + direction.offset
@@ -615,8 +1652,8 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 		var neighbor_height: int = neighbor.height if neighbor else 0
 		var levels_needed := cell.height - neighbor_height
 		var is_stone := (
-			cell.terrain in ["stone", "stone_road", "rock", "wall"]
-			or cell.terrain in SELECTABLE_BLOCK_TERRAINS
+			base_terrain in ["stone", "stone_road", "rock", "wall"]
+			or base_terrain in SELECTABLE_BLOCK_TERRAINS
 		)
 		for level in levels_needed:
 			var is_top_level := level == levels_needed - 1
@@ -632,17 +1669,14 @@ func _create_cliff_sides(cell: MapCellVisualData) -> void:
 				else:
 					side_scene = visual_theme.cliff_stone if is_stone else visual_theme.cliff_side
 			var side := _instantiate(side_scene)
-			if not side: side = _make_fallback_cliff(cell.terrain)
+			if not side: side = _make_fallback_cliff(base_terrain)
 			if not is_fluid:
-				# Preserve the owning block family across separately instanced
-				# lower side panels. Validation uses this to keep grass-column
-				# and dirt-column side parameters continuous at level seams.
+				# Preserve the physical block family across separately instanced
+				# lower side panels. Surface covers never change cliff material.
 				var side_block_key := "dirt"
-				if cell.terrain in ["grass", "forest", "high_ground"]:
-					side_block_key = "grass"
-				elif (
-					cell.terrain in ["stone", "stone_road", "rock", "wall"]
-					or cell.terrain in SELECTABLE_BLOCK_TERRAINS
+				if (
+					base_terrain in ["stone", "stone_road", "rock", "wall"]
+					or base_terrain in SELECTABLE_BLOCK_TERRAINS
 				):
 					side_block_key = "stone"
 				side.set_meta("terrain_side_block_key", side_block_key)
@@ -702,7 +1736,6 @@ func _create_decorations() -> void:
 	for cell: MapCellVisualData in map_data.cells:
 		for data: MapDecorationData in cell.props:
 			_create_decoration(data, cell.height)
-		_create_random_grass(cell)
 
 func _create_decoration(data: MapDecorationData, cell_height: int) -> void:
 	var scene := visual_theme.decoration_scene_for(data.kind) if visual_theme else null
@@ -714,7 +1747,7 @@ func _create_decoration(data: MapDecorationData, cell_height: int) -> void:
 	add_to_layer(decoration, PROP_LAYER)
 
 func _create_random_grass(cell: MapCellVisualData) -> void:
-	if cell.terrain != "grass" or not cell.props.is_empty():
+	if not _has_grass_cover(cell) or not cell.props.is_empty():
 		return
 	var rng := RandomNumberGenerator.new()
 	# Coordinate mixing keeps the result stable regardless of cell iteration order.
@@ -893,13 +1926,17 @@ func _apply_nearest_filter(node: Node3D, use_mipmaps := true) -> void:
 		if child is Node3D:
 			_apply_nearest_filter(child, use_mipmaps)
 
-func _create_fallback_top(grid_pos: Vector2i, cell: MapCellVisualData) -> void:
+func _create_fallback_top(
+	grid_pos: Vector2i,
+	cell: MapCellVisualData,
+	base_terrain: String
+) -> void:
 	var part := MeshInstance3D.new()
-	if cell.terrain == "water":
+	if base_terrain == "water":
 		var plane := PlaneMesh.new()
 		plane.size = Vector2(0.98, 0.98)
 		part.mesh = plane
-	elif cell.terrain == "stair":
+	elif base_terrain == "stair":
 		var stair_base := BoxMesh.new()
 		stair_base.size = Vector3(0.96, 0.18, 0.96)
 		part.mesh = stair_base
@@ -907,13 +1944,13 @@ func _create_fallback_top(grid_pos: Vector2i, cell: MapCellVisualData) -> void:
 		part.position.y = -stair_base.size.y * 0.5
 	else:
 		var tile := BoxMesh.new()
-		tile.size = Vector3(0.96, 0.2 if cell.terrain == "bridge" else 0.12, 0.96)
+		tile.size = Vector3(0.96, 0.2 if base_terrain == "bridge" else 0.12, 0.96)
 		part.mesh = tile
 		part.position.y = -tile.size.y * 0.5
-	part.material_override = _material_for(cell.terrain)
+	part.material_override = _material_for(base_terrain)
 	part.position += Vector3(grid_pos.x + 0.5, cell.height, grid_pos.y + 0.5)
-	add_to_layer(part, WATER_LAYER if cell.terrain == "water" else TOP_LAYER)
-	if cell.terrain == "stair": _add_stair_steps(grid_pos, cell.height)
+	add_to_layer(part, WATER_LAYER if base_terrain == "water" else TOP_LAYER)
+	if base_terrain == "stair": _add_stair_steps(grid_pos, cell.height)
 
 func _add_stair_steps(grid_pos: Vector2i, height: int) -> void:
 	# The logical cell surface stays at `height`; these steps only bridge the

@@ -220,9 +220,36 @@ func generate_grid() -> void:
 						terrain = "stone"
 
 			height = max(height, _natural_terrain_height(real_x, real_z, height_noise))
-			cells[Vector2i(real_x, real_z)] = GridCell.new(
+			var cell := GridCell.new(
 				real_x, real_z, height, terrain, walkable, move_cost
 			)
+			# Build broad, broken stone avenues and darker grass pockets without
+			# changing gameplay terrain or movement rules.
+			if terrain == "grass":
+				if _is_visual_stone_floor_path(x, z):
+					cell.set_visual_layers("dirt", "stone_floor")
+				elif _is_visual_dark_grass_patch(x, z):
+					cell.set_visual_layers("dirt", "grass_dark")
+			cells[Vector2i(real_x, real_z)] = cell
+
+
+func _is_visual_stone_floor_path(x: int, z: int) -> bool:
+	var horizontal_avenue := z in [8, 9, 10, 11] and x >= 4 and x <= 35
+	var vertical_avenue := x in [18, 19, 20, 21] and z >= 2 and z <= 34
+	# Small deterministic bites keep the road silhouette from reading as a
+	# perfect rectangle while leaving its main route continuous.
+	var edge_bite := (
+		(x * 17 + z * 31) % 13 == 0
+		and not (x in [19, 20] or z in [9, 10])
+	)
+	return (horizontal_avenue or vertical_avenue) and not edge_bite
+
+
+func _is_visual_dark_grass_patch(x: int, z: int) -> bool:
+	var center_patch := Vector2(x - 14, z - 17).length_squared() <= 30.0
+	var east_patch := Vector2(x - 27, z - 9).length_squared() <= 20.0
+	var south_patch := Vector2(x - 25, z - 29).length_squared() <= 18.0
+	return center_patch or east_patch or south_patch
 
 
 func _natural_terrain_height(x: int, z: int, noise: FastNoiseLite) -> int:
@@ -243,6 +270,58 @@ func is_in_bounds(position: Vector2i) -> bool:
 
 func get_cell(position: Vector2i) -> GridCell:
 	return cells.get(position) as GridCell
+
+
+func flatten_patch(center: Vector2i, radius: int = 1, height: int = 1) -> void:
+	for x in range(center.x - radius, center.x + radius + 1):
+		for z in range(center.y - radius, center.y + radius + 1):
+			var position := Vector2i(x, z)
+			if not is_in_bounds(position):
+				continue
+			var cell := get_cell(position)
+			if not cell:
+				continue
+			cell.set_surface("grass", height, true, 1)
+
+
+func flatten_centered_rectangle(center: Vector2i, width: int, height: int, target_height: int = 1) -> void:
+	var half_width := floori(float(width) * 0.5)
+	var half_height := floori(float(height) * 0.5)
+	var x_min := center.x - half_width
+	var x_max := x_min + width - 1
+	var z_min := center.y - half_height
+	var z_max := z_min + height - 1
+	for x in range(x_min, x_max + 1):
+		for z in range(z_min, z_max + 1):
+			var position := Vector2i(x, z)
+			if not is_in_bounds(position):
+				continue
+			var cell := get_cell(position)
+			if not cell:
+				continue
+			cell.set_surface("grass", target_height, true, 1)
+
+
+func flatten_patch_by_cell_count(center: Vector2i, target_cells: int, height: int = 1) -> void:
+	var cells_to_flatten: Array[Vector2i] = []
+	var max_radius := 0
+	while cells_to_flatten.size() < target_cells:
+		for x in range(center.x - max_radius, center.x + max_radius + 1):
+			for z in range(center.y - max_radius, center.y + max_radius + 1):
+				var position := Vector2i(x, z)
+				if not is_in_bounds(position):
+					continue
+				if abs(position.x - center.x) + abs(position.y - center.y) != max_radius:
+					continue
+				if not cells_to_flatten.has(position):
+					cells_to_flatten.append(position)
+		max_radius += 1
+	if cells_to_flatten.size() > target_cells:
+		cells_to_flatten = cells_to_flatten.slice(0, target_cells)
+	for position in cells_to_flatten:
+		var cell := get_cell(position)
+		if cell:
+			cell.set_surface("grass", height, true, 1)
 
 
 func grid_to_world(position: Vector2i, extra_height: float = 0.0) -> Vector3:

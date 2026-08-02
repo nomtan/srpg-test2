@@ -24,17 +24,17 @@ func setup(source_grid: GridSystem) -> void:
 
 
 func spawn_initial_units() -> void:
-	var vain := _spawn_unit("vain", "Vain", Vector2i(10, 10), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING)
+	var vain := _spawn_unit("vain", "Vain", Vector2i(73, 20), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING)
 	vain.attach_face_texture(VEIN_FACE_TEXTURE)
-	_spawn_unit("acrea", "Acrea", Vector2i(6, 3), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", ACREA_TUNIC_COLOR, ACREA_ACCENT_COLOR)
-	_spawn_unit("glen", "Glen", Vector2i(3, 6), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "bow", GLEN_TUNIC_COLOR, GLEN_ACCENT_COLOR)
+	_spawn_unit("acrea", "Acrea", Vector2i(72, 19), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", ACREA_TUNIC_COLOR, ACREA_ACCENT_COLOR)
+	_spawn_unit("glen", "Glen", Vector2i(74, 19), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "bow", GLEN_TUNIC_COLOR, GLEN_ACCENT_COLOR)
 	var debug_enemy: BattleUnit
 	if ENABLE_DEBUG_NEARBY_ENEMY:
-		debug_enemy = _spawn_unit("debug_bandit", "Debug Bandit", Vector2i(15, 6), "enemy", 55, 16, 3, 80, 6)
+		debug_enemy = _spawn_unit("debug_bandit", "Debug Bandit", Vector2i(55, 25), "enemy", 55, 16, 3, 80, 6)
 		debug_enemy.enemy_type = BattleUnit.EnemyType.AGGRESSIVE
-	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(60, 114), "enemy", 80, 22, 4, 85, 8)
+	var boss := _spawn_unit("bandit_a", "Bandit A", Vector2i(76, 22), "enemy", 80, 22, 4, 85, 8)
 	boss.enemy_type = BattleUnit.EnemyType.BOSS
-	var sniper := _spawn_unit("bandit_b", "Bandit B", Vector2i(54, 114), "enemy", 70, 18, 3, 80, 10, BattleUnit.AttackType.RANGED, 2, 3)
+	var sniper := _spawn_unit("bandit_b", "Bandit B", Vector2i(74, 22), "enemy", 70, 18, 3, 80, 10, BattleUnit.AttackType.RANGED, 2, 3)
 	sniper.enemy_type = BattleUnit.EnemyType.SNIPER
 	get_unit_by_id("vain").configure_role("swordsman", "剣術師", BattleUnit.ElementType.EARTH, 30, ["power_slash", "earth_break"])
 	get_unit_by_id("acrea").configure_role("magic_swordsman", "魔法剣士", BattleUnit.ElementType.WATER, 45, ["aqua_edge", "healing_water"])

@@ -1,76 +1,62 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_prepass_alpha;
 
-// Transparent painted grass sits over a dirt-colored block. VoxelMap marks
-// only edges/corners that touch same-height dirt, producing an organic inset
-// there. The texture itself is a low ground-cover decal; upright long grass is
-// intentionally supplied by separate decoration assets.
-uniform sampler2D grass_tex : source_color, filter_nearest_mipmap, repeat_enable;
-uniform float fringe_width : hint_range(0.08, 0.40) = 0.18;
+// Sparse pixel-art leaf marks placed above the solid grass cover. Geometry
+// controls each cluster's position, size, and rotation; this shader preserves
+// the decal silhouette and assigns a small illustrated foliage palette.
+uniform sampler2D grass_tex : source_color, filter_nearest, repeat_disable;
 uniform float pattern_seed = 0.0;
-uniform float overlay_scale = 1.0;
-uniform int texture_turn : hint_range(0, 3) = 0;
-uniform float texture_opacity : hint_range(0.0, 1.0) = 0.35;
+uniform float texture_opacity : hint_range(0.0, 1.0) = 0.9;
 uniform float texture_tile_size : hint_range(0.1, 4.0) = 1.0;
 uniform float texture_brightness : hint_range(0.3, 2.0) = 1.0;
 uniform float texture_saturation : hint_range(0.0, 2.0) = 1.0;
+uniform vec3 overlay_tint : source_color = vec3(0.48, 0.68, 0.32);
+uniform float pixel_grid : hint_range(2.0, 12.0) = 6.0;
+uniform float leaf_scale : hint_range(0.5, 3.0) = 1.0;
+uniform float shape_jitter : hint_range(0.0, 2.0) = 1.0;
 
-uniform bool trim_n = false;
-uniform bool trim_e = false;
-uniform bool trim_s = false;
-uniform bool trim_w = false;
-uniform bool trim_ne = false;
-uniform bool trim_se = false;
-uniform bool trim_sw = false;
-uniform bool trim_nw = false;
+// Each leaf mark uses a restrained pale yellow-green palette. Keeping every
+// tone lighter than the grass base gives the reference's softly painted look.
+const vec3 LEAF_PALE = vec3(0.776, 0.824, 0.451); // #c6d273
+const vec3 LEAF_LIGHT = vec3(0.714, 0.788, 0.412); // #b6c969
+const vec3 LEAF_MID = vec3(0.624, 0.741, 0.361);   // #9fbd5c
+const vec3 LEAF_GREEN = vec3(0.525, 0.678, 0.322); // #86ad52
 
-float pixel_hash(float value, float salt) {
-    return fract(sin(value * 91.17 + salt * 37.31 + pattern_seed * 0.071) * 43758.5453);
-}
-
-float edge_depth(float coordinate, float salt) {
-    float pixel = floor(coordinate * 32.0);
-    float wobble = (pixel_hash(pixel, salt) - 0.5) * 0.11;
-    return clamp(fringe_width + wobble, 0.06, 0.38);
-}
-
-float keep_outside_corner(vec2 from_corner, float salt) {
-    vec2 pixel_uv = floor(from_corner * 32.0) / 32.0;
-    float wobble = (pixel_hash(pixel_uv.x * 32.0 + pixel_uv.y * 71.0, salt) - 0.5) * 0.07;
-    return step(fringe_width * 1.18 + wobble, length(pixel_uv));
-}
-
-vec2 rotate_texture_uv(vec2 uv) {
-    if (texture_turn == 1) return vec2(1.0 - uv.y, uv.x);
-    if (texture_turn == 2) return vec2(1.0 - uv.x, 1.0 - uv.y);
-    if (texture_turn == 3) return vec2(uv.y, 1.0 - uv.x);
-    return uv;
+float hash21(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7)) + pattern_seed * 0.017) * 43758.5453);
 }
 
 void fragment() {
-    // The mesh may overlap adjacent grass cells. cell_uv keeps the trim mask
-    // aligned to the original one-cell footprint while texture_uv rotates only
-    // the painted marks, never the map-facing north/east/south/west flags.
-    vec2 cell_uv = (UV - vec2(0.5)) * overlay_scale + vec2(0.5);
-    vec2 uv = floor(cell_uv * 32.0) / 32.0;
-    float keep = 1.0;
+    float safe_scale = max(leaf_scale, 0.001);
+    vec2 texture_uv = (UV - vec2(0.5)) / safe_scale + vec2(0.5);
+    vec2 native_texel = floor(texture_uv * 32.0) / 32.0;
+    vec4 tex = texture(grass_tex, native_texel);
 
-    if (trim_n) keep *= step(edge_depth(uv.x, 1.0), uv.y);
-    if (trim_s) keep *= step(edge_depth(uv.x, 2.0), 1.0 - uv.y);
-    if (trim_w) keep *= step(edge_depth(uv.y, 3.0), uv.x);
-    if (trim_e) keep *= step(edge_depth(uv.y, 4.0), 1.0 - uv.x);
+    float source_luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+    float palette_roll = fract(
+        hash21(floor(native_texel * 32.0)) + source_luma * 0.58
+    );
+    vec3 palette_color = LEAF_MID;
+    if (palette_roll < 0.18) {
+        palette_color = LEAF_GREEN;
+    } else if (palette_roll > 0.82) {
+        palette_color = LEAF_PALE;
+    } else if (palette_roll > 0.52) {
+        palette_color = LEAF_LIGHT;
+    }
 
-    if (trim_nw) keep *= keep_outside_corner(uv, 5.0);
-    if (trim_ne) keep *= keep_outside_corner(vec2(1.0 - uv.x, uv.y), 6.0);
-    if (trim_se) keep *= keep_outside_corner(vec2(1.0 - uv.x, 1.0 - uv.y), 7.0);
-    if (trim_sw) keep *= keep_outside_corner(vec2(uv.x, 1.0 - uv.y), 8.0);
-
-    vec2 texture_uv = rotate_texture_uv(UV);
-    texture_uv = (texture_uv - vec2(0.5)) / max(texture_tile_size, 0.001) + vec2(0.5);
-    vec4 tex = texture(grass_tex, texture_uv);
-    vec3 overlay_col = tex.rgb * texture_brightness;
-    float overlay_luma = dot(overlay_col, vec3(0.299, 0.587, 0.114));
-    ALBEDO = mix(vec3(overlay_luma), overlay_col, texture_saturation);
-    ALPHA = tex.a * keep * texture_opacity;
-    ALPHA_SCISSOR_THRESHOLD = 0.05;
+    float palette_luma = dot(palette_color, vec3(0.299, 0.587, 0.114));
+    vec3 colored_leaf = mix(
+        vec3(palette_luma),
+        palette_color,
+        texture_saturation
+    );
+    float alpha_jitter = mix(
+        1.0,
+        smoothstep(0.08, 0.42, tex.a + (palette_roll - 0.5) * 0.16),
+        clamp(shape_jitter, 0.0, 1.0)
+    );
+    ALBEDO = colored_leaf * texture_brightness;
+    ALPHA = tex.a * alpha_jitter * texture_opacity;
+    ALPHA_SCISSOR_THRESHOLD = 0.08;
 }

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://flat_grass_test_scene"]
+
+[ext_resource type="Script" uid="uid://imqn2fhckkfr" path="res://scripts/dev/flat_grass_test.gd" id="1"]
+
+[node name="FlatGrassTest" type="Node3D" unique_id="uid://flat_grass_test_root"]
+script = ExtResource("1")

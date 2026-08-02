@@ -60,6 +60,9 @@ const MAP_DEPTH := 14
 # resolve to terrain_stone_top_01.glb), not a judgment call made here.
 const TERRAIN_ASSET_TO_PALETTE_KEY := {
 	"terrain_grass_top_01.glb": "grass",
+	"terrain_grass_dark_cover": "grass",
+	"terrain_stone_floor_cover": "stone",
+	"terrain_stone_floor_worn_cover": "stone",
 	"terrain_dirt_top_01.glb": "dirt",
 	"terrain_stone_top_01.glb": "stone",
 	"terrain_stair_01.glb": "stone", # build_terrain_glb.py bakes the stone-top texture onto the stair asset
@@ -97,7 +100,7 @@ const TERRAIN_STYLE_TINTS := {
 	"cliff_side_top": Vector3(1.12, 1.06, 0.82),
 	"cliff_stone": Vector3(1.05, 1.03, 0.91),
 }
-const TALL_GRASS_STYLE_TINT := Vector3(1.35, 1.30, 0.95)
+const TALL_GRASS_STYLE_TINT := Vector3.ONE
 
 var params := {
 	"face_top": 1.01,
@@ -109,11 +112,16 @@ var params := {
 	"grass_top_tile_size": 0.1,
 	"grass_side_tile_size": 0.2,
 	"grass_side_brightness": 0.7,
-	"grass_hue_jitter": 0.08,
-	"grass_texture_opacity": 0.22,
+	"grass_hue_jitter": 0.0,
+	"grass_texture_opacity": 1.0,
 	"grass_texture_tile_size": 1.0,
 	"grass_texture_brightness": 1.0,
-	"grass_texture_saturation": 1.35,
+	"grass_texture_saturation": 1.0,
+	# Painted grass overlay controls (procedural leaf blocks)
+	"paint_overlay_pixel_grid": 6.0,
+	"paint_leaf_scale": 1.0,
+	"paint_shape_jitter": 1.0,
+	"paint_overlay_tint": Color("#d7e17a"),
 	"grass_boundary_width": 0.18,
 	"dirt_top_tile_size": 0.2,
 	"dirt_side_tile_size": 0.2,
@@ -131,8 +139,9 @@ var params := {
 	"tall_grass_brightness": 1.0,
 	"grass_antialiasing": 0.35,
 	"grass_mip_bias": 0.0,
-	"grass_tint": Color("#7aad52"),
-	"grass_tint_blend": 0.0,
+	# Force a single user tint for vegetation (bright green)
+	"grass_tint": Color("#6fc23a"),
+	"grass_tint_blend": 1.0,
 	"sat_jitter": 0.11,
 	"val_jitter": 0.06,
 	"strata_enabled": true,
@@ -146,6 +155,7 @@ var params := {
 }
 
 var terrain_mode := "A" # Keep the validation scene on the solid-color baseline; B remains available on F2.
+@export var grass_only_map := false
 var free_orbit := false
 var presentation_mode := false
 
@@ -267,16 +277,8 @@ func _build_terrain() -> void:
 	var renderer := VoxelMap.new()
 	renderer.name = "MapRenderer"
 	renderer.visual_theme = VISUAL_THEME
-	# Scatter the seven production grass variants across open grass cells.
-	# VoxelMap skips dirt/water and cells that already contain an explicit
-	# prop, preserving paths and the authored tall cluster.
-	renderer.grass_prop_chance = 0.70
-	renderer.grass_prop_seed = 4171
-	renderer.grass_short_weight = 0.85
-	renderer.grass_mid_weight = 0.12
-	renderer.grass_tall_weight = 0.03
-	renderer.grass_short_cluster_chance = 0.30
-	renderer.grass_short_large_cluster_chance = 0.25
+	# Automatic upright grass props are disabled; grass is decorated only by
+	# the sparse leaf-pattern decals configured below.
 	# Grass tops no longer overlap dirt with a separate transition image.
 	# Their shared edge is handled by the terrain surfaces themselves.
 	renderer.grass_transitions_enabled = false
@@ -284,11 +286,10 @@ func _build_terrain() -> void:
 	# Water/lava cells have logical height 0 (the upper cube is removed), while
 	# the liquid fills the resulting cavity to slightly below the height-1 rim.
 	renderer.fluid_surface_fill_offset = 0.88
-	# A low painted ground-cover layer gives grass tiles the dense illustrated
-	# brushwork seen in the visual reference without adding more upright props.
+	# Sparse leaf decals decorate the otherwise texture-free grass cover.
 	renderer.painted_grass_overlays_enabled = true
 	renderer.painted_grass_overlay_seed = 8123
-	renderer.painted_grass_edge_fringe_width = 0.18
+	renderer.painted_grass_overlay_chance = 0.38
 	add_child(renderer)
 	validation_map = _create_validation_map()
 	renderer.build_from_map_data(validation_map)
@@ -310,6 +311,14 @@ func _create_validation_map() -> MapData:
 			cell.terrain = "dirt" if cell.height == 1 else "grass"
 			data.cells.append(cell)
 	data.rebuild_lookup()
+
+	if grass_only_map:
+		for cell in data.cells:
+			if cell.terrain != "grass":
+				cell.terrain = "grass"
+				cell.height = 1
+		data.rebuild_lookup()
+		return data
 
 	# A broad, irregular dirt clearing gives units and props a readable stage.
 	var clearing_center := Vector2(9.3, 7.5)
@@ -608,12 +617,25 @@ func _register_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int
 		else ""
 	)
 	var is_side_surface := "side" in source_texture_name
-	# Grass top and side share one imported block but need different flat
-	# buckets: the horizontal surface is solid green with grass tile variation,
-	# while the complete vertical face remains exposed dirt.
+	var is_solid_grass_top := (
+		asset_name in [
+			"terrain_grass_top_01.glb",
+			"terrain_grass_dark_cover",
+		]
+		and not is_side_surface
+	)
+	var is_solid_stone_floor := asset_name in [
+		"terrain_stone_floor_cover", "terrain_stone_floor_worn_cover"
+	]
+	# Grass covers are independent horizontal surfaces. Physical block surfaces
+	# keep their own dirt/stone buckets and textures underneath the cover.
 	if asset_name == "terrain_grass_top_01.glb":
 		palette_key = "dirt" if is_side_surface else "grass"
 	var bucket_color: Color = bucket_colors.get(palette_key, UNDEFINED_TILE_COLOR) if not palette_key.is_empty() else UNDEFINED_TILE_COLOR
+	if asset_name == "terrain_grass_dark_cover":
+		bucket_color = Color("#507a38")
+	elif is_solid_stone_floor:
+		bucket_color = Color("#d8d99a")
 
 	if palette_key.is_empty() or not bucket_colors.has(palette_key):
 		undefined_tile_count += 1
@@ -628,7 +650,13 @@ func _register_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int
 	solid_material.set_shader_parameter("base_color", bucket_color)
 
 	var tex_material := ShaderMaterial.new()
-	tex_material.shader = FLAT_TERRAIN_TEX_SHADER
+	tex_material.shader = (
+		FLAT_TERRAIN_SOLID_SHADER
+		if is_solid_grass_top or is_solid_stone_floor
+		else FLAT_TERRAIN_TEX_SHADER
+	)
+	if is_solid_grass_top or is_solid_stone_floor:
+		tex_material.set_shader_parameter("base_color", bucket_color)
 
 	# Hybrid preview (Plan A+): flat top like Plan A, but the side faces sample
 	# whatever albedo Plan B would have used for this same surface, so soil/
@@ -669,10 +697,12 @@ func _register_terrain_surface(mesh_instance: MeshInstance3D, surface_index: int
 
 
 func _block_key_for_asset(asset_name: String) -> String:
-	if asset_name == "terrain_grass_top_01.glb":
+	if asset_name in ["terrain_grass_top_01.glb", "terrain_grass_dark_cover"]:
 		return "grass"
 	if asset_name == "terrain_dirt_top_01.glb":
 		return "dirt"
+	if asset_name in ["terrain_stone_floor_cover", "terrain_stone_floor_worn_cover"]:
+		return "stone"
 	if asset_name in ["terrain_stone_top_01.glb", "terrain_stair_01.glb"]:
 		return "stone"
 	if asset_name in [
@@ -1194,6 +1224,11 @@ func _push_terrain_params() -> void:
 			"texture_saturation",
 			params.grass_texture_saturation
 		)
+		# Painted overlay shader params
+		material.set_shader_parameter("overlay_tint", Vector3(params.paint_overlay_tint.r, params.paint_overlay_tint.g, params.paint_overlay_tint.b))
+		material.set_shader_parameter("pixel_grid", params.paint_overlay_pixel_grid)
+		material.set_shader_parameter("leaf_scale", params.paint_leaf_scale)
+		material.set_shader_parameter("shape_jitter", params.paint_shape_jitter)
 	for entry in transition_entries:
 		var material: ShaderMaterial = entry.material
 		material.set_shader_parameter("face_top", params.face_top)
@@ -1374,6 +1409,12 @@ func _build_ui() -> void:
 	_add_ui_section(list, "草の色味")
 	_add_color_picker(list, "grass_tint", _on_terrain_param_changed)
 	_add_float_slider(list, "grass_tint_blend", 0.0, 1.0, 0.05, _on_terrain_param_changed)
+
+	_add_ui_section(list, "草の模様")
+	_add_color_picker(list, "paint_overlay_tint", _on_terrain_param_changed)
+	_add_float_slider(list, "paint_overlay_pixel_grid", 2.0, 12.0, 1.0, _on_terrain_param_changed)
+	_add_float_slider(list, "paint_leaf_scale", 0.5, 3.0, 0.05, _on_terrain_param_changed)
+	_add_float_slider(list, "paint_shape_jitter", 0.0, 2.0, 0.05, _on_terrain_param_changed)
 
 	_add_ui_section(list, "土ブロック")
 	_add_float_slider(list, "dirt_top_tile_size", 0.1, 4.0, 0.05, _on_terrain_param_changed)

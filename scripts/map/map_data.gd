@@ -18,6 +18,8 @@ static func from_grid(grid: GridSystem, decorations: Array[MapDecorationData] = 
 		visual_cell.position = grid_position
 		visual_cell.height = source.height
 		visual_cell.terrain = source.terrain
+		visual_cell.base_terrain = source.base_terrain
+		visual_cell.surface_cover = source.surface_cover
 		for decoration: MapDecorationData in decorations:
 			if decoration.grid_position == grid_position:
 				visual_cell.props.append(decoration)
@@ -40,4 +42,3 @@ func get_cell(position: Vector2i) -> MapCellVisualData:
 
 func is_in_bounds(position: Vector2i) -> bool:
 	return position.x >= 0 and position.x < width and position.y >= 0 and position.y < depth
-
