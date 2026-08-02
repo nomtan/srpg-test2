@@ -224,10 +224,15 @@ theme_override_colors/font_color = Color(0.78, 0.82, 0.88, 1)
 text = "WASD: カーソル  矢印: マップ移動  Q/E・左ドラッグ: カメラ回転  ホイール: ズーム"
 
 [node name="TurnOrderPanel" type="PanelContainer" parent="UI"]
-offset_left = 1510.0
+layout_mode = 0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -410.0
 offset_top = 72.0
-offset_right = 1900.0
+offset_right = -20.0
 offset_bottom = 362.0
+grow_horizontal = 0
 script = ExtResource("50_turn_order")
 
 [node name="CoordinateLabel" type="Label" parent="UI"]

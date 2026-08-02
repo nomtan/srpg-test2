@@ -138,11 +138,8 @@ const DARK_GRASS_STONE_CHIP_COLORS: Array[Color] = [
 @export var painted_grass_overlay_seed := 8123
 @export_range(0.0, 1.0, 0.025) var painted_grass_overlay_chance := 0.30
 @export_range(0.0, 1.0, 0.025) var dark_leaf_overlay_chance := 0.26
-# Multiplies painted_grass_overlay_chance for dark-grass cells only. Both
-# variants otherwise follow identical rules (size, required-at-boundary
-# placement); this just makes the dark leaf pattern show up a bit less often
-# away from boundaries.
-@export_range(0.0, 1.0, 0.025) var dark_leaf_pattern_chance_scale := 0.7
+@export_range(0.0, 1.0, 0.025) var dark_grass_pale_leaf_chance := 0.78
+@export_range(0.0, 1.0, 0.025) var dark_grass_dark_leaf_chance := 0.82
 @export_range(0.15, 0.70, 0.01) var painted_grass_overlay_min_size := 0.26
 @export_range(0.15, 0.70, 0.01) var painted_grass_overlay_max_size := 0.46
 # Kept for compatibility with existing preview scenes; sparse clusters no
@@ -418,7 +415,7 @@ func _create_painted_grass_overlays() -> void:
 		if not _has_grass_cover(cell):
 			continue
 		var is_dark := _has_dark_grass_cover(cell)
-		var palette := DARK_LEAF_PATTERN_COLORS if is_dark else LEAF_PATTERN_COLORS
+		var palette := LEAF_PATTERN_COLORS
 		var boundary_edges := _grass_boundary_leaf_edges(cell, is_dark)
 		var is_required_boundary := not boundary_edges.is_empty()
 		var rng := RandomNumberGenerator.new()
@@ -427,11 +424,10 @@ func _create_painted_grass_overlays() -> void:
 			+ cell.position.x * 73856093
 			+ cell.position.y * 19349663
 		)
-		# Boundary cells always receive leaves. Other grass cells use the
-		# original sparse random chance, restoring patterns across open
-		# grassland; dark grass uses that same chance scaled down a bit.
+		# Boundary cells always receive leaves. Dark grass carries a much denser
+		# pale pattern than regular grass, matching its overgrown appearance.
 		var scatter_chance := (
-			painted_grass_overlay_chance * dark_leaf_pattern_chance_scale
+			dark_grass_pale_leaf_chance
 			if is_dark
 			else painted_grass_overlay_chance
 		)
@@ -440,7 +436,11 @@ func _create_painted_grass_overlays() -> void:
 		if _uses_micro_height_profile(cell):
 			_create_micro_leaf_patterns(cell, rng, palette)
 		else:
-			var cluster_count := 2 if rng.randf() < 0.18 else 1
+			var cluster_count := (
+				rng.randi_range(2, 4)
+				if is_dark
+				else (2 if rng.randf() < 0.18 else 1)
+			)
 			for cluster_index in cluster_count:
 				if is_required_boundary:
 					var edge_offset: Vector2i = boundary_edges[
@@ -473,8 +473,9 @@ func _create_dark_leaf_overlays() -> void:
 	if not painted_grass_overlays_enabled:
 		return
 	for cell: MapCellVisualData in map_data.cells:
-		if not _has_regular_grass_cover(cell):
+		if not _has_grass_cover(cell):
 			continue
+		var is_dark_grass := _has_dark_grass_cover(cell)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = (
 			painted_grass_overlay_seed
@@ -482,9 +483,18 @@ func _create_dark_leaf_overlays() -> void:
 			+ cell.position.y * 19349669
 			+ 149417
 		)
-		if rng.randf() >= dark_leaf_overlay_chance:
+		var scatter_chance := (
+			dark_grass_dark_leaf_chance
+			if is_dark_grass
+			else dark_leaf_overlay_chance
+		)
+		if rng.randf() >= scatter_chance:
 			continue
-		var cluster_count := 2 if rng.randf() < 0.16 else 1
+		var cluster_count := (
+			rng.randi_range(2, 4)
+			if is_dark_grass
+			else (2 if rng.randf() < 0.16 else 1)
+		)
 		for cluster_index in cluster_count:
 			if _uses_micro_height_profile(cell):
 				var sub_x := rng.randi_range(0, MICRO_GRID_SIZE - 1)
@@ -600,7 +610,9 @@ func _create_leaf_pattern(
 	)
 	overlay.position = Vector3(
 		area_center.x + rng.randf_range(-offset_limit, offset_limit),
-		surface_height + SURFACE_COVER_OFFSET + 0.006 + cluster_index * 0.0002,
+		surface_height + SURFACE_COVER_OFFSET + 0.006
+			+ cluster_index * 0.0002
+			+ (0.0001 if pattern_kind == "dark" else 0.0),
 		area_center.y + rng.randf_range(-offset_limit, offset_limit)
 	)
 	overlay.material_override = _leaf_pattern_surface_material()
