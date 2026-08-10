@@ -1,181 +1,172 @@
-[gd_scene load_steps=57 format=3]
+[gd_scene format=3 uid="uid://d3gtk74vpv6n1"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
-[ext_resource type="Script" path="res://scripts/map/voxel_map.gd" id="3_map"]
-[ext_resource type="Script" path="res://scripts/unit/unit_manager.gd" id="4_units"]
-[ext_resource type="Script" path="res://scripts/battle/battle_cursor.gd" id="5_cursor"]
-[ext_resource type="Script" path="res://scripts/battle/pathfinding.gd" id="6_path"]
-[ext_resource type="Script" path="res://scripts/camera/camera_controller.gd" id="7_camera"]
-[ext_resource type="Script" path="res://scripts/battle/turn_manager.gd" id="8_turn"]
-[ext_resource type="Script" path="res://scripts/ui/battle_hud.gd" id="9_hud"]
-[ext_resource type="Script" path="res://scripts/battle/attack_system.gd" id="10_attack"]
-[ext_resource type="Script" path="res://scripts/ui/action_menu.gd" id="11_menu"]
-[ext_resource type="Script" path="res://scripts/ui/unit_info_panel.gd" id="12_info"]
-[ext_resource type="Script" path="res://scripts/battle/enemy_ai.gd" id="13_ai"]
-[ext_resource type="Script" path="res://scripts/ui/battle_log.gd" id="14_log"]
-[ext_resource type="Script" path="res://scripts/battle/line_of_sight.gd" id="15_los"]
-[ext_resource type="Script" path="res://scripts/ui/facing_selector.gd" id="16_facing"]
-[ext_resource type="Script" path="res://scripts/stage/stage_manager.gd" id="17_stage"]
-[ext_resource type="Script" path="res://scripts/stage/trigger_manager.gd" id="18_trigger"]
-[ext_resource type="Script" path="res://scripts/stage/event_manager.gd" id="19_event"]
-[ext_resource type="Script" path="res://scripts/ui/mission_ui.gd" id="20_mission"]
-[ext_resource type="Script" path="res://scripts/ui/battle_message.gd" id="21_message"]
-[ext_resource type="Script" path="res://scripts/stage/stage_data.gd" id="22_stage_data"]
-[ext_resource type="Script" path="res://scripts/stage/stage_object.gd" id="23_stage_object"]
-[ext_resource type="Script" path="res://scripts/battle/threat_system.gd" id="24_threat"]
-[ext_resource type="Script" path="res://scripts/battle/threat_arrow_manager.gd" id="25_arrows"]
-[ext_resource type="Script" path="res://scripts/unit/unit_mover.gd" id="26_mover"]
-[ext_resource type="Script" path="res://scripts/ui/combat_confirm_panel.gd" id="27_confirm"]
-[ext_resource type="Script" path="res://scripts/skill/skill_database.gd" id="28_skill_db"]
-[ext_resource type="Script" path="res://scripts/battle/element_system.gd" id="29_element"]
-[ext_resource type="Script" path="res://scripts/battle/skill_system.gd" id="30_skill_system"]
-[ext_resource type="Script" path="res://scripts/ui/skill_menu.gd" id="31_skill_menu"]
-[ext_resource type="Script" path="res://scripts/ui/skill_confirm_panel.gd" id="32_skill_confirm"]
-[ext_resource type="Script" path="res://scripts/skill/skill_data.gd" id="33_skill_data"]
-[ext_resource type="Script" path="res://scripts/effect/floating_number_manager.gd" id="34_floating_manager"]
-[ext_resource type="Script" path="res://scripts/effect/floating_number_3d.gd" id="35_floating_number"]
-[ext_resource type="Script" path="res://scripts/job/job_database.gd" id="36_job_db"]
-[ext_resource type="Script" path="res://scripts/job/job_system.gd" id="37_job_system"]
-[ext_resource type="Script" path="res://scripts/battle/experience_system.gd" id="38_exp"]
-[ext_resource type="Script" path="res://scripts/ui/growth_result_panel.gd" id="39_growth"]
-[ext_resource type="Script" path="res://scripts/job/job_data.gd" id="40_job_data"]
-[ext_resource type="Script" path="res://scripts/skill/skill_unlock_system.gd" id="41_unlock"]
-[ext_resource type="Script" path="res://scripts/ui/pre_battle_setup_panel.gd" id="42_setup"]
-[ext_resource type="Script" path="res://scripts/unit/unit_build_data.gd" id="43_build"]
-[ext_resource type="Script" path="res://scripts/save/save_manager.gd" id="44_save"]
-[ext_resource type="Script" path="res://scripts/save/player_profile_data.gd" id="45_profile"]
-[ext_resource type="Script" path="res://scripts/save/unit_progress_manager.gd" id="46_unit_progress"]
-[ext_resource type="Script" path="res://scripts/save/stage_progress_manager.gd" id="47_stage_progress"]
-[ext_resource type="Script" path="res://scripts/status/status_calculator.gd" id="48_status"]
-[ext_resource type="Script" path="res://scripts/job/job_unlock_system.gd" id="49_job_unlock"]
-[ext_resource type="Script" path="res://scripts/ui/turn_order_panel.gd" id="50_turn_order"]
-[ext_resource type="Script" path="res://scripts/equipment/equipment_database.gd" id="51_equipment_db"]
-[ext_resource type="Script" path="res://scripts/equipment/equipment_system.gd" id="52_equipment_system"]
-[ext_resource type="Script" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
+[ext_resource type="Script" uid="uid://dm0fwdoylqkci" path="res://scripts/grid/grid_system.gd" id="2_grid"]
+[ext_resource type="Script" uid="uid://cicbesavr3ix4" path="res://scripts/map/voxel_map.gd" id="3_map"]
+[ext_resource type="Script" uid="uid://cwy72x755kikx" path="res://scripts/unit/unit_manager.gd" id="4_units"]
+[ext_resource type="Script" uid="uid://84rxle7bochs" path="res://scripts/battle/battle_cursor.gd" id="5_cursor"]
+[ext_resource type="Script" uid="uid://cylcve4x34wqj" path="res://scripts/battle/pathfinding.gd" id="6_path"]
+[ext_resource type="Script" uid="uid://belfkalwx1psa" path="res://scripts/camera/camera_controller.gd" id="7_camera"]
+[ext_resource type="Script" uid="uid://bfpuwit78002t" path="res://scripts/battle/turn_manager.gd" id="8_turn"]
+[ext_resource type="Script" uid="uid://bnqif60okw622" path="res://scripts/ui/battle_hud.gd" id="9_hud"]
+[ext_resource type="Script" uid="uid://bk0v8gw3t3cka" path="res://scripts/battle/attack_system.gd" id="10_attack"]
+[ext_resource type="Script" uid="uid://c3vxwatguo1iv" path="res://scripts/ui/action_menu.gd" id="11_menu"]
+[ext_resource type="Script" uid="uid://qcbh0cdei78x" path="res://scripts/ui/unit_info_panel.gd" id="12_info"]
+[ext_resource type="Script" uid="uid://dqp47eeg7bufa" path="res://scripts/battle/enemy_ai.gd" id="13_ai"]
+[ext_resource type="Script" uid="uid://b8eev341gbhoc" path="res://scripts/ui/battle_log.gd" id="14_log"]
+[ext_resource type="Script" uid="uid://drso8benhdx4a" path="res://scripts/battle/line_of_sight.gd" id="15_los"]
+[ext_resource type="Script" uid="uid://cm7c1u5afkrte" path="res://scripts/ui/facing_selector.gd" id="16_facing"]
+[ext_resource type="Script" uid="uid://bnhh244463c35" path="res://scripts/stage/stage_manager.gd" id="17_stage"]
+[ext_resource type="Script" uid="uid://bpf17kwovuelp" path="res://scripts/stage/trigger_manager.gd" id="18_trigger"]
+[ext_resource type="Script" uid="uid://ddw2eh8r70y2i" path="res://scripts/stage/event_manager.gd" id="19_event"]
+[ext_resource type="Script" uid="uid://bdvpcyhr4j5bt" path="res://scripts/ui/mission_ui.gd" id="20_mission"]
+[ext_resource type="Script" uid="uid://bvs6vjtwplcfo" path="res://scripts/ui/battle_message.gd" id="21_message"]
+[ext_resource type="Script" uid="uid://c635t8a1v61uh" path="res://scripts/battle/threat_system.gd" id="24_threat"]
+[ext_resource type="Script" uid="uid://dtl4cdh2h50uw" path="res://scripts/battle/threat_arrow_manager.gd" id="25_arrows"]
+[ext_resource type="Script" uid="uid://ck0fksv3gukti" path="res://scripts/unit/unit_mover.gd" id="26_mover"]
+[ext_resource type="Script" uid="uid://drtf4llbnb37u" path="res://scripts/ui/combat_confirm_panel.gd" id="27_confirm"]
+[ext_resource type="Script" uid="uid://bodl5480nvg8n" path="res://scripts/skill/skill_database.gd" id="28_skill_db"]
+[ext_resource type="Script" uid="uid://c088v5482kb30" path="res://scripts/battle/element_system.gd" id="29_element"]
+[ext_resource type="Script" uid="uid://bj5jp0r7oflxk" path="res://scripts/battle/skill_system.gd" id="30_skill_system"]
+[ext_resource type="Script" uid="uid://bncm4kuq1nk2b" path="res://scripts/ui/skill_menu.gd" id="31_skill_menu"]
+[ext_resource type="Script" uid="uid://bxk5xvovdclv6" path="res://scripts/ui/skill_confirm_panel.gd" id="32_skill_confirm"]
+[ext_resource type="Script" uid="uid://rv2f5wqgem8s" path="res://scripts/effect/floating_number_manager.gd" id="34_floating_manager"]
+[ext_resource type="Script" uid="uid://pbihaqi45q37" path="res://scripts/job/job_database.gd" id="36_job_db"]
+[ext_resource type="Script" uid="uid://b1qt1p3y20mu7" path="res://scripts/job/job_system.gd" id="37_job_system"]
+[ext_resource type="Script" uid="uid://b8ouhk66tjjwy" path="res://scripts/battle/experience_system.gd" id="38_exp"]
+[ext_resource type="Script" uid="uid://cg7vu37oqfyqd" path="res://scripts/ui/growth_result_panel.gd" id="39_growth"]
+[ext_resource type="Script" uid="uid://b8u0ddvfexg1r" path="res://scripts/skill/skill_unlock_system.gd" id="41_unlock"]
+[ext_resource type="Script" uid="uid://bd5o0qfg6pqq2" path="res://scripts/ui/pre_battle_setup_panel.gd" id="42_setup"]
+[ext_resource type="Script" uid="uid://degdljgceomgc" path="res://scripts/save/save_manager.gd" id="44_save"]
+[ext_resource type="Script" uid="uid://unba503r1dtf" path="res://scripts/save/player_profile_data.gd" id="45_profile"]
+[ext_resource type="Script" uid="uid://b5qwidg56u0hb" path="res://scripts/save/unit_progress_manager.gd" id="46_unit_progress"]
+[ext_resource type="Script" uid="uid://bbyh31m3lt56v" path="res://scripts/save/stage_progress_manager.gd" id="47_stage_progress"]
+[ext_resource type="Script" uid="uid://csjt5u3g5xt28" path="res://scripts/status/status_calculator.gd" id="48_status"]
+[ext_resource type="Script" uid="uid://7qgbflhvxt7r" path="res://scripts/job/job_unlock_system.gd" id="49_job_unlock"]
+[ext_resource type="Script" uid="uid://b4dtpt4dhga5j" path="res://scripts/ui/turn_order_panel.gd" id="50_turn_order"]
+[ext_resource type="Script" uid="uid://b8tw8s0twi8cn" path="res://scripts/equipment/equipment_database.gd" id="51_equipment_db"]
+[ext_resource type="Script" uid="uid://e83kku1i0luf" path="res://scripts/equipment/equipment_system.gd" id="52_equipment_system"]
+[ext_resource type="Script" uid="uid://c0sromj1giwni" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
 [ext_resource type="Resource" path="res://assets/terrain/theme_default.tres" id="54_map_theme"]
 [ext_resource type="Environment" path="res://assets/environment/battle_atmosphere.tres" id="55_env"]
-[ext_resource type="Script" path="res://scripts/ui/direction_compass.gd" id="56_compass"]
+[ext_resource type="Script" uid="uid://yvxymq3l0ec" path="res://scripts/ui/direction_compass.gd" id="56_compass"]
 
-[node name="Main" type="Node3D"]
-script = ExtResource("1_main")
+[node name="Main" type="Node3D" unique_id=2113042772]
 
-[node name="SaveManager" type="Node" parent="."]
+[node name="SaveManager" type="Node" parent="." unique_id=1704738821]
 script = ExtResource("44_save")
 
-[node name="PlayerProfileData" type="Node" parent="."]
+[node name="PlayerProfileData" type="Node" parent="." unique_id=1196281457]
 script = ExtResource("45_profile")
 
-[node name="UnitProgressManager" type="Node" parent="."]
+[node name="UnitProgressManager" type="Node" parent="." unique_id=1396058331]
 script = ExtResource("46_unit_progress")
 
-[node name="StageProgressManager" type="Node" parent="."]
+[node name="StageProgressManager" type="Node" parent="." unique_id=1494979943]
 script = ExtResource("47_stage_progress")
 
-[node name="StatusCalculator" type="Node" parent="."]
+[node name="StatusCalculator" type="Node" parent="." unique_id=961180593]
 script = ExtResource("48_status")
 
-[node name="JobUnlockSystem" type="Node" parent="."]
+[node name="JobUnlockSystem" type="Node" parent="." unique_id=656842539]
 script = ExtResource("49_job_unlock")
 
-[node name="EquipmentDatabase" type="Node" parent="."]
+[node name="EquipmentDatabase" type="Node" parent="." unique_id=131439104]
 script = ExtResource("51_equipment_db")
 
-[node name="EquipmentSystem" type="Node" parent="."]
+[node name="EquipmentSystem" type="Node" parent="." unique_id=1328658940]
 script = ExtResource("52_equipment_system")
 
-[node name="WeaponPowerCalculator" type="Node" parent="."]
+[node name="WeaponPowerCalculator" type="Node" parent="." unique_id=1005719510]
 script = ExtResource("53_weapon_power")
 
-[node name="GridSystem" type="Node" parent="."]
+[node name="GridSystem" type="Node" parent="." unique_id=1057582378]
 script = ExtResource("2_grid")
 
-[node name="VoxelMap" type="Node3D" parent="."]
+[node name="VoxelMap" type="Node3D" parent="." unique_id=255488112]
 script = ExtResource("3_map")
 visual_theme = ExtResource("54_map_theme")
 
-[node name="UnitManager" type="Node3D" parent="."]
+[node name="UnitManager" type="Node3D" parent="." unique_id=1764284681]
 script = ExtResource("4_units")
 
-[node name="UnitMover" type="Node" parent="."]
+[node name="UnitMover" type="Node" parent="." unique_id=794701066]
 script = ExtResource("26_mover")
 
-[node name="BattleCursor" type="Node3D" parent="."]
+[node name="BattleCursor" type="Node3D" parent="." unique_id=1388620569]
 script = ExtResource("5_cursor")
 
-[node name="Pathfinding" type="Node" parent="."]
+[node name="Pathfinding" type="Node" parent="." unique_id=1299305271]
 script = ExtResource("6_path")
 
-[node name="AttackSystem" type="Node" parent="."]
+[node name="AttackSystem" type="Node" parent="." unique_id=61157284]
 script = ExtResource("10_attack")
 
-[node name="SkillSystem" type="Node" parent="."]
+[node name="SkillSystem" type="Node" parent="." unique_id=1796377911]
 script = ExtResource("30_skill_system")
 
-[node name="ElementSystem" type="Node" parent="."]
+[node name="ElementSystem" type="Node" parent="." unique_id=47649289]
 script = ExtResource("29_element")
 
-[node name="SkillDatabase" type="Node" parent="."]
+[node name="SkillDatabase" type="Node" parent="." unique_id=1049785863]
 script = ExtResource("28_skill_db")
 
-[node name="JobDatabase" type="Node" parent="."]
+[node name="JobDatabase" type="Node" parent="." unique_id=1216339529]
 script = ExtResource("36_job_db")
 
-[node name="JobSystem" type="Node" parent="."]
+[node name="JobSystem" type="Node" parent="." unique_id=1979108175]
 script = ExtResource("37_job_system")
 
-[node name="ExperienceSystem" type="Node" parent="."]
+[node name="ExperienceSystem" type="Node" parent="." unique_id=1806048401]
 script = ExtResource("38_exp")
 
-[node name="SkillUnlockSystem" type="Node" parent="."]
+[node name="SkillUnlockSystem" type="Node" parent="." unique_id=1384095426]
 script = ExtResource("41_unlock")
 
-[node name="LineOfSight" type="Node" parent="."]
+[node name="LineOfSight" type="Node" parent="." unique_id=1637841611]
 script = ExtResource("15_los")
 
-[node name="ThreatSystem" type="Node" parent="."]
+[node name="ThreatSystem" type="Node" parent="." unique_id=1453424965]
 script = ExtResource("24_threat")
 
-[node name="ThreatArrowManager" type="Node3D" parent="."]
+[node name="ThreatArrowManager" type="Node3D" parent="." unique_id=2144940431]
 script = ExtResource("25_arrows")
 
-[node name="FloatingNumberManager" type="Node3D" parent="."]
+[node name="FloatingNumberManager" type="Node3D" parent="." unique_id=180450460]
 script = ExtResource("34_floating_manager")
 
-[node name="EnemyAI" type="Node" parent="."]
+[node name="EnemyAI" type="Node" parent="." unique_id=561920532]
 script = ExtResource("13_ai")
 
-[node name="TurnManager" type="Node" parent="."]
+[node name="TurnManager" type="Node" parent="." unique_id=1506034973]
 script = ExtResource("8_turn")
 
-[node name="StageManager" type="Node3D" parent="."]
+[node name="StageManager" type="Node3D" parent="." unique_id=771935378]
 script = ExtResource("17_stage")
 
-[node name="TriggerManager" type="Node" parent="."]
+[node name="TriggerManager" type="Node" parent="." unique_id=80597700]
 script = ExtResource("18_trigger")
 
-[node name="EventManager" type="Node" parent="."]
+[node name="EventManager" type="Node" parent="." unique_id=538530452]
 script = ExtResource("19_event")
 
-[node name="CameraController" type="Node3D" parent="."]
+[node name="CameraController" type="Node3D" parent="." unique_id=426312757]
 script = ExtResource("7_camera")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=906935160]
 environment = ExtResource("55_env")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-52, -35, 0)
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=761845269]
+transform = Transform3D(0.81915206, 0.45198438, -0.35312894, 0, 0.6156615, 0.7880107, 0.57357645, -0.6455006, 0.5043204, 0, 0, 0)
 light_color = Color(1, 0.949, 0.839, 1)
 light_energy = 1.3
-shadow_enabled = false
-shadow_opacity = 0.35
 shadow_bias = 0.05
+shadow_opacity = 0.35
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1812039906]
 
-[node name="DirectionCompass" type="Control" parent="UI"]
+[node name="DirectionCompass" type="Control" parent="UI" unique_id=1387808697]
 layout_mode = 3
-anchors_preset = 8
+anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -189,49 +180,68 @@ grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("56_compass")
 
-[node name="MarginContainer" type="MarginContainer" parent="UI"]
+[node name="MarginContainer" type="MarginContainer" parent="UI" unique_id=2019164395]
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 510.0
 offset_bottom = 220.0
 
-[node name="BattleHUD" type="VBoxContainer" parent="UI/MarginContainer"]
+[node name="BattleHUD" type="VBoxContainer" parent="UI/MarginContainer" unique_id=445060044]
+layout_mode = 2
 theme_override_constants/separation = 8
 script = ExtResource("9_hud")
 
-[node name="Title" type="Label" parent="UI/MarginContainer/BattleHUD"]
+[node name="Title" type="Label" parent="UI/MarginContainer/BattleHUD" unique_id=934140497]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.9, 0.72, 1)
 theme_override_font_sizes/font_size = 22
 text = "VOXEL SRPG PROTOTYPE"
 
-[node name="TurnLabel" type="Label" parent="UI/MarginContainer/BattleHUD"]
+[node name="TurnLabel" type="Label" parent="UI/MarginContainer/BattleHUD" unique_id=492746378]
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
 theme_override_font_sizes/font_size = 20
 text = "Turn 1"
 
-[node name="PhaseLabel" type="Label" parent="UI/MarginContainer/BattleHUD"]
+[node name="PhaseLabel" type="Label" parent="UI/MarginContainer/BattleHUD" unique_id=1275766065]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.75, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "Player Turn"
 
-[node name="StatusLabel" type="Label" parent="UI/MarginContainer/BattleHUD"]
+[node name="StatusLabel" type="Label" parent="UI/MarginContainer/BattleHUD" unique_id=689259910]
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 text = "Loading..."
 
-[node name="Help" type="Label" parent="UI/MarginContainer/BattleHUD"]
+[node name="Help" type="Label" parent="UI/MarginContainer/BattleHUD" unique_id=1024571288]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.82, 0.88, 1)
 text = "WASD: カーソル  矢印: マップ移動  Q/E・左ドラッグ: カメラ回転  ホイール: ズーム"
 
-[node name="TurnOrderPanel" type="PanelContainer" parent="UI"]
+[node name="TurnOrderPanel" type="PanelContainer" parent="UI" unique_id=279418245]
 offset_left = 1510.0
 offset_top = 72.0
 offset_right = 1900.0
 offset_bottom = 362.0
 script = ExtResource("50_turn_order")
 
-[node name="CoordinateLabel" type="Label" parent="UI"]
-layout_mode = 0
+[node name="VBox" type="VBoxContainer" parent="UI/TurnOrderPanel" unique_id=1501430711]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CurrentActorLabel" type="Label" parent="UI/TurnOrderPanel/VBox" unique_id=734619647]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Current: ---"
+
+[node name="UpcomingList" type="Label" parent="UI/TurnOrderPanel/VBox" unique_id=306422768]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Next:"
+
+[node name="CoordinateLabel" type="Label" parent="UI" unique_id=721052792]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -240,7 +250,6 @@ offset_top = 18.0
 offset_right = -20.0
 offset_bottom = 58.0
 grow_horizontal = 0
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 2
@@ -250,18 +259,7 @@ text = "0:0:0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="VBox" type="VBoxContainer" parent="UI/TurnOrderPanel"]
-theme_override_constants/separation = 10
-
-[node name="CurrentActorLabel" type="Label" parent="UI/TurnOrderPanel/VBox"]
-theme_override_font_sizes/font_size = 22
-text = "Current: ---"
-
-[node name="UpcomingList" type="Label" parent="UI/TurnOrderPanel/VBox"]
-theme_override_font_sizes/font_size = 18
-text = "Next:"
-
-[node name="ActionMenu" type="VBoxContainer" parent="UI"]
+[node name="ActionMenu" type="VBoxContainer" parent="UI" unique_id=1064370703]
 visible = false
 anchors_preset = 6
 anchor_left = 1.0
@@ -277,49 +275,55 @@ grow_vertical = 2
 theme_override_constants/separation = 8
 script = ExtResource("11_menu")
 
-[node name="MoveButton" type="Button" parent="UI/ActionMenu"]
+[node name="MoveButton" type="Button" parent="UI/ActionMenu" unique_id=1422218396]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "移動"
 
-[node name="AttackButton" type="Button" parent="UI/ActionMenu"]
+[node name="AttackButton" type="Button" parent="UI/ActionMenu" unique_id=57138283]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "攻撃"
 
-[node name="SkillButton" type="Button" parent="UI/ActionMenu"]
+[node name="SkillButton" type="Button" parent="UI/ActionMenu" unique_id=1579684503]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "スキル"
 
-[node name="WaitButton" type="Button" parent="UI/ActionMenu"]
+[node name="WaitButton" type="Button" parent="UI/ActionMenu" unique_id=1856425187]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "待機"
 
-[node name="CancelButton" type="Button" parent="UI/ActionMenu"]
+[node name="CancelButton" type="Button" parent="UI/ActionMenu" unique_id=336995388]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "キャンセル"
 
-[node name="UnitInfoPanel" type="PanelContainer" parent="UI"]
+[node name="UnitInfoPanel" type="PanelContainer" parent="UI" unique_id=1192585028]
 offset_left = 20.0
 offset_top = 850.0
 offset_right = 360.0
 offset_bottom = 1040.0
 script = ExtResource("12_info")
 
-[node name="UnitInfoLabel" type="Label" parent="UI/UnitInfoPanel"]
+[node name="UnitInfoLabel" type="Label" parent="UI/UnitInfoPanel" unique_id=486335652]
+layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = ""
 
-[node name="BattleLog" type="PanelContainer" parent="UI"]
+[node name="BattleLog" type="PanelContainer" parent="UI" unique_id=1572490432]
 offset_left = 1480.0
 offset_top = 850.0
 offset_right = 1900.0
 offset_bottom = 1040.0
 script = ExtResource("14_log")
 
-[node name="BattleLogLabel" type="Label" parent="UI/BattleLog"]
+[node name="BattleLogLabel" type="Label" parent="UI/BattleLog" unique_id=1351591573]
+layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Battle Log"
 
-[node name="FacingSelector" type="VBoxContainer" parent="UI"]
+[node name="FacingSelector" type="VBoxContainer" parent="UI" unique_id=1244409008]
 visible = false
 offset_left = 1060.0
 offset_top = 360.0
@@ -328,31 +332,39 @@ offset_bottom = 650.0
 theme_override_constants/separation = 6
 script = ExtResource("16_facing")
 
-[node name="NorthButton" type="Button" parent="UI/FacingSelector"]
+[node name="NorthButton" type="Button" parent="UI/FacingSelector" unique_id=644844183]
 custom_minimum_size = Vector2(220, 48)
+layout_mode = 2
 text = "North"
-[node name="EastButton" type="Button" parent="UI/FacingSelector"]
+
+[node name="EastButton" type="Button" parent="UI/FacingSelector" unique_id=380571778]
 custom_minimum_size = Vector2(220, 48)
+layout_mode = 2
 text = "East"
-[node name="SouthButton" type="Button" parent="UI/FacingSelector"]
+
+[node name="SouthButton" type="Button" parent="UI/FacingSelector" unique_id=30636516]
 custom_minimum_size = Vector2(220, 48)
+layout_mode = 2
 text = "South"
-[node name="WestButton" type="Button" parent="UI/FacingSelector"]
+
+[node name="WestButton" type="Button" parent="UI/FacingSelector" unique_id=1054211227]
 custom_minimum_size = Vector2(220, 48)
+layout_mode = 2
 text = "West"
 
-[node name="MissionUI" type="PanelContainer" parent="UI"]
+[node name="MissionUI" type="PanelContainer" parent="UI" unique_id=1655378036]
 offset_left = 20.0
 offset_top = 270.0
 offset_right = 360.0
 offset_bottom = 510.0
 script = ExtResource("20_mission")
 
-[node name="MissionLabel" type="Label" parent="UI/MissionUI"]
+[node name="MissionLabel" type="Label" parent="UI/MissionUI" unique_id=726986714]
+layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Mission"
 
-[node name="BattleMessage" type="Label" parent="UI"]
+[node name="BattleMessage" type="Label" parent="UI" unique_id=845621752]
 visible = false
 offset_left = 660.0
 offset_top = 150.0
@@ -364,7 +376,7 @@ text = "Player Phase"
 horizontal_alignment = 1
 script = ExtResource("21_message")
 
-[node name="CombatConfirmPanel" type="PanelContainer" parent="UI"]
+[node name="CombatConfirmPanel" type="PanelContainer" parent="UI" unique_id=797577932]
 visible = false
 offset_left = 700.0
 offset_top = 300.0
@@ -372,25 +384,30 @@ offset_right = 1220.0
 offset_bottom = 720.0
 script = ExtResource("27_confirm")
 
-[node name="VBox" type="VBoxContainer" parent="UI/CombatConfirmPanel"]
+[node name="VBox" type="VBoxContainer" parent="UI/CombatConfirmPanel" unique_id=2065097147]
+layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="PreviewLabel" type="Label" parent="UI/CombatConfirmPanel/VBox"]
+[node name="PreviewLabel" type="Label" parent="UI/CombatConfirmPanel/VBox" unique_id=2101769437]
+layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Combat Preview"
 
-[node name="Buttons" type="HBoxContainer" parent="UI/CombatConfirmPanel/VBox"]
+[node name="Buttons" type="HBoxContainer" parent="UI/CombatConfirmPanel/VBox" unique_id=2019006483]
+layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="ConfirmButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons"]
+[node name="ConfirmButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons" unique_id=1103027214]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "決定"
 
-[node name="CancelButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons"]
+[node name="CancelButton" type="Button" parent="UI/CombatConfirmPanel/VBox/Buttons" unique_id=1590579893]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "キャンセル"
 
-[node name="SkillMenu" type="PanelContainer" parent="UI"]
+[node name="SkillMenu" type="PanelContainer" parent="UI" unique_id=1606847282]
 visible = false
 offset_left = 700.0
 offset_top = 280.0
@@ -398,100 +415,154 @@ offset_right = 1220.0
 offset_bottom = 730.0
 script = ExtResource("31_skill_menu")
 
-[node name="VBox" type="VBoxContainer" parent="UI/SkillMenu"]
+[node name="VBox" type="VBoxContainer" parent="UI/SkillMenu" unique_id=2137673310]
+layout_mode = 2
 theme_override_constants/separation = 10
-[node name="Title" type="Label" parent="UI/SkillMenu/VBox"]
+
+[node name="Title" type="Label" parent="UI/SkillMenu/VBox" unique_id=2143678700]
+layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Skills"
-[node name="SkillList" type="VBoxContainer" parent="UI/SkillMenu/VBox"]
-[node name="Description" type="Label" parent="UI/SkillMenu/VBox"]
+
+[node name="SkillList" type="VBoxContainer" parent="UI/SkillMenu/VBox" unique_id=564338269]
+layout_mode = 2
+
+[node name="Description" type="Label" parent="UI/SkillMenu/VBox" unique_id=1087781312]
 custom_minimum_size = Vector2(480, 100)
+layout_mode = 2
 text = "スキルを選択"
-[node name="CancelButton" type="Button" parent="UI/SkillMenu/VBox"]
+
+[node name="CancelButton" type="Button" parent="UI/SkillMenu/VBox" unique_id=1196426768]
+layout_mode = 2
 text = "キャンセル"
 
-[node name="SkillConfirmPanel" type="PanelContainer" parent="UI"]
+[node name="SkillConfirmPanel" type="PanelContainer" parent="UI" unique_id=2024070469]
 visible = false
 offset_left = 690.0
 offset_top = 280.0
 offset_right = 1230.0
 offset_bottom = 720.0
 script = ExtResource("32_skill_confirm")
-[node name="VBox" type="VBoxContainer" parent="UI/SkillConfirmPanel"]
+
+[node name="VBox" type="VBoxContainer" parent="UI/SkillConfirmPanel" unique_id=930789722]
+layout_mode = 2
 theme_override_constants/separation = 14
-[node name="Preview" type="Label" parent="UI/SkillConfirmPanel/VBox"]
+
+[node name="Preview" type="Label" parent="UI/SkillConfirmPanel/VBox" unique_id=1403785176]
+layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Skill Preview"
-[node name="Buttons" type="HBoxContainer" parent="UI/SkillConfirmPanel/VBox"]
-[node name="Confirm" type="Button" parent="UI/SkillConfirmPanel/VBox/Buttons"]
+
+[node name="Buttons" type="HBoxContainer" parent="UI/SkillConfirmPanel/VBox" unique_id=1303570847]
+layout_mode = 2
+
+[node name="Confirm" type="Button" parent="UI/SkillConfirmPanel/VBox/Buttons" unique_id=1176453373]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "決定"
-[node name="Cancel" type="Button" parent="UI/SkillConfirmPanel/VBox/Buttons"]
+
+[node name="Cancel" type="Button" parent="UI/SkillConfirmPanel/VBox/Buttons" unique_id=1696658585]
 custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
 text = "キャンセル"
 
-[node name="GrowthResultPanel" type="PanelContainer" parent="UI"]
+[node name="GrowthResultPanel" type="PanelContainer" parent="UI" unique_id=1011984747]
 visible = false
 offset_left = 570.0
 offset_top = 180.0
 offset_right = 1350.0
 offset_bottom = 900.0
 script = ExtResource("39_growth")
-[node name="VBox" type="VBoxContainer" parent="UI/GrowthResultPanel"]
-[node name="Title" type="Label" parent="UI/GrowthResultPanel/VBox"]
+
+[node name="VBox" type="VBoxContainer" parent="UI/GrowthResultPanel" unique_id=229923388]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/GrowthResultPanel/VBox" unique_id=1890293461]
+layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Growth Results"
-[node name="Results" type="Label" parent="UI/GrowthResultPanel/VBox"]
-theme_override_font_sizes/font_size = 20
-text = ""
 
-[node name="PreBattleSetupPanel" type="PanelContainer" parent="UI"]
+[node name="Results" type="Label" parent="UI/GrowthResultPanel/VBox" unique_id=1379511186]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="PreBattleSetupPanel" type="PanelContainer" parent="UI" unique_id=734803842]
 offset_left = 250.0
 offset_top = 90.0
 offset_right = 1670.0
 offset_bottom = 990.0
 script = ExtResource("42_setup")
 
-[node name="Layout" type="HBoxContainer" parent="UI/PreBattleSetupPanel"]
+[node name="Layout" type="HBoxContainer" parent="UI/PreBattleSetupPanel" unique_id=711467009]
+layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="UnitList" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout"]
+[node name="UnitList" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout" unique_id=1562452165]
 custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
 
-[node name="Detail" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout"]
+[node name="Detail" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout" unique_id=997398047]
 custom_minimum_size = Vector2(1080, 0)
+layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Name" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="Name" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=2134934688]
+layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Unit"
 
-[node name="MainJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="MainJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=1869464897]
+layout_mode = 2
 text = "Main Job"
-[node name="MainJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
-[node name="SubJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+
+[node name="MainJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=1204273422]
+layout_mode = 2
+
+[node name="SubJobLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=444362501]
+layout_mode = 2
 text = "Sub Job"
-[node name="SubJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
 
-[node name="WeaponLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="SubJob" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=17411908]
+layout_mode = 2
+
+[node name="WeaponLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=574988087]
+layout_mode = 2
 text = "Weapon"
-[node name="Weapon" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
-[node name="ArmorLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+
+[node name="Weapon" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=318274298]
+layout_mode = 2
+
+[node name="ArmorLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=344860897]
+layout_mode = 2
 text = "Armor"
-[node name="Armor" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
-[node name="AccessoryLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+
+[node name="Armor" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=720179487]
+layout_mode = 2
+
+[node name="AccessoryLabel" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=282141158]
+layout_mode = 2
 text = "Accessory"
-[node name="Accessory" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail"]
 
-[node name="Skills" type="HBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="Accessory" type="OptionButton" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=1078551317]
+layout_mode = 2
+
+[node name="Skills" type="HBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=33513124]
+layout_mode = 2
 theme_override_constants/separation = 20
-[node name="Equipped" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail/Skills"]
-custom_minimum_size = Vector2(500, 360)
-[node name="Available" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail/Skills"]
-custom_minimum_size = Vector2(500, 360)
 
-[node name="Message" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+[node name="Equipped" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail/Skills" unique_id=1980148980]
+custom_minimum_size = Vector2(500, 360)
+layout_mode = 2
+
+[node name="Available" type="VBoxContainer" parent="UI/PreBattleSetupPanel/Layout/Detail/Skills" unique_id=390842627]
+custom_minimum_size = Vector2(500, 360)
+layout_mode = 2
+
+[node name="Message" type="Label" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=1873847920]
+layout_mode = 2
 text = "Equipped Skills 0 / 6"
-[node name="StartBattle" type="Button" parent="UI/PreBattleSetupPanel/Layout/Detail"]
+
+[node name="StartBattle" type="Button" parent="UI/PreBattleSetupPanel/Layout/Detail" unique_id=3027800]
 custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
 text = "戦闘開始"

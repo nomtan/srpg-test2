@@ -1,0 +1,27 @@
+{
+  "format": "8-direction anime pixel sprite sheet",
+  "sheets": [
+    {
+      "action": "onehand_sword_idle",
+      "path": "vain_onehand_sword_idle_8dir.png",
+      "cell_size": [
+        64,
+        64
+      ],
+      "columns": 4,
+      "rows": 8,
+      "directions": [
+        "front",
+        "front_right",
+        "right",
+        "back_right",
+        "back",
+        "back_left",
+        "left",
+        "front_left"
+      ],
+      "frame_count": 4,
+      "fps": 4
+    }
+  ]
+}

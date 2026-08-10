@@ -76,6 +76,7 @@ var base_color: Color
 var direction_marker: MeshInstance3D
 var status_bars: Sprite3D
 var blob_shadow: Decal
+var character_sprite: Sprite3D
 
 
 func configure(
@@ -147,6 +148,7 @@ const BOW_ATTACK_ANIMATION_NAMES: Array[StringName] = [
 ]
 const CHARACTER_FLAT_SHADER := preload("res://shaders/flat/flat_character.gdshader")
 const CHARACTER_FACE_SHADER := preload("res://shaders/flat/flat_character_face.gdshader")
+const CHARACTER_OUTLINE_SHADER := preload("res://shaders/flat/pixel_character_outline.gdshader")
 const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd")
 
 # T5 (docs/dev/phase/phase17-step1.md): flat shading has no realtime shadow,
@@ -240,7 +242,36 @@ func _apply_flat_shading(root: Node, tunic_color: Color, accent_color: Color) ->
 			var flat_material := ShaderMaterial.new()
 			flat_material.shader = CHARACTER_FLAT_SHADER
 			flat_material.set_shader_parameter("albedo_color", surface_color)
+			var outline_material := ShaderMaterial.new()
+			outline_material.shader = CHARACTER_OUTLINE_SHADER
+			flat_material.next_pass = outline_material
 			mesh_instance.set_surface_override_material(surface_index, flat_material)
+
+
+## Replaces the rendered 3D model with a camera-facing character image while
+## leaving the unit node, grid position, status bars and combat behavior intact.
+func use_billboard_sprite(texture_path: String, target_height := 1.75) -> void:
+	var texture := load(texture_path) as Texture2D
+	if not texture:
+		push_warning("Cannot create character sprite: failed to load '%s'" % texture_path)
+		return
+	if character_sprite:
+		character_sprite.queue_free()
+	if model_instance:
+		model_instance.visible = false
+
+	character_sprite = Sprite3D.new()
+	character_sprite.name = "CharacterBillboard"
+	character_sprite.texture = texture
+	character_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	character_sprite.shaded = false
+	character_sprite.double_sided = true
+	character_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	character_sprite.alpha_scissor_threshold = 0.5
+	character_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	character_sprite.pixel_size = target_height / float(texture.get_height())
+	character_sprite.position.y = target_height * 0.5
+	add_child(character_sprite)
 
 
 static func _blob_shadow_texture() -> ImageTexture:
