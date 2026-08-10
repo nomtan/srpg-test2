@@ -122,9 +122,11 @@ const DARK_GRASS_STONE_CHIP_COLORS: Array[Color] = [
 @export_group("Terrain transitions")
 @export var grass_transitions_enabled := false
 @export_range(0.08, 0.40, 0.01) var grass_transition_fringe_width := 0.20
+@export_group("Grass cover boundaries")
+@export_range(0.08, 0.40, 0.01) var dark_grass_boundary_width := 0.24
 @export_group("Grass cliff overhangs")
 @export var grass_cliff_overhangs_enabled := true
-@export_range(0.04, 0.24, 0.01) var grass_cliff_overhang_width := 0.12
+@export_range(0.10, 0.60, 0.01) var grass_cliff_overhang_drop := 0.33
 @export_group("Fluid surfaces")
 # Optional visual fill inside a logically lowered water/lava cell. Production
 # remains at 0; validation can remove a full cube while keeping its liquid
@@ -167,6 +169,7 @@ func build_from_map_data(data: MapData) -> void:
 			_create_top(cell)
 		_create_cliff_sides(cell)
 	_create_stone_floor_boundaries()
+	_create_grass_cover_boundaries()
 	_create_grass_cliff_overhangs()
 	_create_painted_grass_overlays()
 	_create_dark_leaf_overlays()
@@ -196,6 +199,127 @@ func _has_stone_floor_cover(cell: MapCellVisualData) -> bool:
 
 func _has_worn_stone_floor_cover(cell: MapCellVisualData) -> bool:
 	return cell.has_surface_cover("stone_floor_worn")
+
+
+func _create_grass_cover_boundaries() -> void:
+	# Draw each light/dark seam once, from the dark cell into the regular grass
+	# cell. Its irregular outer edge replaces the straight cover-plane join.
+	for cell: MapCellVisualData in map_data.cells:
+		if not _has_dark_grass_cover(cell) or _uses_micro_height_profile(cell):
+			continue
+		for edge_index in DIRECTIONS.size():
+			var direction: Dictionary = DIRECTIONS[edge_index]
+			var neighbor_position: Vector2i = cell.position + direction.offset
+			if not map_data.is_in_bounds(neighbor_position):
+				continue
+			var neighbor := map_data.get_cell(neighbor_position)
+			if (
+				neighbor == null
+				or neighbor.height != cell.height
+				or not _has_regular_grass_cover(neighbor)
+				or _uses_micro_height_profile(neighbor)
+			):
+				continue
+			_create_dark_grass_boundary_fringe(
+				cell, Vector2i(direction.offset), edge_index
+			)
+
+
+func _create_dark_grass_boundary_fringe(
+	cell: MapCellVisualData,
+	edge_offset: Vector2i,
+	edge_index: int
+) -> void:
+	# Four broad sections produce large turf clumps along the seam instead of
+	# a fine saw-tooth edge.
+	const EDGE_SEGMENTS := 4
+	var vertices: Array[Vector3] = []
+	var normals: Array[Vector3] = []
+	var uvs: Array[Vector2] = []
+	var outward := Vector2(edge_offset)
+	var tangent := Vector2(-outward.y, outward.x)
+	var edge_center := (
+		Vector2(cell.position) + Vector2(0.5, 0.5) + outward * 0.5
+	)
+	var edge_start := edge_center - tangent * 0.5
+	for segment in EDGE_SEGMENTS:
+		var t0 := float(segment) / float(EDGE_SEGMENTS)
+		var t1 := float(segment + 1) / float(EDGE_SEGMENTS)
+		var inner_0_2d := edge_start + tangent * t0
+		var inner_1_2d := edge_start + tangent * t1
+		var outer_0_2d := inner_0_2d + outward * _dark_grass_boundary_depth(
+			cell.position, edge_index, segment, EDGE_SEGMENTS
+		)
+		var outer_1_2d := inner_1_2d + outward * _dark_grass_boundary_depth(
+			cell.position, edge_index, segment + 1, EDGE_SEGMENTS
+		)
+		var inner_0 := Vector3(inner_0_2d.x, 0.0, inner_0_2d.y)
+		var inner_1 := Vector3(inner_1_2d.x, 0.0, inner_1_2d.y)
+		var outer_0 := Vector3(outer_0_2d.x, 0.0, outer_0_2d.y)
+		var outer_1 := Vector3(outer_1_2d.x, 0.0, outer_1_2d.y)
+		_append_grass_boundary_triangle(
+			vertices, normals, uvs, inner_0, inner_1, outer_1
+		)
+		_append_grass_boundary_triangle(
+			vertices, normals, uvs, inner_0, outer_1, outer_0
+		)
+
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+	arrays[Mesh.ARRAY_NORMAL] = PackedVector3Array(normals)
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array(uvs)
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var fringe := MeshInstance3D.new()
+	fringe.name = "DarkGrassBoundary_%d_%d_%d" % [
+		cell.position.x, cell.position.y, edge_index
+	]
+	fringe.mesh = mesh
+	fringe.position.y = float(cell.height) + SURFACE_COVER_OFFSET + 0.003
+	fringe.material_override = _solid_grass_cover_surface_material("grass_dark")
+	fringe.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fringe.set_meta("terrain_asset_name", "terrain_grass_dark_cover")
+	fringe.set_meta("surface_cover", "grass_dark")
+	fringe.set_meta("dark_grass_boundary", true)
+	add_to_layer(fringe, TOP_LAYER)
+
+
+func _dark_grass_boundary_depth(
+	position: Vector2i,
+	edge_index: int,
+	sample_index: int,
+	segments: int
+) -> float:
+	if sample_index == 0 or sample_index == segments:
+		return dark_grass_boundary_width * 0.72
+	var seed := float(
+		position.x * 83492791
+		+ position.y * 26544357
+		+ edge_index * 73856093
+		+ sample_index * 19349663
+	)
+	var variation := fposmod(sin(seed) * 43758.5453, 1.0)
+	return dark_grass_boundary_width * lerpf(0.35, 1.45, variation)
+
+
+func _append_grass_boundary_triangle(
+	vertices: Array[Vector3],
+	normals: Array[Vector3],
+	uvs: Array[Vector2],
+	a: Vector3,
+	b: Vector3,
+	c: Vector3
+) -> void:
+	# Godot's horizontal front faces use clockwise winding when viewed above.
+	if (b - a).cross(c - a).y > 0.0:
+		var swap := b
+		b = c
+		c = swap
+	for point in [a, b, c]:
+		vertices.append(point)
+		normals.append(Vector3.UP)
+		uvs.append(Vector2(point.x, point.z))
 
 
 func _create_stone_floor_boundaries() -> void:
@@ -913,7 +1037,9 @@ func _create_grass_cliff_overhang(cell: MapCellVisualData, flags: Dictionary) ->
 	var vertices: Array[Vector3] = []
 	var normals: Array[Vector3] = []
 	var uvs: Array[Vector2] = []
-	const EDGE_SEGMENTS := 8
+	# Fewer, wider segments make the lower turf edge read as torn clumps
+	# instead of a finely tessellated wave.
+	const EDGE_SEGMENTS := 6
 	if flags.n:
 		_append_grass_overhang_strip(
 			vertices, normals, uvs, cell, 0,
@@ -947,18 +1073,6 @@ func _create_grass_cliff_overhang(cell: MapCellVisualData, flags: Dictionary) ->
 			EDGE_SEGMENTS
 		)
 
-	# Adjacent exposed edges form a convex outer corner. Fill their gap with a
-	# small rounded fan; concave inner corners are formed by the overlap of the
-	# two neighboring cells' straight lips.
-	if flags.n and flags.e:
-		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(1.0, 0.0), -90.0)
-	if flags.e and flags.s:
-		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(1.0, 1.0), 0.0)
-	if flags.s and flags.w:
-		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(0.0, 1.0), 90.0)
-	if flags.w and flags.n:
-		_append_grass_overhang_corner(vertices, normals, uvs, Vector2(0.0, 0.0), 180.0)
-
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
@@ -975,7 +1089,8 @@ func _create_grass_cliff_overhang(cell: MapCellVisualData, flags: Dictionary) ->
 	var layer_order := (cell.position.x * 3 + cell.position.y * 5) % 11
 	overhang.position = Vector3(
 		cell.position.x,
-		float(cell.height) + 0.024 + float(layer_order) * 0.00015,
+		float(cell.height) + SURFACE_COVER_OFFSET + 0.002
+			+ float(layer_order) * 0.00015,
 		cell.position.y
 	)
 	# flat_validation routes this procedural surface through the same grass
@@ -996,77 +1111,70 @@ func _append_grass_overhang_strip(
 	outward: Vector3,
 	segments: int
 ) -> void:
+	# Lay the fringe directly over the physical block side. A tiny outward
+	# offset prevents z-fighting with the dirt face without making the grass
+	# look like a separate floating shell.
+	const SIDE_SURFACE_OFFSET := 0.003
 	for segment in segments:
 		var t0 := float(segment) / float(segments)
 		var t1 := float(segment + 1) / float(segments)
-		var inner_0 := start + tangent * t0
-		var inner_1 := start + tangent * t1
-		var outer_0 := inner_0 + outward * _grass_overhang_depth(
+		var upper_0 := start + tangent * t0 + outward * SIDE_SURFACE_OFFSET
+		var upper_1 := start + tangent * t1 + outward * SIDE_SURFACE_OFFSET
+		var lower_0 := upper_0 - Vector3.UP * _grass_overhang_drop(
 			cell.position, edge_index, segment, segments
 		)
-		var outer_1 := inner_1 + outward * _grass_overhang_depth(
+		var lower_1 := upper_1 - Vector3.UP * _grass_overhang_drop(
 			cell.position, edge_index, segment + 1, segments
 		)
-		_append_grass_overhang_triangle(vertices, normals, uvs, inner_0, inner_1, outer_1)
-		_append_grass_overhang_triangle(vertices, normals, uvs, inner_0, outer_1, outer_0)
+		_append_grass_overhang_side_triangle(
+			vertices, normals, uvs, upper_0, lower_1, upper_1, outward
+		)
+		_append_grass_overhang_side_triangle(
+			vertices, normals, uvs, upper_0, lower_0, lower_1, outward
+		)
 
 
-func _grass_overhang_depth(
+func _grass_overhang_drop(
 	position: Vector2i,
 	edge_index: int,
 	sample_index: int,
 	segments: int
 ) -> float:
+	# Keep edge endpoints level so adjacent corner skirts meet without cracks,
+	# while the samples between them form a subtly uneven turf fringe.
 	if sample_index == 0 or sample_index == segments:
-		return grass_cliff_overhang_width
+		return grass_cliff_overhang_drop
 	var seed := float(
-		position.x * 73856093
-		+ position.y * 19349663
-		+ edge_index * 83492791
-		+ sample_index * 26544357
+		position.x * 19349663
+		+ position.y * 83492791
+		+ edge_index * 26544357
+		+ sample_index * 73856093
 	)
 	var variation := fposmod(sin(seed) * 43758.5453, 1.0)
-	return grass_cliff_overhang_width * lerpf(0.82, 1.12, variation)
+	return grass_cliff_overhang_drop * lerpf(0.65, 1.30, variation)
 
 
-func _append_grass_overhang_corner(
-	vertices: Array[Vector3],
-	normals: Array[Vector3],
-	uvs: Array[Vector2],
-	corner: Vector2,
-	start_angle_degrees: float
-) -> void:
-	const CORNER_SEGMENTS := 4
-	var center := Vector3(corner.x, 0.0, corner.y)
-	for segment in CORNER_SEGMENTS:
-		var angle_0 := deg_to_rad(
-			start_angle_degrees + 90.0 * float(segment) / float(CORNER_SEGMENTS)
-		)
-		var angle_1 := deg_to_rad(
-			start_angle_degrees + 90.0 * float(segment + 1) / float(CORNER_SEGMENTS)
-		)
-		var point_0 := center + Vector3(cos(angle_0), 0.0, sin(angle_0)) * grass_cliff_overhang_width
-		var point_1 := center + Vector3(cos(angle_1), 0.0, sin(angle_1)) * grass_cliff_overhang_width
-		_append_grass_overhang_triangle(vertices, normals, uvs, center, point_0, point_1)
-
-
-func _append_grass_overhang_triangle(
+func _append_grass_overhang_side_triangle(
 	vertices: Array[Vector3],
 	normals: Array[Vector3],
 	uvs: Array[Vector2],
 	a: Vector3,
 	b: Vector3,
-	c: Vector3
+	c: Vector3,
+	outward: Vector3
 ) -> void:
-	# Keep every triangle front-facing from above regardless of edge direction.
-	if (b - a).cross(c - a).y < 0.0:
+	# Godot treats clockwise triangles as front-facing. A cross product pointing
+	# inward therefore exposes this face to a camera looking at the cliff.
+	if (b - a).cross(c - a).dot(outward) > 0.0:
 		var swap := b
 		b = c
 		c = swap
 	for point in [a, b, c]:
 		vertices.append(point)
-		normals.append(Vector3.UP)
-		uvs.append(Vector2(point.x, point.z))
+		normals.append(outward)
+		# The solid grass material ignores UVs, but retaining stable coordinates
+		# keeps this mesh ready for a textured turf-side material later.
+		uvs.append(Vector2(point.x + point.z, -point.y))
 
 
 func _grass_cliff_overhang_material(cover_kind: String) -> StandardMaterial3D:

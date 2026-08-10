@@ -171,6 +171,14 @@ shadow_enabled = false
 shadow_opacity = 0.35
 shadow_bias = 0.05
 
+[node name="MapCenterFillLight3D" type="OmniLight3D" parent="."]
+position = Vector3(60, 32, 60)
+light_color = Color(0.86, 0.9, 1, 1)
+light_energy = 0.32
+shadow_enabled = false
+omni_range = 110.0
+omni_attenuation = 0.45
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="DirectionCompass" type="Control" parent="UI"]
