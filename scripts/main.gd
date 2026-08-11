@@ -180,6 +180,7 @@ func _ready() -> void:
 	unit_info.setup(equipment_database)
 	cursor.setup(grid, camera_controller.setup(), camera_controller)
 	direction_compass.setup(camera_controller)
+	camera_controller.display_state_changed.connect(_on_camera_display_state_changed)
 	cursor.confirm_pressed.connect(_on_confirm)
 	cursor.cancel_pressed.connect(_on_cancel)
 	cursor.grid_position_changed.connect(_on_cursor_grid_position_changed)
@@ -654,7 +655,19 @@ func _on_cursor_grid_position_changed(grid_pos: Vector2i) -> void:
 func _update_coordinate_label(grid_pos: Vector2i) -> void:
 	var cell := grid.get_cell(grid_pos)
 	var height := cell.height if cell else 0
-	coordinate_label.text = "%d:%d:%d" % [grid_pos.x, height, grid_pos.y]
+	coordinate_label.text = "%d:%d:%d (%s) (方位%.0f°/仰角%.0f°) (%.2f倍)" % [
+		grid_pos.x,
+		height,
+		grid_pos.y,
+		camera_controller.get_fixed_view_name(),
+		camera_controller.get_azimuth_degrees(),
+		camera_controller.get_elevation_degrees(),
+		camera_controller.get_zoom_multiplier(),
+	]
+
+
+func _on_camera_display_state_changed() -> void:
+	_update_coordinate_label(cursor.grid_position)
 
 
 func _update_move_threat_preview(grid_pos: Vector2i) -> void:

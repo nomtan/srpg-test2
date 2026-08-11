@@ -15,9 +15,10 @@ var cursor_mesh: MeshInstance3D
 var range_root: Node3D
 var input_enabled: bool = true
 var current_mode: CursorMode = CursorMode.IDLE
+var _map_cross_mesh: ArrayMesh
+var _range_cross_material: StandardMaterial3D
 
 const _DRAG_THRESHOLD := 6.0
-const _KEYBOARD_ORBIT_SPEED := 105.0
 var _mouse_held := false
 var _drag_start_pos := Vector2.ZERO
 var _dragging := false
@@ -38,14 +39,6 @@ func setup(source_grid: GridSystem, source_camera: Camera3D, cam_controller: Cam
 func _process(delta: float) -> void:
 	if not camera_controller:
 		return
-	var orbit_direction := 0.0
-	if Input.is_key_pressed(KEY_Q):
-		orbit_direction -= 1.0
-	if Input.is_key_pressed(KEY_E):
-		orbit_direction += 1.0
-	if not is_zero_approx(orbit_direction):
-		camera_controller.orbit_view(orbit_direction * _KEYBOARD_ORBIT_SPEED * delta)
-
 	var pan_direction := Vector2.ZERO
 	if Input.is_key_pressed(KEY_LEFT):
 		pan_direction.x -= 1.0
@@ -99,6 +92,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			_update_from_mouse(event.position)
 		return
 
+	if _is_key(event, KEY_Q):
+		if camera_controller:
+			camera_controller.rotate_view(-1)
+			get_viewport().set_input_as_handled()
+		return
+	elif _is_key(event, KEY_E):
+		if camera_controller:
+			camera_controller.rotate_view(1)
+			get_viewport().set_input_as_handled()
+		return
+
 	# R/F remain available for keyboard-only elevation adjustments.
 	if _is_key(event, KEY_R):
 		if camera_controller:
@@ -144,6 +148,7 @@ func show_reachable(reachable: Dictionary, origin: Vector2i) -> void:
 		var marker := _create_highlight(Color(0.15, 0.65, 1.0, 0.42))
 		marker.position = grid.grid_to_world(grid_pos, 0.025)
 		range_root.add_child(marker)
+	_add_map_boundary_crosses()
 
 func show_move_range(reachable: Dictionary, origin: Vector2i, danger_cells: Dictionary) -> void:
 	clear_reachable()
@@ -153,6 +158,7 @@ func show_move_range(reachable: Dictionary, origin: Vector2i, danger_cells: Dict
 		var marker := _create_highlight(color)
 		marker.position = grid.grid_to_world(grid_pos, 0.025)
 		range_root.add_child(marker)
+	_add_map_boundary_crosses()
 
 
 func show_attack_range(cells: Array[Vector2i]) -> void:
@@ -161,6 +167,7 @@ func show_attack_range(cells: Array[Vector2i]) -> void:
 		var marker := _create_highlight(Color(1.0, 0.2, 0.18, 0.48))
 		marker.position = grid.grid_to_world(grid_pos, 0.03)
 		range_root.add_child(marker)
+	_add_map_boundary_crosses()
 
 func show_skill_range(cells: Array[Vector2i], is_heal: bool) -> void:
 	clear_reachable()
@@ -169,6 +176,7 @@ func show_skill_range(cells: Array[Vector2i], is_heal: bool) -> void:
 		var marker := _create_highlight(color)
 		marker.position = grid.grid_to_world(grid_pos, 0.035)
 		range_root.add_child(marker)
+	_add_map_boundary_crosses()
 
 func show_skill_area(cells: Array[Vector2i]) -> void:
 	clear_reachable()
@@ -176,6 +184,7 @@ func show_skill_area(cells: Array[Vector2i]) -> void:
 		var marker := _create_highlight(Color(1.0, 0.86, 0.1, 0.55))
 		marker.position = grid.grid_to_world(grid_pos, 0.04)
 		range_root.add_child(marker)
+	_add_map_boundary_crosses()
 
 
 func clear_reachable() -> void:
@@ -231,6 +240,153 @@ func _create_highlight(color: Color) -> MeshInstance3D:
 	material.no_depth_test = false
 	instance.material_override = material
 	return instance
+
+
+func _add_map_boundary_crosses() -> void:
+	if not _map_cross_mesh:
+		_map_cross_mesh = _build_map_cross_mesh()
+	if not _range_cross_material:
+		_range_cross_material = StandardMaterial3D.new()
+		_range_cross_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+		_range_cross_material.albedo_color = Color(1.0, 0.98, 0.82, 0.5)
+		_range_cross_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_range_cross_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_range_cross_material.render_priority = -100
+
+	var instance := MeshInstance3D.new()
+	instance.name = "MapGridBoundaryStars"
+	instance.mesh = _map_cross_mesh
+	instance.material_override = _range_cross_material
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	instance.sorting_offset = -100.0
+	range_root.add_child(instance)
+
+
+func _build_map_cross_mesh() -> ArrayMesh:
+	var cross_positions: Dictionary = {}
+	var boundary_edges: Dictionary = {}
+	var corner_offsets: Array[Vector2i] = [
+		Vector2i.ZERO,
+		Vector2i.RIGHT,
+		Vector2i.DOWN,
+		Vector2i.ONE,
+	]
+	for grid_pos: Vector2i in grid.cells:
+		var cell := grid.get_cell(grid_pos)
+		if not cell:
+			continue
+		var surface_y := grid.grid_to_world(grid_pos, 0.055).y
+		for corner_offset in corner_offsets:
+			var corner := grid_pos + corner_offset
+			var cross_key := Vector3i(corner.x, cell.height, corner.y)
+			cross_positions[cross_key] = Vector3(
+				float(corner.x) * GridSystem.CELL_SIZE,
+				surface_y,
+				float(corner.y) * GridSystem.CELL_SIZE
+			)
+		var cell_corners: Array[Vector2i] = [
+			grid_pos,
+			grid_pos + Vector2i.RIGHT,
+			grid_pos + Vector2i.ONE,
+			grid_pos + Vector2i.DOWN,
+		]
+		for edge_index in 4:
+			var edge_start := cell_corners[edge_index]
+			var edge_end := cell_corners[(edge_index + 1) % 4]
+			if edge_end.x < edge_start.x or (edge_end.x == edge_start.x and edge_end.y < edge_start.y):
+				var swapped_start := edge_start
+				edge_start = edge_end
+				edge_end = swapped_start
+			var edge_key := "%d:%d:%d:%d:%d" % [
+				edge_start.x, edge_start.y,
+				edge_end.x, edge_end.y,
+				cell.height,
+			]
+			boundary_edges[edge_key] = [
+				Vector3(
+					float(edge_start.x) * GridSystem.CELL_SIZE,
+					surface_y,
+					float(edge_start.y) * GridSystem.CELL_SIZE
+				),
+				Vector3(
+					float(edge_end.x) * GridSystem.CELL_SIZE,
+					surface_y,
+					float(edge_end.y) * GridSystem.CELL_SIZE
+				),
+			]
+
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var indices := PackedInt32Array()
+	for edge_value in boundary_edges.values():
+		var edge_points: Array = edge_value
+		_append_boundary_line_geometry(
+			vertices, normals, indices,
+			edge_points[0] as Vector3,
+			edge_points[1] as Vector3
+		)
+	for cross_position: Vector3 in cross_positions.values():
+		_append_star_geometry(vertices, normals, indices, cross_position)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+func _append_star_geometry(
+	vertices: PackedVector3Array,
+	normals: PackedVector3Array,
+	indices: PackedInt32Array,
+	origin: Vector3
+) -> void:
+	const ARM_LENGTH := 0.27
+	const CENTER_WIDTH := 0.0467
+	var base_index := vertices.size()
+	vertices.append(origin)
+	vertices.append(origin + Vector3(0.0, 0.0, -ARM_LENGTH))
+	vertices.append(origin + Vector3(CENTER_WIDTH, 0.0, -CENTER_WIDTH))
+	vertices.append(origin + Vector3(ARM_LENGTH, 0.0, 0.0))
+	vertices.append(origin + Vector3(CENTER_WIDTH, 0.0, CENTER_WIDTH))
+	vertices.append(origin + Vector3(0.0, 0.0, ARM_LENGTH))
+	vertices.append(origin + Vector3(-CENTER_WIDTH, 0.0, CENTER_WIDTH))
+	vertices.append(origin + Vector3(-ARM_LENGTH, 0.0, 0.0))
+	vertices.append(origin + Vector3(-CENTER_WIDTH, 0.0, -CENTER_WIDTH))
+	for _vertex_index in 9:
+		normals.append(Vector3.UP)
+	for outer_index in 8:
+		indices.append(base_index)
+		indices.append(base_index + outer_index + 1)
+		indices.append(base_index + ((outer_index + 1) % 8) + 1)
+
+
+func _append_boundary_line_geometry(
+	vertices: PackedVector3Array,
+	normals: PackedVector3Array,
+	indices: PackedInt32Array,
+	start: Vector3,
+	end: Vector3
+) -> void:
+	const STAR_ARM_LENGTH := 0.27
+	const LINE_HALF_WIDTH := 0.012
+	var direction := (end - start).normalized()
+	var line_start := start + direction * STAR_ARM_LENGTH
+	var line_end := end - direction * STAR_ARM_LENGTH
+	var perpendicular := Vector3(-direction.z, 0.0, direction.x) * LINE_HALF_WIDTH
+	var base_index := vertices.size()
+	vertices.append(line_start - perpendicular)
+	vertices.append(line_end - perpendicular)
+	vertices.append(line_end + perpendicular)
+	vertices.append(line_start + perpendicular)
+	for _vertex_index in 4:
+		normals.append(Vector3.UP)
+	indices.append_array(PackedInt32Array([
+		base_index, base_index + 1, base_index + 2,
+		base_index, base_index + 2, base_index + 3,
+	]))
 
 
 func _is_key(event: InputEvent, keycode: Key) -> bool:

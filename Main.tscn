@@ -1,4 +1,4 @@
-[gd_scene load_steps=57 format=3]
+[gd_scene load_steps=59 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/grid/grid_system.gd" id="2_grid"]
@@ -56,6 +56,15 @@
 [ext_resource type="Resource" path="res://assets/terrain/theme_default.tres" id="54_map_theme"]
 [ext_resource type="Environment" path="res://assets/environment/battle_atmosphere.tres" id="55_env"]
 [ext_resource type="Script" path="res://scripts/ui/direction_compass.gd" id="56_compass"]
+[ext_resource type="Shader" path="res://shaders/post/map_illustration.gdshader" id="57_illustration"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_illustration"]
+shader = ExtResource("57_illustration")
+shader_parameter/illustration_strength = 0.55
+shader_parameter/color_steps = 12.0
+shader_parameter/edge_strength = 0.28
+shader_parameter/paper_grain = 0.018
+shader_parameter/warmth = 0.035
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -179,6 +188,18 @@ shadow_enabled = false
 omni_range = 110.0
 omni_attenuation = 0.45
 
+[node name="MapIllustrationFilter" type="CanvasLayer" parent="."]
+layer = 0
+
+[node name="Filter" type="ColorRect" parent="MapIllustrationFilter"]
+material = SubResource("ShaderMaterial_illustration")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="DirectionCompass" type="Control" parent="UI"]
@@ -248,7 +269,7 @@ layout_mode = 0
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -390.0
+offset_left = -650.0
 offset_top = 18.0
 offset_right = -20.0
 offset_bottom = 58.0
@@ -259,7 +280,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 24
-text = "0:0:0"
+text = "0:0:0 (EN) (方位45°/仰角44°) (1.00倍)"
 horizontal_alignment = 2
 vertical_alignment = 1
 

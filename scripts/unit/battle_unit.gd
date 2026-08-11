@@ -73,7 +73,6 @@ var temporary_defense_bonus := 0
 
 var body_material: StandardMaterial3D
 var base_color: Color
-var direction_marker: MeshInstance3D
 var status_bars: Sprite3D
 var blob_shadow: Decal
 
@@ -97,8 +96,15 @@ func configure(
 
 
 const FACING_MODEL_ANGLES := [180.0, 90.0, 0.0, -90.0]
+const FACING_WORLD_VECTORS: Array[Vector3] = [
+	Vector3(0.0, 0.0, -1.0),
+	Vector3(1.0, 0.0, 0.0),
+	Vector3(0.0, 0.0, 1.0),
+	Vector3(-1.0, 0.0, 0.0),
+]
 
 var model_instance: Node3D
+var sprite_instance: AnimatedSprite3D
 var animation_player: AnimationPlayer
 var weapon_attachment: BoneAttachment3D
 var weapon_instance: Node3D
@@ -107,6 +113,12 @@ var face_instance: MeshInstance3D
 var attack_animation_name: StringName
 var model_facing_offset_degrees := 0.0
 var animation_profile := "onehand_sword"
+var sprite_selected := false
+var directional_sprite_enabled := false
+var _last_directional_animation: StringName
+var _last_directional_flip_h := false
+
+const DIRECTIONAL_SPRITE_FOOT_Y_RATIO := 298.0 / 400.0
 
 const IDLE_ANIMATION_NAMES: Array[StringName] = [
 	&"animation_onehand_sword_idle",
@@ -165,6 +177,11 @@ const BLOB_SHADOW_MAX_ALPHA := 0.55
 static var _blob_shadow_texture_cache: ImageTexture
 
 
+func _process(_delta: float) -> void:
+	if directional_sprite_enabled:
+		_update_directional_sprite()
+
+
 func setup_visual(
 	model_path: String = "",
 	model_scale: float = 1.0,
@@ -173,7 +190,13 @@ func setup_visual(
 	use_flat_shading: bool = false,
 	requested_animation_profile: String = "onehand_sword",
 	tunic_color: Color = Color.TRANSPARENT,
-	accent_color: Color = Color.TRANSPARENT
+	accent_color: Color = Color.TRANSPARENT,
+	sprite_texture_path: String = "",
+	sprite_pixel_size: float = 0.0018,
+	sprite_hframes: int = 1,
+	sprite_vframes: int = 1,
+	sprite_fps: float = 6.0,
+	sprite_back_texture_path: String = ""
 ) -> void:
 	model_facing_offset_degrees = facing_offset_degrees
 	animation_profile = requested_animation_profile
@@ -185,7 +208,16 @@ func setup_visual(
 	body_material.albedo_color = base_color
 	body_material.metallic = 0.15
 
-	if not model_path.is_empty():
+	if not sprite_texture_path.is_empty():
+		_create_sprite_visual(
+			sprite_texture_path,
+			sprite_pixel_size,
+			sprite_hframes,
+			sprite_vframes,
+			sprite_fps,
+			sprite_back_texture_path
+		)
+	elif not model_path.is_empty():
 		var packed: PackedScene = load(model_path)
 		model_instance = packed.instantiate()
 		model_instance.scale = Vector3.ONE * model_scale * CHARACTER_VISUAL_SCALE
@@ -209,20 +241,12 @@ func setup_visual(
 		body.material_override = body_material
 		add_child(body)
 
-	var marker := MeshInstance3D.new()
-	direction_marker = marker
-	var cone := PrismMesh.new()
-	cone.size = Vector3(0.22, 0.25, 0.22)
-	marker.mesh = cone
-	marker.position = Vector3(0, 1.05 * CHARACTER_VISUAL_SCALE, -0.05)
-	marker.material_override = body_material
-	add_child(marker)
 	status_bars = UNIT_STATUS_BAR_SCRIPT.new()
 	status_bars.configure(team)
 	status_bars.position.y = (
-		2.05 * CHARACTER_VISUAL_SCALE
-		if model_instance
-		else 1.45 * CHARACTER_VISUAL_SCALE
+		1.72
+		if sprite_instance
+		else (2.05 * CHARACTER_VISUAL_SCALE if model_instance else 1.45 * CHARACTER_VISUAL_SCALE)
 	)
 	add_child(status_bars)
 	_create_blob_shadow()
@@ -230,6 +254,108 @@ func setup_visual(
 	update_facing_visual()
 	refresh_status_bars()
 	play_idle_animation()
+
+
+func _create_sprite_visual(
+	texture_path: String,
+	pixel_size: float,
+	hframes: int,
+	vframes: int,
+	fps: float,
+	back_texture_path: String = ""
+) -> void:
+	var sprite_texture := load(texture_path) as Texture2D
+	if not sprite_texture:
+		push_warning("Cannot create unit sprite: failed to load '%s'" % texture_path)
+		return
+	var back_texture := load(back_texture_path) as Texture2D if not back_texture_path.is_empty() else null
+	if not back_texture_path.is_empty() and not back_texture:
+		push_warning("Cannot create directional unit sprite: failed to load '%s'" % back_texture_path)
+		return
+	var safe_hframes := maxi(hframes, 1)
+	var safe_vframes := maxi(vframes, 1)
+	var frame_size := Vector2(
+		float(sprite_texture.get_width()) / float(safe_hframes),
+		float(sprite_texture.get_height()) / float(safe_vframes)
+	)
+	var sprite_frames := SpriteFrames.new()
+	sprite_frames.remove_animation(&"default")
+	if back_texture:
+		directional_sprite_enabled = true
+		_add_sprite_sheet_animation(
+			sprite_frames, &"front", sprite_texture,
+			safe_hframes, safe_vframes, fps
+		)
+		_add_sprite_sheet_animation(
+			sprite_frames, &"back", back_texture,
+			safe_hframes, safe_vframes, fps
+		)
+	else:
+		sprite_frames.add_animation(&"idle")
+		sprite_frames.set_animation_loop(&"idle", true)
+		sprite_frames.set_animation_speed(&"idle", maxf(fps, 0.1))
+		for frame_index in safe_hframes * safe_vframes:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = sprite_texture
+			atlas.region = Rect2(
+				Vector2(
+					float(frame_index % safe_hframes),
+					float(floori(float(frame_index) / float(safe_hframes)))
+				) * frame_size,
+				frame_size
+			)
+			sprite_frames.add_frame(&"idle", atlas)
+
+	sprite_instance = AnimatedSprite3D.new()
+	sprite_instance.name = "CharacterIllustration"
+	sprite_instance.sprite_frames = sprite_frames
+	sprite_instance.animation = &"front" if directional_sprite_enabled else &"idle"
+	sprite_instance.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sprite_instance.pixel_size = pixel_size
+	if directional_sprite_enabled:
+		sprite_instance.position.y = (
+			frame_size.y * pixel_size * (DIRECTIONAL_SPRITE_FOOT_Y_RATIO - 0.5)
+		)
+	else:
+		# Frames share a bottom anchor at y=861 in an 896px cell. This ratio keeps the
+		# foot anchor on the map surface while the upper body breathes in place.
+		sprite_instance.position.y = frame_size.y * pixel_size * 0.461
+	sprite_instance.shaded = false
+	sprite_instance.double_sided = true
+	sprite_instance.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	add_child(sprite_instance)
+	if directional_sprite_enabled:
+		sprite_instance.play(&"front")
+	else:
+		sprite_instance.play(&"idle")
+
+
+func _add_sprite_sheet_animation(
+	frames: SpriteFrames,
+	animation_name: StringName,
+	texture: Texture2D,
+	hframes: int,
+	vframes: int,
+	fps: float
+) -> void:
+	var frame_size := Vector2(
+		float(texture.get_width()) / float(hframes),
+		float(texture.get_height()) / float(vframes)
+	)
+	frames.add_animation(animation_name)
+	frames.set_animation_loop(animation_name, true)
+	frames.set_animation_speed(animation_name, maxf(fps, 0.1))
+	for frame_index in hframes * vframes:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = Rect2(
+			Vector2(
+				float(frame_index % hframes),
+				float(floori(float(frame_index) / float(hframes)))
+			) * frame_size,
+			frame_size
+		)
+		frames.add_frame(animation_name, atlas)
 
 
 func _apply_flat_shading(root: Node, tunic_color: Color, accent_color: Color) -> void:
@@ -440,25 +566,58 @@ func set_facing(direction: FacingDirection) -> void:
 
 
 func update_facing_visual() -> void:
-	if not direction_marker: return
-	var marker_height := 1.05 * CHARACTER_VISUAL_SCALE
-	var marker_offset := 0.28 * CHARACTER_VISUAL_SCALE
-	var offsets := [
-		Vector3(0, marker_height, -marker_offset),
-		Vector3(marker_offset, marker_height, 0),
-		Vector3(0, marker_height, marker_offset),
-		Vector3(-marker_offset, marker_height, 0),
-	]
-	direction_marker.position = offsets[int(facing)]
 	if model_instance:
 		model_instance.rotation_degrees.y = FACING_MODEL_ANGLES[int(facing)] + model_facing_offset_degrees
+	if directional_sprite_enabled:
+		_update_directional_sprite()
+
+
+func _update_directional_sprite() -> void:
+	if not sprite_instance or not directional_sprite_enabled:
+		return
+	if not is_inside_tree():
+		return
+	var viewport := get_viewport()
+	if not viewport:
+		return
+	var viewport_camera := viewport.get_camera_3d()
+	if not viewport_camera:
+		return
+	var facing_vector := FACING_WORLD_VECTORS[int(facing)]
+	var to_camera := viewport_camera.global_position - global_position
+	to_camera.y = 0.0
+	if to_camera.is_zero_approx():
+		return
+	to_camera = to_camera.normalized()
+	var screen_right := viewport_camera.global_basis.x
+	screen_right.y = 0.0
+	if screen_right.is_zero_approx():
+		return
+	screen_right = screen_right.normalized()
+	var shows_front := facing_vector.dot(to_camera) >= 0.0
+	var points_right := facing_vector.dot(screen_right) > 0.0
+	var next_animation: StringName = &"front" if shows_front else &"back"
+	var next_flip_h := points_right if shows_front else not points_right
+	if next_animation != _last_directional_animation:
+		var previous_frame := sprite_instance.frame
+		sprite_instance.play(next_animation)
+		sprite_instance.frame = mini(
+			previous_frame,
+			sprite_instance.sprite_frames.get_frame_count(next_animation) - 1
+		)
+		_last_directional_animation = next_animation
+	if next_flip_h != _last_directional_flip_h:
+		sprite_instance.flip_h = next_flip_h
+		_last_directional_flip_h = next_flip_h
 
 
 func set_selected(selected: bool) -> void:
+	sprite_selected = selected
 	if body_material:
 		body_material.emission_enabled = selected
 		body_material.emission = Color("#66d9ff") if team == "player" else Color("#ff7777")
 		body_material.emission_energy_multiplier = 0.7
+	_update_sprite_modulate()
 
 
 func mark_acted(moved: bool = true) -> void:
@@ -601,10 +760,17 @@ func reset_ct_after_wait() -> void: ct = 20
 
 
 func update_visual_state() -> void:
-	if not body_material:
-		return
 	visible = not is_dead
-	body_material.albedo_color = base_color.darkened(0.55) if has_acted else base_color
+	if body_material:
+		body_material.albedo_color = base_color
+	_update_sprite_modulate()
+
+
+func _update_sprite_modulate() -> void:
+	if not sprite_instance:
+		return
+	var tint := Color("#c9f2ff") if sprite_selected else Color.WHITE
+	sprite_instance.modulate = tint
 
 
 func snap_to_grid(grid: GridSystem) -> void:
