@@ -4,13 +4,13 @@ extends Label3D
 func play(value_text: String, start_position: Vector3, number_type: String) -> void:
 	text = value_text
 	global_position = start_position + Vector3(0, 1.4, 0)
-	font_size = 64
+	font_size = 48
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	fixed_size = true
 	no_depth_test = true
 	double_sided = true
 	render_priority = 10
-	outline_size = 12
+	outline_size = 8
 	outline_modulate = Color(0.05, 0.05, 0.05, 0.95)
 	modulate = {"damage": Color("#ff4b4b"), "critical": Color("#ffd34e"), "heal": Color("#55ef88"), "miss": Color.WHITE}.get(number_type, Color.WHITE)
 	var tween := create_tween()

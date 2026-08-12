@@ -115,10 +115,15 @@ var model_facing_offset_degrees := 0.0
 var animation_profile := "onehand_sword"
 var sprite_selected := false
 var directional_sprite_enabled := false
+var directional_attack_enabled := false
+var directional_attack_playing := false
 var _last_directional_animation: StringName
 var _last_directional_flip_h := false
 
 const DIRECTIONAL_SPRITE_FOOT_Y_RATIO := 298.0 / 400.0
+const DIRECTIONAL_ATTACK_FPS := 8.0
+const DIRECTIONAL_ATTACK_CHARGE_FRAMES := 3
+const DIRECTIONAL_ATTACK_STRIKE_FRAMES := 3
 
 const IDLE_ANIMATION_NAMES: Array[StringName] = [
 	&"animation_onehand_sword_idle",
@@ -196,7 +201,8 @@ func setup_visual(
 	sprite_hframes: int = 1,
 	sprite_vframes: int = 1,
 	sprite_fps: float = 6.0,
-	sprite_back_texture_path: String = ""
+	sprite_back_texture_path: String = "",
+	sprite_attack_base_path: String = ""
 ) -> void:
 	model_facing_offset_degrees = facing_offset_degrees
 	animation_profile = requested_animation_profile
@@ -215,7 +221,8 @@ func setup_visual(
 			sprite_hframes,
 			sprite_vframes,
 			sprite_fps,
-			sprite_back_texture_path
+			sprite_back_texture_path,
+			sprite_attack_base_path
 		)
 	elif not model_path.is_empty():
 		var packed: PackedScene = load(model_path)
@@ -262,7 +269,8 @@ func _create_sprite_visual(
 	hframes: int,
 	vframes: int,
 	fps: float,
-	back_texture_path: String = ""
+	back_texture_path: String = "",
+	attack_base_path: String = ""
 ) -> void:
 	var sprite_texture := load(texture_path) as Texture2D
 	if not sprite_texture:
@@ -290,6 +298,10 @@ func _create_sprite_visual(
 			sprite_frames, &"back", back_texture,
 			safe_hframes, safe_vframes, fps
 		)
+		if not attack_base_path.is_empty():
+			directional_attack_enabled = _add_directional_attack_animations(
+				sprite_frames, attack_base_path
+			)
 	else:
 		sprite_frames.add_animation(&"idle")
 		sprite_frames.set_animation_loop(&"idle", true)
@@ -324,6 +336,7 @@ func _create_sprite_visual(
 	sprite_instance.double_sided = true
 	sprite_instance.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
 	add_child(sprite_instance)
+	sprite_instance.animation_finished.connect(_on_sprite_animation_finished)
 	if directional_sprite_enabled:
 		sprite_instance.play(&"front")
 	else:
@@ -356,6 +369,24 @@ func _add_sprite_sheet_animation(
 			frame_size
 		)
 		frames.add_frame(animation_name, atlas)
+
+
+func _add_directional_attack_animations(frames: SpriteFrames, base_path: String) -> bool:
+	for facing_name in ["front", "back"]:
+		var charge_texture := load("%s/%s/1.png" % [base_path, facing_name]) as Texture2D
+		var strike_texture := load("%s/%s/2.png" % [base_path, facing_name]) as Texture2D
+		if not charge_texture or not strike_texture:
+			push_warning("Cannot create directional attack animation for '%s'" % facing_name)
+			return false
+		var animation_name := StringName("attack_%s" % facing_name)
+		frames.add_animation(animation_name)
+		frames.set_animation_loop(animation_name, false)
+		frames.set_animation_speed(animation_name, DIRECTIONAL_ATTACK_FPS)
+		for _charge_frame in DIRECTIONAL_ATTACK_CHARGE_FRAMES:
+			frames.add_frame(animation_name, charge_texture)
+		for _strike_frame in DIRECTIONAL_ATTACK_STRIKE_FRAMES:
+			frames.add_frame(animation_name, strike_texture)
+	return true
 
 
 func _apply_flat_shading(root: Node, tunic_color: Color, accent_color: Color) -> void:
@@ -473,6 +504,11 @@ func play_idle_animation() -> void:
 
 
 func play_attack_animation() -> void:
+	if sprite_instance and directional_attack_enabled:
+		directional_attack_playing = true
+		var facing_name := "back" if _last_directional_animation == &"back" else "front"
+		sprite_instance.play(StringName("attack_%s" % facing_name))
+		return
 	var candidates := BOW_ATTACK_ANIMATION_NAMES if animation_profile == "bow" else ATTACK_ANIMATION_NAMES
 	attack_animation_name = _find_animation(candidates)
 	if attack_animation_name.is_empty():
@@ -480,6 +516,15 @@ func play_attack_animation() -> void:
 	var animation := animation_player.get_animation(attack_animation_name)
 	animation.loop_mode = Animation.LOOP_NONE
 	animation_player.play(attack_animation_name)
+
+
+func wait_for_attack_impact() -> void:
+	if not directional_attack_playing or not is_inside_tree():
+		return
+	var charge_duration := (
+		float(DIRECTIONAL_ATTACK_CHARGE_FRAMES) / DIRECTIONAL_ATTACK_FPS
+	)
+	await get_tree().create_timer(charge_duration).timeout
 
 
 func _play_animation(candidates: Array[StringName], loop_mode: Animation.LoopMode) -> void:
@@ -507,6 +552,14 @@ func _find_animation(candidates: Array[StringName]) -> StringName:
 func _on_animation_finished(finished_animation: StringName) -> void:
 	if not attack_animation_name.is_empty() and finished_animation == attack_animation_name:
 		play_idle_animation()
+
+
+func _on_sprite_animation_finished() -> void:
+	if not directional_attack_playing:
+		return
+	directional_attack_playing = false
+	_last_directional_animation = &""
+	_update_directional_sprite()
 
 
 func equip_weapon_visual(
@@ -598,6 +651,11 @@ func _update_directional_sprite() -> void:
 	var points_right := facing_vector.dot(screen_right) > 0.0
 	var next_animation: StringName = &"front" if shows_front else &"back"
 	var next_flip_h := points_right if shows_front else not points_right
+	if directional_attack_playing:
+		if next_flip_h != _last_directional_flip_h:
+			sprite_instance.flip_h = next_flip_h
+			_last_directional_flip_h = next_flip_h
+		return
 	if next_animation != _last_directional_animation:
 		var previous_frame := sprite_instance.frame
 		sprite_instance.play(next_animation)

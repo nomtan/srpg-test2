@@ -271,7 +271,7 @@ func _on_confirm() -> void:
 		if stage_manager.interact_at(grid_pos): return
 		_select_unit(grid_pos)
 	elif cursor.current_mode == BattleCursor.CursorMode.MOVE_TARGETING:
-		_confirm_move(grid_pos)
+		await _confirm_move(grid_pos)
 	elif cursor.current_mode == BattleCursor.CursorMode.ATTACK_TARGETING:
 		_confirm_attack(grid_pos)
 	elif cursor.current_mode == BattleCursor.CursorMode.SKILL_TARGETING:
@@ -280,7 +280,7 @@ func _on_confirm() -> void:
 		var selected := unit_manager.selected_unit
 		if selected and is_move_destination_provisional and reachable.has(grid_pos):
 			action_menu.close()
-			_confirm_move(grid_pos)
+			await _confirm_move(grid_pos)
 
 
 func _select_unit(grid_pos: Vector2i) -> void:
@@ -329,6 +329,7 @@ func _confirm_move(grid_pos: Vector2i) -> void:
 	if unit.has_used_action:
 		threat_arrows.clear_threat_arrows()
 		cursor.clear_reachable()
+		await _play_pending_movement()
 		_request_final_facing("移動後の向きを選択してください")
 	else:
 		cursor.current_mode = BattleCursor.CursorMode.ACTION_MENU
@@ -427,7 +428,7 @@ func _on_combat_confirmed() -> void:
 	combat_confirm.close()
 	await _play_pending_movement()
 	camera_controller.pulse_focus()
-	var result := attack_system.execute_attack(attacker, target)
+	var result: Dictionary = await attack_system.execute_attack(attacker, target)
 	var gained_exp := experience_system.calculate_action_exp(attacker, target, bool(result.hit) and int(result.damage) > 0)
 	if bool(result.defeated): gained_exp += 30
 	_grant_growth(attacker, gained_exp, 5 + (5 if result.defeated else 0))
@@ -464,6 +465,7 @@ func _on_wait_selected() -> void:
 	threat_arrows.clear_threat_arrows()
 	cursor.clear_reachable()
 	pending_wait_action = not unit_manager.selected_unit.has_used_action
+	await _play_pending_movement()
 	_request_final_facing("待機後の向きを選択してください")
 
 
@@ -476,7 +478,6 @@ func _request_final_facing(message: String) -> void:
 
 func _on_facing_selected(direction: BattleUnit.FacingDirection) -> void:
 	facing_selector.close()
-	await _play_pending_movement()
 	unit_manager.selected_unit.set_facing(direction)
 	_finish_action()
 
@@ -484,7 +485,6 @@ func _on_facing_selected(direction: BattleUnit.FacingDirection) -> void:
 func _on_facing_cancelled() -> void:
 	var direction := unit_manager.selected_unit.facing
 	facing_selector.close()
-	await _play_pending_movement()
 	unit_manager.selected_unit.set_facing(direction)
 	_finish_action()
 
@@ -532,7 +532,7 @@ func _on_cancel() -> void:
 			cursor.input_enabled = false
 			action_menu.open(unit_manager.selected_unit)
 	elif cursor.current_mode == BattleCursor.CursorMode.ACTION_MENU:
-		_cancel_after_move()
+		await _cancel_after_move()
 	elif cursor.current_mode == BattleCursor.CursorMode.COMBAT_CONFIRM:
 		_on_combat_cancelled()
 	elif cursor.current_mode == BattleCursor.CursorMode.SKILL_TARGETING:
@@ -548,6 +548,7 @@ func _cancel_after_move() -> void:
 	var unit := unit_manager.selected_unit
 	if not unit: return
 	if unit.has_used_action:
+		await _play_pending_movement()
 		_request_final_facing("行動後の向きを選択してください")
 		return
 	if Vector2i(unit.grid_x, unit.grid_z) != original_grid_pos:
@@ -610,6 +611,7 @@ func _on_ct_actor_ready(actor: BattleUnit) -> void:
 		cursor.input_enabled = true
 		cursor.current_mode = BattleCursor.CursorMode.IDLE
 		_select_unit(Vector2i(actor.grid_x, actor.grid_z))
+		_on_move_selected()
 	else:
 		cursor.input_enabled = false
 		unit_manager.clear_selection()

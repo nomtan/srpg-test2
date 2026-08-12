@@ -27,7 +27,7 @@ func process_enemy_unit(enemy: BattleUnit) -> String:
 	if not skill_message.is_empty(): return skill_message
 	var target := find_attackable_player_unit(enemy)
 	if target:
-		return _attack(enemy, target)
+		return await _attack(enemy, target)
 	var nearest := find_nearest_player_unit(enemy)
 	if not nearest:
 		return "%sは待機" % enemy.unit_name
@@ -42,7 +42,7 @@ func process_enemy_unit(enemy: BattleUnit) -> String:
 	target = find_attackable_player_unit(enemy)
 	skill_message = _try_skill(enemy)
 	if not skill_message.is_empty(): return skill_message
-	if target: return _attack(enemy, target)
+	if target: return await _attack(enemy, target)
 	enemy.face_toward(Vector2i(nearest.grid_x, nearest.grid_z))
 	return "%sは移動して待機" % enemy.unit_name
 
@@ -100,7 +100,7 @@ func _find_best_destination(enemy: BattleUnit, target: BattleUnit, reachable: Di
 
 
 func _attack(enemy: BattleUnit, target: BattleUnit) -> String:
-	var result := attack_system.execute_attack(enemy, target)
+	var result: Dictionary = await attack_system.execute_attack(enemy, target)
 	floating_result.emit(target, "damage" if result.hit else "miss", int(result.damage))
 	if not target.is_alive(): unit_manager.remove_unit(target)
 	if not result.hit: return "%s attacks %s\nMiss!" % [enemy.unit_name, target.unit_name]
