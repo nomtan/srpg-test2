@@ -1,0 +1,211 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/pixel_character_rig.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/waist.png" id="2_waist"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/torso.png" id="3_torso"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/head.png" id="4_head"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/arm_l_upper.png" id="5_alu"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/arm_l_lower.png" id="6_all"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/hand_l.png" id="7_hl"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/arm_r_upper.png" id="8_aru"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/arm_r_lower.png" id="9_arl"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/hand_r.png" id="10_hr"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/leg_l_upper.png" id="11_llu"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/leg_l_lower.png" id="12_lll"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/foot_l.png" id="13_fl"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/leg_r_upper.png" id="14_lru"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/leg_r_lower.png" id="15_lrl"]
+[ext_resource type="Texture2D" path="res://assets/characters/male/front_left/foot_r.png" id="16_fr"]
+
+[node name="CharacterRig" type="Node2D"]
+position = Vector2(886, 386)
+texture_filter = 1
+script = ExtResource("1_script")
+
+[node name="Root" type="Node2D" parent="."]
+scale = Vector2(0.3, 0.3)
+
+[node name="Waist" type="Node2D" parent="Root"]
+position = Vector2(223, 648)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist"]
+z_index = 10
+position = Vector2(-223, -648)
+texture = ExtResource("2_waist")
+centered = false
+
+[node name="Torso" type="Node2D" parent="Root/Waist"]
+position = Vector2(0, -42)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso"]
+position = Vector2(-223, -606)
+texture = ExtResource("3_torso")
+centered = false
+
+[node name="Head" type="Node2D" parent="Root/Waist/Torso"]
+position = Vector2(0, -229)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/Head"]
+z_index = 40
+position = Vector2(-223, -377)
+texture = ExtResource("4_head")
+centered = false
+
+[node name="ArmRUpper" type="Node2D" parent="Root/Waist/Torso"]
+position = Vector2(-104, -208)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/ArmRUpper"]
+z_index = -20
+position = Vector2(-119, -398)
+texture = ExtResource("8_aru")
+centered = false
+
+[node name="ArmRLower" type="Node2D" parent="Root/Waist/Torso/ArmRUpper"]
+position = Vector2(-37, 135)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower"]
+z_index = -19
+position = Vector2(-82, -533)
+texture = ExtResource("9_arl")
+centered = false
+
+[node name="HandR" type="Node2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower"]
+position = Vector2(-29, 105)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR"]
+z_index = -18
+position = Vector2(-53, -638)
+texture = ExtResource("10_hr")
+centered = false
+
+[node name="WeaponSocket" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR"]
+position = Vector2(-10, 50)
+
+[node name="ArmLUpper" type="Node2D" parent="Root/Waist/Torso"]
+position = Vector2(104, -208)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/ArmLUpper"]
+z_index = 30
+position = Vector2(-327, -398)
+texture = ExtResource("5_alu")
+centered = false
+
+[node name="ArmLLower" type="Node2D" parent="Root/Waist/Torso/ArmLUpper"]
+position = Vector2(57, 135)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower"]
+z_index = 31
+position = Vector2(-384, -533)
+texture = ExtResource("6_all")
+centered = false
+
+[node name="HandL" type="Node2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower"]
+position = Vector2(28, 105)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL"]
+z_index = 32
+position = Vector2(-412, -638)
+texture = ExtResource("7_hl")
+centered = false
+
+[node name="WeaponSocket" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL"]
+position = Vector2(10, 50)
+
+[node name="LegRUpper" type="Node2D" parent="Root/Waist"]
+position = Vector2(-56, 21)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/LegRUpper"]
+z_index = -10
+position = Vector2(-167, -669)
+texture = ExtResource("14_lru")
+centered = false
+
+[node name="LegRLower" type="Node2D" parent="Root/Waist/LegRUpper"]
+position = Vector2(0, 125)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/LegRUpper/LegRLower"]
+z_index = -9
+position = Vector2(-167, -794)
+texture = ExtResource("15_lrl")
+centered = false
+
+[node name="FootR" type="Node2D" parent="Root/Waist/LegRUpper/LegRLower"]
+position = Vector2(-29, 115)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/LegRUpper/LegRLower/FootR"]
+z_index = -8
+position = Vector2(-138, -909)
+texture = ExtResource("16_fr")
+centered = false
+
+[node name="LegLUpper" type="Node2D" parent="Root/Waist"]
+position = Vector2(57, 21)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/LegLUpper"]
+z_index = 20
+position = Vector2(-280, -669)
+texture = ExtResource("11_llu")
+centered = false
+
+[node name="LegLLower" type="Node2D" parent="Root/Waist/LegLUpper"]
+position = Vector2(28, 135)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/LegLUpper/LegLLower"]
+z_index = 21
+position = Vector2(-308, -804)
+texture = ExtResource("12_lll")
+centered = false
+
+[node name="FootL" type="Node2D" parent="Root/Waist/LegLUpper/LegLLower"]
+position = Vector2(19, 136)
+
+[node name="Sprite2D" type="Sprite2D" parent="Root/Waist/LegLUpper/LegLLower/FootL"]
+z_index = 22
+position = Vector2(-327, -940)
+texture = ExtResource("13_fl")
+centered = false
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="RightPanel" type="PanelContainer" parent="UI"]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -224.0
+offset_top = -104.0
+offset_right = -24.0
+offset_bottom = 104.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/RightPanel"]
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="UI/RightPanel/Margin"]
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="UI/RightPanel/Margin/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "Animation"
+horizontal_alignment = 1
+
+[node name="AnimationStatus" type="Label" parent="UI/RightPanel/Margin/VBox"]
+text = "再生中: Idle"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="UI/RightPanel/Margin/VBox"]
+
+[node name="IdleButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Idle"
+
+[node name="WalkButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Walk"
