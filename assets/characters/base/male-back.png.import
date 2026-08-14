@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bpga4umu7ifpk"
-path="res://.godot/imported/front.png-c1901797cce16928a86c86399a3620c3.ctex"
+uid="uid://gtgq81t53rsl"
+path="res://.godot/imported/male-back.png-05fc25b56aa51d47ad5b6d84f660606e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/base/front.png"
-dest_files=["res://.godot/imported/front.png-c1901797cce16928a86c86399a3620c3.ctex"]
+source_file="res://assets/characters/base/male-back.png"
+dest_files=["res://.godot/imported/male-back.png-05fc25b56aa51d47ad5b6d84f660606e.ctex"]
 
 [params]
 

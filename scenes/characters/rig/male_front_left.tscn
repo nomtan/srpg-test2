@@ -176,9 +176,9 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -224.0
-offset_top = -104.0
+offset_top = -180.0
 offset_right = -24.0
-offset_bottom = 104.0
+offset_bottom = 180.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -209,3 +209,17 @@ text = "Idle"
 [node name="WalkButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 44)
 text = "Walk"
+
+[node name="DirectionSeparator" type="HSeparator" parent="UI/RightPanel/Margin/VBox"]
+
+[node name="DirectionStatus" type="Label" parent="UI/RightPanel/Margin/VBox"]
+text = "方向: Front"
+horizontal_alignment = 1
+
+[node name="FrontButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Front"
+
+[node name="BackButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Back"

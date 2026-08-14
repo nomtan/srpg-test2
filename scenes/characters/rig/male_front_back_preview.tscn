@@ -1,0 +1,79 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/rig/male_front_left.tscn" id="1_rig"]
+[ext_resource type="Script" path="res://scripts/character/male_front_back_preview.gd" id="2_script"]
+
+[node name="MaleFrontBackPreview" type="Node2D"]
+script = ExtResource("2_script")
+
+[node name="FrontRig" parent="." instance=ExtResource("1_rig")]
+position = Vector2(776, 386)
+center_character_in_viewport = false
+show_ui = false
+
+[node name="BackRig" parent="." instance=ExtResource("1_rig")]
+position = Vector2(987, 388)
+preview_direction = "back_right"
+center_character_in_viewport = false
+show_ui = false
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="FrontLabel" type="Label" parent="UI"]
+offset_left = 790.0
+offset_top = 350.0
+offset_right = 910.0
+offset_bottom = 382.0
+theme_override_font_sizes/font_size = 20
+text = "Front"
+horizontal_alignment = 1
+
+[node name="BackLabel" type="Label" parent="UI"]
+offset_left = 1010.0
+offset_top = 350.0
+offset_right = 1130.0
+offset_bottom = 382.0
+theme_override_font_sizes/font_size = 20
+text = "Back"
+horizontal_alignment = 1
+
+[node name="RightPanel" type="PanelContainer" parent="UI"]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -224.0
+offset_top = -112.0
+offset_right = -24.0
+offset_bottom = 112.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/RightPanel"]
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="UI/RightPanel/Margin"]
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="UI/RightPanel/Margin/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "Animation"
+horizontal_alignment = 1
+
+[node name="AnimationStatus" type="Label" parent="UI/RightPanel/Margin/VBox"]
+text = "再生中: Idle"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="UI/RightPanel/Margin/VBox"]
+
+[node name="IdleButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Idle"
+
+[node name="WalkButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Walk"

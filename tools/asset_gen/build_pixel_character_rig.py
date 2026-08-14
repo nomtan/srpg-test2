@@ -18,7 +18,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SOURCE = ROOT / "assets/characters/base/front.png"
+DEFAULT_SOURCE = ROOT / "assets/characters/base/male-front.png"
 DEFAULT_OUTPUT = ROOT / "assets/characters/male/front_left"
 REFERENCE_BBOX = (8, 0, 55, 92)
 
@@ -175,6 +175,33 @@ def _build_parts(source: Image.Image, output: Path, specs: tuple[Part, ...], geo
     return images
 
 
+def _load_or_build_parts(
+    source: Image.Image,
+    output: Path,
+    specs: tuple[Part, ...],
+    geometry: Geometry,
+    rebuild_parts: bool,
+) -> tuple[dict[str, Image.Image], bool]:
+    part_paths = {part.name: output / f"{part.name}.png" for part in specs}
+    existing = [name for name, path in part_paths.items() if path.exists()]
+    if rebuild_parts or not existing:
+        return _build_parts(source, output, specs, geometry), True
+    if len(existing) != len(part_paths):
+        missing = sorted(set(part_paths) - set(existing))
+        raise SystemExit(
+            "Refusing to overwrite a partial hand-edited part set. "
+            f"Missing: {', '.join(missing)}. Restore those files or explicitly use --rebuild-parts."
+        )
+    images = {name: Image.open(path).convert("RGBA") for name, path in part_paths.items()}
+    wrong_sizes = {name: image.size for name, image in images.items() if image.size != source.size}
+    if wrong_sizes:
+        raise SystemExit(
+            "Existing hand-edited parts do not match the source canvas "
+            f"{source.size}: {wrong_sizes}. Use a separate output directory or explicitly use --rebuild-parts."
+        )
+    return images, False
+
+
 def _validate_hands_are_not_baked_into_body(parts: dict[str, Image.Image]) -> None:
     non_arm_names = (
         "head", "torso", "waist",
@@ -285,9 +312,16 @@ def _save_sheet(images: dict[str, Image.Image], specs: tuple[Part, ...], poses: 
     sheet.save(path, optimize=True)
 
 
-def _save_manifest(source: Image.Image, output: Path, specs: tuple[Part, ...], geometry: Geometry) -> None:
+def _resource_path(path: Path) -> str:
+    try:
+        return "res://" + path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(path.resolve())
+
+
+def _save_manifest(source_path: Path, source: Image.Image, output: Path, specs: tuple[Part, ...], geometry: Geometry, direction: str) -> None:
     data = {
-        "source": "res://assets/characters/base/front.png", "direction": "front_left",
+        "source": _resource_path(source_path), "direction": direction,
         "canvas_size": list(source.size), "source_bbox": list(geometry.source_bbox),
         "motion_step": geometry.motion_step, "frame_count": 6, "fps": 6,
         "parts": [{"name": p.name, "parent": p.parent, "pivot": list(p.pivot), "z_index": p.z_index} for p in specs],
@@ -299,28 +333,44 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--direction", choices=("front_left", "back_right"), default="front_left")
+    parser.add_argument(
+        "--rebuild-parts",
+        action="store_true",
+        help="Explicitly overwrite all 15 part PNGs by decomposing the source again.",
+    )
     args = parser.parse_args()
 
     source = Image.open(args.source).convert("RGBA")
     geometry = Geometry.from_source(source)
     specs = _map_parts(geometry)
-    images = _build_parts(source, args.output, specs, geometry)
-    _validate_hands_are_not_baked_into_body(images)
-    _validate_visible_source_coverage(source, images)
+    images, parts_were_built = _load_or_build_parts(
+        source, args.output, specs, geometry, args.rebuild_parts
+    )
+    if parts_were_built:
+        _validate_hands_are_not_baked_into_body(images)
+        _validate_visible_source_coverage(source, images)
     idle_poses = _idle_poses(geometry.motion_step)
     _validate_idle_feet_are_fixed(idle_poses, specs)
-    _save_sheet(images, specs, idle_poses, args.output / "idle_front_left.png")
-    _save_sheet(images, specs, _walk_poses(geometry.motion_step), args.output / "walk_front_left.png")
-    _save_manifest(source, args.output, specs, geometry)
+    idle_path = args.output / f"idle_{args.direction}.png"
+    walk_path = args.output / f"walk_{args.direction}.png"
+    _save_sheet(images, specs, idle_poses, idle_path)
+    _save_sheet(images, specs, _walk_poses(geometry.motion_step), walk_path)
+    _save_manifest(args.source, source, args.output, specs, geometry, args.direction)
 
     assert len(images) == 15 and all(image.size == source.size and image.mode == "RGBA" for image in images.values())
-    assert Image.open(args.output / "idle_front_left.png").size == (source.width * 6, source.height)
-    assert Image.open(args.output / "walk_front_left.png").size == (source.width * 6, source.height)
+    assert Image.open(idle_path).size == (source.width * 6, source.height)
+    assert Image.open(walk_path).size == (source.width * 6, source.height)
     rebuilt = _render_pose(images, specs, idle_poses[0])
     changed = sum(px != (0, 0, 0, 0) for px in ImageChops.difference(source, rebuilt).get_flattened_data())
     print(f"Mapped visible bbox {geometry.source_bbox} at x={geometry.scale_x:.3f}, y={geometry.scale_y:.3f}")
+    print(
+        "Rebuilt 15 part PNGs from source"
+        if parts_were_built
+        else "Reused 15 existing part PNGs without modifying them"
+    )
     print(f"Built 15 RGBA parts and two 6-frame sheets at {source.size}; motion step={geometry.motion_step}px")
-    print("Validated source coverage, fixed idle feet, and zero body/hand mask overlap")
+    print("Validated fixed idle feet" + (", source coverage, and zero body/hand mask overlap" if parts_were_built else ""))
     print(f"Rest-pose changed pixels (joint alpha overlap): {changed}/{source.width * source.height}")
 
 

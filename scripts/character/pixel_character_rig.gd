@@ -8,7 +8,10 @@ class_name PixelCharacterRig
 
 const FRAME_COUNT := 6
 const FPS := 6.0
-const RIG_MANIFEST_PATH := "res://assets/characters/male/front_left/rig_manifest.json"
+const DIRECTION_DIRECTORIES := {
+	"front_left": "res://assets/characters/male/front_left",
+	"back_right": "res://assets/characters/male/back_right",
+}
 const PART_NODE_PATHS := {
 	"waist": ^"Root/Waist",
 	"torso": ^"Root/Waist/Torso",
@@ -32,33 +35,71 @@ const PART_NODE_PATHS := {
 		preview_animation = value
 		if is_inside_tree():
 			play(value)
+@export_enum("front_left", "back_right") var preview_direction := "front_left"
 @export var center_character_in_viewport := true
+@export var show_ui := true
 @export_range(0.01, 4.0, 0.01) var character_display_scale := 0.3
 
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
-@onready var idle_button: Button = $UI/RightPanel/Margin/VBox/IdleButton
-@onready var walk_button: Button = $UI/RightPanel/Margin/VBox/WalkButton
-@onready var animation_status: Label = $UI/RightPanel/Margin/VBox/AnimationStatus
+@onready var ui: CanvasLayer = get_node_or_null("UI") as CanvasLayer
+@onready var idle_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/IdleButton") as Button
+@onready var walk_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/WalkButton") as Button
+@onready var animation_status: Label = get_node_or_null("UI/RightPanel/Margin/VBox/AnimationStatus") as Label
+@onready var direction_status: Label = get_node_or_null("UI/RightPanel/Margin/VBox/DirectionStatus") as Label
+@onready var front_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/FrontButton") as Button
+@onready var back_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/BackButton") as Button
 
 var motion_step := 1
 
 
 func _ready() -> void:
+	if ui:
+		ui.visible = show_ui
 	$Root.scale = Vector2.ONE * character_display_scale
-	_apply_manifest_geometry()
+	set_direction(preview_direction)
 	_build_animation_library()
-	idle_button.pressed.connect(_on_idle_pressed)
-	walk_button.pressed.connect(_on_walk_pressed)
+	if idle_button:
+		idle_button.pressed.connect(_on_idle_pressed)
+	if walk_button:
+		walk_button.pressed.connect(_on_walk_pressed)
+	if front_button:
+		front_button.pressed.connect(_on_front_pressed)
+	if back_button:
+		back_button.pressed.connect(_on_back_pressed)
 	play(preview_animation)
 
 
-func _apply_manifest_geometry() -> void:
-	if not FileAccess.file_exists(RIG_MANIFEST_PATH):
-		push_warning("Character rig manifest not found: %s" % RIG_MANIFEST_PATH)
+func set_direction(direction_name: StringName) -> void:
+	var direction := String(direction_name)
+	if not DIRECTION_DIRECTORIES.has(direction):
+		push_warning("Unknown character direction: %s" % direction)
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(RIG_MANIFEST_PATH))
+	var active_animation: String = animation_player.current_animation if animation_player else ""
+	preview_direction = direction
+	var directory: String = DIRECTION_DIRECTORIES[direction]
+	for part_name: String in PART_NODE_PATHS:
+		var node_path: NodePath = PART_NODE_PATHS[part_name]
+		var sprite := get_node(NodePath(str(node_path) + "/Sprite2D")) as Sprite2D
+		var texture_path := "%s/%s.png" % [directory, part_name]
+		var texture := load(texture_path) as Texture2D
+		if texture:
+			sprite.texture = texture
+		else:
+			push_warning("Character part texture not found: %s" % texture_path)
+	_apply_manifest_geometry("%s/rig_manifest.json" % directory)
+	_update_direction_ui(direction)
+	if animation_player and animation_player.has_animation_library(&""):
+		_build_animation_library()
+		play(StringName(active_animation if not active_animation.is_empty() else preview_animation))
+
+
+func _apply_manifest_geometry(manifest_path: String) -> void:
+	if not FileAccess.file_exists(manifest_path):
+		push_warning("Character rig manifest not found: %s" % manifest_path)
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
 	if not parsed is Dictionary:
-		push_warning("Character rig manifest is invalid: %s" % RIG_MANIFEST_PATH)
+		push_warning("Character rig manifest is invalid: %s" % manifest_path)
 		return
 	var manifest := parsed as Dictionary
 	motion_step = maxi(int(manifest.get("motion_step", 1)), 1)
@@ -113,6 +154,22 @@ func _on_idle_pressed() -> void:
 
 func _on_walk_pressed() -> void:
 	play(&"walk")
+
+
+func _on_front_pressed() -> void:
+	set_direction(&"front_left")
+
+
+func _on_back_pressed() -> void:
+	set_direction(&"back_right")
+
+
+func _update_direction_ui(direction: String) -> void:
+	if not front_button or not back_button or not direction_status:
+		return
+	front_button.disabled = direction == "front_left"
+	back_button.disabled = direction == "back_right"
+	direction_status.text = "方向: %s" % ("Front" if direction == "front_left" else "Back")
 
 
 func _update_animation_ui(animation_name: StringName) -> void:
