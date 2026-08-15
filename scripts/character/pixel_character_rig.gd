@@ -45,7 +45,21 @@ const PART_NODE_PATHS := {
 @export_enum("male", "female") var preview_character := "male"
 @export var center_character_in_viewport := true
 @export var show_ui := true
-@export_range(0.01, 4.0, 0.01) var character_display_scale := 0.3
+@export_range(0.01, 4.0, 0.01) var character_display_scale := 0.24
+@export var weapon_texture: Texture2D
+@export var flip_weapon_face_on_back := false
+@export var weapon_grip_position := Vector2(626, 1000)
+@export_range(0.01, 2.0, 0.01) var weapon_display_scale := 0.55
+@export_range(-180.0, 180.0, 1.0) var weapon_rotation_degrees := 70.0
+@export_range(-180.0, 180.0, 1.0) var front_weapon_rotation_degrees := -50.0
+@export var front_weapon_screen_offset := Vector2(10, -10)
+@export var back_weapon_screen_offset := Vector2(10, -10)
+@export var male_back_weapon_screen_offset := Vector2(-3, -8)
+@export var female_back_weapon_screen_offset := Vector2(-3, -3)
+@export var shield_texture: Texture2D
+@export var shield_grip_position := Vector2(615, 664)
+@export_range(0.01, 2.0, 0.01) var shield_display_scale := 0.55
+@export var back_shield_screen_offset := Vector2(0, -12)
 
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var ui: CanvasLayer = get_node_or_null("UI") as CanvasLayer
@@ -55,6 +69,12 @@ const PART_NODE_PATHS := {
 @onready var direction_status: Label = get_node_or_null("UI/RightPanel/Margin/VBox/DirectionStatus") as Label
 @onready var front_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/FrontButton") as Button
 @onready var back_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/BackButton") as Button
+@onready var right_weapon_pivot: Node2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot
+@onready var right_weapon_sprite: Sprite2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/WeaponSprite
+@onready var left_weapon_pivot: Node2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot
+@onready var left_weapon_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/WeaponSprite
+@onready var shield_pivot: Node2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot
+@onready var shield_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot/ShieldSprite
 
 var motion_step := 1
 
@@ -74,6 +94,87 @@ func _ready() -> void:
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
 	play(preview_animation)
+
+
+func _update_weapon() -> void:
+	var right_weapon_rotation: float = front_weapon_rotation_degrees
+	if preview_direction == "back_right":
+		right_weapon_rotation = weapon_rotation_degrees
+	_configure_weapon(right_weapon_pivot, right_weapon_sprite, right_weapon_rotation)
+	_configure_weapon(left_weapon_pivot, left_weapon_sprite, weapon_rotation_degrees)
+	right_weapon_sprite.flip_h = preview_direction == "back_right" and flip_weapon_face_on_back
+	right_weapon_pivot.position = Vector2.ZERO
+	if preview_direction == "front_left":
+		right_weapon_pivot.position = front_weapon_screen_offset / character_display_scale
+	elif preview_direction == "back_right":
+		var back_offset: Vector2 = back_weapon_screen_offset
+		if preview_character == "male":
+			back_offset += male_back_weapon_screen_offset
+		elif preview_character == "female":
+			back_offset += female_back_weapon_screen_offset
+		right_weapon_pivot.position = back_offset / character_display_scale
+	var has_weapon: bool = weapon_texture != null
+	# Part IDs are authored in screen space. HandR is the anatomical right hand
+	# from the front, and the anatomical left hand when viewed from the back.
+	right_weapon_pivot.visible = has_weapon
+	left_weapon_pivot.visible = false
+
+
+func _configure_weapon(pivot: Node2D, sprite: Sprite2D, rotation: float) -> void:
+	sprite.texture = weapon_texture
+	sprite.position = -weapon_grip_position
+	pivot.scale = Vector2.ONE * weapon_display_scale
+	pivot.rotation_degrees = rotation
+
+
+func equip_weapon(texture: Texture2D, should_flip_face_on_back: bool = false) -> void:
+	weapon_texture = texture
+	flip_weapon_face_on_back = should_flip_face_on_back
+	_update_weapon()
+
+
+func equip_shield(texture: Texture2D) -> void:
+	shield_texture = texture
+	_update_shield()
+
+
+func unequip_shield() -> void:
+	shield_texture = null
+	_update_shield()
+
+
+func _update_shield() -> void:
+	shield_sprite.texture = shield_texture
+	shield_sprite.position = -shield_grip_position
+	shield_pivot.position = Vector2.ZERO
+	if preview_direction == "back_right":
+		shield_pivot.position = back_shield_screen_offset / character_display_scale
+	shield_pivot.scale = Vector2.ONE * shield_display_scale
+	shield_pivot.rotation_degrees = 0.0
+	shield_pivot.visible = shield_texture != null
+
+
+func _update_arm_layer_order() -> void:
+	if preview_direction == "back_right":
+		$Root/Waist/Torso/ArmRUpper/Sprite2D.z_index = 30
+		$Root/Waist/Torso/ArmRUpper/ArmRLower/Sprite2D.z_index = 31
+		$Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/Sprite2D.z_index = 32
+		right_weapon_pivot.z_index = -30
+		$Root/Waist/Torso/ArmLUpper/Sprite2D.z_index = -20
+		$Root/Waist/Torso/ArmLUpper/ArmLLower/Sprite2D.z_index = -19
+		$Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/Sprite2D.z_index = -18
+		left_weapon_pivot.z_index = -19
+		shield_pivot.z_index = 50
+	else:
+		$Root/Waist/Torso/ArmRUpper/Sprite2D.z_index = -20
+		$Root/Waist/Torso/ArmRUpper/ArmRLower/Sprite2D.z_index = -19
+		$Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/Sprite2D.z_index = -18
+		right_weapon_pivot.z_index = -19
+		$Root/Waist/Torso/ArmLUpper/Sprite2D.z_index = 30
+		$Root/Waist/Torso/ArmLUpper/ArmLLower/Sprite2D.z_index = 31
+		$Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/Sprite2D.z_index = 32
+		left_weapon_pivot.z_index = 31
+		shield_pivot.z_index = 33
 
 
 func set_direction(direction_name: StringName) -> void:
@@ -99,6 +200,9 @@ func set_direction(direction_name: StringName) -> void:
 		else:
 			push_warning("Character part texture not found: %s" % texture_path)
 	_apply_manifest_geometry("%s/rig_manifest.json" % directory)
+	_update_arm_layer_order()
+	_update_weapon()
+	_update_shield()
 	_update_direction_ui(direction)
 	if animation_player and animation_player.has_animation_library(&""):
 		_build_animation_library()

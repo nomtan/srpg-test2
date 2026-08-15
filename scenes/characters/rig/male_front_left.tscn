@@ -23,7 +23,7 @@ texture_filter = 1
 script = ExtResource("1_script")
 
 [node name="Root" type="Node2D" parent="."]
-scale = Vector2(0.3, 0.3)
+scale = Vector2(0.24, 0.24)
 
 [node name="Waist" type="Node2D" parent="Root"]
 position = Vector2(223, 648)
@@ -81,6 +81,13 @@ centered = false
 [node name="WeaponSocket" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR"]
 position = Vector2(-10, 50)
 
+[node name="WeaponPivot" type="Node2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket"]
+visible = false
+z_index = -19
+
+[node name="WeaponSprite" type="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
+centered = false
+
 [node name="ArmLUpper" type="Node2D" parent="Root/Waist/Torso"]
 position = Vector2(104, -208)
 
@@ -110,6 +117,20 @@ centered = false
 
 [node name="WeaponSocket" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL"]
 position = Vector2(10, 50)
+
+[node name="WeaponPivot" type="Node2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket"]
+visible = false
+z_index = 31
+
+[node name="WeaponSprite" type="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
+centered = false
+
+[node name="ShieldPivot" type="Node2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket"]
+visible = false
+z_index = 33
+
+[node name="ShieldSprite" type="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot"]
+centered = false
 
 [node name="LegRUpper" type="Node2D" parent="Root/Waist"]
 position = Vector2(-56, 21)

@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/characters/rig/male_front_left.tscn" id="1_rig"]
 [ext_resource type="Script" path="res://scripts/character/male_front_back_preview.gd" id="2_script"]
 [ext_resource type="PackedScene" path="res://scenes/characters/rig/female_front_left.tscn" id="3_female"]
+[ext_resource type="Texture2D" path="res://assets/weapons/sword/base.png" id="4_sword"]
 
 [node name="CharacterFrontBackPreview" type="Node2D"]
 script = ExtResource("2_script")
@@ -11,57 +12,61 @@ script = ExtResource("2_script")
 position = Vector2(300, 386)
 center_character_in_viewport = false
 show_ui = false
+weapon_texture = ExtResource("4_sword")
 
 [node name="MaleBackRig" parent="." instance=ExtResource("1_rig")]
-position = Vector2(520, 388)
+position = Vector2(570, 388)
 preview_direction = "back_right"
 center_character_in_viewport = false
 show_ui = false
+weapon_texture = ExtResource("4_sword")
 
 [node name="FemaleFrontRig" parent="." instance=ExtResource("3_female")]
-position = Vector2(740, 386)
+position = Vector2(840, 386)
 center_character_in_viewport = false
 show_ui = false
+weapon_texture = ExtResource("4_sword")
 
 [node name="FemaleBackRig" parent="." instance=ExtResource("3_female")]
-position = Vector2(960, 388)
+position = Vector2(1110, 388)
 preview_direction = "back_right"
 center_character_in_viewport = false
 show_ui = false
+weapon_texture = ExtResource("4_sword")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="MaleFrontLabel" type="Label" parent="UI"]
-offset_left = 314.0
+offset_left = 298.0
 offset_top = 350.0
-offset_right = 434.0
+offset_right = 418.0
 offset_bottom = 382.0
 theme_override_font_sizes/font_size = 20
 text = "Male Front"
 horizontal_alignment = 1
 
 [node name="MaleBackLabel" type="Label" parent="UI"]
-offset_left = 543.0
+offset_left = 576.0
 offset_top = 350.0
-offset_right = 663.0
+offset_right = 696.0
 offset_bottom = 382.0
 theme_override_font_sizes/font_size = 20
 text = "Male Back"
 horizontal_alignment = 1
 
 [node name="FemaleFrontLabel" type="Label" parent="UI"]
-offset_left = 751.0
+offset_left = 829.0
 offset_top = 350.0
-offset_right = 891.0
+offset_right = 969.0
 offset_bottom = 382.0
 theme_override_font_sizes/font_size = 20
 text = "Female Front"
 horizontal_alignment = 1
 
 [node name="FemaleBackLabel" type="Label" parent="UI"]
-offset_left = 983.0
+offset_left = 1102.0
 offset_top = 350.0
-offset_right = 1123.0
+offset_right = 1242.0
 offset_bottom = 382.0
 theme_override_font_sizes/font_size = 20
 text = "Female Back"
@@ -74,9 +79,9 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -224.0
-offset_top = -112.0
+offset_top = -280.0
 offset_right = -24.0
-offset_bottom = 112.0
+offset_bottom = 280.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -107,3 +112,39 @@ text = "Idle"
 [node name="WalkButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 44)
 text = "Walk"
+
+[node name="WeaponSeparator" type="HSeparator" parent="UI/RightPanel/Margin/VBox"]
+
+[node name="WeaponTitle" type="Label" parent="UI/RightPanel/Margin/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "Weapon"
+horizontal_alignment = 1
+
+[node name="WeaponStatus" type="Label" parent="UI/RightPanel/Margin/VBox"]
+text = "Weapon: Sword"
+horizontal_alignment = 1
+
+[node name="SwordButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+disabled = true
+text = "Sword"
+
+[node name="ShortSwordButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+text = "Short Sword"
+
+[node name="ShieldSeparator" type="HSeparator" parent="UI/RightPanel/Margin/VBox"]
+
+[node name="ShieldTitle" type="Label" parent="UI/RightPanel/Margin/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "Shield"
+horizontal_alignment = 1
+
+[node name="ShieldStatus" type="Label" parent="UI/RightPanel/Margin/VBox"]
+text = "Shield: Equipped"
+horizontal_alignment = 1
+
+[node name="ShieldToggle" type="CheckButton" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+button_pressed = true
+text = "Equip Shield"
