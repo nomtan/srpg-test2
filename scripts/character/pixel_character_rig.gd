@@ -59,7 +59,7 @@ const PART_NODE_PATHS := {
 @export var shield_texture: Texture2D
 @export var shield_grip_position := Vector2(615, 664)
 @export_range(0.01, 2.0, 0.01) var shield_display_scale := 0.55
-@export var back_shield_screen_offset := Vector2(0, -12)
+@export var back_shield_screen_offset := Vector2(0, -14)
 
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var ui: CanvasLayer = get_node_or_null("UI") as CanvasLayer
