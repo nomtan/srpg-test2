@@ -1,40 +1,70 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/characters/rig/male_front_left.tscn" id="1_rig"]
 [ext_resource type="Script" path="res://scripts/character/male_front_back_preview.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://scenes/characters/rig/female_front_left.tscn" id="3_female"]
 
-[node name="MaleFrontBackPreview" type="Node2D"]
+[node name="CharacterFrontBackPreview" type="Node2D"]
 script = ExtResource("2_script")
 
-[node name="FrontRig" parent="." instance=ExtResource("1_rig")]
-position = Vector2(776, 386)
+[node name="MaleFrontRig" parent="." instance=ExtResource("1_rig")]
+position = Vector2(300, 386)
 center_character_in_viewport = false
 show_ui = false
 
-[node name="BackRig" parent="." instance=ExtResource("1_rig")]
-position = Vector2(987, 388)
+[node name="MaleBackRig" parent="." instance=ExtResource("1_rig")]
+position = Vector2(520, 388)
+preview_direction = "back_right"
+center_character_in_viewport = false
+show_ui = false
+
+[node name="FemaleFrontRig" parent="." instance=ExtResource("3_female")]
+position = Vector2(740, 386)
+center_character_in_viewport = false
+show_ui = false
+
+[node name="FemaleBackRig" parent="." instance=ExtResource("3_female")]
+position = Vector2(960, 388)
 preview_direction = "back_right"
 center_character_in_viewport = false
 show_ui = false
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="FrontLabel" type="Label" parent="UI"]
-offset_left = 790.0
+[node name="MaleFrontLabel" type="Label" parent="UI"]
+offset_left = 314.0
 offset_top = 350.0
-offset_right = 910.0
+offset_right = 434.0
 offset_bottom = 382.0
 theme_override_font_sizes/font_size = 20
-text = "Front"
+text = "Male Front"
 horizontal_alignment = 1
 
-[node name="BackLabel" type="Label" parent="UI"]
-offset_left = 1010.0
+[node name="MaleBackLabel" type="Label" parent="UI"]
+offset_left = 543.0
 offset_top = 350.0
-offset_right = 1130.0
+offset_right = 663.0
 offset_bottom = 382.0
 theme_override_font_sizes/font_size = 20
-text = "Back"
+text = "Male Back"
+horizontal_alignment = 1
+
+[node name="FemaleFrontLabel" type="Label" parent="UI"]
+offset_left = 751.0
+offset_top = 350.0
+offset_right = 891.0
+offset_bottom = 382.0
+theme_override_font_sizes/font_size = 20
+text = "Female Front"
+horizontal_alignment = 1
+
+[node name="FemaleBackLabel" type="Label" parent="UI"]
+offset_left = 983.0
+offset_top = 350.0
+offset_right = 1123.0
+offset_bottom = 382.0
+theme_override_font_sizes/font_size = 20
+text = "Female Back"
 horizontal_alignment = 1
 
 [node name="RightPanel" type="PanelContainer" parent="UI"]

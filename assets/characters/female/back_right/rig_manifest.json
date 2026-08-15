@@ -1,0 +1,154 @@
+{
+  "source": "res://assets/characters/base/female-back.png",
+  "direction": "back_right",
+  "canvas_size": [
+    493,
+    1024
+  ],
+  "source_bbox": [
+    76,
+    66,
+    440,
+    987
+  ],
+  "motion_step": 9,
+  "frame_count": 6,
+  "fps": 6,
+  "parts": [
+    {
+      "name": "waist",
+      "parent": null,
+      "pivot": [
+        239,
+        657
+      ],
+      "z_index": 10
+    },
+    {
+      "name": "torso",
+      "parent": "waist",
+      "pivot": [
+        239,
+        617
+      ],
+      "z_index": 0
+    },
+    {
+      "name": "head",
+      "parent": "torso",
+      "pivot": [
+        239,
+        396
+      ],
+      "z_index": 40
+    },
+    {
+      "name": "arm_r_upper",
+      "parent": "torso",
+      "pivot": [
+        153,
+        416
+      ],
+      "z_index": -20
+    },
+    {
+      "name": "arm_r_lower",
+      "parent": "arm_r_upper",
+      "pivot": [
+        122,
+        547
+      ],
+      "z_index": -19
+    },
+    {
+      "name": "hand_r",
+      "parent": "arm_r_lower",
+      "pivot": [
+        99,
+        647
+      ],
+      "z_index": -18
+    },
+    {
+      "name": "arm_l_upper",
+      "parent": "torso",
+      "pivot": [
+        324,
+        416
+      ],
+      "z_index": 30
+    },
+    {
+      "name": "arm_l_lower",
+      "parent": "arm_l_upper",
+      "pivot": [
+        370,
+        547
+      ],
+      "z_index": 31
+    },
+    {
+      "name": "hand_l",
+      "parent": "arm_l_lower",
+      "pivot": [
+        394,
+        647
+      ],
+      "z_index": 32
+    },
+    {
+      "name": "leg_r_upper",
+      "parent": "waist",
+      "pivot": [
+        192,
+        677
+      ],
+      "z_index": -10
+    },
+    {
+      "name": "leg_r_lower",
+      "parent": "leg_r_upper",
+      "pivot": [
+        192,
+        797
+      ],
+      "z_index": -9
+    },
+    {
+      "name": "foot_r",
+      "parent": "leg_r_lower",
+      "pivot": [
+        169,
+        907
+      ],
+      "z_index": -8
+    },
+    {
+      "name": "leg_l_upper",
+      "parent": "waist",
+      "pivot": [
+        285,
+        677
+      ],
+      "z_index": 20
+    },
+    {
+      "name": "leg_l_lower",
+      "parent": "leg_l_upper",
+      "pivot": [
+        308,
+        807
+      ],
+      "z_index": 21
+    },
+    {
+      "name": "foot_l",
+      "parent": "leg_l_lower",
+      "pivot": [
+        324,
+        937
+      ],
+      "z_index": 22
+    }
+  ]
+}

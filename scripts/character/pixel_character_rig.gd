@@ -2,15 +2,21 @@
 extends Node2D
 class_name PixelCharacterRig
 
-## Runtime/editor animation setup for the reusable front-left cutout rig.
+## Runtime/editor animation setup for the reusable character cutout rig.
 ## Body proportions are never scaled; animation is limited to integer position
 ## keys and stepped joint rotations.
 
 const FRAME_COUNT := 6
 const FPS := 6.0
-const DIRECTION_DIRECTORIES := {
-	"front_left": "res://assets/characters/male/front_left",
-	"back_right": "res://assets/characters/male/back_right",
+const CHARACTER_DIRECTORIES := {
+	"male": {
+		"front_left": "res://assets/characters/male/front_left",
+		"back_right": "res://assets/characters/male/back_right",
+	},
+	"female": {
+		"front_left": "res://assets/characters/female/front_left",
+		"back_right": "res://assets/characters/female/back_right",
+	},
 }
 const PART_NODE_PATHS := {
 	"waist": ^"Root/Waist",
@@ -36,6 +42,7 @@ const PART_NODE_PATHS := {
 		if is_inside_tree():
 			play(value)
 @export_enum("front_left", "back_right") var preview_direction := "front_left"
+@export_enum("male", "female") var preview_character := "male"
 @export var center_character_in_viewport := true
 @export var show_ui := true
 @export_range(0.01, 4.0, 0.01) var character_display_scale := 0.3
@@ -71,12 +78,17 @@ func _ready() -> void:
 
 func set_direction(direction_name: StringName) -> void:
 	var direction := String(direction_name)
-	if not DIRECTION_DIRECTORIES.has(direction):
+	var character: String = preview_character
+	if not CHARACTER_DIRECTORIES.has(character):
+		push_warning("Unknown character type: %s" % character)
+		return
+	var character_directories: Dictionary = CHARACTER_DIRECTORIES[character]
+	if not character_directories.has(direction):
 		push_warning("Unknown character direction: %s" % direction)
 		return
 	var active_animation: String = animation_player.current_animation if animation_player else ""
 	preview_direction = direction
-	var directory: String = DIRECTION_DIRECTORIES[direction]
+	var directory: String = character_directories[direction]
 	for part_name: String in PART_NODE_PATHS:
 		var node_path: NodePath = PART_NODE_PATHS[part_name]
 		var sprite := get_node(NodePath(str(node_path) + "/Sprite2D")) as Sprite2D
@@ -91,6 +103,15 @@ func set_direction(direction_name: StringName) -> void:
 	if animation_player and animation_player.has_animation_library(&""):
 		_build_animation_library()
 		play(StringName(active_animation if not active_animation.is_empty() else preview_animation))
+
+
+func set_character(character_name: StringName) -> void:
+	var character := String(character_name)
+	if not CHARACTER_DIRECTORIES.has(character):
+		push_warning("Unknown character type: %s" % character)
+		return
+	preview_character = character
+	set_direction(preview_direction)
 
 
 func _apply_manifest_geometry(manifest_path: String) -> void:

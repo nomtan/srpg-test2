@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/rig/male_front_left.tscn" id="1_rig"]
+
+[node name="FemaleCharacterRig" instance=ExtResource("1_rig")]
+preview_character = "female"

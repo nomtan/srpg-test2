@@ -63,6 +63,51 @@ class Geometry:
         return max(1, round((self.scale_x + self.scale_y) * 0.5))
 
 
+def _keep_largest_alpha_component(source: Image.Image) -> Image.Image:
+    """Drop disconnected export noise without altering the authored source file."""
+    alpha = source.getchannel("A")
+    alpha_pixels = alpha.load()
+    visited: set[tuple[int, int]] = set()
+    largest: list[tuple[int, int]] = []
+    for y in range(source.height):
+        for x in range(source.width):
+            if alpha_pixels[x, y] <= 1 or (x, y) in visited:
+                continue
+            component: list[tuple[int, int]] = []
+            pending = [(x, y)]
+            visited.add((x, y))
+            while pending:
+                current_x, current_y = pending.pop()
+                component.append((current_x, current_y))
+                for neighbour_x, neighbour_y in (
+                    (current_x - 1, current_y),
+                    (current_x + 1, current_y),
+                    (current_x, current_y - 1),
+                    (current_x, current_y + 1),
+                ):
+                    neighbour = (neighbour_x, neighbour_y)
+                    if (
+                        0 <= neighbour_x < source.width
+                        and 0 <= neighbour_y < source.height
+                        and neighbour not in visited
+                        and alpha_pixels[neighbour_x, neighbour_y] > 1
+                    ):
+                        visited.add(neighbour)
+                        pending.append(neighbour)
+            if len(component) > len(largest):
+                largest = component
+
+    if not largest:
+        raise ValueError("Source image has no visible pixels")
+    cleaned = source.copy()
+    cleaned_alpha = Image.new("L", source.size, 0)
+    cleaned_alpha_pixels = cleaned_alpha.load()
+    for x, y in largest:
+        cleaned_alpha_pixels[x, y] = alpha_pixels[x, y]
+    cleaned.putalpha(cleaned_alpha)
+    return cleaned
+
+
 # Coordinates below describe anatomy, not a particular source resolution.
 # Anatomical right limbs appear on the left side of this front-left image.
 REFERENCE_PARTS = (
@@ -99,6 +144,58 @@ def _mask_for(part: Part, size: tuple[int, int]) -> Image.Image:
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).polygon(part.polygon, fill=255)
     return mask
+
+
+def _distance_squared_to_segment(
+    point: tuple[int, int], start: tuple[int, int], end: tuple[int, int]
+) -> float:
+    px, py = point
+    sx, sy = start
+    ex, ey = end
+    dx, dy = ex - sx, ey - sy
+    length_squared = dx * dx + dy * dy
+    if length_squared == 0:
+        return float((px - sx) ** 2 + (py - sy) ** 2)
+    amount = min(1.0, max(0.0, ((px - sx) * dx + (py - sy) * dy) / length_squared))
+    nearest_x = sx + amount * dx
+    nearest_y = sy + amount * dy
+    return (px - nearest_x) ** 2 + (py - nearest_y) ** 2
+
+
+def _assign_uncovered_source_pixels(
+    source: Image.Image, images: dict[str, Image.Image], specs: tuple[Part, ...]
+) -> None:
+    """Assign silhouette variations outside the reference polygons to a nearby part."""
+    union = Image.new("L", source.size, 0)
+    for image in images.values():
+        union = ImageChops.lighter(union, image.getchannel("A"))
+    missing = ImageChops.multiply(source.getchannel("A"), ImageChops.invert(union))
+    missing_bbox = missing.getbbox()
+    if missing_bbox is None:
+        return
+
+    owner_masks = {part.name: Image.new("L", source.size, 0) for part in specs}
+    owner_pixels = {name: mask.load() for name, mask in owner_masks.items()}
+    left, top, right, bottom = missing_bbox
+    missing_pixels = missing.load()
+    for y in range(top, bottom):
+        for x in range(left, right):
+            if missing_pixels[x, y] == 0:
+                continue
+            closest = min(
+                specs,
+                key=lambda part: min(
+                    _distance_squared_to_segment(
+                        (x, y), part.polygon[index - 1], part.polygon[index]
+                    )
+                    for index in range(len(part.polygon))
+                ),
+            )
+            owner_pixels[closest.name][x, y] = 255
+
+    for part_name, owner_mask in owner_masks.items():
+        if owner_mask.getbbox() is not None:
+            images[part_name].paste(source, (0, 0), owner_mask)
 
 
 def _sample(source: Image.Image, geometry: Geometry, logical_point: tuple[int, int]) -> tuple[int, int, int, int]:
@@ -158,6 +255,7 @@ def _build_parts(source: Image.Image, output: Path, specs: tuple[Part, ...], geo
         _draw_joint_completion(layer, part.name, source, geometry)
         layer.paste(source, (0, 0), _mask_for(part, source.size))
         images[part.name] = layer
+    _assign_uncovered_source_pixels(source, images, specs)
     # The rest pose has hands touching the torso/upper legs. Give those source
     # pixels exclusively to hand layers so they cannot remain as moving ghosts.
     hand_union = ImageChops.lighter(
@@ -341,7 +439,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    source = Image.open(args.source).convert("RGBA")
+    source = _keep_largest_alpha_component(Image.open(args.source).convert("RGBA"))
     geometry = Geometry.from_source(source)
     specs = _map_parts(geometry)
     images, parts_were_built = _load_or_build_parts(
