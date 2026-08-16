@@ -46,8 +46,8 @@
       "name": "arm_r_upper",
       "parent": "torso",
       "pivot": [
-        119,
-        398
+        150,
+        430
       ],
       "z_index": -20
     },
@@ -55,7 +55,7 @@
       "name": "arm_r_lower",
       "parent": "arm_r_upper",
       "pivot": [
-        82,
+        97,
         533
       ],
       "z_index": -19
@@ -64,7 +64,7 @@
       "name": "hand_r",
       "parent": "arm_r_lower",
       "pivot": [
-        53,
+        137,
         638
       ],
       "z_index": -18
@@ -73,8 +73,8 @@
       "name": "arm_l_upper",
       "parent": "torso",
       "pivot": [
-        327,
-        398
+        300,
+        440
       ],
       "z_index": 30
     },

@@ -10,6 +10,7 @@ const SHIELD_TEXTURE := preload("res://assets/weapons/shield/base.png")
 @onready var female_back_rig: PixelCharacterRig = $FemaleBackRig
 @onready var idle_button: Button = $UI/RightPanel/Margin/VBox/IdleButton
 @onready var walk_button: Button = $UI/RightPanel/Margin/VBox/WalkButton
+@onready var attack_button: Button = $UI/RightPanel/Margin/VBox/AttackButton
 @onready var animation_status: Label = $UI/RightPanel/Margin/VBox/AnimationStatus
 @onready var sword_button: Button = $UI/RightPanel/Margin/VBox/SwordButton
 @onready var short_sword_button: Button = $UI/RightPanel/Margin/VBox/ShortSwordButton
@@ -21,9 +22,11 @@ const SHIELD_TEXTURE := preload("res://assets/weapons/shield/base.png")
 func _ready() -> void:
 	idle_button.pressed.connect(_on_idle_pressed)
 	walk_button.pressed.connect(_on_walk_pressed)
+	attack_button.pressed.connect(_on_attack_pressed)
 	sword_button.pressed.connect(_on_sword_pressed)
 	short_sword_button.pressed.connect(_on_short_sword_pressed)
 	shield_toggle.toggled.connect(_on_shield_toggled)
+	male_front_rig.animation_player.animation_finished.connect(_on_preview_animation_finished)
 	_play_all(&"idle")
 	_equip_all(SWORD_TEXTURE, &"sword")
 	_equip_shield_all(true)
@@ -35,6 +38,15 @@ func _on_idle_pressed() -> void:
 
 func _on_walk_pressed() -> void:
 	_play_all(&"walk")
+
+
+func _on_attack_pressed() -> void:
+	_play_all(&"attack")
+
+
+func _on_preview_animation_finished(animation_name: StringName) -> void:
+	if animation_name == &"authored/attack":
+		_play_all(&"idle")
 
 
 func _on_sword_pressed() -> void:
@@ -81,4 +93,5 @@ func _play_all(animation_name: StringName) -> void:
 	female_back_rig.play(animation_name)
 	idle_button.disabled = animation_name == &"idle"
 	walk_button.disabled = animation_name == &"walk"
+	attack_button.disabled = animation_name == &"attack"
 	animation_status.text = "再生中: %s" % str(animation_name).capitalize()

@@ -8,6 +8,7 @@ class_name PixelCharacterRig
 
 const FRAME_COUNT := 6
 const FPS := 6.0
+const ATTACK_ANIMATION_PLAYER_NAME := &"authored/attack"
 const CHARACTER_DIRECTORIES := {
 	"male": {
 		"front_left": "res://assets/characters/male/front_left",
@@ -36,7 +37,7 @@ const PART_NODE_PATHS := {
 	"foot_r": ^"Root/Waist/LegRUpper/LegRLower/FootR",
 }
 
-@export_enum("idle", "walk") var preview_animation := "idle":
+@export_enum("idle", "walk", "attack") var preview_animation := "idle":
 	set(value):
 		preview_animation = value
 		if is_inside_tree():
@@ -188,6 +189,8 @@ func set_direction(direction_name: StringName) -> void:
 		push_warning("Unknown character direction: %s" % direction)
 		return
 	var active_animation: String = animation_player.current_animation if animation_player else ""
+	if active_animation == String(ATTACK_ANIMATION_PLAYER_NAME):
+		active_animation = "attack"
 	preview_direction = direction
 	var directory: String = character_directories[direction]
 	for part_name: String in PART_NODE_PATHS:
@@ -268,9 +271,20 @@ func _apply_manifest_geometry(manifest_path: String) -> void:
 func play(animation_name: StringName) -> void:
 	if not animation_player:
 		return
-	if animation_player.has_animation(animation_name):
-		animation_player.play(animation_name)
+	var player_animation_name: StringName = animation_name
+	if animation_name == &"attack":
+		player_animation_name = ATTACK_ANIMATION_PLAYER_NAME
+		_reset_pose_before_attack()
+	if animation_player.has_animation(player_animation_name):
+		animation_player.play(player_animation_name)
 		_update_animation_ui(animation_name)
+
+
+func _reset_pose_before_attack() -> void:
+	if not animation_player.has_animation(&"idle"):
+		return
+	animation_player.play(&"idle")
+	animation_player.seek(0.0, true)
 
 
 func _on_idle_pressed() -> void:
@@ -322,6 +336,16 @@ func _make_idle() -> Animation:
 	_add_position_track(animation, ^"Root/Waist/LegLUpper/LegLLower", $Root/Waist/LegLUpper/LegLLower.position, [0, -1, 0, 1, 0, 0])
 	_add_position_track(animation, ^"Root/Waist/LegRUpper/LegRLower", $Root/Waist/LegRUpper/LegRLower.position, [0, -1, 0, 1, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/Head", [0, -1, 0, 1, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper/ArmLLower", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper/ArmRLower", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/LegLUpper", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/LegLUpper/LegLLower", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/LegLUpper/LegLLower/FootL", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/LegRUpper", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/LegRUpper/LegRLower", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/LegRUpper/LegRLower/FootR", [0, 0, 0, 0, 0, 0])
 	return animation
 
 
@@ -329,7 +353,9 @@ func _make_walk() -> Animation:
 	var animation := _new_loop_animation()
 	_add_position_track(animation, ^"Root/Waist", $Root/Waist.position, [0, -1, 1, 0, -1, 1])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper", [-10, -5, 0, 10, 5, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper/ArmLLower", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper", [12, 6, 0, -12, -6, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper/ArmRLower", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegLUpper", [14, 7, 0, -14, -7, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegLUpper/LegLLower", [-6, -3, 0, 7, 3, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegLUpper/LegLLower/FootL", [3, 1.5, 0, -3.5, -1.5, 0])
