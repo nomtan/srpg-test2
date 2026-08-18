@@ -14,6 +14,11 @@
   "motion_step": 10,
   "frame_count": 6,
   "fps": 6,
+  "equipment_layers": {
+    "right_weapon": -19,
+    "left_weapon": 31,
+    "shield": 33
+  },
   "parts": [
     {
       "name": "waist",
@@ -64,8 +69,8 @@
       "name": "hand_r",
       "parent": "arm_r_lower",
       "pivot": [
-        137,
-        638
+        85,
+        600
       ],
       "z_index": -18
     },

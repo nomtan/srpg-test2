@@ -14,6 +14,11 @@
   "motion_step": 9,
   "frame_count": 6,
   "fps": 6,
+  "equipment_layers": {
+    "right_weapon": -30,
+    "left_weapon": -19,
+    "shield": 50
+  },
   "parts": [
     {
       "name": "waist",
@@ -49,7 +54,7 @@
         153,
         416
       ],
-      "z_index": -20
+      "z_index": 30
     },
     {
       "name": "arm_r_lower",
@@ -58,7 +63,7 @@
         122,
         547
       ],
-      "z_index": -19
+      "z_index": 31
     },
     {
       "name": "hand_r",
@@ -67,7 +72,7 @@
         99,
         647
       ],
-      "z_index": -18
+      "z_index": 32
     },
     {
       "name": "arm_l_upper",
@@ -76,7 +81,7 @@
         324,
         416
       ],
-      "z_index": 30
+      "z_index": -20
     },
     {
       "name": "arm_l_lower",
@@ -85,7 +90,7 @@
         370,
         547
       ],
-      "z_index": 31
+      "z_index": -19
     },
     {
       "name": "hand_l",
@@ -94,7 +99,7 @@
         394,
         647
       ],
-      "z_index": 32
+      "z_index": -18
     },
     {
       "name": "leg_r_upper",

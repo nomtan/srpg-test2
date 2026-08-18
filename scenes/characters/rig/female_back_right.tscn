@@ -1,9 +1,10 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" uid="uid://dkw584q4mhen8" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
-[ext_resource type="AnimationLibrary" path="res://scenes/characters/rig/female_front_attack_animations.tres" id="2_attack"]
+[ext_resource type="AnimationLibrary" path="res://scenes/characters/rig/female_back_attack_animations.tres" id="2_attack"]
 
-[node name="FemaleCharacterRig" instance=ExtResource("1_rig")]
+[node name="FemaleBackRightRig" instance=ExtResource("1_rig")]
 preview_character = "female"
+preview_direction = "back_right"
 authored_attack_library = ExtResource("2_attack")
 editor_preview_weapon = "Sword"

@@ -128,6 +128,20 @@ REFERENCE_PARTS = (
     Part("foot_l", "leg_l_lower", (40, 87), ((30, 81), (52, 81), (52, 92), (30, 92)), 22),
 )
 
+BACK_RIGHT_Z_INDEX = {
+    "arm_r_upper": 30,
+    "arm_r_lower": 31,
+    "hand_r": 32,
+    "arm_l_upper": -20,
+    "arm_l_lower": -19,
+    "hand_l": -18,
+}
+
+EQUIPMENT_LAYERS = {
+    "front_left": {"right_weapon": -19, "left_weapon": 31, "shield": 33},
+    "back_right": {"right_weapon": -30, "left_weapon": -19, "shield": 50},
+}
+
 
 def _map_parts(geometry: Geometry) -> tuple[Part, ...]:
     return tuple(
@@ -137,6 +151,15 @@ def _map_parts(geometry: Geometry) -> tuple[Part, ...]:
             polygon=tuple(geometry.point(point) for point in part.polygon),
         )
         for part in REFERENCE_PARTS
+    )
+
+
+def _with_direction_layers(specs: tuple[Part, ...], direction: str) -> tuple[Part, ...]:
+    if direction != "back_right":
+        return specs
+    return tuple(
+        replace(part, z_index=BACK_RIGHT_Z_INDEX.get(part.name, part.z_index))
+        for part in specs
     )
 
 
@@ -422,6 +445,7 @@ def _save_manifest(source_path: Path, source: Image.Image, output: Path, specs: 
         "source": _resource_path(source_path), "direction": direction,
         "canvas_size": list(source.size), "source_bbox": list(geometry.source_bbox),
         "motion_step": geometry.motion_step, "frame_count": 6, "fps": 6,
+        "equipment_layers": EQUIPMENT_LAYERS[direction],
         "parts": [{"name": p.name, "parent": p.parent, "pivot": list(p.pivot), "z_index": p.z_index} for p in specs],
     }
     (output / "rig_manifest.json").write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -441,7 +465,7 @@ def main() -> None:
 
     source = _keep_largest_alpha_component(Image.open(args.source).convert("RGBA"))
     geometry = Geometry.from_source(source)
-    specs = _map_parts(geometry)
+    specs = _with_direction_layers(_map_parts(geometry), args.direction)
     images, parts_were_built = _load_or_build_parts(
         source, args.output, specs, geometry, args.rebuild_parts
     )

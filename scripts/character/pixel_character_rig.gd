@@ -9,6 +9,8 @@ class_name PixelCharacterRig
 const FRAME_COUNT := 6
 const FPS := 6.0
 const ATTACK_ANIMATION_PLAYER_NAME := &"authored/attack"
+const PREVIEW_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/sword/base.png")
+const PREVIEW_SHORT_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/short_sword/base.png")
 const CHARACTER_DIRECTORIES := {
 	"male": {
 		"front_left": "res://assets/characters/male/front_left",
@@ -44,16 +46,44 @@ const PART_NODE_PATHS := {
 			play(value)
 @export_enum("front_left", "back_right") var preview_direction := "front_left"
 @export_enum("male", "female") var preview_character := "male"
+@export var authored_attack_library: AnimationLibrary:
+	set(value):
+		authored_attack_library = value
+		if Engine.is_editor_hint() and is_node_ready():
+			_apply_authored_attack_library()
 @export var center_character_in_viewport := true
 @export var show_ui := true
 @export_range(0.01, 4.0, 0.01) var character_display_scale := 0.24
 @export var weapon_texture: Texture2D
+@export_enum("None", "Sword", "Short Sword") var editor_preview_weapon: String = "Sword":
+	set(value):
+		editor_preview_weapon = value
+		if Engine.is_editor_hint() and is_node_ready():
+			_apply_editor_preview_weapon()
 @export var flip_weapon_face_on_back := false
 @export var weapon_grip_position := Vector2(626, 1000)
-@export_range(0.01, 2.0, 0.01) var weapon_display_scale := 0.55
-@export_range(-180.0, 180.0, 1.0) var weapon_rotation_degrees := 70.0
-@export_range(-180.0, 180.0, 1.0) var front_weapon_rotation_degrees := -50.0
+@export_range(0.01, 2.0, 0.01) var weapon_display_scale: float = 0.55:
+	set(value):
+		weapon_display_scale = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var weapon_rotation_degrees: float = 70.0:
+	set(value):
+		weapon_rotation_degrees = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var front_weapon_rotation_degrees: float = -50.0:
+	set(value):
+		front_weapon_rotation_degrees = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var male_front_weapon_rotation_offset_degrees: float = 0.0:
+	set(value):
+		male_front_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var male_back_weapon_rotation_offset_degrees: float = 0.0:
+	set(value):
+		male_back_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
 @export var front_weapon_screen_offset := Vector2(10, -10)
+@export var male_front_weapon_screen_offset := Vector2(-10, 5)
 @export var back_weapon_screen_offset := Vector2(10, -10)
 @export var male_back_weapon_screen_offset := Vector2(-3, -8)
 @export var female_back_weapon_screen_offset := Vector2(-3, -3)
@@ -84,8 +114,13 @@ func _ready() -> void:
 	if ui:
 		ui.visible = show_ui
 	$Root.scale = Vector2.ONE * character_display_scale
+	if Engine.is_editor_hint():
+		_apply_editor_preview_weapon()
+	_apply_authored_attack_library()
 	set_direction(preview_direction)
 	_build_animation_library()
+	if not animation_player.animation_finished.is_connected(_on_animation_finished):
+		animation_player.animation_finished.connect(_on_animation_finished)
 	if idle_button:
 		idle_button.pressed.connect(_on_idle_pressed)
 	if walk_button:
@@ -97,16 +132,50 @@ func _ready() -> void:
 	play(preview_animation)
 
 
+func _apply_editor_preview_weapon() -> void:
+	match editor_preview_weapon:
+		"Sword":
+			weapon_texture = PREVIEW_SWORD_TEXTURE
+			flip_weapon_face_on_back = false
+		"Short Sword":
+			weapon_texture = PREVIEW_SHORT_SWORD_TEXTURE
+			flip_weapon_face_on_back = true
+		_:
+			weapon_texture = null
+			flip_weapon_face_on_back = false
+	if is_node_ready():
+		_update_weapon()
+
+
+func _refresh_editor_weapon() -> void:
+	if Engine.is_editor_hint() and is_node_ready():
+		_update_weapon()
+
+
+func _apply_authored_attack_library() -> void:
+	if animation_player.has_animation_library(&"authored"):
+		animation_player.remove_animation_library(&"authored")
+	if authored_attack_library:
+		animation_player.add_animation_library(&"authored", authored_attack_library)
+
+
 func _update_weapon() -> void:
 	var right_weapon_rotation: float = front_weapon_rotation_degrees
 	if preview_direction == "back_right":
 		right_weapon_rotation = weapon_rotation_degrees
+		if preview_character == "male":
+			right_weapon_rotation += male_back_weapon_rotation_offset_degrees
+	elif preview_character == "male":
+		right_weapon_rotation += male_front_weapon_rotation_offset_degrees
 	_configure_weapon(right_weapon_pivot, right_weapon_sprite, right_weapon_rotation)
 	_configure_weapon(left_weapon_pivot, left_weapon_sprite, weapon_rotation_degrees)
 	right_weapon_sprite.flip_h = preview_direction == "back_right" and flip_weapon_face_on_back
 	right_weapon_pivot.position = Vector2.ZERO
 	if preview_direction == "front_left":
-		right_weapon_pivot.position = front_weapon_screen_offset / character_display_scale
+		var front_offset: Vector2 = front_weapon_screen_offset
+		if preview_character == "male":
+			front_offset += male_front_weapon_screen_offset
+		right_weapon_pivot.position = front_offset / character_display_scale
 	elif preview_direction == "back_right":
 		var back_offset: Vector2 = back_weapon_screen_offset
 		if preview_character == "male":
@@ -155,29 +224,6 @@ func _update_shield() -> void:
 	shield_pivot.visible = shield_texture != null
 
 
-func _update_arm_layer_order() -> void:
-	if preview_direction == "back_right":
-		$Root/Waist/Torso/ArmRUpper/Sprite2D.z_index = 30
-		$Root/Waist/Torso/ArmRUpper/ArmRLower/Sprite2D.z_index = 31
-		$Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/Sprite2D.z_index = 32
-		right_weapon_pivot.z_index = -30
-		$Root/Waist/Torso/ArmLUpper/Sprite2D.z_index = -20
-		$Root/Waist/Torso/ArmLUpper/ArmLLower/Sprite2D.z_index = -19
-		$Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/Sprite2D.z_index = -18
-		left_weapon_pivot.z_index = -19
-		shield_pivot.z_index = 50
-	else:
-		$Root/Waist/Torso/ArmRUpper/Sprite2D.z_index = -20
-		$Root/Waist/Torso/ArmRUpper/ArmRLower/Sprite2D.z_index = -19
-		$Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/Sprite2D.z_index = -18
-		right_weapon_pivot.z_index = -19
-		$Root/Waist/Torso/ArmLUpper/Sprite2D.z_index = 30
-		$Root/Waist/Torso/ArmLUpper/ArmLLower/Sprite2D.z_index = 31
-		$Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/Sprite2D.z_index = 32
-		left_weapon_pivot.z_index = 31
-		shield_pivot.z_index = 33
-
-
 func set_direction(direction_name: StringName) -> void:
 	var direction := String(direction_name)
 	var character: String = preview_character
@@ -203,7 +249,6 @@ func set_direction(direction_name: StringName) -> void:
 		else:
 			push_warning("Character part texture not found: %s" % texture_path)
 	_apply_manifest_geometry("%s/rig_manifest.json" % directory)
-	_update_arm_layer_order()
 	_update_weapon()
 	_update_shield()
 	_update_direction_ui(direction)
@@ -251,6 +296,15 @@ func _apply_manifest_geometry(manifest_path: String) -> void:
 		node.position = pivot - parent_pivot
 		var sprite := node.get_node("Sprite2D") as Sprite2D
 		sprite.position = -pivot
+		var z_index_value: Variant = part.get("z_index", null)
+		if z_index_value != null:
+			sprite.z_index = int(z_index_value)
+	var equipment_layers_value: Variant = manifest.get("equipment_layers", {})
+	if equipment_layers_value is Dictionary:
+		var equipment_layers := equipment_layers_value as Dictionary
+		right_weapon_pivot.z_index = int(equipment_layers.get("right_weapon", right_weapon_pivot.z_index))
+		left_weapon_pivot.z_index = int(equipment_layers.get("left_weapon", left_weapon_pivot.z_index))
+		shield_pivot.z_index = int(equipment_layers.get("shield", shield_pivot.z_index))
 	if pivots.has("hand_l"):
 		$Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket.position = Vector2(motion_step, motion_step * 5)
 	if pivots.has("hand_r"):
@@ -285,6 +339,11 @@ func _reset_pose_before_attack() -> void:
 		return
 	animation_player.play(&"idle")
 	animation_player.seek(0.0, true)
+
+
+func _on_animation_finished(animation_name: StringName) -> void:
+	if animation_name == ATTACK_ANIMATION_PLAYER_NAME:
+		play(&"idle")
 
 
 func _on_idle_pressed() -> void:
@@ -335,11 +394,14 @@ func _make_idle() -> Animation:
 	# planted while the body above the knees performs the idle bounce.
 	_add_position_track(animation, ^"Root/Waist/LegLUpper/LegLLower", $Root/Waist/LegLUpper/LegLLower.position, [0, -1, 0, 1, 0, 0])
 	_add_position_track(animation, ^"Root/Waist/LegRUpper/LegRLower", $Root/Waist/LegRUpper/LegRLower.position, [0, -1, 0, 1, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/Head", [0, -1, 0, 1, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper/ArmLLower", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmLUpper/ArmLLower/HandL", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper/ArmRLower", [0, 0, 0, 0, 0, 0])
+	_add_rotation_track(animation, ^"Root/Waist/Torso/ArmRUpper/ArmRLower/HandR", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegLUpper", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegLUpper/LegLLower", [0, 0, 0, 0, 0, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegLUpper/LegLLower/FootL", [0, 0, 0, 0, 0, 0])
