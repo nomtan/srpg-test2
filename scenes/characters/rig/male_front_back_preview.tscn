@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://br7rla0detmgx" path="res://scripts/character/male_front_back_preview.gd" id="2_script"]
 [ext_resource type="PackedScene" uid="uid://chfq5cavywp8f" path="res://scenes/characters/rig/female_front_left.tscn" id="3_female"]
 [ext_resource type="PackedScene" uid="uid://d1dqvci538h6f" path="res://scenes/characters/rig/male_back_right.tscn" id="5_male_back"]
-[ext_resource type="PackedScene" path="res://scenes/characters/rig/female_back_right.tscn" id="6_female_back"]
+[ext_resource type="PackedScene" uid="uid://clb2hja52smn3" path="res://scenes/characters/rig/female_back_right.tscn" id="6_female_back"]
 
 [node name="CharacterFrontBackPreview" type="Node2D" unique_id=241083817]
 script = ExtResource("2_script")
@@ -27,7 +27,7 @@ center_character_in_viewport = false
 show_ui = false
 front_weapon_rotation_degrees = -70.0
 male_back_weapon_rotation_offset_degrees = -7.0
-male_front_weapon_screen_offset = Vector2(-15, 0)
+male_front_weapon_screen_offset = Vector2(-12, 0)
 female_front_weapon_screen_offset = Vector2(0, 0)
 
 [node name="FemaleBackRig" parent="." unique_id=1878974055 instance=ExtResource("6_female_back")]
