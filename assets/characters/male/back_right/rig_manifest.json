@@ -60,8 +60,8 @@
       "name": "arm_r_lower",
       "parent": "arm_r_upper",
       "pivot": [
-        94,
-        545
+        100,
+        520
       ],
       "z_index": -21
     },

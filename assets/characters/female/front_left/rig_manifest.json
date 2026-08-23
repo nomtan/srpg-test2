@@ -51,8 +51,8 @@
       "name": "arm_r_upper",
       "parent": "torso",
       "pivot": [
-        137,
-        419
+        170,
+        475
       ],
       "z_index": -20
     },
@@ -60,7 +60,7 @@
       "name": "arm_r_lower",
       "parent": "arm_r_upper",
       "pivot": [
-        104,
+        120,
         550
       ],
       "z_index": -19

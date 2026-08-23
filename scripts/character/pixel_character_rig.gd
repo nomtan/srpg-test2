@@ -82,11 +82,34 @@ const PART_NODE_PATHS := {
 	set(value):
 		male_back_weapon_rotation_offset_degrees = value
 		_refresh_editor_weapon()
-@export var front_weapon_screen_offset := Vector2(10, -10)
-@export var male_front_weapon_screen_offset := Vector2(-10, 5)
-@export var back_weapon_screen_offset := Vector2(10, -10)
-@export var male_back_weapon_screen_offset := Vector2(-3, -8)
-@export var female_back_weapon_screen_offset := Vector2(-3, -3)
+@export_range(-180.0, 180.0, 1.0) var female_back_weapon_rotation_offset_degrees: float = 0.0:
+	set(value):
+		female_back_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
+@export var front_weapon_screen_offset := Vector2(10, -10):
+	set(value):
+		front_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export var male_front_weapon_screen_offset := Vector2(-10, 5):
+	set(value):
+		male_front_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export var female_front_weapon_screen_offset := Vector2.ZERO:
+	set(value):
+		female_front_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export var back_weapon_screen_offset := Vector2(10, -10):
+	set(value):
+		back_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export var male_back_weapon_screen_offset := Vector2(-3, -8):
+	set(value):
+		male_back_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export var female_back_weapon_screen_offset := Vector2(-3, -3):
+	set(value):
+		female_back_weapon_screen_offset = value
+		_refresh_editor_weapon()
 @export var shield_texture: Texture2D
 @export var shield_grip_position := Vector2(615, 664)
 @export_range(0.01, 2.0, 0.01) var shield_display_scale := 0.55
@@ -165,6 +188,8 @@ func _update_weapon() -> void:
 		right_weapon_rotation = weapon_rotation_degrees
 		if preview_character == "male":
 			right_weapon_rotation += male_back_weapon_rotation_offset_degrees
+		elif preview_character == "female":
+			right_weapon_rotation += female_back_weapon_rotation_offset_degrees
 	elif preview_character == "male":
 		right_weapon_rotation += male_front_weapon_rotation_offset_degrees
 	_configure_weapon(right_weapon_pivot, right_weapon_sprite, right_weapon_rotation)
@@ -175,6 +200,8 @@ func _update_weapon() -> void:
 		var front_offset: Vector2 = front_weapon_screen_offset
 		if preview_character == "male":
 			front_offset += male_front_weapon_screen_offset
+		elif preview_character == "female":
+			front_offset += female_front_weapon_screen_offset
 		right_weapon_pivot.position = front_offset / character_display_scale
 	elif preview_direction == "back_right":
 		var back_offset: Vector2 = back_weapon_screen_offset

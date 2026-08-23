@@ -1,4 +1,4 @@
-[gd_resource type="AnimationLibrary" format=3]
+[gd_resource type="AnimationLibrary" format=3 uid="uid://bswt5l4fjs8k6"]
 
 [sub_resource type="Animation" id="Animation_attack"]
 resource_name = "attack"
@@ -81,4 +81,3 @@ tracks/5/keys = {
 _data = {
 &"attack": SubResource("Animation_attack")
 }
-

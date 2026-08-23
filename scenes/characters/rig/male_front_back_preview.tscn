@@ -1,10 +1,9 @@
 [gd_scene format=3 uid="uid://ypdk2ch7jp5d"]
 
-[ext_resource type="PackedScene" path="res://scenes/characters/rig/male_front_left.tscn" id="1_rig"]
+[ext_resource type="PackedScene" uid="uid://pp31xwlg1042" path="res://scenes/characters/rig/male_front_left.tscn" id="1_rig"]
 [ext_resource type="Script" uid="uid://br7rla0detmgx" path="res://scripts/character/male_front_back_preview.gd" id="2_script"]
-[ext_resource type="PackedScene" path="res://scenes/characters/rig/female_front_left.tscn" id="3_female"]
-[ext_resource type="Texture2D" uid="uid://cqkxbmem32yms" path="res://assets/weapons/sword/base.png" id="4_sword"]
-[ext_resource type="PackedScene" path="res://scenes/characters/rig/male_back_right.tscn" id="5_male_back"]
+[ext_resource type="PackedScene" uid="uid://chfq5cavywp8f" path="res://scenes/characters/rig/female_front_left.tscn" id="3_female"]
+[ext_resource type="PackedScene" uid="uid://d1dqvci538h6f" path="res://scenes/characters/rig/male_back_right.tscn" id="5_male_back"]
 [ext_resource type="PackedScene" path="res://scenes/characters/rig/female_back_right.tscn" id="6_female_back"]
 
 [node name="CharacterFrontBackPreview" type="Node2D" unique_id=241083817]
@@ -14,33 +13,33 @@ script = ExtResource("2_script")
 position = Vector2(300, 386)
 center_character_in_viewport = false
 show_ui = false
-weapon_texture = ExtResource("4_sword")
-male_front_weapon_screen_offset = Vector2(-15, 0)
+male_front_weapon_screen_offset = Vector2(-3, 0)
 
 [node name="MaleBackRig" parent="." unique_id=164925071 instance=ExtResource("5_male_back")]
 position = Vector2(570, 388)
 center_character_in_viewport = false
 show_ui = false
-weapon_texture = ExtResource("4_sword")
-male_front_weapon_screen_offset = Vector2(-15, 0)
+male_front_weapon_screen_offset = Vector2(-10, 0)
 
 [node name="FemaleFrontRig" parent="." unique_id=366938189 instance=ExtResource("3_female")]
 position = Vector2(840, 386)
 center_character_in_viewport = false
 show_ui = false
-weapon_texture = ExtResource("4_sword")
+front_weapon_rotation_degrees = -70.0
+male_back_weapon_rotation_offset_degrees = -7.0
 male_front_weapon_screen_offset = Vector2(-15, 0)
+female_front_weapon_screen_offset = Vector2(0, 0)
 
 [node name="FemaleBackRig" parent="." unique_id=1878974055 instance=ExtResource("6_female_back")]
 position = Vector2(1110, 388)
 center_character_in_viewport = false
 show_ui = false
-weapon_texture = ExtResource("4_sword")
+female_back_weapon_rotation_offset_degrees = 75.0
 male_front_weapon_screen_offset = Vector2(-15, 0)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1365014514]
 
-[node name="MaleFrontLabel" type="Label" parent="UI" unique_id=1414674353]
+[node name="MaleFrontLabel" type="Label" parent="UI" unique_id=736631427]
 offset_left = 298.0
 offset_top = 350.0
 offset_right = 418.0

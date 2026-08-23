@@ -367,9 +367,11 @@ _data = {
 }
 
 [node name="MaleBackRightRig" unique_id=810421414 instance=ExtResource("1_rig")]
-position = Vector2(711, 270)
+position = Vector2(-57, -125)
 preview_direction = "back_right"
 authored_attack_library = ExtResource("2_attack")
+male_front_weapon_rotation_offset_degrees = -180.0
+male_back_weapon_rotation_offset_degrees = 75.0
 
 [node name="Waist" parent="Root" parent_id_path=PackedInt32Array(1801188451) index="0" unique_id=344495270]
 position = Vector2(220, 658)
@@ -394,7 +396,6 @@ texture = ExtResource("5_hdkhw")
 
 [node name="ArmRUpper" parent="Root/Waist/Torso" index="2" unique_id=807877460]
 position = Vector2(-73, -205)
-rotation = -0.13962634
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper" index="0" unique_id=1080088950]
 position = Vector2(-147, -412)
@@ -422,7 +423,7 @@ position = Vector2(-9, 45)
 [node name="WeaponPivot" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket" index="0" unique_id=1478996569]
 z_index = -30
 position = Vector2(29.166668, -75)
-rotation = 0.0
+rotation = 1.3089969
 
 [node name="ArmLUpper" parent="Root/Waist/Torso" index="3" unique_id=1406694156]
 position = Vector2(93, -205)
