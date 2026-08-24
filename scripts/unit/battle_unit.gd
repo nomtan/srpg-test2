@@ -105,6 +105,9 @@ const FACING_WORLD_VECTORS: Array[Vector3] = [
 
 var model_instance: Node3D
 var sprite_instance: AnimatedSprite3D
+var character_rig_viewport: SubViewport
+var character_rig_sprite: Sprite3D
+var character_rig: PixelCharacterRig
 var animation_player: AnimationPlayer
 var weapon_attachment: BoneAttachment3D
 var weapon_instance: Node3D
@@ -117,6 +120,7 @@ var sprite_selected := false
 var directional_sprite_enabled := false
 var directional_attack_enabled := false
 var directional_attack_playing := false
+var character_rig_attack_playing := false
 var _last_directional_animation: StringName
 var _last_directional_flip_h := false
 
@@ -124,6 +128,7 @@ const DIRECTIONAL_SPRITE_FOOT_Y_RATIO := 298.0 / 400.0
 const DIRECTIONAL_ATTACK_FPS := 8.0
 const DIRECTIONAL_ATTACK_CHARGE_FRAMES := 3
 const DIRECTIONAL_ATTACK_STRIKE_FRAMES := 3
+const CHARACTER_RIG_PIXEL_SIZE := 0.006
 
 const IDLE_ANIMATION_NAMES: Array[StringName] = [
 	&"animation_onehand_sword_idle",
@@ -202,7 +207,9 @@ func setup_visual(
 	sprite_vframes: int = 1,
 	sprite_fps: float = 6.0,
 	sprite_back_texture_path: String = "",
-	sprite_attack_base_path: String = ""
+	sprite_attack_base_path: String = "",
+	character_rig_scene_path: String = "",
+	character_rig_character: String = "male"
 ) -> void:
 	model_facing_offset_degrees = facing_offset_degrees
 	animation_profile = requested_animation_profile
@@ -214,7 +221,9 @@ func setup_visual(
 	body_material.albedo_color = base_color
 	body_material.metallic = 0.15
 
-	if not sprite_texture_path.is_empty():
+	if not character_rig_scene_path.is_empty():
+		_create_character_rig_visual(character_rig_scene_path, character_rig_character)
+	elif not sprite_texture_path.is_empty():
 		_create_sprite_visual(
 			sprite_texture_path,
 			sprite_pixel_size,
@@ -252,7 +261,7 @@ func setup_visual(
 	status_bars.configure(team)
 	status_bars.position.y = (
 		1.72
-		if sprite_instance
+		if sprite_instance or character_rig_sprite
 		else (2.05 * CHARACTER_VISUAL_SCALE if model_instance else 1.45 * CHARACTER_VISUAL_SCALE)
 	)
 	add_child(status_bars)
@@ -261,6 +270,54 @@ func setup_visual(
 	update_facing_visual()
 	refresh_status_bars()
 	play_idle_animation()
+
+
+func _create_character_rig_visual(scene_path: String, character: String) -> void:
+	var packed := load(scene_path) as PackedScene
+	if not packed:
+		push_warning("Cannot create character rig: failed to load '%s'" % scene_path)
+		return
+
+	character_rig_viewport = SubViewport.new()
+	character_rig_viewport.name = "CharacterRigViewport"
+	character_rig_viewport.size = Vector2i(320, 320)
+	character_rig_viewport.transparent_bg = true
+	character_rig_viewport.disable_3d = true
+	character_rig_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(character_rig_viewport)
+
+	character_rig = packed.instantiate() as PixelCharacterRig
+	if not character_rig:
+		push_warning("Character rig scene root must be a PixelCharacterRig: '%s'" % scene_path)
+		character_rig_viewport.queue_free()
+		character_rig_viewport = null
+		return
+	character_rig.name = "CharacterRig"
+	character_rig.show_ui = false
+	character_rig.center_character_in_viewport = true
+	character_rig.preview_character = character
+	character_rig.weapon_texture = null
+	character_rig_viewport.add_child(character_rig)
+
+	character_rig_sprite = Sprite3D.new()
+	character_rig_sprite.name = "CharacterRigBillboard"
+	character_rig_sprite.texture = character_rig_viewport.get_texture()
+	character_rig_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	character_rig_sprite.pixel_size = CHARACTER_RIG_PIXEL_SIZE
+	_ground_character_rig_sprite()
+	character_rig_sprite.shaded = false
+	character_rig_sprite.double_sided = true
+	character_rig_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	add_child(character_rig_sprite)
+	directional_sprite_enabled = true
+
+
+func _ground_character_rig_sprite() -> void:
+	if not character_rig or not character_rig_sprite:
+		return
+	character_rig_sprite.position.y = (
+		character_rig.get_center_to_foot_pixels() * CHARACTER_RIG_PIXEL_SIZE
+	)
 
 
 func _create_sprite_visual(
@@ -491,6 +548,9 @@ func attach_face_texture(texture_path: String, bone_name: String = "ganmen") -> 
 
 
 func play_walk_animation() -> void:
+	if character_rig:
+		character_rig.play(&"walk")
+		return
 	_play_animation(BOW_RUN_ANIMATION_NAMES if animation_profile == "bow" else RUN_ANIMATION_NAMES, Animation.LOOP_LINEAR)
 
 
@@ -500,10 +560,18 @@ func stop_walk_animation() -> void:
 
 func play_idle_animation() -> void:
 	attack_animation_name = &""
+	character_rig_attack_playing = false
+	if character_rig:
+		character_rig.play(&"idle")
+		return
 	_play_animation(BOW_IDLE_ANIMATION_NAMES if animation_profile == "bow" else IDLE_ANIMATION_NAMES, Animation.LOOP_LINEAR)
 
 
 func play_attack_animation() -> void:
+	if character_rig:
+		character_rig_attack_playing = true
+		character_rig.play(&"attack")
+		return
 	if sprite_instance and directional_attack_enabled:
 		directional_attack_playing = true
 		var facing_name := "back" if _last_directional_animation == &"back" else "front"
@@ -519,9 +587,9 @@ func play_attack_animation() -> void:
 
 
 func wait_for_attack_impact() -> void:
-	if not directional_attack_playing or not is_inside_tree():
+	if (not directional_attack_playing and not character_rig_attack_playing) or not is_inside_tree():
 		return
-	var charge_duration := (
+	var charge_duration := 0.5 if character_rig_attack_playing else (
 		float(DIRECTIONAL_ATTACK_CHARGE_FRAMES) / DIRECTIONAL_ATTACK_FPS
 	)
 	await get_tree().create_timer(charge_duration).timeout
@@ -600,6 +668,13 @@ func equip_weapon_visual(
 	weapon_attachment.add_child(weapon_instance)
 
 
+func equip_character_rig_weapon(texture_path: String, flip_face_on_back: bool = false) -> void:
+	if not character_rig:
+		return
+	var texture := load(texture_path) as Texture2D if not texture_path.is_empty() else null
+	character_rig.equip_weapon(texture, flip_face_on_back)
+
+
 func face_toward(target_pos: Vector2i) -> void:
 	var delta := target_pos - Vector2i(grid_x, grid_z)
 	face_along_grid_delta(delta)
@@ -626,7 +701,7 @@ func update_facing_visual() -> void:
 
 
 func _update_directional_sprite() -> void:
-	if not sprite_instance or not directional_sprite_enabled:
+	if (not sprite_instance and not character_rig_sprite) or not directional_sprite_enabled:
 		return
 	if not is_inside_tree():
 		return
@@ -651,6 +726,15 @@ func _update_directional_sprite() -> void:
 	var points_right := facing_vector.dot(screen_right) > 0.0
 	var next_animation: StringName = &"front" if shows_front else &"back"
 	var next_flip_h := points_right if shows_front else not points_right
+	if character_rig and character_rig_sprite:
+		var next_direction := "front_left" if shows_front else "back_right"
+		if character_rig.preview_direction != next_direction:
+			character_rig.set_direction(next_direction)
+			_ground_character_rig_sprite()
+		character_rig_sprite.flip_h = next_flip_h
+		_last_directional_animation = next_animation
+		_last_directional_flip_h = next_flip_h
+		return
 	if directional_attack_playing:
 		if next_flip_h != _last_directional_flip_h:
 			sprite_instance.flip_h = next_flip_h
@@ -825,10 +909,11 @@ func update_visual_state() -> void:
 
 
 func _update_sprite_modulate() -> void:
-	if not sprite_instance:
-		return
 	var tint := Color("#c9f2ff") if sprite_selected else Color.WHITE
-	sprite_instance.modulate = tint
+	if sprite_instance:
+		sprite_instance.modulate = tint
+	if character_rig_sprite:
+		character_rig_sprite.modulate = tint
 
 
 func snap_to_grid(grid: GridSystem) -> void:

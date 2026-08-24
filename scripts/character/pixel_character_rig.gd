@@ -21,6 +21,31 @@ const CHARACTER_DIRECTORIES := {
 		"back_right": "res://assets/characters/female/back_right",
 	},
 }
+const ATTACK_LIBRARY_PATHS := {
+	"male": {
+		"front_left": "res://scenes/characters/rig/character_attack_animations.tres",
+		"back_right": "res://scenes/characters/rig/male_back_attack_animations.tres",
+	},
+	"female": {
+		"front_left": "res://scenes/characters/rig/female_front_attack_animations.tres",
+		"back_right": "res://scenes/characters/rig/female_back_attack_animations.tres",
+	},
+}
+const RIG_EQUIPMENT_SETTINGS := {
+	"male": {
+		"front_weapon_rotation_degrees": 0.0,
+		"male_front_weapon_rotation_offset_degrees": -75.0,
+		"male_back_weapon_rotation_offset_degrees": 75.0,
+		"male_front_weapon_screen_offset": Vector2(-3, 0),
+		"male_back_weapon_screen_offset": Vector2(-3, -8),
+	},
+	"female": {
+		"front_weapon_rotation_degrees": -70.0,
+		"female_front_weapon_screen_offset": Vector2.ZERO,
+		"female_back_weapon_rotation_offset_degrees": 75.0,
+		"female_back_weapon_screen_offset": Vector2(-10, -3),
+	},
+}
 const PART_NODE_PATHS := {
 	"waist": ^"Root/Waist",
 	"torso": ^"Root/Waist/Torso",
@@ -131,6 +156,7 @@ const PART_NODE_PATHS := {
 @onready var shield_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot/ShieldSprite
 
 var motion_step := 1
+var visible_character_height := 0.0
 
 
 func _ready() -> void:
@@ -217,11 +243,11 @@ func _update_weapon() -> void:
 	left_weapon_pivot.visible = false
 
 
-func _configure_weapon(pivot: Node2D, sprite: Sprite2D, rotation: float) -> void:
+func _configure_weapon(pivot: Node2D, sprite: Sprite2D, rotation_degrees_value: float) -> void:
 	sprite.texture = weapon_texture
 	sprite.position = -weapon_grip_position
 	pivot.scale = Vector2.ONE * weapon_display_scale
-	pivot.rotation_degrees = rotation
+	pivot.rotation_degrees = rotation_degrees_value
 
 
 func equip_weapon(texture: Texture2D, should_flip_face_on_back: bool = false) -> void:
@@ -261,10 +287,16 @@ func set_direction(direction_name: StringName) -> void:
 	if not character_directories.has(direction):
 		push_warning("Unknown character direction: %s" % direction)
 		return
+	_apply_character_equipment_settings(character)
 	var active_animation: String = animation_player.current_animation if animation_player else ""
 	if active_animation == String(ATTACK_ANIMATION_PLAYER_NAME):
 		active_animation = "attack"
 	preview_direction = direction
+	var attack_paths := ATTACK_LIBRARY_PATHS.get(character, {}) as Dictionary
+	var attack_library_path := String(attack_paths.get(direction, ""))
+	if not attack_library_path.is_empty():
+		authored_attack_library = load(attack_library_path) as AnimationLibrary
+		_apply_authored_attack_library()
 	var directory: String = character_directories[direction]
 	for part_name: String in PART_NODE_PATHS:
 		var node_path: NodePath = PART_NODE_PATHS[part_name]
@@ -284,6 +316,29 @@ func set_direction(direction_name: StringName) -> void:
 		play(StringName(active_animation if not active_animation.is_empty() else preview_animation))
 
 
+func _apply_character_equipment_settings(character: String) -> void:
+	var settings := RIG_EQUIPMENT_SETTINGS.get(character, {}) as Dictionary
+	if settings.is_empty():
+		return
+	if character == "male":
+		front_weapon_rotation_degrees = float(settings.front_weapon_rotation_degrees)
+		male_front_weapon_rotation_offset_degrees = float(
+			settings.male_front_weapon_rotation_offset_degrees
+		)
+		male_back_weapon_rotation_offset_degrees = float(
+			settings.male_back_weapon_rotation_offset_degrees
+		)
+		male_front_weapon_screen_offset = settings.male_front_weapon_screen_offset
+		male_back_weapon_screen_offset = settings.male_back_weapon_screen_offset
+	else:
+		front_weapon_rotation_degrees = float(settings.front_weapon_rotation_degrees)
+		female_front_weapon_screen_offset = settings.female_front_weapon_screen_offset
+		female_back_weapon_rotation_offset_degrees = float(
+			settings.female_back_weapon_rotation_offset_degrees
+		)
+		female_back_weapon_screen_offset = settings.female_back_weapon_screen_offset
+
+
 func set_character(character_name: StringName) -> void:
 	var character := String(character_name)
 	if not CHARACTER_DIRECTORIES.has(character):
@@ -291,6 +346,10 @@ func set_character(character_name: StringName) -> void:
 		return
 	preview_character = character
 	set_direction(preview_direction)
+
+
+func get_center_to_foot_pixels() -> float:
+	return visible_character_height * character_display_scale * 0.5
 
 
 func _apply_manifest_geometry(manifest_path: String) -> void:
@@ -303,6 +362,9 @@ func _apply_manifest_geometry(manifest_path: String) -> void:
 		return
 	var manifest := parsed as Dictionary
 	motion_step = maxi(int(manifest.get("motion_step", 1)), 1)
+	var bbox_value: Array = manifest.get("source_bbox", [])
+	if bbox_value.size() == 4:
+		visible_character_height = float(bbox_value[3]) - float(bbox_value[1])
 	var pivots: Dictionary = {}
 	for part_value in manifest.get("parts", []):
 		var part := part_value as Dictionary
@@ -337,7 +399,6 @@ func _apply_manifest_geometry(manifest_path: String) -> void:
 	if pivots.has("hand_r"):
 		$Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket.position = Vector2(-motion_step, motion_step * 5)
 	if center_character_in_viewport:
-		var bbox_value: Array = manifest.get("source_bbox", [])
 		if bbox_value.size() == 4:
 			var visible_center := Vector2(
 				(float(bbox_value[0]) + float(bbox_value[2]) - 1.0) * 0.5,

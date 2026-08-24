@@ -370,8 +370,6 @@ _data = {
 position = Vector2(-57, -125)
 preview_direction = "back_right"
 authored_attack_library = ExtResource("2_attack")
-male_front_weapon_rotation_offset_degrees = -180.0
-male_back_weapon_rotation_offset_degrees = 75.0
 
 [node name="Waist" parent="Root" parent_id_path=PackedInt32Array(1801188451) index="0" unique_id=344495270]
 position = Vector2(220, 658)

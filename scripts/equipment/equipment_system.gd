@@ -1,6 +1,9 @@
 class_name EquipmentSystem
 extends Node
 
+const PIXEL_SWORD_TEXTURE := "res://assets/weapons/sword/base.png"
+const PIXEL_SHORT_SWORD_TEXTURE := "res://assets/weapons/short_sword/base.png"
+
 var equipment_database: Node
 var job_database: JobDatabase
 var status_calculator: Node
@@ -32,7 +35,17 @@ func refresh_weapon_visual(unit: BattleUnit) -> void:
 	var weapon: WeaponData = equipment_database.get_weapon(unit.equipped_weapon_id)
 	if not weapon:
 		unit.equip_weapon_visual("")
+		unit.equip_character_rig_weapon("")
 		return
+	var pixel_texture_path := ""
+	var flip_pixel_weapon := false
+	match weapon.weapon_type:
+		WeaponData.WeaponType.SWORD:
+			pixel_texture_path = PIXEL_SWORD_TEXTURE
+		WeaponData.WeaponType.DAGGER, WeaponData.WeaponType.DUAL_BLADE:
+			pixel_texture_path = PIXEL_SHORT_SWORD_TEXTURE
+			flip_pixel_weapon = true
+	unit.equip_character_rig_weapon(pixel_texture_path, flip_pixel_weapon)
 	unit.equip_weapon_visual(
 		weapon.visual_model_path,
 		"hand_right_te",

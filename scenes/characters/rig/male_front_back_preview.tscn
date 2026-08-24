@@ -13,29 +13,21 @@ script = ExtResource("2_script")
 position = Vector2(300, 386)
 center_character_in_viewport = false
 show_ui = false
-male_front_weapon_screen_offset = Vector2(-3, 0)
 
 [node name="MaleBackRig" parent="." unique_id=164925071 instance=ExtResource("5_male_back")]
 position = Vector2(570, 388)
 center_character_in_viewport = false
 show_ui = false
-male_front_weapon_screen_offset = Vector2(-10, 0)
 
 [node name="FemaleFrontRig" parent="." unique_id=366938189 instance=ExtResource("3_female")]
 position = Vector2(840, 386)
 center_character_in_viewport = false
 show_ui = false
-front_weapon_rotation_degrees = -70.0
-male_back_weapon_rotation_offset_degrees = -7.0
-male_front_weapon_screen_offset = Vector2(-12, 0)
-female_front_weapon_screen_offset = Vector2(0, 0)
 
 [node name="FemaleBackRig" parent="." unique_id=1878974055 instance=ExtResource("6_female_back")]
 position = Vector2(1110, 388)
 center_character_in_viewport = false
 show_ui = false
-female_back_weapon_rotation_offset_degrees = 75.0
-male_front_weapon_screen_offset = Vector2(-15, 0)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1365014514]
 

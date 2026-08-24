@@ -11,6 +11,8 @@ const VEIN_CHARACTER_SPRITE_FRONT := "res://assets/characters/test/idle/front/id
 const VEIN_CHARACTER_SPRITE_BACK := "res://assets/characters/test/idle/back/idle-back-6f.png"
 const VEIN_CHARACTER_ATTACK_NORMAL := "res://assets/characters/test/attack/normal"
 const VEIN_CHARACTER_SPRITE_PIXEL_SIZE := 0.00648
+const MALE_CHARACTER_RIG := "res://scenes/characters/rig/male_front_left.tscn"
+const FEMALE_CHARACTER_RIG := "res://scenes/characters/rig/female_front_left.tscn"
 const ACREA_TUNIC_COLOR := Color("#497b9b")
 const ACREA_ACCENT_COLOR := Color("#65c9d5")
 const GLEN_TUNIC_COLOR := Color("#526f49")
@@ -27,9 +29,9 @@ func setup(source_grid: GridSystem) -> void:
 
 
 func spawn_initial_units() -> void:
-	_spawn_unit("vain", "Vain", Vector2i(73, 20), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", Color.TRANSPARENT, Color.TRANSPARENT, VEIN_CHARACTER_SPRITE_FRONT, VEIN_CHARACTER_SPRITE_PIXEL_SIZE, 3, 2, 6.0, VEIN_CHARACTER_SPRITE_BACK, VEIN_CHARACTER_ATTACK_NORMAL)
-	_spawn_unit("acrea", "Acrea", Vector2i(72, 19), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", ACREA_TUNIC_COLOR, ACREA_ACCENT_COLOR)
-	_spawn_unit("glen", "Glen", Vector2i(74, 19), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "bow", GLEN_TUNIC_COLOR, GLEN_ACCENT_COLOR)
+	_spawn_unit("vain", "Vain", Vector2i(73, 20), "player", 120, 30, 8, 90, 10, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", Color.TRANSPARENT, Color.TRANSPARENT, "", VEIN_CHARACTER_SPRITE_PIXEL_SIZE, 3, 2, 6.0, "", "", MALE_CHARACTER_RIG, "male")
+	_spawn_unit("acrea", "Acrea", Vector2i(72, 19), "player", 90, 24, 5, 92, 15, BattleUnit.AttackType.MELEE, 1, 1, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "onehand_sword", ACREA_TUNIC_COLOR, ACREA_ACCENT_COLOR, "", VEIN_CHARACTER_SPRITE_PIXEL_SIZE, 1, 1, 6.0, "", "", FEMALE_CHARACTER_RIG, "female")
+	_spawn_unit("glen", "Glen", Vector2i(74, 19), "player", 100, 22, 5, 85, 12, BattleUnit.AttackType.RANGED, 2, 3, VEIN_CHARACTER_MODEL, VEIN_CHARACTER_SCALE, VEIN_CHARACTER_Y_OFFSET, VEIN_CHARACTER_FACING_OFFSET, VEIN_USE_FLAT_SHADING, "bow", GLEN_TUNIC_COLOR, GLEN_ACCENT_COLOR, "", VEIN_CHARACTER_SPRITE_PIXEL_SIZE, 1, 1, 6.0, "", "", MALE_CHARACTER_RIG, "male")
 	var debug_enemy: BattleUnit
 	if ENABLE_DEBUG_NEARBY_ENEMY:
 		debug_enemy = _spawn_unit("debug_bandit", "Debug Bandit", Vector2i(55, 25), "enemy", 55, 16, 3, 80, 6)
@@ -95,12 +97,14 @@ func _spawn_unit(
 	sprite_vframes: int = 1,
 	sprite_fps: float = 6.0,
 	sprite_back_texture_path: String = "",
-	sprite_attack_base_path: String = ""
+	sprite_attack_base_path: String = "",
+	character_rig_scene_path: String = "",
+	character_rig_character: String = "male"
 ) -> BattleUnit:
 	var unit := BattleUnit.new()
 	unit.configure(unit_id, display_name, grid_pos, team)
 	unit.set_combat_stats(max_hp, power, armor, accuracy, evasion, attack_type, min_range, max_range)
-	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_flat_shading, animation_profile, tunic_color, accent_color, sprite_texture_path, sprite_pixel_size, sprite_hframes, sprite_vframes, sprite_fps, sprite_back_texture_path, sprite_attack_base_path)
+	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_flat_shading, animation_profile, tunic_color, accent_color, sprite_texture_path, sprite_pixel_size, sprite_hframes, sprite_vframes, sprite_fps, sprite_back_texture_path, sprite_attack_base_path, character_rig_scene_path, character_rig_character)
 	add_child(unit)
 	units.append(unit)
 	grid.set_occupied_unit(grid_pos, unit)

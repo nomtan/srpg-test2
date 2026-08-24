@@ -370,8 +370,6 @@ _data = {
 position = Vector2(709, 268)
 preview_character = "female"
 authored_attack_library = ExtResource("2_attack")
-front_weapon_rotation_degrees = -89.0
-female_front_weapon_screen_offset = null
 
 [node name="Waist" parent="Root" parent_id_path=PackedInt32Array(1801188451) index="0" unique_id=344495270]
 position = Vector2(227, 661)

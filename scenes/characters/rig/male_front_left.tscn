@@ -354,7 +354,6 @@ _data = {
 [node name="MaleFrontLeftRig" unique_id=1751582844 instance=ExtResource("1_rig")]
 position = Vector2(-58, -122)
 authored_attack_library = ExtResource("2_attack")
-male_front_weapon_rotation_offset_degrees = -75.0
 
 [node name="WeaponPivot" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket" parent_id_path=PackedInt32Array(1419343557) index="0" unique_id=1478996569]
 rotation = -1.3089969
