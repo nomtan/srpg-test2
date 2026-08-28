@@ -444,6 +444,22 @@ position = Vector2(0, -20.833334)
 rotation = -1.2740903
 scale = Vector2(0.55, 0.55)
 
+[node name="BowString" type="Line2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
+visible = false
+z_index = -1
+points = PackedVector2Array(140, -545, 140, 0, 140, 500)
+width = 8.0
+default_color = Color(0.2, 0.105882, 0.0509804, 1)
+
+[node name="BowUpperTip" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
+position = Vector2(140, -545)
+
+[node name="BowStringRest" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
+position = Vector2(140, 0)
+
+[node name="BowLowerTip" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
+position = Vector2(140, 500)
+
 [node name="WeaponSprite" type="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot" unique_id=455959676]
 position = Vector2(-626, -1000)
 texture = ExtResource("18_sword")
@@ -484,6 +500,8 @@ visible = false
 z_index = 31
 rotation = 1.2217305
 scale = Vector2(0.55, 0.55)
+
+[node name="ArrowNock" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
 
 [node name="WeaponSprite" type="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" unique_id=1428805213]
 position = Vector2(-626, -1000)
@@ -565,9 +583,9 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_left = -224.0
-offset_top = -180.0
+offset_top = -300.0
 offset_right = -24.0
-offset_bottom = 180.0
+offset_bottom = 300.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -606,3 +624,37 @@ text = "Idle"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Walk"
+
+[node name="AttackButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Attack"
+
+[node name="WeaponSeparator" type="HSeparator" parent="UI/RightPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="WeaponTitle" type="Label" parent="UI/RightPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Weapon"
+horizontal_alignment = 1
+
+[node name="WeaponStatus" type="Label" parent="UI/RightPanel/Margin/VBox"]
+layout_mode = 2
+text = "Weapon: Sword"
+horizontal_alignment = 1
+
+[node name="SwordButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Sword"
+
+[node name="ShortSwordButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Short Sword"
+
+[node name="BowButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Bow"

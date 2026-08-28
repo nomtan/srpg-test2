@@ -369,6 +369,7 @@ _data = {
 [node name="MaleBackRightRig" unique_id=810421414 instance=ExtResource("1_rig")]
 position = Vector2(-57, -125)
 preview_direction = "back_right"
+editor_preview_weapon = "Bow"
 authored_attack_library = ExtResource("2_attack")
 
 [node name="Waist" parent="Root" parent_id_path=PackedInt32Array(1801188451) index="0" unique_id=344495270]

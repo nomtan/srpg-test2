@@ -9,8 +9,14 @@ class_name PixelCharacterRig
 const FRAME_COUNT := 6
 const FPS := 6.0
 const ATTACK_ANIMATION_PLAYER_NAME := &"authored/attack"
+const BOW_ATTACK_ANIMATION_PLAYER_NAME := &"authored/bow_attack"
 const PREVIEW_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/sword/base.png")
 const PREVIEW_SHORT_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/short_sword/base.png")
+const PREVIEW_BOW_TEXTURE: Texture2D = preload("res://assets/weapons/bow/base.png")
+const PREVIEW_ARROW_TEXTURE: Texture2D = preload("res://assets/weapons/allow/base.png")
+const DEFAULT_WEAPON_GRIP_POSITION := Vector2(626, 1000)
+const BOW_WEAPON_GRIP_POSITION := Vector2(562, 620)
+const ARROW_GRIP_POSITION := Vector2(626, 190)
 const CHARACTER_DIRECTORIES := {
 	"male": {
 		"front_left": "res://assets/characters/male/front_left",
@@ -80,13 +86,31 @@ const PART_NODE_PATHS := {
 @export var show_ui := true
 @export_range(0.01, 4.0, 0.01) var character_display_scale := 0.24
 @export var weapon_texture: Texture2D
-@export_enum("None", "Sword", "Short Sword") var editor_preview_weapon: String = "Sword":
+@export_enum("None", "Sword", "Short Sword", "Bow") var editor_preview_weapon: String = "Sword":
 	set(value):
 		editor_preview_weapon = value
 		if Engine.is_editor_hint() and is_node_ready():
 			_apply_editor_preview_weapon()
 @export var flip_weapon_face_on_back := false
 @export var weapon_grip_position := Vector2(626, 1000)
+@export var offhand_weapon_texture: Texture2D
+@export var offhand_weapon_grip_position := ARROW_GRIP_POSITION:
+	set(value):
+		offhand_weapon_grip_position = value
+		_refresh_editor_weapon()
+@export_range(0.01, 2.0, 0.01) var offhand_weapon_display_scale := 0.55:
+	set(value):
+		offhand_weapon_display_scale = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var offhand_weapon_rotation_offset_degrees := 90.0:
+	set(value):
+		offhand_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
+@export_range(0.0, 1.0, 0.01) var bow_string_pull_amount: float = 0.0:
+	set(value):
+		bow_string_pull_amount = clampf(value, 0.0, 1.0)
+		if is_node_ready():
+			_update_bow_string()
 @export_range(0.01, 2.0, 0.01) var weapon_display_scale: float = 0.55:
 	set(value):
 		weapon_display_scale = value
@@ -144,7 +168,12 @@ const PART_NODE_PATHS := {
 @onready var ui: CanvasLayer = get_node_or_null("UI") as CanvasLayer
 @onready var idle_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/IdleButton") as Button
 @onready var walk_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/WalkButton") as Button
+@onready var attack_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/AttackButton") as Button
 @onready var animation_status: Label = get_node_or_null("UI/RightPanel/Margin/VBox/AnimationStatus") as Label
+@onready var sword_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/SwordButton") as Button
+@onready var short_sword_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/ShortSwordButton") as Button
+@onready var bow_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/BowButton") as Button
+@onready var weapon_status: Label = get_node_or_null("UI/RightPanel/Margin/VBox/WeaponStatus") as Label
 @onready var direction_status: Label = get_node_or_null("UI/RightPanel/Margin/VBox/DirectionStatus") as Label
 @onready var front_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/FrontButton") as Button
 @onready var back_button: Button = get_node_or_null("UI/RightPanel/Margin/VBox/BackButton") as Button
@@ -152,18 +181,24 @@ const PART_NODE_PATHS := {
 @onready var right_weapon_sprite: Sprite2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/WeaponSprite
 @onready var left_weapon_pivot: Node2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot
 @onready var left_weapon_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/WeaponSprite
+@onready var bow_string: Line2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowString
+@onready var bow_upper_tip: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowUpperTip
+@onready var bow_string_rest: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowStringRest
+@onready var bow_lower_tip: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowLowerTip
+@onready var arrow_nock: Marker2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/ArrowNock
 @onready var shield_pivot: Node2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot
 @onready var shield_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot/ShieldSprite
 
 var motion_step := 1
 var visible_character_height := 0.0
+var weapon_animation_profile: StringName = &"default"
 
 
 func _ready() -> void:
 	if ui:
 		ui.visible = show_ui
 	$Root.scale = Vector2.ONE * character_display_scale
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint() or show_ui:
 		_apply_editor_preview_weapon()
 	_apply_authored_attack_library()
 	set_direction(preview_direction)
@@ -174,6 +209,14 @@ func _ready() -> void:
 		idle_button.pressed.connect(_on_idle_pressed)
 	if walk_button:
 		walk_button.pressed.connect(_on_walk_pressed)
+	if attack_button:
+		attack_button.pressed.connect(_on_attack_pressed)
+	if sword_button:
+		sword_button.pressed.connect(_on_sword_pressed)
+	if short_sword_button:
+		short_sword_button.pressed.connect(_on_short_sword_pressed)
+	if bow_button:
+		bow_button.pressed.connect(_on_bow_pressed)
 	if front_button:
 		front_button.pressed.connect(_on_front_pressed)
 	if back_button:
@@ -181,19 +224,42 @@ func _ready() -> void:
 	play(preview_animation)
 
 
+func _process(_delta: float) -> void:
+	if bow_string and bow_string.visible:
+		_update_bow_string()
+
+
 func _apply_editor_preview_weapon() -> void:
+	bow_string_pull_amount = 0.0
 	match editor_preview_weapon:
 		"Sword":
 			weapon_texture = PREVIEW_SWORD_TEXTURE
+			weapon_grip_position = DEFAULT_WEAPON_GRIP_POSITION
+			offhand_weapon_texture = null
+			weapon_animation_profile = &"default"
 			flip_weapon_face_on_back = false
 		"Short Sword":
 			weapon_texture = PREVIEW_SHORT_SWORD_TEXTURE
+			weapon_grip_position = DEFAULT_WEAPON_GRIP_POSITION
+			offhand_weapon_texture = null
+			weapon_animation_profile = &"default"
 			flip_weapon_face_on_back = true
+		"Bow":
+			weapon_texture = PREVIEW_BOW_TEXTURE
+			weapon_grip_position = BOW_WEAPON_GRIP_POSITION
+			offhand_weapon_texture = PREVIEW_ARROW_TEXTURE
+			offhand_weapon_grip_position = ARROW_GRIP_POSITION
+			weapon_animation_profile = &"bow"
+			flip_weapon_face_on_back = false
 		_:
 			weapon_texture = null
+			weapon_grip_position = DEFAULT_WEAPON_GRIP_POSITION
+			offhand_weapon_texture = null
+			weapon_animation_profile = &"default"
 			flip_weapon_face_on_back = false
 	if is_node_ready():
 		_update_weapon()
+	_update_weapon_ui()
 
 
 func _refresh_editor_weapon() -> void:
@@ -218,8 +284,22 @@ func _update_weapon() -> void:
 			right_weapon_rotation += female_back_weapon_rotation_offset_degrees
 	elif preview_character == "male":
 		right_weapon_rotation += male_front_weapon_rotation_offset_degrees
-	_configure_weapon(right_weapon_pivot, right_weapon_sprite, right_weapon_rotation)
-	_configure_weapon(left_weapon_pivot, left_weapon_sprite, weapon_rotation_degrees)
+	_configure_weapon(
+		right_weapon_pivot,
+		right_weapon_sprite,
+		weapon_texture,
+		weapon_grip_position,
+		weapon_display_scale,
+		right_weapon_rotation
+	)
+	_configure_weapon(
+		left_weapon_pivot,
+		left_weapon_sprite,
+		offhand_weapon_texture,
+		offhand_weapon_grip_position,
+		offhand_weapon_display_scale,
+		right_weapon_rotation + offhand_weapon_rotation_offset_degrees
+	)
 	right_weapon_sprite.flip_h = preview_direction == "back_right" and flip_weapon_face_on_back
 	right_weapon_pivot.position = Vector2.ZERO
 	if preview_direction == "front_left":
@@ -240,18 +320,59 @@ func _update_weapon() -> void:
 	# Part IDs are authored in screen space. HandR is the anatomical right hand
 	# from the front, and the anatomical left hand when viewed from the back.
 	right_weapon_pivot.visible = has_weapon
-	left_weapon_pivot.visible = false
+	left_weapon_pivot.visible = offhand_weapon_texture != null
+	_update_bow_string()
 
 
-func _configure_weapon(pivot: Node2D, sprite: Sprite2D, rotation_degrees_value: float) -> void:
-	sprite.texture = weapon_texture
-	sprite.position = -weapon_grip_position
-	pivot.scale = Vector2.ONE * weapon_display_scale
+func _update_bow_string() -> void:
+	if not bow_string or not bow_upper_tip or not bow_string_rest or not bow_lower_tip:
+		return
+	var bow_equipped := weapon_animation_profile == &"bow" and weapon_texture != null
+	bow_string.visible = bow_equipped
+	if not bow_equipped:
+		return
+	var pull_position := bow_string_rest.position
+	if arrow_nock and offhand_weapon_texture != null:
+		var nock_in_bow_space := right_weapon_pivot.to_local(arrow_nock.global_position)
+		pull_position = bow_string_rest.position.lerp(
+			nock_in_bow_space,
+			bow_string_pull_amount
+		)
+	bow_string.points = PackedVector2Array([
+		bow_upper_tip.position,
+		pull_position,
+		bow_lower_tip.position,
+	])
+
+
+func _configure_weapon(
+	pivot: Node2D,
+	sprite: Sprite2D,
+	texture: Texture2D,
+	grip_position: Vector2,
+	display_scale: float,
+	rotation_degrees_value: float
+) -> void:
+	sprite.texture = texture
+	sprite.position = -grip_position
+	pivot.scale = Vector2.ONE * display_scale
 	pivot.rotation_degrees = rotation_degrees_value
 
 
-func equip_weapon(texture: Texture2D, should_flip_face_on_back: bool = false) -> void:
+func equip_weapon(
+	texture: Texture2D,
+	should_flip_face_on_back: bool = false,
+	grip_position: Vector2 = DEFAULT_WEAPON_GRIP_POSITION,
+	offhand_texture: Texture2D = null,
+	offhand_grip_position: Vector2 = ARROW_GRIP_POSITION,
+	animation_profile: StringName = &"default"
+) -> void:
+	bow_string_pull_amount = 0.0
 	weapon_texture = texture
+	weapon_grip_position = grip_position
+	offhand_weapon_texture = offhand_texture
+	offhand_weapon_grip_position = offhand_grip_position
+	weapon_animation_profile = animation_profile
 	flip_weapon_face_on_back = should_flip_face_on_back
 	_update_weapon()
 
@@ -289,7 +410,10 @@ func set_direction(direction_name: StringName) -> void:
 		return
 	_apply_character_equipment_settings(character)
 	var active_animation: String = animation_player.current_animation if animation_player else ""
-	if active_animation == String(ATTACK_ANIMATION_PLAYER_NAME):
+	if active_animation in [
+		String(ATTACK_ANIMATION_PLAYER_NAME),
+		String(BOW_ATTACK_ANIMATION_PLAYER_NAME),
+	]:
 		active_animation = "attack"
 	preview_direction = direction
 	var attack_paths := ATTACK_LIBRARY_PATHS.get(character, {}) as Dictionary
@@ -413,9 +537,17 @@ func _apply_manifest_geometry(manifest_path: String) -> void:
 func play(animation_name: StringName) -> void:
 	if not animation_player:
 		return
+	if animation_name != &"attack":
+		bow_string_pull_amount = 0.0
 	var player_animation_name: StringName = animation_name
 	if animation_name == &"attack":
-		player_animation_name = ATTACK_ANIMATION_PLAYER_NAME
+		player_animation_name = (
+			BOW_ATTACK_ANIMATION_PLAYER_NAME
+			if weapon_animation_profile == &"bow"
+			else ATTACK_ANIMATION_PLAYER_NAME
+		)
+		if not animation_player.has_animation(player_animation_name):
+			player_animation_name = ATTACK_ANIMATION_PLAYER_NAME
 		_reset_pose_before_attack()
 	if animation_player.has_animation(player_animation_name):
 		animation_player.play(player_animation_name)
@@ -430,7 +562,8 @@ func _reset_pose_before_attack() -> void:
 
 
 func _on_animation_finished(animation_name: StringName) -> void:
-	if animation_name == ATTACK_ANIMATION_PLAYER_NAME:
+	if animation_name in [ATTACK_ANIMATION_PLAYER_NAME, BOW_ATTACK_ANIMATION_PLAYER_NAME]:
+		bow_string_pull_amount = 0.0
 		play(&"idle")
 
 
@@ -440,6 +573,25 @@ func _on_idle_pressed() -> void:
 
 func _on_walk_pressed() -> void:
 	play(&"walk")
+
+
+func _on_attack_pressed() -> void:
+	play(&"attack")
+
+
+func _on_sword_pressed() -> void:
+	editor_preview_weapon = "Sword"
+	_apply_editor_preview_weapon()
+
+
+func _on_short_sword_pressed() -> void:
+	editor_preview_weapon = "Short Sword"
+	_apply_editor_preview_weapon()
+
+
+func _on_bow_pressed() -> void:
+	editor_preview_weapon = "Bow"
+	_apply_editor_preview_weapon()
 
 
 func _on_front_pressed() -> void:
@@ -463,7 +615,18 @@ func _update_animation_ui(animation_name: StringName) -> void:
 		return
 	idle_button.disabled = animation_name == &"idle"
 	walk_button.disabled = animation_name == &"walk"
+	if attack_button:
+		attack_button.disabled = animation_name == &"attack"
 	animation_status.text = "再生中: %s" % str(animation_name).capitalize()
+
+
+func _update_weapon_ui() -> void:
+	if not sword_button or not short_sword_button or not bow_button or not weapon_status:
+		return
+	sword_button.disabled = editor_preview_weapon == "Sword"
+	short_sword_button.disabled = editor_preview_weapon == "Short Sword"
+	bow_button.disabled = editor_preview_weapon == "Bow"
+	weapon_status.text = "Weapon: %s" % editor_preview_weapon
 
 
 func _build_animation_library() -> void:

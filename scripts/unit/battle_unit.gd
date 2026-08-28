@@ -75,6 +75,7 @@ var body_material: StandardMaterial3D
 var base_color: Color
 var status_bars: Sprite3D
 var blob_shadow: Decal
+var active_marker: Label3D
 
 
 func configure(
@@ -184,6 +185,7 @@ const BLOB_SHADOW_SIZE := Vector3(
 	0.85 * CHARACTER_VISUAL_SCALE
 )
 const BLOB_SHADOW_MAX_ALPHA := 0.55
+const ACTIVE_MARKER_OFFSET_Y := 0.42
 static var _blob_shadow_texture_cache: ImageTexture
 
 
@@ -265,6 +267,7 @@ func setup_visual(
 		else (2.05 * CHARACTER_VISUAL_SCALE if model_instance else 1.45 * CHARACTER_VISUAL_SCALE)
 	)
 	add_child(status_bars)
+	_create_active_marker()
 	_create_blob_shadow()
 	update_visual_state()
 	update_facing_visual()
@@ -493,6 +496,22 @@ func _create_blob_shadow() -> void:
 	add_child(blob_shadow)
 
 
+func _create_active_marker() -> void:
+	active_marker = Label3D.new()
+	active_marker.name = "ActiveMarker"
+	active_marker.text = "▼"
+	active_marker.position.y = status_bars.position.y + ACTIVE_MARKER_OFFSET_Y
+	active_marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	active_marker.font_size = 48
+	active_marker.pixel_size = 0.008
+	active_marker.modulate = Color("#ffd84a")
+	active_marker.outline_modulate = Color("#3a2b08")
+	active_marker.outline_size = 8
+	active_marker.no_depth_test = true
+	active_marker.visible = sprite_selected
+	add_child(active_marker)
+
+
 ## Shrinks and fades the blob shadow as the unit rises off the ground
 ## (jump/float). Not yet wired to any movement animation - call this once
 ## the mover/skill systems track real-time height above ground.
@@ -668,11 +687,30 @@ func equip_weapon_visual(
 	weapon_attachment.add_child(weapon_instance)
 
 
-func equip_character_rig_weapon(texture_path: String, flip_face_on_back: bool = false) -> void:
+func equip_character_rig_weapon(
+	texture_path: String,
+	flip_face_on_back: bool = false,
+	grip_position: Vector2 = Vector2(626, 1000),
+	offhand_texture_path: String = "",
+	offhand_grip_position: Vector2 = Vector2(626, 190),
+	weapon_profile: StringName = &"default"
+) -> void:
 	if not character_rig:
 		return
 	var texture := load(texture_path) as Texture2D if not texture_path.is_empty() else null
-	character_rig.equip_weapon(texture, flip_face_on_back)
+	var offhand_texture: Texture2D = (
+		load(offhand_texture_path) as Texture2D
+		if not offhand_texture_path.is_empty()
+		else null
+	)
+	character_rig.equip_weapon(
+		texture,
+		flip_face_on_back,
+		grip_position,
+		offhand_texture,
+		offhand_grip_position,
+		weapon_profile
+	)
 
 
 func face_toward(target_pos: Vector2i) -> void:
@@ -756,10 +794,8 @@ func _update_directional_sprite() -> void:
 func set_selected(selected: bool) -> void:
 	sprite_selected = selected
 	if body_material:
-		body_material.emission_enabled = selected
-		body_material.emission = Color("#66d9ff") if team == "player" else Color("#ff7777")
-		body_material.emission_energy_multiplier = 0.7
-	_update_sprite_modulate()
+		body_material.emission_enabled = false
+	_update_selection_visual()
 
 
 func mark_acted(moved: bool = true) -> void:
@@ -905,15 +941,16 @@ func update_visual_state() -> void:
 	visible = not is_dead
 	if body_material:
 		body_material.albedo_color = base_color
-	_update_sprite_modulate()
+	_update_selection_visual()
 
 
-func _update_sprite_modulate() -> void:
-	var tint := Color("#c9f2ff") if sprite_selected else Color.WHITE
+func _update_selection_visual() -> void:
 	if sprite_instance:
-		sprite_instance.modulate = tint
+		sprite_instance.modulate = Color.WHITE
 	if character_rig_sprite:
-		character_rig_sprite.modulate = tint
+		character_rig_sprite.modulate = Color.WHITE
+	if active_marker:
+		active_marker.visible = sprite_selected
 
 
 func snap_to_grid(grid: GridSystem) -> void:

@@ -3,6 +3,11 @@ extends Node
 
 const PIXEL_SWORD_TEXTURE := "res://assets/weapons/sword/base.png"
 const PIXEL_SHORT_SWORD_TEXTURE := "res://assets/weapons/short_sword/base.png"
+const PIXEL_BOW_TEXTURE := "res://assets/weapons/bow/base.png"
+const PIXEL_ARROW_TEXTURE := "res://assets/weapons/allow/base.png"
+const DEFAULT_PIXEL_WEAPON_GRIP := Vector2(626, 1000)
+const PIXEL_BOW_GRIP := Vector2(562, 620)
+const PIXEL_ARROW_GRIP := Vector2(626, 190)
 
 var equipment_database: Node
 var job_database: JobDatabase
@@ -39,13 +44,28 @@ func refresh_weapon_visual(unit: BattleUnit) -> void:
 		return
 	var pixel_texture_path := ""
 	var flip_pixel_weapon := false
+	var pixel_weapon_grip := DEFAULT_PIXEL_WEAPON_GRIP
+	var pixel_offhand_texture_path := ""
+	var pixel_weapon_profile: StringName = &"default"
 	match weapon.weapon_type:
 		WeaponData.WeaponType.SWORD:
 			pixel_texture_path = PIXEL_SWORD_TEXTURE
 		WeaponData.WeaponType.DAGGER, WeaponData.WeaponType.DUAL_BLADE:
 			pixel_texture_path = PIXEL_SHORT_SWORD_TEXTURE
 			flip_pixel_weapon = true
-	unit.equip_character_rig_weapon(pixel_texture_path, flip_pixel_weapon)
+		WeaponData.WeaponType.BOW:
+			pixel_texture_path = PIXEL_BOW_TEXTURE
+			pixel_weapon_grip = PIXEL_BOW_GRIP
+			pixel_offhand_texture_path = PIXEL_ARROW_TEXTURE
+			pixel_weapon_profile = &"bow"
+	unit.equip_character_rig_weapon(
+		pixel_texture_path,
+		flip_pixel_weapon,
+		pixel_weapon_grip,
+		pixel_offhand_texture_path,
+		PIXEL_ARROW_GRIP,
+		pixel_weapon_profile
+	)
 	unit.equip_weapon_visual(
 		weapon.visual_model_path,
 		"hand_right_te",
