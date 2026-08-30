@@ -13,7 +13,8 @@ func find_reachable(
 	grid: GridSystem,
 	start: Vector2i,
 	move_range: int,
-	jump_height: int
+	jump_height: int,
+	moving_unit: BattleUnit
 ) -> Dictionary:
 	var costs: Dictionary = {start: 0}
 	var frontier: Array[Vector2i] = [start]
@@ -29,7 +30,10 @@ func find_reachable(
 			if not grid.is_in_bounds(next_pos):
 				continue
 			var next_cell: GridCell = grid.get_cell(next_pos)
-			if not next_cell.walkable or next_cell.blocks_movement or next_cell.occupied_unit != null:
+			if not next_cell.walkable or next_cell.blocks_movement:
+				continue
+			var occupant := next_cell.occupied_unit
+			if occupant and occupant != moving_unit and occupant.team != moving_unit.team:
 				continue
 			if absi(next_cell.height - current_cell.height) > jump_height:
 				continue
@@ -42,7 +46,12 @@ func find_reachable(
 				if next_pos not in frontier:
 					frontier.append(next_pos)
 
-	return costs
+	var reachable: Dictionary = {}
+	for grid_pos: Vector2i in costs:
+		var occupant := grid.get_cell(grid_pos).occupied_unit
+		if grid_pos == start or occupant == null or occupant == moving_unit:
+			reachable[grid_pos] = costs[grid_pos]
+	return reachable
 
 
 func _lowest_cost_index(frontier: Array[Vector2i], costs: Dictionary) -> int:
@@ -66,7 +75,8 @@ func find_path_from(grid: GridSystem, unit: BattleUnit, start: Vector2i, destina
 			if not grid.is_in_bounds(next_pos) or came_from.has(next_pos): continue
 			var cell := grid.get_cell(next_pos)
 			if not cell.walkable or cell.blocks_movement: continue
-			if cell.occupied_unit and cell.occupied_unit != unit and next_pos != destination: continue
+			if cell.occupied_unit and cell.occupied_unit != unit:
+				if next_pos == destination or cell.occupied_unit.team != unit.team: continue
 			if absi(cell.height - grid.get_cell(current).height) > unit.jump_height: continue
 			came_from[next_pos] = current
 			frontier.append(next_pos)

@@ -27,7 +27,7 @@
         220,
         658
       ],
-      "z_index": 10
+      "z_index": 0
     },
     {
       "name": "torso",
@@ -108,7 +108,7 @@
         170,
         679
       ],
-      "z_index": -10
+      "z_index": -50
     },
     {
       "name": "leg_r_lower",
@@ -117,7 +117,7 @@
         170,
         802
       ],
-      "z_index": -9
+      "z_index": -51
     },
     {
       "name": "foot_r",
@@ -126,7 +126,7 @@
         144,
         915
       ],
-      "z_index": -8
+      "z_index": -52
     },
     {
       "name": "leg_l_upper",
@@ -135,7 +135,7 @@
         271,
         679
       ],
-      "z_index": 20
+      "z_index": -30
     },
     {
       "name": "leg_l_lower",
@@ -144,7 +144,7 @@
         296,
         812
       ],
-      "z_index": 21
+      "z_index": -31
     },
     {
       "name": "foot_l",
@@ -153,7 +153,7 @@
         313,
         946
       ],
-      "z_index": 22
+      "z_index": -32
     }
   ]
 }

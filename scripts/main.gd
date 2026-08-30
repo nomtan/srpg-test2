@@ -307,7 +307,9 @@ func _on_move_selected() -> void:
 	action_menu.close()
 	var unit := unit_manager.selected_unit
 	if reachable.is_empty():
-		reachable = pathfinding.find_reachable(grid, original_grid_pos, unit.move_range, unit.jump_height)
+		reachable = pathfinding.find_reachable(
+			grid, original_grid_pos, unit.move_range, unit.jump_height, unit
+		)
 	_show_move_range(unit, original_grid_pos)
 	cursor.current_mode = BattleCursor.CursorMode.MOVE_TARGETING
 	cursor.input_enabled = true

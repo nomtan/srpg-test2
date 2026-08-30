@@ -254,7 +254,7 @@ func _add_map_boundary_crosses() -> void:
 		_range_cross_material.render_priority = -100
 
 	var instance := MeshInstance3D.new()
-	instance.name = "MapGridBoundaryStars"
+	instance.name = "MapGridBoundaryCrosses"
 	instance.mesh = _map_cross_mesh
 	instance.material_override = _range_cross_material
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -326,7 +326,7 @@ func _build_map_cross_mesh() -> ArrayMesh:
 			edge_points[1] as Vector3
 		)
 	for cross_position: Vector3 in cross_positions.values():
-		_append_star_geometry(vertices, normals, indices, cross_position)
+		_append_cross_geometry(vertices, normals, indices, cross_position)
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
@@ -337,30 +337,34 @@ func _build_map_cross_mesh() -> ArrayMesh:
 	return mesh
 
 
-func _append_star_geometry(
+func _append_cross_geometry(
 	vertices: PackedVector3Array,
 	normals: PackedVector3Array,
 	indices: PackedInt32Array,
 	origin: Vector3
 ) -> void:
 	const ARM_LENGTH := 0.27
-	const CENTER_WIDTH := 0.0467
+	const ARM_HALF_WIDTH := 0.012
 	var base_index := vertices.size()
 	vertices.append(origin)
-	vertices.append(origin + Vector3(0.0, 0.0, -ARM_LENGTH))
-	vertices.append(origin + Vector3(CENTER_WIDTH, 0.0, -CENTER_WIDTH))
-	vertices.append(origin + Vector3(ARM_LENGTH, 0.0, 0.0))
-	vertices.append(origin + Vector3(CENTER_WIDTH, 0.0, CENTER_WIDTH))
-	vertices.append(origin + Vector3(0.0, 0.0, ARM_LENGTH))
-	vertices.append(origin + Vector3(-CENTER_WIDTH, 0.0, CENTER_WIDTH))
-	vertices.append(origin + Vector3(-ARM_LENGTH, 0.0, 0.0))
-	vertices.append(origin + Vector3(-CENTER_WIDTH, 0.0, -CENTER_WIDTH))
-	for _vertex_index in 9:
+	vertices.append(origin + Vector3(-ARM_HALF_WIDTH, 0.0, -ARM_LENGTH))
+	vertices.append(origin + Vector3(ARM_HALF_WIDTH, 0.0, -ARM_LENGTH))
+	vertices.append(origin + Vector3(ARM_HALF_WIDTH, 0.0, -ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(ARM_LENGTH, 0.0, -ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(ARM_LENGTH, 0.0, ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(ARM_HALF_WIDTH, 0.0, ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(ARM_HALF_WIDTH, 0.0, ARM_LENGTH))
+	vertices.append(origin + Vector3(-ARM_HALF_WIDTH, 0.0, ARM_LENGTH))
+	vertices.append(origin + Vector3(-ARM_HALF_WIDTH, 0.0, ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(-ARM_LENGTH, 0.0, ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(-ARM_LENGTH, 0.0, -ARM_HALF_WIDTH))
+	vertices.append(origin + Vector3(-ARM_HALF_WIDTH, 0.0, -ARM_HALF_WIDTH))
+	for _vertex_index in 13:
 		normals.append(Vector3.UP)
-	for outer_index in 8:
+	for outer_index in 12:
 		indices.append(base_index)
 		indices.append(base_index + outer_index + 1)
-		indices.append(base_index + ((outer_index + 1) % 8) + 1)
+		indices.append(base_index + ((outer_index + 1) % 12) + 1)
 
 
 func _append_boundary_line_geometry(
@@ -370,11 +374,11 @@ func _append_boundary_line_geometry(
 	start: Vector3,
 	end: Vector3
 ) -> void:
-	const STAR_ARM_LENGTH := 0.27
+	const CROSS_ARM_LENGTH := 0.27
 	const LINE_HALF_WIDTH := 0.012
 	var direction := (end - start).normalized()
-	var line_start := start + direction * STAR_ARM_LENGTH
-	var line_end := end - direction * STAR_ARM_LENGTH
+	var line_start := start + direction * CROSS_ARM_LENGTH
+	var line_end := end - direction * CROSS_ARM_LENGTH
 	var perpendicular := Vector3(-direction.z, 0.0, direction.x) * LINE_HALF_WIDTH
 	var base_index := vertices.size()
 	vertices.append(line_start - perpendicular)

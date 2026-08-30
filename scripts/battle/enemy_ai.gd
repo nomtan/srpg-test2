@@ -32,7 +32,7 @@ func process_enemy_unit(enemy: BattleUnit) -> String:
 	if not nearest:
 		return "%sは待機" % enemy.unit_name
 	var reachable := pathfinding.find_reachable(
-		grid, Vector2i(enemy.grid_x, enemy.grid_z), enemy.move_range, enemy.jump_height
+		grid, Vector2i(enemy.grid_x, enemy.grid_z), enemy.move_range, enemy.jump_height, enemy
 	)
 	var destination := _find_best_destination(enemy, nearest, reachable)
 	if destination != Vector2i(enemy.grid_x, enemy.grid_z):

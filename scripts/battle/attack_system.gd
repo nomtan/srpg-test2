@@ -126,6 +126,7 @@ func execute_attack(attacker: BattleUnit, target: BattleUnit) -> Dictionary:
 	attacker.face_toward(Vector2i(target.grid_x, target.grid_z))
 	attacker.play_attack_animation()
 	await attacker.wait_for_attack_impact()
+	target.face_toward(Vector2i(attacker.grid_x, attacker.grid_z))
 	var hit_rate := calculate_hit_rate(attacker, target)
 	if randi_range(1, 100) > hit_rate: return {"success": true, "hit": false, "damage": 0, "message": "Miss!", "defeated": false, "hit_rate": hit_rate}
 	var damage := calculate_damage(attacker, target)

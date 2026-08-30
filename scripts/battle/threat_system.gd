@@ -20,7 +20,9 @@ func get_threatening_enemies_for_cell(target_unit: BattleUnit, target_pos: Vecto
 	var result: Array[BattleUnit] = []
 	for enemy in units.get_enemy_units():
 		var enemy_positions: Array[Vector2i] = [Vector2i(enemy.grid_x, enemy.grid_z)]
-		var reachable := paths.find_reachable(grid, enemy_positions[0], enemy.move_range, enemy.jump_height)
+		var reachable := paths.find_reachable(
+			grid, enemy_positions[0], enemy.move_range, enemy.jump_height, enemy
+		)
 		for enemy_pos: Vector2i in reachable:
 			if enemy_pos not in enemy_positions: enemy_positions.append(enemy_pos)
 		var skill_threat := false

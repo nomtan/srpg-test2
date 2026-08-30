@@ -101,10 +101,13 @@ func _spawn_unit(
 	character_rig_scene_path: String = "",
 	character_rig_character: String = "male"
 ) -> BattleUnit:
+	var resolved_character_rig_scene_path := character_rig_scene_path
+	if resolved_character_rig_scene_path.is_empty() and team == "enemy":
+		resolved_character_rig_scene_path = MALE_CHARACTER_RIG
 	var unit := BattleUnit.new()
 	unit.configure(unit_id, display_name, grid_pos, team)
 	unit.set_combat_stats(max_hp, power, armor, accuracy, evasion, attack_type, min_range, max_range)
-	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_flat_shading, animation_profile, tunic_color, accent_color, sprite_texture_path, sprite_pixel_size, sprite_hframes, sprite_vframes, sprite_fps, sprite_back_texture_path, sprite_attack_base_path, character_rig_scene_path, character_rig_character)
+	unit.setup_visual(model_path, model_scale, model_y_offset, model_facing_offset, use_flat_shading, animation_profile, tunic_color, accent_color, sprite_texture_path, sprite_pixel_size, sprite_hframes, sprite_vframes, sprite_fps, sprite_back_texture_path, sprite_attack_base_path, resolved_character_rig_scene_path, character_rig_character)
 	add_child(unit)
 	units.append(unit)
 	grid.set_occupied_unit(grid_pos, unit)

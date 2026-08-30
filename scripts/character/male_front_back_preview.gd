@@ -5,8 +5,6 @@ const SHORT_SWORD_TEXTURE := preload("res://assets/weapons/short_sword/base.png"
 const BOW_TEXTURE := preload("res://assets/weapons/bow/base.png")
 const ARROW_TEXTURE := preload("res://assets/weapons/allow/base.png")
 const SHIELD_TEXTURE := preload("res://assets/weapons/shield/base.png")
-const DEFAULT_WEAPON_GRIP_POSITION := Vector2(626, 1000)
-const BOW_WEAPON_GRIP_POSITION := Vector2(562, 620)
 
 @onready var male_front_rig: PixelCharacterRig = $MaleFrontRig
 @onready var male_back_rig: PixelCharacterRig = $MaleBackRig
@@ -89,11 +87,6 @@ func _equip_shield_all(enabled: bool) -> void:
 
 func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	var flip_face_on_back: bool = weapon_name == &"short_sword"
-	var grip_position := (
-		BOW_WEAPON_GRIP_POSITION
-		if weapon_name == &"bow"
-		else DEFAULT_WEAPON_GRIP_POSITION
-	)
 	var is_bow := weapon_name == &"bow"
 	shield_toggle.disabled = is_bow
 	var offhand_texture: Texture2D = ARROW_TEXTURE if is_bow else null
@@ -101,7 +94,7 @@ func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	male_front_rig.equip_weapon(
 		texture,
 		flip_face_on_back,
-		grip_position,
+		male_front_rig.weapon_grip_position,
 		offhand_texture,
 		male_front_rig.offhand_weapon_grip_position,
 		weapon_profile
@@ -109,7 +102,7 @@ func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	male_back_rig.equip_weapon(
 		texture,
 		flip_face_on_back,
-		grip_position,
+		male_back_rig.weapon_grip_position,
 		offhand_texture,
 		male_back_rig.offhand_weapon_grip_position,
 		weapon_profile
@@ -117,7 +110,7 @@ func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	female_front_rig.equip_weapon(
 		texture,
 		flip_face_on_back,
-		grip_position,
+		female_front_rig.weapon_grip_position,
 		offhand_texture,
 		female_front_rig.offhand_weapon_grip_position,
 		weapon_profile
@@ -125,7 +118,7 @@ func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	female_back_rig.equip_weapon(
 		texture,
 		flip_face_on_back,
-		grip_position,
+		female_back_rig.weapon_grip_position,
 		offhand_texture,
 		female_back_rig.offhand_weapon_grip_position,
 		weapon_profile

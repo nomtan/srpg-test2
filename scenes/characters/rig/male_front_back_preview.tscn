@@ -13,21 +13,25 @@ script = ExtResource("2_script")
 position = Vector2(300, 386)
 center_character_in_viewport = false
 show_ui = false
+use_scene_geometry = true
 
 [node name="MaleBackRig" parent="." unique_id=164925071 instance=ExtResource("5_male_back")]
 position = Vector2(570, 388)
 center_character_in_viewport = false
 show_ui = false
+use_scene_geometry = true
 
 [node name="FemaleFrontRig" parent="." unique_id=366938189 instance=ExtResource("3_female")]
 position = Vector2(840, 386)
 center_character_in_viewport = false
 show_ui = false
+use_scene_geometry = true
 
 [node name="FemaleBackRig" parent="." unique_id=1878974055 instance=ExtResource("6_female_back")]
 position = Vector2(1110, 388)
 center_character_in_viewport = false
 show_ui = false
+use_scene_geometry = true
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1365014514]
 

@@ -750,7 +750,10 @@ func _update_directional_sprite() -> void:
 	if not viewport_camera:
 		return
 	var facing_vector := FACING_WORLD_VECTORS[int(facing)]
-	var to_camera := viewport_camera.global_position - global_position
+	# The battle camera is orthographic, so every unit is viewed from the
+	# camera's backward axis. Using camera-to-unit positions makes panning alone
+	# cross the front/back boundary even though the viewing direction is fixed.
+	var to_camera := viewport_camera.global_basis.z
 	to_camera.y = 0.0
 	if to_camera.is_zero_approx():
 		return

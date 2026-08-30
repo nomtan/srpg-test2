@@ -97,6 +97,8 @@ func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> 
 	var messages: Array[String] = ["%s uses %s" % [user.unit_name, skill.skill_name]]
 	var target_results: Array[Dictionary] = []
 	for target: BattleUnit in preview.targets:
+		if skill.skill_type == SkillData.SkillType.ATTACK:
+			target.face_toward(Vector2i(user.grid_x, user.grid_z))
 		if skill.skill_type == SkillData.SkillType.BUFF:
 			target.temporary_defense_bonus += 3
 			messages.append("%s gains Defense +3" % target.unit_name)
