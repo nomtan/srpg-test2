@@ -78,8 +78,8 @@
       "name": "arm_l_upper",
       "parent": "torso",
       "pivot": [
-        316,
-        419
+        300,
+        460
       ],
       "z_index": 30
     },

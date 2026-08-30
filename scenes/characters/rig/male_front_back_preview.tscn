@@ -145,7 +145,7 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Short Sword"
 
-[node name="BowButton" type="Button" parent="UI/RightPanel/Margin/VBox"]
+[node name="BowButton" type="Button" parent="UI/RightPanel/Margin/VBox" unique_id=860261090]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Bow"

@@ -693,7 +693,7 @@ func equip_character_rig_weapon(
 	grip_position: Vector2 = Vector2(626, 1000),
 	offhand_texture_path: String = "",
 	offhand_grip_position: Vector2 = Vector2(626, 190),
-	weapon_profile: StringName = &"default"
+	weapon_profile: StringName = &"sword"
 ) -> void:
 	if not character_rig:
 		return

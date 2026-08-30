@@ -46,13 +46,14 @@ func refresh_weapon_visual(unit: BattleUnit) -> void:
 	var flip_pixel_weapon := false
 	var pixel_weapon_grip := DEFAULT_PIXEL_WEAPON_GRIP
 	var pixel_offhand_texture_path := ""
-	var pixel_weapon_profile: StringName = &"default"
+	var pixel_weapon_profile: StringName = &"sword"
 	match weapon.weapon_type:
 		WeaponData.WeaponType.SWORD:
 			pixel_texture_path = PIXEL_SWORD_TEXTURE
 		WeaponData.WeaponType.DAGGER, WeaponData.WeaponType.DUAL_BLADE:
 			pixel_texture_path = PIXEL_SHORT_SWORD_TEXTURE
 			flip_pixel_weapon = true
+			pixel_weapon_profile = &"short_sword"
 		WeaponData.WeaponType.BOW:
 			pixel_texture_path = PIXEL_BOW_TEXTURE
 			pixel_weapon_grip = PIXEL_BOW_GRIP

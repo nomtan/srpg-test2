@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://chfq5cavywp8f"]
 
-[ext_resource type="PackedScene" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
+[ext_resource type="PackedScene" uid="uid://dkw584q4mhen8" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
 [ext_resource type="AnimationLibrary" uid="uid://bswt5l4fjs8k6" path="res://scenes/characters/rig/female_front_attack_animations.tres" id="2_attack"]
 [ext_resource type="Texture2D" uid="uid://ca6tdppv67u2t" path="res://assets/characters/female/front_left/waist.png" id="3_begj3"]
 [ext_resource type="Texture2D" uid="uid://cideet35x37mt" path="res://assets/characters/female/front_left/torso.png" id="4_g53tu"]
@@ -18,7 +18,7 @@
 [ext_resource type="Texture2D" uid="uid://ccnrxclaum1m3" path="res://assets/characters/female/front_left/leg_l_lower.png" id="16_q1v31"]
 [ext_resource type="Texture2D" uid="uid://wor7bci2ilgr" path="res://assets/characters/female/front_left/foot_l.png" id="17_uedwm"]
 
-[sub_resource type="Animation" id="Animation_cebyd"]
+[sub_resource type="Animation" id="Animation_begj3"]
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -30,7 +30,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.16666667, 0.33333334, 0.5, 0.6666667, 0.8333333),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(227, 661), Vector2(227, 670), Vector2(227, 661), Vector2(227, 652), Vector2(227, 661), Vector2(227, 661)]
+"values": [Vector2(227, 670), Vector2(227, 679), Vector2(227, 670), Vector2(227, 661), Vector2(227, 670), Vector2(227, 670)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -42,7 +42,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.16666667, 0.33333334, 0.5, 0.6666667, 0.8333333),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(24, 131), Vector2(24, 122), Vector2(24, 131), Vector2(24, 140), Vector2(24, 131), Vector2(24, 131)]
+"values": [Vector2(24, 122), Vector2(24, 113), Vector2(24, 122), Vector2(24, 131), Vector2(24, 122), Vector2(24, 122)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -54,7 +54,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.16666667, 0.33333334, 0.5, 0.6666667, 0.8333333),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(0, 121), Vector2(0, 112), Vector2(0, 121), Vector2(0, 130), Vector2(0, 121), Vector2(0, 121)]
+"values": [Vector2(0, 112), Vector2(0, 103), Vector2(0, 112), Vector2(0, 121), Vector2(0, 112), Vector2(0, 112)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -225,7 +225,7 @@ tracks/16/keys = {
 "values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 }
 
-[sub_resource type="Animation" id="Animation_8gvvv"]
+[sub_resource type="Animation" id="Animation_g53tu"]
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -237,7 +237,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.16666667, 0.33333334, 0.5, 0.6666667, 0.8333333),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(227, 661), Vector2(227, 652), Vector2(227, 670), Vector2(227, 661), Vector2(227, 652), Vector2(227, 670)]
+"values": [Vector2(227, 670), Vector2(227, 661), Vector2(227, 679), Vector2(227, 670), Vector2(227, 661), Vector2(227, 679)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -360,20 +360,28 @@ tracks/10/keys = {
 "values": [-3.5, -1.5, 0.0, 3.0, 1.5, 0.0]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_h4psa"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_7hw7s"]
 _data = {
-&"idle": SubResource("Animation_cebyd"),
-&"walk": SubResource("Animation_8gvvv")
+&"idle": SubResource("Animation_begj3"),
+&"walk": SubResource("Animation_g53tu")
 }
 
 [node name="FemaleCharacterRig" unique_id=434367965 instance=ExtResource("1_rig")]
-position = Vector2(709, 268)
+position = Vector2(709, 162)
 preview_character = "female"
-editor_preview_weapon = "Bow"
 authored_attack_library = ExtResource("2_attack")
+weapon_grip_position = Vector2(562, 620)
+offhand_weapon_grip_position = Vector2(650, 190)
+offhand_weapon_rotation_offset_degrees = 59.0
+sword_weapon_screen_offset = Vector2(-47, -4)
+short_sword_weapon_screen_offset = Vector2(-47, -4)
+front_weapon_rotation_degrees = -75.0
+female_back_weapon_rotation_offset_degrees = 75.0
+female_front_weapon_screen_offset = Vector2(-3, 0)
+female_back_weapon_screen_offset = Vector2(-10, -3)
 
 [node name="Waist" parent="Root" parent_id_path=PackedInt32Array(1801188451) index="0" unique_id=344495270]
-position = Vector2(227, 661)
+position = Vector2(227, 670)
 
 [node name="Sprite2D" parent="Root/Waist" index="0" unique_id=949060372]
 position = Vector2(-227, -661)
@@ -395,22 +403,20 @@ texture = ExtResource("5_7hw7s")
 
 [node name="ArmRUpper" parent="Root/Waist/Torso" index="2" unique_id=807877460]
 position = Vector2(-57, -146)
-rotation = -0.13962634
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper" index="0" unique_id=1080088950]
 position = Vector2(-170, -475)
 texture = ExtResource("6_ajays")
 
 [node name="ArmRLower" parent="Root/Waist/Torso/ArmRUpper" index="1" unique_id=1171528895]
-position = Vector2(-66, 75)
-rotation = 0.43633232
+position = Vector2(-50, 75)
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower" index="0" unique_id=884372852]
-position = Vector2(-104, -550)
+position = Vector2(-120, -550)
 texture = ExtResource("7_7pwt5")
 
 [node name="HandR" parent="Root/Waist/Torso/ArmRUpper/ArmRLower" index="1" unique_id=600620894]
-position = Vector2(-24, 101)
+position = Vector2(-40, 101)
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR" index="0" unique_id=28465374]
 position = Vector2(-80, -651)
@@ -420,18 +426,21 @@ texture = ExtResource("8_kx544")
 position = Vector2(-9, 45)
 
 [node name="WeaponPivot" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket" index="0" unique_id=1478996569]
-position = Vector2(41.666668, -41.666668)
-rotation = -1.553343
+position = Vector2(-166.66667, -58.333336)
+rotation = -1.3089969
+
+[node name="WeaponSprite" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot" index="5" unique_id=455959676]
+position = Vector2(-562, -620)
 
 [node name="ArmLUpper" parent="Root/Waist/Torso" index="3" unique_id=1406694156]
-position = Vector2(89, -202)
+position = Vector2(73, -161)
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmLUpper" index="0" unique_id=1562982352]
-position = Vector2(-316, -419)
+position = Vector2(-300, -460)
 texture = ExtResource("9_bpscm")
 
 [node name="ArmLLower" parent="Root/Waist/Torso/ArmLUpper" index="1" unique_id=1062013879]
-position = Vector2(49, 131)
+position = Vector2(65, 90)
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower" index="0" unique_id=1913047404]
 position = Vector2(-365, -550)
@@ -448,7 +457,11 @@ texture = ExtResource("11_xjyc1")
 position = Vector2(9, 45)
 
 [node name="WeaponPivot" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket" index="0" unique_id=1738622338]
-rotation = 0.0
+rotation = -0.27925268
+
+[node name="WeaponSprite" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" index="5" unique_id=1428805213]
+position = Vector2(-650, -190)
+texture = null
 
 [node name="LegRUpper" parent="Root/Waist" index="2" unique_id=1045566017]
 position = Vector2(-49, 21)
@@ -458,7 +471,7 @@ position = Vector2(-178, -682)
 texture = ExtResource("12_grko6")
 
 [node name="LegRLower" parent="Root/Waist/LegRUpper" index="1" unique_id=1077976986]
-position = Vector2(0, 121)
+position = Vector2(0, 112)
 
 [node name="Sprite2D" parent="Root/Waist/LegRUpper/LegRLower" index="0" unique_id=1435630744]
 position = Vector2(-178, -803)
@@ -479,7 +492,7 @@ position = Vector2(-276, -682)
 texture = ExtResource("15_gx6jc")
 
 [node name="LegLLower" parent="Root/Waist/LegLUpper" index="1" unique_id=1048074866]
-position = Vector2(24, 131)
+position = Vector2(24, 122)
 
 [node name="Sprite2D" parent="Root/Waist/LegLUpper/LegLLower" index="0" unique_id=1364006554]
 position = Vector2(-300, -813)
@@ -493,5 +506,8 @@ position = Vector2(-316, -944)
 texture = ExtResource("17_uedwm")
 
 [node name="AnimationPlayer" parent="." index="1" unique_id=729920036]
-libraries/ = SubResource("AnimationLibrary_h4psa")
+libraries/ = SubResource("AnimationLibrary_7hw7s")
 libraries/authored = ExtResource("2_attack")
+
+[node name="SwordButton" parent="UI/RightPanel/Margin/VBox" parent_id_path=PackedInt32Array(1992042899) index="9"]
+disabled = true

@@ -63,7 +63,7 @@
         140,
         532
       ],
-      "z_index": -19
+      "z_index": -21
     },
     {
       "name": "hand_r",
@@ -72,7 +72,7 @@
         110,
         600
       ],
-      "z_index": -18
+      "z_index": -22
     },
     {
       "name": "arm_l_upper",

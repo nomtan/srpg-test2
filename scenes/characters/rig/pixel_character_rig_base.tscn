@@ -371,7 +371,6 @@ texture_filter = 1
 position = Vector2(709, 273)
 script = ExtResource("1_script")
 weapon_texture = ExtResource("18_sword")
-weapon_display_scale = 0.55
 weapon_rotation_degrees = 0.0
 front_weapon_rotation_degrees = 0.0
 male_front_weapon_rotation_offset_degrees = -23.0
@@ -460,6 +459,8 @@ position = Vector2(140, 0)
 [node name="BowLowerTip" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
 position = Vector2(140, 500)
 
+[node name="ArrowNockBack" type="Marker2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot"]
+
 [node name="WeaponSprite" type="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot" unique_id=455959676]
 position = Vector2(-626, -1000)
 texture = ExtResource("18_sword")
@@ -500,6 +501,22 @@ visible = false
 z_index = 31
 rotation = 1.2217305
 scale = Vector2(0.55, 0.55)
+
+[node name="BackBowString" type="Line2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
+visible = false
+z_index = -1
+points = PackedVector2Array(140, -545, 140, 0, 140, 500)
+width = 8.0
+default_color = Color(0.2, 0.105882, 0.0509804, 1)
+
+[node name="BackBowUpperTip" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
+position = Vector2(140, -545)
+
+[node name="BackBowStringRest" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
+position = Vector2(140, 0)
+
+[node name="BackBowLowerTip" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
+position = Vector2(140, 500)
 
 [node name="ArrowNock" type="Marker2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot"]
 

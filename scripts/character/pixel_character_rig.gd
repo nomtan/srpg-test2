@@ -15,7 +15,6 @@ const PREVIEW_SHORT_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/sho
 const PREVIEW_BOW_TEXTURE: Texture2D = preload("res://assets/weapons/bow/base.png")
 const PREVIEW_ARROW_TEXTURE: Texture2D = preload("res://assets/weapons/allow/base.png")
 const DEFAULT_WEAPON_GRIP_POSITION := Vector2(626, 1000)
-const BOW_WEAPON_GRIP_POSITION := Vector2(562, 620)
 const ARROW_GRIP_POSITION := Vector2(626, 190)
 const CHARACTER_DIRECTORIES := {
 	"male": {
@@ -35,21 +34,6 @@ const ATTACK_LIBRARY_PATHS := {
 	"female": {
 		"front_left": "res://scenes/characters/rig/female_front_attack_animations.tres",
 		"back_right": "res://scenes/characters/rig/female_back_attack_animations.tres",
-	},
-}
-const RIG_EQUIPMENT_SETTINGS := {
-	"male": {
-		"front_weapon_rotation_degrees": 0.0,
-		"male_front_weapon_rotation_offset_degrees": -75.0,
-		"male_back_weapon_rotation_offset_degrees": 75.0,
-		"male_front_weapon_screen_offset": Vector2(-3, 0),
-		"male_back_weapon_screen_offset": Vector2(-3, -8),
-	},
-	"female": {
-		"front_weapon_rotation_degrees": -70.0,
-		"female_front_weapon_screen_offset": Vector2.ZERO,
-		"female_back_weapon_rotation_offset_degrees": 75.0,
-		"female_back_weapon_screen_offset": Vector2(-10, -3),
 	},
 }
 const PART_NODE_PATHS := {
@@ -92,7 +76,10 @@ const PART_NODE_PATHS := {
 		if Engine.is_editor_hint() and is_node_ready():
 			_apply_editor_preview_weapon()
 @export var flip_weapon_face_on_back := false
-@export var weapon_grip_position := Vector2(626, 1000)
+@export var weapon_grip_position := Vector2(626, 1000):
+	set(value):
+		weapon_grip_position = value
+		_refresh_editor_weapon()
 @export var offhand_weapon_texture: Texture2D
 @export var offhand_weapon_grip_position := ARROW_GRIP_POSITION:
 	set(value):
@@ -106,15 +93,56 @@ const PART_NODE_PATHS := {
 	set(value):
 		offhand_weapon_rotation_offset_degrees = value
 		_refresh_editor_weapon()
-@export_range(0.0, 1.0, 0.01) var bow_string_pull_amount: float = 0.0:
+var bow_string_pull_amount: float = 0.0:
 	set(value):
 		bow_string_pull_amount = clampf(value, 0.0, 1.0)
 		if is_node_ready():
 			_update_bow_string()
-@export_range(0.01, 2.0, 0.01) var weapon_display_scale: float = 0.55:
+var bow_arrow_visible := true:
 	set(value):
-		weapon_display_scale = value
+		bow_arrow_visible = value
+		if is_node_ready():
+			_update_offhand_weapon_visibility()
+@export_group("Sword Weapon")
+@export_range(0.01, 2.0, 0.01) var sword_weapon_display_scale: float = 0.55:
+	set(value):
+		sword_weapon_display_scale = value
 		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var sword_weapon_rotation_offset_degrees := 0.0:
+	set(value):
+		sword_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
+@export var sword_weapon_screen_offset := Vector2.ZERO:
+	set(value):
+		sword_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export_group("Short Sword Weapon")
+@export_range(0.01, 2.0, 0.01) var short_sword_weapon_display_scale: float = 0.55:
+	set(value):
+		short_sword_weapon_display_scale = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var short_sword_weapon_rotation_offset_degrees := 0.0:
+	set(value):
+		short_sword_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
+@export var short_sword_weapon_screen_offset := Vector2.ZERO:
+	set(value):
+		short_sword_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export_group("Bow Weapon")
+@export_range(0.01, 2.0, 0.01) var bow_weapon_display_scale: float = 0.55:
+	set(value):
+		bow_weapon_display_scale = value
+		_refresh_editor_weapon()
+@export_range(-180.0, 180.0, 1.0) var bow_weapon_rotation_offset_degrees := 0.0:
+	set(value):
+		bow_weapon_rotation_offset_degrees = value
+		_refresh_editor_weapon()
+@export var bow_weapon_screen_offset := Vector2.ZERO:
+	set(value):
+		bow_weapon_screen_offset = value
+		_refresh_editor_weapon()
+@export_group("Direction Weapon Rotation")
 @export_range(-180.0, 180.0, 1.0) var weapon_rotation_degrees: float = 70.0:
 	set(value):
 		weapon_rotation_degrees = value
@@ -159,6 +187,7 @@ const PART_NODE_PATHS := {
 	set(value):
 		female_back_weapon_screen_offset = value
 		_refresh_editor_weapon()
+@export_group("")
 @export var shield_texture: Texture2D
 @export var shield_grip_position := Vector2(615, 664)
 @export_range(0.01, 2.0, 0.01) var shield_display_scale := 0.55
@@ -181,23 +210,32 @@ const PART_NODE_PATHS := {
 @onready var right_weapon_sprite: Sprite2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/WeaponSprite
 @onready var left_weapon_pivot: Node2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot
 @onready var left_weapon_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/WeaponSprite
+@onready var left_arm_upper: Node2D = $Root/Waist/Torso/ArmLUpper
 @onready var bow_string: Line2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowString
 @onready var bow_upper_tip: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowUpperTip
 @onready var bow_string_rest: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowStringRest
 @onready var bow_lower_tip: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/BowLowerTip
 @onready var arrow_nock: Marker2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/ArrowNock
+@onready var back_bow_string: Line2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/BackBowString
+@onready var back_bow_upper_tip: Marker2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/BackBowUpperTip
+@onready var back_bow_string_rest: Marker2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/BackBowStringRest
+@onready var back_bow_lower_tip: Marker2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot/BackBowLowerTip
+@onready var back_arrow_nock: Marker2D = $Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot/ArrowNockBack
 @onready var shield_pivot: Node2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot
 @onready var shield_sprite: Sprite2D = $Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/ShieldPivot/ShieldSprite
 
 var motion_step := 1
 var visible_character_height := 0.0
 var weapon_animation_profile: StringName = &"default"
+var authored_locomotion_library: AnimationLibrary
+var authored_locomotion_profile: StringName = &"default"
 
 
 func _ready() -> void:
 	if ui:
 		ui.visible = show_ui
 	$Root.scale = Vector2.ONE * character_display_scale
+	_capture_authored_locomotion_library()
 	if Engine.is_editor_hint() or show_ui:
 		_apply_editor_preview_weapon()
 	_apply_authored_attack_library()
@@ -225,40 +263,37 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if bow_string and bow_string.visible:
+	if (bow_string and bow_string.visible) or (back_bow_string and back_bow_string.visible):
 		_update_bow_string()
 
 
 func _apply_editor_preview_weapon() -> void:
 	bow_string_pull_amount = 0.0
+	bow_arrow_visible = true
 	match editor_preview_weapon:
 		"Sword":
 			weapon_texture = PREVIEW_SWORD_TEXTURE
-			weapon_grip_position = DEFAULT_WEAPON_GRIP_POSITION
 			offhand_weapon_texture = null
-			weapon_animation_profile = &"default"
+			weapon_animation_profile = &"sword"
 			flip_weapon_face_on_back = false
 		"Short Sword":
 			weapon_texture = PREVIEW_SHORT_SWORD_TEXTURE
-			weapon_grip_position = DEFAULT_WEAPON_GRIP_POSITION
 			offhand_weapon_texture = null
-			weapon_animation_profile = &"default"
+			weapon_animation_profile = &"short_sword"
 			flip_weapon_face_on_back = true
 		"Bow":
 			weapon_texture = PREVIEW_BOW_TEXTURE
-			weapon_grip_position = BOW_WEAPON_GRIP_POSITION
 			offhand_weapon_texture = PREVIEW_ARROW_TEXTURE
-			offhand_weapon_grip_position = ARROW_GRIP_POSITION
 			weapon_animation_profile = &"bow"
 			flip_weapon_face_on_back = false
 		_:
 			weapon_texture = null
-			weapon_grip_position = DEFAULT_WEAPON_GRIP_POSITION
 			offhand_weapon_texture = null
 			weapon_animation_profile = &"default"
 			flip_weapon_face_on_back = false
 	if is_node_ready():
 		_update_weapon()
+		_rebuild_locomotion_animations()
 	_update_weapon_ui()
 
 
@@ -274,6 +309,18 @@ func _apply_authored_attack_library() -> void:
 		animation_player.add_animation_library(&"authored", authored_attack_library)
 
 
+func _capture_authored_locomotion_library() -> void:
+	if authored_locomotion_library or not animation_player.has_animation_library(&""):
+		return
+	var library := animation_player.get_animation_library(&"")
+	if not library or not library.has_animation(&"idle"):
+		return
+	authored_locomotion_library = library
+	authored_locomotion_profile = (
+		&"bow" if editor_preview_weapon == "Bow" else &"default"
+	)
+
+
 func _update_weapon() -> void:
 	var right_weapon_rotation: float = front_weapon_rotation_degrees
 	if preview_direction == "back_right":
@@ -284,64 +331,157 @@ func _update_weapon() -> void:
 			right_weapon_rotation += female_back_weapon_rotation_offset_degrees
 	elif preview_character == "male":
 		right_weapon_rotation += male_front_weapon_rotation_offset_degrees
-	_configure_weapon(
-		right_weapon_pivot,
-		right_weapon_sprite,
-		weapon_texture,
-		weapon_grip_position,
-		weapon_display_scale,
-		right_weapon_rotation
-	)
-	_configure_weapon(
-		left_weapon_pivot,
-		left_weapon_sprite,
-		offhand_weapon_texture,
-		offhand_weapon_grip_position,
-		offhand_weapon_display_scale,
-		right_weapon_rotation + offhand_weapon_rotation_offset_degrees
-	)
+	right_weapon_rotation += _active_weapon_rotation_offset_degrees()
+	var active_weapon_scale := _active_weapon_display_scale()
+	var swap_bow_hands := _should_swap_bow_hands()
+	if swap_bow_hands:
+		_configure_weapon(
+			right_weapon_pivot,
+			right_weapon_sprite,
+			offhand_weapon_texture,
+			offhand_weapon_grip_position,
+			offhand_weapon_display_scale,
+			right_weapon_rotation + offhand_weapon_rotation_offset_degrees
+		)
+		_configure_weapon(
+			left_weapon_pivot,
+			left_weapon_sprite,
+			weapon_texture,
+			weapon_grip_position,
+			active_weapon_scale,
+			right_weapon_rotation
+		)
+	else:
+		_configure_weapon(
+			right_weapon_pivot,
+			right_weapon_sprite,
+			weapon_texture,
+			weapon_grip_position,
+			active_weapon_scale,
+			right_weapon_rotation
+		)
+		_configure_weapon(
+			left_weapon_pivot,
+			left_weapon_sprite,
+			offhand_weapon_texture,
+			offhand_weapon_grip_position,
+			offhand_weapon_display_scale,
+			right_weapon_rotation + offhand_weapon_rotation_offset_degrees
+		)
 	right_weapon_sprite.flip_h = preview_direction == "back_right" and flip_weapon_face_on_back
 	right_weapon_pivot.position = Vector2.ZERO
+	left_weapon_pivot.position = Vector2.ZERO
+	var main_weapon_pivot := left_weapon_pivot if swap_bow_hands else right_weapon_pivot
 	if preview_direction == "front_left":
 		var front_offset: Vector2 = front_weapon_screen_offset
 		if preview_character == "male":
 			front_offset += male_front_weapon_screen_offset
 		elif preview_character == "female":
 			front_offset += female_front_weapon_screen_offset
-		right_weapon_pivot.position = front_offset / character_display_scale
+		front_offset += _active_weapon_screen_offset()
+		main_weapon_pivot.position = front_offset / character_display_scale
 	elif preview_direction == "back_right":
 		var back_offset: Vector2 = back_weapon_screen_offset
 		if preview_character == "male":
 			back_offset += male_back_weapon_screen_offset
 		elif preview_character == "female":
 			back_offset += female_back_weapon_screen_offset
-		right_weapon_pivot.position = back_offset / character_display_scale
+		back_offset += _active_weapon_screen_offset()
+		main_weapon_pivot.position = back_offset / character_display_scale
 	var has_weapon: bool = weapon_texture != null
 	# Part IDs are authored in screen space. HandR is the anatomical right hand
 	# from the front, and the anatomical left hand when viewed from the back.
-	right_weapon_pivot.visible = has_weapon
-	left_weapon_pivot.visible = offhand_weapon_texture != null
+	right_weapon_pivot.visible = (
+		offhand_weapon_texture != null and bow_arrow_visible
+		if swap_bow_hands
+		else has_weapon
+	)
+	_update_offhand_weapon_visibility()
+	if swap_bow_hands:
+		# Use an absolute layer so the nested ArmLLower/HandL hierarchy cannot
+		# pull the bow forward. Keep it exactly one layer behind ArmLUpper.
+		left_weapon_pivot.z_as_relative = false
+		left_weapon_pivot.z_index = _effective_z_index(left_arm_upper) - 1
+	else:
+		left_weapon_pivot.z_as_relative = true
 	_update_bow_string()
 
 
+func _update_offhand_weapon_visibility() -> void:
+	left_weapon_pivot.visible = (
+		weapon_texture != null
+		if _should_swap_bow_hands()
+		else offhand_weapon_texture != null and bow_arrow_visible
+	)
+
+
+func _should_swap_bow_hands() -> bool:
+	return preview_direction == "back_right" and weapon_animation_profile == &"bow"
+
+
+func _active_weapon_display_scale() -> float:
+	match weapon_animation_profile:
+		&"bow":
+			return bow_weapon_display_scale
+		&"short_sword":
+			return short_sword_weapon_display_scale
+		_:
+			return sword_weapon_display_scale
+
+
+func _active_weapon_rotation_offset_degrees() -> float:
+	match weapon_animation_profile:
+		&"bow":
+			return bow_weapon_rotation_offset_degrees
+		&"short_sword":
+			return short_sword_weapon_rotation_offset_degrees
+		_:
+			return sword_weapon_rotation_offset_degrees
+
+
+func _active_weapon_screen_offset() -> Vector2:
+	match weapon_animation_profile:
+		&"bow":
+			return bow_weapon_screen_offset
+		&"short_sword":
+			return short_sword_weapon_screen_offset
+		_:
+			return sword_weapon_screen_offset
+
+
+func _effective_z_index(item: CanvasItem) -> int:
+	var result := item.z_index
+	var current := item
+	while current.z_as_relative and current.get_parent() is CanvasItem:
+		current = current.get_parent() as CanvasItem
+		result += current.z_index
+	return result
+
+
 func _update_bow_string() -> void:
-	if not bow_string or not bow_upper_tip or not bow_string_rest or not bow_lower_tip:
-		return
 	var bow_equipped := weapon_animation_profile == &"bow" and weapon_texture != null
-	bow_string.visible = bow_equipped
+	var use_back_hand := bow_equipped and _should_swap_bow_hands()
+	bow_string.visible = bow_equipped and not use_back_hand
+	back_bow_string.visible = use_back_hand
 	if not bow_equipped:
 		return
-	var pull_position := bow_string_rest.position
-	if arrow_nock and offhand_weapon_texture != null:
-		var nock_in_bow_space := right_weapon_pivot.to_local(arrow_nock.global_position)
-		pull_position = bow_string_rest.position.lerp(
+	var active_string := back_bow_string if use_back_hand else bow_string
+	var active_upper_tip := back_bow_upper_tip if use_back_hand else bow_upper_tip
+	var active_rest := back_bow_string_rest if use_back_hand else bow_string_rest
+	var active_lower_tip := back_bow_lower_tip if use_back_hand else bow_lower_tip
+	var active_bow_pivot := left_weapon_pivot if use_back_hand else right_weapon_pivot
+	var active_arrow_nock := back_arrow_nock if use_back_hand else arrow_nock
+	var pull_position := active_rest.position
+	if active_arrow_nock and offhand_weapon_texture != null:
+		var nock_in_bow_space := active_bow_pivot.to_local(active_arrow_nock.global_position)
+		pull_position = active_rest.position.lerp(
 			nock_in_bow_space,
 			bow_string_pull_amount
 		)
-	bow_string.points = PackedVector2Array([
-		bow_upper_tip.position,
+	active_string.points = PackedVector2Array([
+		active_upper_tip.position,
 		pull_position,
-		bow_lower_tip.position,
+		active_lower_tip.position,
 	])
 
 
@@ -365,9 +505,10 @@ func equip_weapon(
 	grip_position: Vector2 = DEFAULT_WEAPON_GRIP_POSITION,
 	offhand_texture: Texture2D = null,
 	offhand_grip_position: Vector2 = ARROW_GRIP_POSITION,
-	animation_profile: StringName = &"default"
+	animation_profile: StringName = &"sword"
 ) -> void:
 	bow_string_pull_amount = 0.0
+	bow_arrow_visible = true
 	weapon_texture = texture
 	weapon_grip_position = grip_position
 	offhand_weapon_texture = offhand_texture
@@ -375,6 +516,7 @@ func equip_weapon(
 	weapon_animation_profile = animation_profile
 	flip_weapon_face_on_back = should_flip_face_on_back
 	_update_weapon()
+	_rebuild_locomotion_animations()
 
 
 func equip_shield(texture: Texture2D) -> void:
@@ -408,13 +550,16 @@ func set_direction(direction_name: StringName) -> void:
 	if not character_directories.has(direction):
 		push_warning("Unknown character direction: %s" % direction)
 		return
-	_apply_character_equipment_settings(character)
 	var active_animation: String = animation_player.current_animation if animation_player else ""
 	if active_animation in [
 		String(ATTACK_ANIMATION_PLAYER_NAME),
 		String(BOW_ATTACK_ANIMATION_PLAYER_NAME),
 	]:
 		active_animation = "attack"
+	elif active_animation == "bow_idle":
+		active_animation = "idle"
+	elif active_animation == "bow_walk":
+		active_animation = "walk"
 	preview_direction = direction
 	var attack_paths := ATTACK_LIBRARY_PATHS.get(character, {}) as Dictionary
 	var attack_library_path := String(attack_paths.get(direction, ""))
@@ -438,29 +583,6 @@ func set_direction(direction_name: StringName) -> void:
 	if animation_player and animation_player.has_animation_library(&""):
 		_build_animation_library()
 		play(StringName(active_animation if not active_animation.is_empty() else preview_animation))
-
-
-func _apply_character_equipment_settings(character: String) -> void:
-	var settings := RIG_EQUIPMENT_SETTINGS.get(character, {}) as Dictionary
-	if settings.is_empty():
-		return
-	if character == "male":
-		front_weapon_rotation_degrees = float(settings.front_weapon_rotation_degrees)
-		male_front_weapon_rotation_offset_degrees = float(
-			settings.male_front_weapon_rotation_offset_degrees
-		)
-		male_back_weapon_rotation_offset_degrees = float(
-			settings.male_back_weapon_rotation_offset_degrees
-		)
-		male_front_weapon_screen_offset = settings.male_front_weapon_screen_offset
-		male_back_weapon_screen_offset = settings.male_back_weapon_screen_offset
-	else:
-		front_weapon_rotation_degrees = float(settings.front_weapon_rotation_degrees)
-		female_front_weapon_screen_offset = settings.female_front_weapon_screen_offset
-		female_back_weapon_rotation_offset_degrees = float(
-			settings.female_back_weapon_rotation_offset_degrees
-		)
-		female_back_weapon_screen_offset = settings.female_back_weapon_screen_offset
 
 
 func set_character(character_name: StringName) -> void:
@@ -539,8 +661,10 @@ func play(animation_name: StringName) -> void:
 		return
 	if animation_name != &"attack":
 		bow_string_pull_amount = 0.0
+		bow_arrow_visible = true
 	var player_animation_name: StringName = animation_name
 	if animation_name == &"attack":
+		bow_arrow_visible = true
 		player_animation_name = (
 			BOW_ATTACK_ANIMATION_PLAYER_NAME
 			if weapon_animation_profile == &"bow"
@@ -554,16 +678,31 @@ func play(animation_name: StringName) -> void:
 		_update_animation_ui(animation_name)
 
 
-func _reset_pose_before_attack() -> void:
-	if not animation_player.has_animation(&"idle"):
+func _rebuild_locomotion_animations() -> void:
+	if not animation_player:
 		return
-	animation_player.play(&"idle")
+	var current := StringName(animation_player.current_animation)
+	var was_idle := current in [&"idle", &"bow_idle"]
+	var was_walking := current in [&"walk", &"bow_walk"]
+	_build_animation_library()
+	if was_idle:
+		play(&"idle")
+	elif was_walking:
+		play(&"walk")
+
+
+func _reset_pose_before_attack() -> void:
+	var reset_animation := &"idle"
+	if not animation_player.has_animation(reset_animation):
+		return
+	animation_player.play(reset_animation)
 	animation_player.seek(0.0, true)
 
 
 func _on_animation_finished(animation_name: StringName) -> void:
 	if animation_name in [ATTACK_ANIMATION_PLAYER_NAME, BOW_ATTACK_ANIMATION_PLAYER_NAME]:
 		bow_string_pull_amount = 0.0
+		bow_arrow_visible = true
 		play(&"idle")
 
 
@@ -630,11 +769,28 @@ func _update_weapon_ui() -> void:
 
 
 func _build_animation_library() -> void:
+	_capture_authored_locomotion_library()
+	var active_profile := &"bow" if weapon_animation_profile == &"bow" else &"default"
+	var library := authored_locomotion_library
+	if not library or active_profile != authored_locomotion_profile:
+		library = AnimationLibrary.new()
+		library.add_animation(
+			&"idle",
+			_make_bow_idle() if active_profile == &"bow" else _make_idle()
+		)
+		library.add_animation(
+			&"walk",
+			_make_bow_walk() if active_profile == &"bow" else _make_walk()
+		)
+	elif (
+		animation_player.has_animation_library(&"")
+		and animation_player.get_animation_library(&"") == library
+	):
+		# Keep the scene-owned library attached so edits made in Godot remain
+		# authoritative and are immediately used by the preview.
+		return
 	if animation_player.has_animation_library(&""):
 		animation_player.remove_animation_library(&"")
-	var library := AnimationLibrary.new()
-	library.add_animation(&"idle", _make_idle())
-	library.add_animation(&"walk", _make_walk())
 	animation_player.add_animation_library(&"", library)
 
 
@@ -676,6 +832,72 @@ func _make_walk() -> Animation:
 	_add_rotation_track(animation, ^"Root/Waist/LegRUpper/LegRLower", [7, 3, 0, -6, -3, 0])
 	_add_rotation_track(animation, ^"Root/Waist/LegRUpper/LegRLower/FootR", [-3.5, -1.5, 0, 3, 1.5, 0])
 	return animation
+
+
+func _make_bow_idle() -> Animation:
+	var animation := _make_idle()
+	_apply_bow_upper_body_pose(animation)
+	return animation
+
+
+func _make_bow_walk() -> Animation:
+	var animation := _make_walk()
+	_apply_bow_upper_body_pose(animation)
+	return animation
+
+
+func _apply_bow_upper_body_pose(animation: Animation) -> void:
+	# Keep the bow ready using the exact opening upper-body pose authored for
+	# bow_attack. The idle bounce and walk cycle continue below the torso.
+	_replace_rotation_track_with_bow_pose(animation, ^"Root/Waist/Torso")
+	_replace_rotation_track_with_bow_pose(animation, ^"Root/Waist/Torso/ArmLUpper")
+	_replace_rotation_track_with_bow_pose(animation, ^"Root/Waist/Torso/ArmLUpper/ArmLLower")
+	_replace_rotation_track_with_bow_pose(animation, ^"Root/Waist/Torso/ArmRUpper")
+	_replace_rotation_track_with_bow_pose(animation, ^"Root/Waist/Torso/ArmRUpper/ArmRLower")
+	# These joints are not keyed by bow_attack, but explicitly resetting them
+	# prevents a previous sword attack or idle head bob leaking into this pose.
+	_replace_rotation_track(animation, ^"Root/Waist/Torso/Head", 0.0)
+	_replace_rotation_track(
+		animation,
+		^"Root/Waist/Torso/ArmLUpper/ArmLLower/HandL",
+		0.0
+	)
+	_replace_rotation_track(
+		animation,
+		^"Root/Waist/Torso/ArmRUpper/ArmRLower/HandR",
+		0.0
+	)
+
+
+func _replace_rotation_track_with_bow_pose(animation: Animation, node_path: NodePath) -> void:
+	var rotation_path := NodePath(str(node_path) + ":rotation")
+	var bow_attack := animation_player.get_animation(BOW_ATTACK_ANIMATION_PLAYER_NAME)
+	if not bow_attack:
+		return
+	var source_track := bow_attack.find_track(rotation_path, Animation.TYPE_VALUE)
+	if source_track < 0 or bow_attack.track_get_key_count(source_track) == 0:
+		return
+	var radians := float(bow_attack.track_get_key_value(source_track, 0))
+	_replace_rotation_track(animation, node_path, rad_to_deg(radians))
+
+
+func _replace_rotation_track(
+	animation: Animation,
+	node_path: NodePath,
+	degrees: float
+) -> void:
+	var rotation_path := NodePath(str(node_path) + ":rotation_degrees")
+	var existing_track := animation.find_track(rotation_path, Animation.TYPE_VALUE)
+	if existing_track >= 0:
+		animation.remove_track(existing_track)
+	_add_rotation_track(animation, node_path, [
+		degrees,
+		degrees,
+		degrees,
+		degrees,
+		degrees,
+		degrees,
+	])
 
 
 func _new_loop_animation() -> Animation:

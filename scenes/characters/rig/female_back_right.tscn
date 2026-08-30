@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://clb2hja52smn3"]
 
-[ext_resource type="PackedScene" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
+[ext_resource type="PackedScene" uid="uid://dkw584q4mhen8" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
 [ext_resource type="AnimationLibrary" uid="uid://mwrseltcjnpe" path="res://scenes/characters/rig/female_back_attack_animations.tres" id="2_attack"]
+[ext_resource type="Texture2D" uid="uid://cxj2jp2cul3hj" path="res://assets/weapons/short_sword/base.png" id="3_ergss"]
 [ext_resource type="Texture2D" uid="uid://bgjerdeofyvmu" path="res://assets/characters/female/back_right/waist.png" id="3_lb3hs"]
 [ext_resource type="Texture2D" uid="uid://behcg2j6bmi7o" path="res://assets/characters/female/back_right/torso.png" id="4_ergss"]
 [ext_resource type="Texture2D" uid="uid://xv0inciqlhfm" path="res://assets/characters/female/back_right/head.png" id="5_v8co7"]
@@ -18,7 +19,7 @@
 [ext_resource type="Texture2D" uid="uid://cpyn4g435vppn" path="res://assets/characters/female/back_right/leg_l_lower.png" id="16_qu7jk"]
 [ext_resource type="Texture2D" uid="uid://csxe50rhupm31" path="res://assets/characters/female/back_right/foot_l.png" id="17_u3g14"]
 
-[sub_resource type="Animation" id="Animation_jn3ce"]
+[sub_resource type="Animation" id="Animation_v8co7"]
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -225,7 +226,7 @@ tracks/16/keys = {
 "values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 }
 
-[sub_resource type="Animation" id="Animation_uh6ha"]
+[sub_resource type="Animation" id="Animation_evk0l"]
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -360,18 +361,36 @@ tracks/10/keys = {
 "values": [-3.5, -1.5, 0.0, 3.0, 1.5, 0.0]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_d1h42"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ldulv"]
 _data = {
-&"idle": SubResource("Animation_jn3ce"),
-&"walk": SubResource("Animation_uh6ha")
+&"idle": SubResource("Animation_v8co7"),
+&"walk": SubResource("Animation_evk0l")
 }
 
 [node name="FemaleBackRightRig" unique_id=1185977294 instance=ExtResource("1_rig")]
-position = Vector2(707, 440)
+position = Vector2(710, 167)
 preview_direction = "back_right"
 preview_character = "female"
-editor_preview_weapon = "Bow"
 authored_attack_library = ExtResource("2_attack")
+weapon_texture = ExtResource("3_ergss")
+editor_preview_weapon = "Short Sword"
+flip_weapon_face_on_back = true
+weapon_grip_position = Vector2(500, 640)
+offhand_weapon_display_scale = 0.56
+offhand_weapon_rotation_offset_degrees = 122.0
+sword_weapon_rotation_offset_degrees = 10.0
+sword_weapon_screen_offset = Vector2(40, -24)
+short_sword_weapon_rotation_offset_degrees = 10.0
+short_sword_weapon_screen_offset = Vector2(40, -24)
+bow_weapon_display_scale = 0.5
+bow_weapon_rotation_offset_degrees = -155.0
+bow_weapon_screen_offset = Vector2(5, 20)
+front_weapon_rotation_degrees = -75.0
+male_front_weapon_rotation_offset_degrees = -112.0
+male_back_weapon_rotation_offset_degrees = 6.0
+female_back_weapon_rotation_offset_degrees = 59.0
+female_front_weapon_screen_offset = Vector2(-3, 0)
+female_back_weapon_screen_offset = Vector2(-10, -3)
 
 [node name="Waist" parent="Root" parent_id_path=PackedInt32Array(1801188451) index="0" unique_id=344495270]
 position = Vector2(239, 657)
@@ -382,7 +401,6 @@ texture = ExtResource("3_lb3hs")
 
 [node name="Torso" parent="Root/Waist" index="1" unique_id=30549733]
 position = Vector2(0, -67)
-rotation = 0.2617994
 
 [node name="Sprite2D" parent="Root/Waist/Torso" index="0" unique_id=712829740]
 position = Vector2(-239, -590)
@@ -397,7 +415,6 @@ texture = ExtResource("5_v8co7")
 
 [node name="ArmRUpper" parent="Root/Waist/Torso" index="2" unique_id=807877460]
 position = Vector2(-66, -154)
-rotation = -0.60562927
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper" index="0" unique_id=1080088950]
 position = Vector2(-173, -436)
@@ -407,14 +424,15 @@ texture = ExtResource("6_evk0l")
 position = Vector2(-33, 96)
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower" index="0" unique_id=884372852]
+z_index = -21
 position = Vector2(-140, -532)
 texture = ExtResource("7_ldulv")
 
 [node name="HandR" parent="Root/Waist/Torso/ArmRUpper/ArmRLower" index="1" unique_id=600620894]
 position = Vector2(-30, 68)
-rotation = 0.8779006
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR" index="0" unique_id=28465374]
+z_index = -22
 position = Vector2(-110, -600)
 texture = ExtResource("8_ijhre")
 
@@ -423,12 +441,16 @@ position = Vector2(-9, 45)
 
 [node name="WeaponPivot" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket" index="0" unique_id=1478996569]
 z_index = -30
-position = Vector2(29.166668, -54.166668)
-rotation = 0.82030475
+position = Vector2(166.66667, -154.16667)
+rotation = 1.2042772
+
+[node name="WeaponSprite" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot" index="5" unique_id=455959676]
+position = Vector2(-500, -640)
+texture = ExtResource("3_ergss")
+flip_h = true
 
 [node name="ArmLUpper" parent="Root/Waist/Torso" index="3" unique_id=1406694156]
 position = Vector2(41, -150)
-rotation = 0.15184365
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmLUpper" index="0" unique_id=1562982352]
 position = Vector2(-280, -440)
@@ -436,7 +458,6 @@ texture = ExtResource("9_4170i")
 
 [node name="ArmLLower" parent="Root/Waist/Torso/ArmLUpper" index="1" unique_id=1062013879]
 position = Vector2(60, 107)
-rotation = -0.7225663
 
 [node name="Sprite2D" parent="Root/Waist/Torso/ArmLUpper/ArmLLower" index="0" unique_id=1913047404]
 position = Vector2(-340, -547)
@@ -453,8 +474,13 @@ texture = ExtResource("11_2nuq7")
 position = Vector2(9, 45)
 
 [node name="WeaponPivot" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket" index="0" unique_id=1738622338]
-z_index = -19
-rotation = 0.0
+z_index = -1
+rotation = 3.3335788
+scale = Vector2(0.56, 0.56)
+
+[node name="WeaponSprite" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" index="5" unique_id=1428805213]
+position = Vector2(-626, -190)
+texture = null
 
 [node name="ShieldPivot" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket" index="1" unique_id=1682244269]
 z_index = 50
@@ -503,5 +529,11 @@ position = Vector2(-300, -900)
 texture = ExtResource("17_u3g14")
 
 [node name="AnimationPlayer" parent="." index="1" unique_id=729920036]
-libraries/ = SubResource("AnimationLibrary_d1h42")
+libraries/ = SubResource("AnimationLibrary_ldulv")
 libraries/authored = ExtResource("2_attack")
+
+[node name="WeaponStatus" parent="UI/RightPanel/Margin/VBox" parent_id_path=PackedInt32Array(1992042899) index="8"]
+text = "Weapon: Short Sword"
+
+[node name="ShortSwordButton" parent="UI/RightPanel/Margin/VBox" parent_id_path=PackedInt32Array(1992042899) index="10"]
+disabled = true

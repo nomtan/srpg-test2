@@ -7,7 +7,6 @@ const ARROW_TEXTURE := preload("res://assets/weapons/allow/base.png")
 const SHIELD_TEXTURE := preload("res://assets/weapons/shield/base.png")
 const DEFAULT_WEAPON_GRIP_POSITION := Vector2(626, 1000)
 const BOW_WEAPON_GRIP_POSITION := Vector2(562, 620)
-const ARROW_GRIP_POSITION := Vector2(626, 190)
 
 @onready var male_front_rig: PixelCharacterRig = $MaleFrontRig
 @onready var male_back_rig: PixelCharacterRig = $MaleBackRig
@@ -98,18 +97,38 @@ func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	var is_bow := weapon_name == &"bow"
 	shield_toggle.disabled = is_bow
 	var offhand_texture: Texture2D = ARROW_TEXTURE if is_bow else null
-	var weapon_profile: StringName = &"bow" if is_bow else &"default"
+	var weapon_profile: StringName = weapon_name
 	male_front_rig.equip_weapon(
-		texture, flip_face_on_back, grip_position, offhand_texture, ARROW_GRIP_POSITION, weapon_profile
+		texture,
+		flip_face_on_back,
+		grip_position,
+		offhand_texture,
+		male_front_rig.offhand_weapon_grip_position,
+		weapon_profile
 	)
 	male_back_rig.equip_weapon(
-		texture, flip_face_on_back, grip_position, offhand_texture, ARROW_GRIP_POSITION, weapon_profile
+		texture,
+		flip_face_on_back,
+		grip_position,
+		offhand_texture,
+		male_back_rig.offhand_weapon_grip_position,
+		weapon_profile
 	)
 	female_front_rig.equip_weapon(
-		texture, flip_face_on_back, grip_position, offhand_texture, ARROW_GRIP_POSITION, weapon_profile
+		texture,
+		flip_face_on_back,
+		grip_position,
+		offhand_texture,
+		female_front_rig.offhand_weapon_grip_position,
+		weapon_profile
 	)
 	female_back_rig.equip_weapon(
-		texture, flip_face_on_back, grip_position, offhand_texture, ARROW_GRIP_POSITION, weapon_profile
+		texture,
+		flip_face_on_back,
+		grip_position,
+		offhand_texture,
+		female_back_rig.offhand_weapon_grip_position,
+		weapon_profile
 	)
 	sword_button.disabled = weapon_name == &"sword"
 	short_sword_button.disabled = weapon_name == &"short_sword"
