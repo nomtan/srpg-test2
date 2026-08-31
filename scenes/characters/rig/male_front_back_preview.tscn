@@ -32,6 +32,7 @@ position = Vector2(1110, 388)
 center_character_in_viewport = false
 show_ui = false
 use_scene_geometry = true
+offhand_weapon_screen_offset = Vector2(0, 0)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1365014514]
 

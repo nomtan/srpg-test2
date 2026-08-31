@@ -143,7 +143,7 @@ tracks/5/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [-1.7453292519943295]
+"values": [0.5235987755982988]
 }
 tracks/6/type = "value"
 tracks/6/imported = false
@@ -155,7 +155,7 @@ tracks/6/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [0.0]
+"values": [-2.6179938779914944]
 }
 
 [sub_resource type="Animation" id="Animation_uh6ha"]
@@ -206,19 +206,19 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [-1.7453292519943295]
+"values": [0.5235987755982988]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
 tracks/4/enabled = true
-tracks/4/path = NodePath("Root/Waist/Torso/ArmRUpper/ArmRLower:rotation_degrees")
+tracks/4/path = NodePath("Root/Waist/Torso/ArmRUpper/ArmRLower:rotation")
 tracks/4/interp = 1
 tracks/4/loop_wrap = true
 tracks/4/keys = {
-"times": PackedFloat32Array(0, 0.16666667, 0.33333334, 0.5, 0.6666667, 0.8333333),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
-"update": 1,
-"values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-2.6179938779914944]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
@@ -301,11 +301,10 @@ _data = {
 }
 
 [node name="FemaleBackRightRig" unique_id=1185977294 instance=ExtResource("1_rig")]
-position = Vector2(710, 167)
+position = Vector2(-61, -125)
 preview_direction = "back_right"
 preview_character = "female"
 authored_attack_library = ExtResource("2_attack")
-use_scene_geometry = null
 weapon_texture = ExtResource("3_v8co7")
 editor_preview_weapon = "Bow"
 weapon_grip_position = Vector2(500, 640)
@@ -319,7 +318,6 @@ bow_weapon_rotation_offset_degrees = -155.0
 bow_weapon_screen_offset = Vector2(5, 20)
 offhand_weapon_display_scale = 0.56
 offhand_weapon_rotation_offset_degrees = 122.0
-offhand_weapon_screen_offset = null
 front_weapon_rotation_degrees = -75.0
 male_front_weapon_rotation_offset_degrees = -112.0
 male_back_weapon_rotation_offset_degrees = 6.0
@@ -418,6 +416,7 @@ scale = Vector2(0.5, 0.5)
 
 [node name="BackBowString" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" index="0"]
 visible = true
+points = PackedVector2Array(140, -545, 142.17172, -0.34478232, 140, 500)
 
 [node name="WeaponSprite" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" index="5" unique_id=1428805213]
 position = Vector2(-500, -640)

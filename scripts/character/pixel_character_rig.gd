@@ -648,10 +648,6 @@ func set_direction(direction_name: StringName) -> void:
 		String(BOW_ATTACK_ANIMATION_PLAYER_NAME),
 	]:
 		active_animation = "attack"
-	elif active_animation == "bow_idle":
-		active_animation = "idle"
-	elif active_animation == "bow_walk":
-		active_animation = "walk"
 	preview_direction = direction
 	_load_directional_rig_settings(character, direction)
 	var attack_paths := ATTACK_LIBRARY_PATHS.get(character, {}) as Dictionary
@@ -761,11 +757,6 @@ func play(animation_name: StringName) -> void:
 		bow_string_pull_amount = 0.0
 		bow_arrow_visible = true
 	var player_animation_name: StringName = animation_name
-	if weapon_animation_profile == &"bow":
-		if animation_name == &"idle" and animation_player.has_animation(&"bow_idle"):
-			player_animation_name = &"bow_idle"
-		elif animation_name == &"walk" and animation_player.has_animation(&"bow_walk"):
-			player_animation_name = &"bow_walk"
 	if animation_name == &"attack":
 		bow_arrow_visible = true
 		player_animation_name = (
@@ -785,8 +776,8 @@ func _rebuild_locomotion_animations() -> void:
 	if not animation_player:
 		return
 	var current := StringName(animation_player.current_animation)
-	var was_idle := current in [&"idle", &"bow_idle"]
-	var was_walking := current in [&"walk", &"bow_walk"]
+	var was_idle := current == &"idle"
+	var was_walking := current == &"walk"
 	_build_animation_library()
 	if was_idle:
 		play(&"idle")
@@ -797,11 +788,7 @@ func _rebuild_locomotion_animations() -> void:
 
 
 func _reset_pose_before_attack() -> void:
-	var reset_animation := (
-		&"bow_idle"
-		if weapon_animation_profile == &"bow" and animation_player.has_animation(&"bow_idle")
-		else &"idle"
-	)
+	var reset_animation := &"idle"
 	if not animation_player.has_animation(reset_animation):
 		return
 	animation_player.play(reset_animation)
@@ -912,9 +899,6 @@ func _build_animation_library() -> void:
 	var library := AnimationLibrary.new()
 	library.add_animation(&"idle", idle_animation)
 	library.add_animation(&"walk", walk_animation)
-	if active_profile == &"bow":
-		library.add_animation(&"bow_idle", idle_animation)
-		library.add_animation(&"bow_walk", walk_animation)
 	if animation_player.has_animation_library(&""):
 		animation_player.remove_animation_library(&"")
 	animation_player.add_animation_library(&"", library)

@@ -25,7 +25,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.5, 0.65),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [0.0, -0.7801621756414651, 0.0]
+"values": [0.0, 0.0, 0.0]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -61,7 +61,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0, 0.5, 0.65),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [0.0, 0.0, 0.4363323129985824]
+"values": [0.0, 0.4363323129985824, 0.4363323129985824]
 }
 
 [sub_resource type="Animation" id="Animation_bow_attack"]
