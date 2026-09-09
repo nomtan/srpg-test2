@@ -81,12 +81,15 @@ func _run() -> void:
 			conditions_valid = conditions_valid and weather.time_index == time_index and weather.weather_index == weather_index
 			conditions_valid = conditions_valid and weather.time_buttons[time_index].button_pressed and weather.weather_buttons[weather_index].button_pressed
 			conditions_valid = conditions_valid and weather.particles.emitting == (weather_index in [1, 3]) and weather.particles.visible == (weather_index in [1, 3])
+			var foliage: ShaderMaterial = World.Batch.Vegetation.material
+			conditions_valid = conditions_valid and is_equal_approx(foliage.get_shader_parameter("wetness"), 1.0 if weather_index == 1 else 0.0)
+			conditions_valid = conditions_valid and is_equal_approx(foliage.get_shader_parameter("snow_cover"), 0.8 if weather_index == 3 else 0.0)
 			for mesh: BoxMesh in World.Batch.meshes.values():
 				if mesh.material.shader != World.Batch.SURFACE: continue
 				conditions_valid = conditions_valid and is_equal_approx(mesh.material.get_shader_parameter("wetness"), 1.0 if weather_index == 1 else 0.0)
 				conditions_valid = conditions_valid and is_equal_approx(mesh.material.get_shader_parameter("snow_cover"), 0.8 if weather_index == 3 else 0.0)
 				conditions_valid = conditions_valid and is_equal_approx(mesh.material.get_shader_parameter("night_light"), 1.0 if time_index == 3 else 0.0)
-	check(conditions_valid, "All 16 time/weather button combinations apply to particles and terrain")
+	check(conditions_valid, "All 16 time/weather button combinations apply to particles, terrain and natural vegetation")
 	weather.apply_conditions(1, 0)
 	var midday_light: float = weather.sun.light_energy
 	var midday_angle: Vector3 = weather.sun.rotation_degrees
@@ -142,6 +145,7 @@ func _run() -> void:
 	world._input(key_event(KEY_V))
 	check(world.player.use_3d and world.player.model.visible and world.player.position == encounter_start, "V restores 3D without teleporting or replacing battle actor")
 	check(battle.hero == world.player and battle.hero.get_instance_id() == original_actor_id, "Exact exploration actor reused")
+	check(World.Batch.Vegetation.material.get_shader_parameter("tactical_radius") > 0.0, "Natural canopy cutaway is enabled in battle")
 	check(world.player.position == encounter_start, "Starting battle does not teleport the explorer")
 	check(battle.enemies.size() == 2, "Enemies spawn on reachable world terrain")
 	var terrain_valid := true
@@ -255,6 +259,7 @@ func _run() -> void:
 			await battle._command("wait")
 			await battle._command("south")
 	check(world.cleared and world.mode == "dialog" and world.player.visible, "Victory ends encounter on same map")
+	check(is_zero_approx(World.Batch.Vegetation.material.get_shader_parameter("tactical_radius")), "Natural canopy is restored after battle")
 	var winning_position: Vector3 = world.player.position
 	check(winning_position.distance_to(encounter_start) < 12 and winning_position != encounter_start, "Victory preserves last tactical position")
 	world._close_dialog()

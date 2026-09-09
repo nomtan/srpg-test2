@@ -1,6 +1,6 @@
 @tool
 extends Node3D
-## Reusable procedural voxel assets. Origins sit on the ground plane.
+## Procedural props: botanical trees and voxel buildings/rocks. Origins sit on the ground.
 const Batch = preload("res://scripts/world_jrpg/voxel_batch.gd")
 @export_enum("oak", "pine", "rock", "cottage", "tower") var kind: String = "oak":
 	set(value):
@@ -22,28 +22,8 @@ func _rebuild() -> void:
 static func append(b: RefCounted, type: String, p: Vector3, scale_factor: float = 1.0) -> void:
 	match type:
 		"oak", "pine":
-			var rng := RandomNumberGenerator.new()
-			rng.seed = int(p.x * 7919 + p.z * 104729 + scale_factor * 313)
-			b.box(p + Vector3(0, 1.8, 0) * scale_factor, Vector3(0.42, 3.6, 0.42) * scale_factor, "trunk")
-			for root in [Vector3(-0.24, 0.22, 0), Vector3(0.24, 0.22, 0.15)]:
-				b.box(p + root * scale_factor, Vector3(0.3, 0.44, 0.5) * scale_factor, "trunk")
-			if type == "pine":
-				for layer in 7:
-					var width := 2.8 - layer * 0.34
-					b.box(p + Vector3(0, 2.0 + layer * 0.48, 0) * scale_factor, Vector3(width, 0.6, width) * scale_factor, "pine")
-					for side in [-1, 1]:
-						b.box(p + Vector3(width * 0.38 * side, 2.25 + layer * 0.48, 0.18) * scale_factor, Vector3(width * 0.45, 0.32, width * 0.75) * scale_factor, "pine_light")
-			else:
-				for branch in [Vector3(-0.7, 2.9, 0.1), Vector3(0.6, 3.3, -0.2)]:
-					b.box(p + branch * scale_factor, Vector3(1.6, 0.25, 0.25) * scale_factor, "trunk")
-				b.box(p + Vector3(0, 3.8, 0) * scale_factor, Vector3(2.8, 1.3, 2.5) * scale_factor, "leaf")
-				for i in 34:
-					var angle := rng.randf() * TAU
-					var radius := rng.randf_range(0.6, 2.1)
-					var y := rng.randf_range(3.0, 5.1) - radius * 0.15
-					var width := rng.randf_range(0.55, 1.05)
-					var offset := Vector3(cos(angle) * radius, y, sin(angle) * radius * 0.8)
-					b.box(p + offset * scale_factor, Vector3(width, 0.6, width) * scale_factor, "leaf_light" if i % 3 == 0 else "leaf")
+			var seed_value := int(p.x * 7919 + p.z * 104729 + scale_factor * 313)
+			b.vegetation.plant(type, p, scale_factor, fposmod(seed_value * 0.618, TAU), seed_value % 3)
 		"rock":
 			b.box(p + Vector3(0, 0.4, 0), Vector3(1.6, 0.8, 1.3) * scale_factor, "cliff")
 			b.box(p + Vector3(0.2, 0.95, 0), Vector3(0.9, 0.5, 1.0) * scale_factor, "cliff_light")

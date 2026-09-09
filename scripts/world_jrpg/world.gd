@@ -469,15 +469,15 @@ func _build_grass() -> void:
 					var density := 5 if bank else 3
 					for tuft in density:
 						var base := Vector3(x + rng.randf(), h, z + rng.randf())
-						for blade in 3:
-							var height := rng.randf_range(0.24, 0.58) * (1.6 if bank else 1.0)
-							var offset := Vector3(rng.randf_range(-0.13, 0.13), height * 0.5, rng.randf_range(-0.13, 0.13))
-							b.box(base + offset, Vector3(0.045, height, 0.05), "reed" if bank else "grass_tip" if blade == 0 else "grass_dark")
+						# Ground each tuft on its own voxel, including the river/bridge edge.
+						base.y = _surface(base.x, base.z)
+						if base.y < WATER: continue
+						b.vegetation.plant("reed" if bank else "grass", base, rng.randf_range(0.8, 1.25), rng.randf() * TAU, rng.randi_range(0, 2))
 						if rng.randf() < 0.09:
 							b.box(base + Vector3(0, 0.4, 0), Vector3(0.1, 0.08, 0.1), "flower_white")
 			b.commit(detail)
 			for mesh: GeometryInstance3D in detail.get_children():
-				mesh.visibility_range_end = 100
+				if not mesh.name.begins_with("Natural_"): mesh.visibility_range_end = 100
 
 func _panel(at: Vector2) -> PanelContainer:
 	var panel := PanelContainer.new()

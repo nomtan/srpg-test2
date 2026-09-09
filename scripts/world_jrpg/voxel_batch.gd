@@ -1,6 +1,8 @@
 extends RefCounted
 ## Cuboids grouped by material, with one MultiMesh per color per chunk.
 
+const Vegetation = preload("res://scripts/world_jrpg/natural_vegetation.gd")
+var vegetation := Vegetation.new()
 var groups: Dictionary = {}
 var palette: Dictionary
 const SURFACE = preload("res://scripts/world_jrpg/surface.gdshader")
@@ -8,6 +10,7 @@ const WATER_SHADER = preload("res://scripts/world_jrpg/water.gdshader")
 static var meshes: Dictionary = {}
 
 static func field_conditions(wet: float, snow: float, night: float) -> void:
+	Vegetation.field_conditions(wet, snow)
 	for mesh: BoxMesh in meshes.values():
 		if mesh.material.shader == SURFACE:
 			mesh.material.set_shader_parameter("wetness", wet)
@@ -15,6 +18,7 @@ static func field_conditions(wet: float, snow: float, night: float) -> void:
 			mesh.material.set_shader_parameter("night_light", night)
 
 static func tactical_cutaway(center: Vector3, radius: float) -> void:
+	Vegetation.tactical_cutaway(center, radius)
 	for mesh: BoxMesh in meshes.values():
 		if mesh.material.shader == SURFACE:
 			mesh.material.set_shader_parameter("tactical_center", center)
@@ -29,6 +33,7 @@ func box(center: Vector3, size: Vector3, color: String) -> void:
 	groups[color].append(Transform3D(Basis.from_scale(size), center))
 
 func commit(parent: Node3D) -> void:
+	vegetation.commit(parent)
 	for color: String in groups:
 		var key := color + str(palette[color])
 		if not meshes.has(key):
