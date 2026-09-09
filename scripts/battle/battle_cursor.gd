@@ -19,6 +19,7 @@ var _map_cross_mesh: ArrayMesh
 var _range_cross_material: StandardMaterial3D
 
 const _DRAG_THRESHOLD := 6.0
+var _pad := GamepadInput.new()
 var _mouse_held := false
 var _drag_start_pos := Vector2.ZERO
 var _dragging := false
@@ -39,7 +40,15 @@ func setup(source_grid: GridSystem, source_camera: Camera3D, cam_controller: Cam
 func _process(delta: float) -> void:
 	if not camera_controller:
 		return
-	var pan_direction := Vector2.ZERO
+	var movement := _pad.step(delta, input_enabled and get_viewport().gui_get_focus_owner() == null)
+	if movement != Vector2i.ZERO:
+		grid_position = Vector2i(clampi(grid_position.x + movement.x, 0, GridSystem.WIDTH - 1), clampi(grid_position.y + movement.y, 0, GridSystem.DEPTH - 1))
+		_update_cursor_visual()
+		grid_position_changed.emit(grid_position)
+	var zoom := GamepadInput.zoom()
+	if not is_zero_approx(zoom):
+		camera_controller.zoom_camera(zoom * delta * 12.0)
+	var pan_direction := GamepadInput.stick(true)
 	if Input.is_key_pressed(KEY_LEFT):
 		pan_direction.x -= 1.0
 	if Input.is_key_pressed(KEY_RIGHT):
@@ -49,10 +58,11 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_DOWN):
 		pan_direction.y += 1.0
 	if not pan_direction.is_zero_approx():
-		camera_controller.pan_keyboard(pan_direction.normalized(), delta)
+		camera_controller.pan_keyboard(pan_direction.limit_length(), delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	event = GamepadInput.as_key(event, {JOY_BUTTON_LEFT_SHOULDER: KEY_Q, JOY_BUTTON_RIGHT_SHOULDER: KEY_E, JOY_BUTTON_Y: KEY_R, JOY_BUTTON_X: KEY_F})
 	if event is InputEventMouseButton:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:

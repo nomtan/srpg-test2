@@ -46,6 +46,7 @@ func setup(player_units: Array[BattleUnit], job_database: JobDatabase, skill_dat
 		unit_list.add_child(button)
 	if not units.is_empty(): _select_unit(units[0])
 	visible = true
+	$Layout/Detail/StartBattle.grab_focus()
 
 func _select_unit(unit: BattleUnit) -> void:
 	selected_unit = unit; refreshing = true
@@ -140,6 +141,9 @@ func _validate_equipped_weapon() -> void:
 		if equipment_system.equip_weapon(selected_unit, candidate.equipment_id): break
 
 func _refresh_skills() -> void:
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null and (equipped_list.is_ancestor_of(focused) or available_list.is_ancestor_of(focused)):
+		$Layout/Detail/StartBattle.grab_focus()
 	for container in [equipped_list, available_list]:
 		for child in container.get_children(): child.queue_free()
 	for skill_id in selected_unit.equipped_skill_ids:

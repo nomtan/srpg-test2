@@ -1,0 +1,9 @@
+{
+  "grass": "#829b56", "grass_light": "#94aa61", "grass_dark": "#738c4a",
+  "earth": "#806446", "rock": "#89918a", "rock_light": "#a8afa2",
+  "sand": "#c9b782", "path": "#bba174", "water": "#438f9c", "foam": "#90c5c1",
+  "trunk": "#624a36", "wood": "#96734b", "leaf": "#426e50", "leaf_light": "#58815a",
+  "pine": "#325c4e", "pine_light": "#426e59", "plaster": "#ded1aa",
+  "roof": "#9d5845", "roof_light": "#b26c50", "window": "#3b5660",
+  "snow": "#dce1ce", "flower": "#e2be70", "flag": "#c98852"
+}
