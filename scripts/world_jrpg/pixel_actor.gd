@@ -11,6 +11,8 @@ const PALETTES := {
 @export_enum("hero", "sage", "merchant", "knight", "enemy") var palette_name := "hero"
 var sprite: Sprite3D
 var walking := false
+var running := false
+var world_facing := Vector3(0, 0, 1)
 var facing := 0
 var elapsed := 0.0
 
@@ -81,4 +83,4 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	elapsed += delta
-	sprite.frame = facing * 3 + (int(elapsed * 8) % 3 if walking else 1)
+	sprite.frame = facing * 3 + (int(elapsed * (16 if running else 8)) % 3 if walking else 1)

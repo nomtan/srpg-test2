@@ -40,6 +40,38 @@ func _run() -> void:
 	root.add_child(world)
 	world.set_process(false)
 	var weather: Node = world.field_weather
+	var previous_time: int = weather.time_index
+	var previous_weather: int = weather.weather_index
+	world._unhandled_input(pad_event(JOY_BUTTON_LEFT_SHOULDER))
+	world._unhandled_input(pad_event(JOY_BUTTON_RIGHT_SHOULDER))
+	check(weather.time_index == previous_time and weather.weather_index == previous_weather, "LB/RB no longer change time or weather")
+	var spawn_position: Vector3 = world.player.position
+	var original_yaw: float = world.yaw
+	world.yaw = 0
+	var move_key := key_event(KEY_D)
+	move_key.physical_keycode = KEY_D
+	Input.parse_input_event(move_key)
+	Input.flush_buffered_events()
+	world._process(0.01)
+	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.045), "Walking retains 4.5 units per second")
+	world.player.position = spawn_position
+	var sprint_key := key_event(KEY_SHIFT)
+	sprint_key.physical_keycode = KEY_SHIFT
+	Input.parse_input_event(sprint_key)
+	Input.flush_buffered_events()
+	world._process(0.01)
+	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.16) and world.player.running, "Running is 16 units per second, twice previous speed")
+	move_key = move_key.duplicate()
+	sprint_key = sprint_key.duplicate()
+	move_key.pressed = false
+	sprint_key.pressed = false
+	Input.parse_input_event(move_key)
+	Input.parse_input_event(sprint_key)
+	Input.flush_buffered_events()
+	world._process(0)
+	check(not world.player.walking and not world.player.running, "Releasing movement returns to idle")
+	world.player.position = spawn_position
+	world.yaw = original_yaw
 	var conditions_valid := true
 	for time_index in 4:
 		for weather_index in 4:
@@ -105,6 +137,10 @@ func _run() -> void:
 	world._close_dialog()
 	check(world.mode == "battle" and world.player.visible, "Encounter keeps explorer visible on world map")
 	var battle: Node3D = world.battle
+	world._input(pad_event(JOY_BUTTON_X))
+	check(not world.player.use_3d and world.player.sprite.visible and battle.hero == world.player, "Gamepad X switches battle hero to original 2D actor")
+	world._input(key_event(KEY_V))
+	check(world.player.use_3d and world.player.model.visible and world.player.position == encounter_start, "V restores 3D without teleporting or replacing battle actor")
 	check(battle.hero == world.player and battle.hero.get_instance_id() == original_actor_id, "Exact exploration actor reused")
 	check(world.player.position == encounter_start, "Starting battle does not teleport the explorer")
 	check(battle.enemies.size() == 2, "Enemies spawn on reachable world terrain")

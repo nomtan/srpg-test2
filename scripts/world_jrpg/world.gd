@@ -19,6 +19,10 @@ var pitch := 0.42
 var distance := 23.0
 var hud: CanvasLayer
 const Actor = preload("res://scripts/world_jrpg/pixel_actor.gd")
+const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
+const WALK_SPEED := 4.5
+const RUN_SPEED := 16.0
+@export var use_3d_player := true
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
 var player: Node3D
@@ -371,7 +375,8 @@ func _build_details(parent: Node3D) -> void:
 
 func _spawn_characters() -> void:
 	story = JSON.parse_string(FileAccess.get_file_as_string(story_path))
-	player = Actor.new()
+	player = Explorer.new()
+	player.use_3d = use_3d_player
 	player.name = "Explorer"
 	add_child(player)
 	player.position = Vector3(32, 14.05, 60)
@@ -500,7 +505,7 @@ func _setup_hud() -> void:
 	location_text = Label.new()
 	info.add_child(location_text)
 	var help := Label.new()
-	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\n右ドラッグ : 視点   ホイール : 距離   M : 全景\n1–4 : 景観を見る   R : キャラクターに戻る   H : UI\nパッド：左 移動 / 押込 走る　右 視点 / 押込 戻す\nA 会話　B 閉じる　Y 全景　LT/RT 距離\n十字 景観　LB 時間帯　RB 天気　Back UI"
+	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\n右ドラッグ : 視点   ホイール : 距離   M : 全景\n1–4 : 景観を見る   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話　B 閉じる　Y 全景　LT/RT 距離\n十字 景観　Back UI　V / X：2D・3D切替"
 	help.add_theme_font_size_override("font_size", 16)
 	info.add_child(help)
 	prompt_text = Label.new()
@@ -537,6 +542,7 @@ func _process(delta: float) -> void:
 	if player == null: return
 	if mode != "explore": return
 	player.walking = false
+	player.running = false
 	var motion := Vector2(float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)), float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
 	motion = (motion + GamepadInput.stick()).limit_length()
 	var look := GamepadInput.stick(true)
@@ -549,7 +555,9 @@ func _process(delta: float) -> void:
 		if overview:
 			distance = 27
 			_focus_player()
-		var velocity := (Vector3(cos(yaw), 0, -sin(yaw)) * motion.x + Vector3(sin(yaw), 0, cos(yaw)) * motion.y) * (8.0 if (Input.is_physical_key_pressed(KEY_SHIFT) or GamepadInput.held(JOY_BUTTON_LEFT_STICK)) else 4.5)
+		player.running = Input.is_physical_key_pressed(KEY_SHIFT) or GamepadInput.held(JOY_BUTTON_RIGHT_SHOULDER)
+		var velocity := (Vector3(cos(yaw), 0, -sin(yaw)) * motion.x + Vector3(sin(yaw), 0, cos(yaw)) * motion.y) * (RUN_SPEED if player.running else WALK_SPEED)
+		player.world_facing = velocity.normalized()
 		# Substeps keep water, cliffs and building bounds solid at low frame rates.
 		var steps := maxi(1, ceili(velocity.length() * delta / 0.18))
 		for i in steps:
@@ -632,16 +640,17 @@ func _finish_battle(won: bool) -> void:
 	hud.show()
 	_show_dialog("街道の襲撃", [story.encounter.victory if won else story.encounter.defeat])
 
+func _input(event: InputEvent) -> void:
+	# Available in exploration, dialogue and battle; does not replace the actor.
+	var toggle: bool = (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_V) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
+	if toggle and player:
+		use_3d_player = not use_3d_player
+		player.set_3d_enabled(use_3d_player)
+		get_viewport().set_input_as_handled()
+
 func _unhandled_input(event: InputEvent) -> void:
 	event = GamepadInput.as_key(event, {JOY_BUTTON_A: KEY_E, JOY_BUTTON_B: KEY_ESCAPE, JOY_BUTTON_Y: KEY_M, JOY_BUTTON_RIGHT_STICK: KEY_R, JOY_BUTTON_BACK: KEY_H, JOY_BUTTON_DPAD_UP: KEY_1, JOY_BUTTON_DPAD_RIGHT: KEY_2, JOY_BUTTON_DPAD_DOWN: KEY_3, JOY_BUTTON_DPAD_LEFT: KEY_4})
 	if mode == "battle": return
-	if mode == "explore" and event is InputEventJoypadButton and event.pressed:
-		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			field_weather.apply_conditions((field_weather.time_index + 1) % 4, field_weather.weather_index)
-			get_viewport().set_input_as_handled()
-		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			field_weather.apply_conditions(field_weather.time_index, (field_weather.weather_index + 1) % 4)
-			get_viewport().set_input_as_handled()
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "dialog":
 			if event.keycode == KEY_ESCAPE: _close_dialog()

@@ -160,9 +160,11 @@ func _route(found: Dictionary, target: Vector2i) -> Array[Vector2i]:
 
 func _walk(actor: Node3D, route: Array[Vector2i]) -> void:
 	actor.walking = true
+	actor.running = false
 	for cell in route:
 		var target := _point(cell)
 		var direction := target - actor.position
+		actor.world_facing = Vector3(direction.x, 0, direction.z).normalized()
 		actor.facing = (1 if direction.x > 0 else 2) if absf(direction.x) > absf(direction.z) else (0 if direction.z > 0 else 3)
 		if animation_time > 0:
 			var tween := create_tween()
@@ -249,6 +251,7 @@ func _sync_units() -> void:
 	hero_data.grid_x = hero_cell.x
 	hero_data.grid_z = hero_cell.y
 	hero.facing = [3, 1, 0, 2][int(hero_data.facing)]
+	hero.world_facing = [Vector3.FORWARD, Vector3.RIGHT, Vector3.BACK, Vector3.LEFT][int(hero_data.facing)]
 	combat_grid.set_occupied_unit(hero_cell, hero_data)
 	for enemy in enemies:
 		var data: BattleUnit = enemy.data
@@ -376,6 +379,7 @@ func _command(command: String) -> void:
 			var direction := ["north", "east", "south", "west"].find(command)
 			hero_data.set_facing(direction as BattleUnit.FacingDirection)
 			hero.facing = [3, 1, 0, 2][direction]
+			hero.world_facing = [Vector3.FORWARD, Vector3.RIGHT, Vector3.BACK, Vector3.LEFT][direction]
 			busy = true
 			stage = "resolving"
 			_refresh("次の手番へ…")
