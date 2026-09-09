@@ -99,8 +99,12 @@ func begin(map: Node3D, explorer: Node3D, view: Camera3D, callback: Callable) ->
 		label.modulate = Color("efd0a0")
 		actor.add_child(label)
 		enemies.append({"actor": actor, "cell": chosen, "hp": 24, "label": label})
-	camera_focus = _point(Vector2i(5, 5))
-	_update_camera()
+	# Inherit the actual exploration view, including terrain-clamped camera height.
+	camera_focus = world.focus
+	var offset := camera.position - camera_focus
+	camera_distance = offset.length()
+	camera_yaw = atan2(offset.x, offset.z)
+	camera_pitch = asin(offset.y / camera_distance)
 	_setup_rules()
 	_setup_hud()
 	turn_manager.actor_ready.connect(_actor_ready)
@@ -316,7 +320,7 @@ func _refresh(message: String) -> void:
 	for unit in turn_manager.estimate_turn_order(4): names.append(unit.unit_name)
 	var current := turn_manager.current_actor.unit_name if turn_manager.current_actor else "—"
 	status.text = "街道の襲撃 / CT %d\n手番：%s\n次：%s\nHP %d / 60　AP %d / 30\n移動 %s　行動 %s\n\n%s\n\n矢印 / 中ドラッグ：カメラ移動\nQ/E・右ドラッグ：回転\nホイール：距離　R：旅人へ\nWASD：マス選択　Enter：決定\n" % [turn, current, " → ".join(names), hp, hero_data.ap, "済" if moved else "未", "済" if attacked else "未", message]
-	status.text += "左スティック：選択　右：カメラ移動\nA：決定　B：戻る　Y：待機\nLB/RB：回転　LT/RT：距離\n右押込：旅人へ\n"
+	status.text += "左スティック：カメラ移動　右：視点回転\n十字キー：行動・マス選択\nA：決定　B：戻る　Y：待機\nLB/RB：回転　LT/RT：距離\n右押込：旅人へ\n"
 	for key: String in buttons:
 		var show_button := (stage == "menu" and key in ["move", "attack", "skill", "wait", "cancel", "retreat"]) or (stage == "confirm" and key in ["confirm", "cancel"]) or (stage in ["move", "attack", "skill_target"] and key == "cancel") or (stage == "skills" and key in ["power_slash", "guard_stance", "cancel"]) or (stage == "facing" and key in ["north", "east", "south", "west"])
 		buttons[key].visible = show_button and not busy
@@ -506,7 +510,7 @@ func _complete(won: bool) -> void:
 
 func _update_camera() -> void:
 	camera.position = camera_focus + Vector3(sin(camera_yaw) * cos(camera_pitch), sin(camera_pitch), cos(camera_yaw) * cos(camera_pitch)) * camera_distance
-	camera.position.y = maxf(camera.position.y, world._surface(camera.position.x, camera.position.z) + 2.0)
+	camera.position.y = maxf(camera.position.y, world._surface(camera.position.x, camera.position.z) + 3.0)
 	camera.look_at(camera_focus)
 
 func _pan_camera(motion: Vector2, delta: float) -> void:
@@ -518,33 +522,46 @@ func _pan_camera(motion: Vector2, delta: float) -> void:
 	_update_camera()
 
 func _process(delta: float) -> void:
+	var devices := Input.get_connected_joypads()
+	_process_controls(delta, devices[0] if not devices.is_empty() else -1)
+
+func _process_controls(delta: float, device: int) -> void:
 	if not camera or resolved: return
 	var motion := Vector2(float(Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_LEFT)), float(Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_UP)))
-	motion = (motion + GamepadInput.stick(true)).limit_length()
+	motion = (motion + (GamepadInput.read_stick(device) if device >= 0 else Vector2.ZERO)).limit_length()
 	if not motion.is_zero_approx(): _pan_camera(motion, delta)
-	var zoom := GamepadInput.zoom()
-	if not is_zero_approx(zoom):
-		camera_distance = clampf(camera_distance * exp(-zoom * delta), 12, 65)
+	var look := GamepadInput.read_stick(device, true) if device >= 0 else Vector2.ZERO
+	var zoom := GamepadInput.read_zoom(device) if device >= 0 else 0.0
+	if not look.is_zero_approx() or not is_zero_approx(zoom):
+		camera_yaw -= look.x * delta * 2.2
+		camera_pitch = clampf(camera_pitch + look.y * delta * 1.5, 0.2, 1.35)
+		camera_distance = clampf(camera_distance * exp(-zoom * delta), 9.0, world.SIZE * 1.8)
 		_update_camera()
-	var movement := _pad.step(delta, not busy and stage in ["move", "attack", "skill_target"])
+	var movement := _pad.step(delta, not busy and stage in ["move", "attack", "skill_target"], false, device)
 	if movement != Vector2i.ZERO:
 		cursor_cell = (cursor_cell + movement).clamp(Vector2i.ZERO, Vector2i(N - 1, N - 1))
-		_refresh("左スティック：マス選択　A / ×：決定")
+		_refresh("十字キー：マス選択　A / ×：決定")
+
+func _input(event: InputEvent) -> void:
+	# UI actions also bind the left stick globally. Reserve analog axes for the
+	# camera before GUI focus navigation sees them; polling still reads their state.
+	if not resolved and event is InputEventJoypadMotion:
+		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
 	event = GamepadInput.as_key(event, {JOY_BUTTON_A: KEY_ENTER, JOY_BUTTON_B: KEY_ESCAPE, JOY_BUTTON_Y: KEY_SPACE, JOY_BUTTON_LEFT_SHOULDER: KEY_Q, JOY_BUTTON_RIGHT_SHOULDER: KEY_E, JOY_BUTTON_RIGHT_STICK: KEY_R})
 	if resolved: return
 	if event is InputEventMouseMotion:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-			camera_yaw -= event.relative.x * 0.006
-			camera_pitch = clampf(camera_pitch + event.relative.y * 0.005, 0.35, 1.35)
+			camera_yaw -= event.relative.x * 0.005
+			camera_pitch = clampf(camera_pitch + event.relative.y * 0.005, 0.2, 1.35)
 			_update_camera()
 		elif Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE): _pan_camera(-event.relative, 0.002)
 	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP: camera_distance = maxf(12, camera_distance * 0.9)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN: camera_distance = minf(65, camera_distance * 1.1)
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP: camera_distance = maxf(9, camera_distance * 0.9)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN: camera_distance = minf(world.SIZE * 1.8, camera_distance * 1.1)
 		elif event.button_index == MOUSE_BUTTON_LEFT: _select(_pick_cell(event.position))
-		_update_camera()
+		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]: _update_camera()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_Q: camera_yaw -= PI / 2
@@ -559,6 +576,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_S: cursor_cell.y = mini(N - 1, cursor_cell.y + 1)
 			KEY_A: cursor_cell.x = maxi(0, cursor_cell.x - 1)
 			KEY_D: cursor_cell.x = mini(N - 1, cursor_cell.x + 1)
-		_update_camera()
+		if event.keycode in [KEY_Q, KEY_E, KEY_R]: _update_camera()
 		if event.keycode in [KEY_W, KEY_A, KEY_S, KEY_D]: _refresh("マスを選択して Enter で決定。")
 	get_viewport().set_input_as_handled()

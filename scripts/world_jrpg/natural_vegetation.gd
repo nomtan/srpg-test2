@@ -2,13 +2,17 @@
 extends RefCounted
 ## Shared, seeded botanical meshes. One MultiMesh per variant and terrain chunk.
 const SHADER = preload("res://scripts/world_jrpg/natural_vegetation.gdshader")
+const GRASS_SHADER = preload("res://scripts/world_jrpg/natural_grass.gdshader")
 static var meshes: Dictionary = {}
 static var material: ShaderMaterial
+static var grass_material: ShaderMaterial
 var groups: Dictionary = {}
 
 static func field_conditions(wet: float, snow: float) -> void:
 	_get_material().set_shader_parameter("wetness", wet)
 	_get_material().set_shader_parameter("snow_cover", snow)
+	_get_grass_material().set_shader_parameter("wetness", wet)
+	_get_grass_material().set_shader_parameter("snow_cover", snow)
 
 static func tactical_cutaway(center: Vector3, radius: float) -> void:
 	_get_material().set_shader_parameter("tactical_center", center)
@@ -19,6 +23,12 @@ static func _get_material() -> ShaderMaterial:
 		material = ShaderMaterial.new()
 		material.shader = SHADER
 	return material
+
+static func _get_grass_material() -> ShaderMaterial:
+	if grass_material == null:
+		grass_material = ShaderMaterial.new()
+		grass_material.shader = GRASS_SHADER
+	return grass_material
 
 func plant(kind: String, position: Vector3, size: float, angle: float, variant: int) -> void:
 	var key := "%s_%d" % [kind, posmod(variant, 3)]
@@ -52,7 +62,7 @@ static func _build(kind: String, variant: int) -> ArrayMesh:
 		_grass(st, rng, kind == "reed")
 	else:
 		_tree(st, rng, kind == "pine", variant)
-	st.set_material(_get_material())
+	st.set_material(_get_grass_material() if kind in ["grass", "reed"] else _get_material())
 	return st.commit()
 
 static func _vertex(st: SurfaceTool, point: Vector3, normal: Vector3, color: Color, canopy: float) -> void:

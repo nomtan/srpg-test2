@@ -16,7 +16,8 @@ static func read_stick(device: int, right: bool = false) -> Vector2:
 	if length <= DEADZONE: return Vector2.ZERO
 	return value.normalized() * clampf((length - DEADZONE) / (1.0 - DEADZONE), 0.0, 1.0)
 
-static func held(button: JoyButton) -> bool:
+static func held(button: JoyButton, device: int = -1) -> bool:
+	if device >= 0: return Input.is_joy_button_pressed(device, button)
 	var devices := Input.get_connected_joypads()
 	return not devices.is_empty() and Input.is_joy_button_pressed(devices[0], button)
 
@@ -37,12 +38,12 @@ static func as_key(event: InputEvent, bindings: Dictionary) -> InputEvent:
 		return key
 	return event
 
-func step(delta: float, enabled: bool = true) -> Vector2i:
-	var value := stick()
-	if held(JOY_BUTTON_DPAD_LEFT): value.x -= 1
-	if held(JOY_BUTTON_DPAD_RIGHT): value.x += 1
-	if held(JOY_BUTTON_DPAD_UP): value.y -= 1
-	if held(JOY_BUTTON_DPAD_DOWN): value.y += 1
+func step(delta: float, enabled: bool = true, include_stick: bool = true, device: int = -1) -> Vector2i:
+	var value := (read_stick(device) if device >= 0 else stick()) if include_stick else Vector2.ZERO
+	if held(JOY_BUTTON_DPAD_LEFT, device): value.x -= 1
+	if held(JOY_BUTTON_DPAD_RIGHT, device): value.x += 1
+	if held(JOY_BUTTON_DPAD_UP, device): value.y -= 1
+	if held(JOY_BUTTON_DPAD_DOWN, device): value.y += 1
 	return repeat_direction(value, delta, enabled)
 
 func repeat_direction(value: Vector2, delta: float, enabled: bool = true) -> Vector2i:

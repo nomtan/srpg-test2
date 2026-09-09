@@ -33,6 +33,21 @@ func pad_event(button: JoyButton) -> InputEventJoypadButton:
 	event.pressed = true
 	return event
 
+func pad_axis(axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.device = 15
+	event.axis = axis
+	event.axis_value = value
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+func pad_button(button: JoyButton, pressed: bool) -> void:
+	var event := pad_event(button)
+	event.device = 15
+	event.pressed = pressed
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
 func _run() -> void:
 	seed(7319)
 	root.size = Vector2i(1280, 720)
@@ -137,8 +152,10 @@ func _run() -> void:
 	var encounter_start: Vector3 = world.player.position
 	world._process(0.01)
 	check(world.mode == "dialog", "Arrival triggers encounter event")
+	var exploration_camera: Transform3D = world.camera.transform
 	world._close_dialog()
 	check(world.mode == "battle" and world.player.visible, "Encounter keeps explorer visible on world map")
+	check(world.camera.transform == exploration_camera, "Battle entry preserves the exact exploration camera transform")
 	var battle: Node3D = world.battle
 	world._input(pad_event(JOY_BUTTON_X))
 	check(not world.player.use_3d and world.player.sprite.visible and battle.hero == world.player, "Gamepad X switches battle hero to original 2D actor")
@@ -159,6 +176,30 @@ func _run() -> void:
 	check(battle.turn_manager.current_actor == battle.hero_data and battle.hero_data.ct >= 100, "CT speed selects ready hero")
 	check(root.gui_get_focus_owner() == battle.buttons.move, "Battle menu has initial controller focus")
 	await process_frame
+	# Exercise real input dispatch: analog axes must not reach native UI navigation.
+	var original_cursor: Vector2i = battle.cursor_cell
+	var original_focus: Vector3 = battle.camera_focus
+	var battle_entry_yaw: float = battle.camera_yaw
+	var original_pitch: float = battle.camera_pitch
+	pad_axis(JOY_AXIS_LEFT_Y, 1.0)
+	battle._process_controls(0.1, 15)
+	check(battle.camera_focus != original_focus and battle.cursor_cell == original_cursor and world.player.position == encounter_start, "Left stick pans the camera without moving hero or grid cursor")
+	check(root.gui_get_focus_owner() == battle.buttons.move, "Left stick cannot change action menu focus")
+	pad_axis(JOY_AXIS_LEFT_Y, 0.0)
+	original_focus = battle.camera_focus
+	pad_axis(JOY_AXIS_RIGHT_X, 0.8)
+	pad_axis(JOY_AXIS_RIGHT_Y, 0.5)
+	battle._process_controls(0.1, 15)
+	check(battle.camera_yaw < battle_entry_yaw and battle.camera_pitch > original_pitch and battle.camera_focus == original_focus, "Right stick rotates the view with exploration controls instead of panning")
+	pad_axis(JOY_AXIS_RIGHT_X, 0.0)
+	pad_axis(JOY_AXIS_RIGHT_Y, 0.0)
+	pad_button(JOY_BUTTON_DPAD_DOWN, true)
+	pad_button(JOY_BUTTON_DPAD_DOWN, false)
+	check(root.gui_get_focus_owner() == battle.buttons.attack, "D-pad selects the next action")
+	pad_button(JOY_BUTTON_DPAD_UP, true)
+	pad_button(JOY_BUTTON_DPAD_UP, false)
+	check(root.gui_get_focus_owner() == battle.buttons.move, "D-pad returns to movement action")
+	await process_frame
 	root.push_input(pad_event(JOY_BUTTON_A))
 	var release := pad_event(JOY_BUTTON_A)
 	release.pressed = false
@@ -166,6 +207,17 @@ func _run() -> void:
 	Input.flush_buffered_events()
 	await process_frame
 	check(battle.stage == "move" and root.gui_get_focus_owner() == null, "Gamepad A opens movement and releases menu focus")
+	var selection_camera: Transform3D = world.camera.transform
+	pad_button(JOY_BUTTON_DPAD_RIGHT, true)
+	battle._process_controls(0.016, 15)
+	pad_button(JOY_BUTTON_DPAD_RIGHT, false)
+	battle._process_controls(0.016, 15)
+	check(battle.cursor_cell == original_cursor + Vector2i.RIGHT and world.camera.transform == selection_camera, "D-pad selects a destination without changing the camera")
+	original_cursor = battle.cursor_cell
+	pad_axis(JOY_AXIS_LEFT_X, 0.8)
+	battle._process_controls(0.1, 15)
+	pad_axis(JOY_AXIS_LEFT_X, 0.0)
+	check(battle.cursor_cell == original_cursor and world.player.position == encounter_start, "Left stick remains camera-only while choosing a destination")
 	battle._unhandled_input(pad_event(JOY_BUTTON_B))
 	check(battle.stage == "menu" and root.gui_get_focus_owner() != null, "Gamepad B restores menu focus")
 	var starting_cell: Vector2i = battle.hero_cell
@@ -192,6 +244,17 @@ func _run() -> void:
 	check(battle.hero_data.ct == 20 and battle.hero_data.facing == BattleUnit.FacingDirection.SOUTH, "Wait preserves CT 20 and chosen facing")
 	await process_frame
 	check(battle.busy and battle.turn_manager.current_actor.team == "enemy", "CT schedules enemy turns")
+	var enemy_turn_focus: Vector3 = battle.camera_focus
+	var enemy_turn_yaw: float = battle.camera_yaw
+	var enemy_turn_cursor: Vector2i = battle.cursor_cell
+	pad_axis(JOY_AXIS_LEFT_X, 0.5)
+	pad_axis(JOY_AXIS_RIGHT_X, 0.5)
+	pad_button(JOY_BUTTON_DPAD_RIGHT, true)
+	battle._process_controls(0.1, 15)
+	pad_axis(JOY_AXIS_LEFT_X, 0.0)
+	pad_axis(JOY_AXIS_RIGHT_X, 0.0)
+	pad_button(JOY_BUTTON_DPAD_RIGHT, false)
+	check(battle.camera_focus != enemy_turn_focus and battle.camera_yaw < enemy_turn_yaw and battle.cursor_cell == enemy_turn_cursor, "Both camera sticks work during enemy turns while destination selection is disabled")
 	camera_before = world.camera.transform
 	battle._unhandled_input(key_event(KEY_E))
 	check(world.camera.transform != camera_before, "Camera input remains available during enemy action")
@@ -286,7 +349,15 @@ func _run() -> void:
 	# Exercise terrain integration away from the scripted encounter.
 	for point in [Vector2(35, 59), Vector2(world._river(80), 80)]:
 		world.player.position = Vector3(point.x, world._surface(point.x, point.y) + 0.05, point.y)
+		# Place the exploration camera over this test location before battle starts.
+		world.focus = world.player.position + Vector3(2, 0, 0)
+		world.yaw = 0.4
+		world.pitch = 1.0
+		world.distance = 27.0
+		world._update_camera()
+		var terrain_camera: Transform3D = world.camera.transform
 		world._start_battle()
+		check(world.camera.transform == terrain_camera, "Battle entry retains camera at cliff / bridge: " + str(point))
 		battle = world.battle
 		var blocked := 0
 		var high := -INF

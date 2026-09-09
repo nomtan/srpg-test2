@@ -22,6 +22,7 @@
 
 - `scripts/world_jrpg/natural_vegetation.gd`：`_tree()` の樹高・枝・葉・配色、`_grass()` の草丈・幅・株の葉数。
 - `scripts/world_jrpg/natural_vegetation.gdshader`：揺れ幅・速度、濡れ色、積雪。
+- `scripts/world_jrpg/natural_grass.gdshader`：草・水辺の草専用。光の方向や受ける影で色が変わらない `unshaded` 描画。株の配色・根元から先端の色の変化、風、雨・雪は維持する。変更後の画像は `assets/world_jrpg/preview_bridge_day_clear.png`。
 - `scripts/world_jrpg/world.gd`：従来どおり木の密度と `_build_grass()` の草の配置範囲・密度を管理。
 - `scripts/world_jrpg/voxel_prop.gd` / `voxel_batch.gd`：既存の木の配置呼び出しを新しい植生へ接続。
 
