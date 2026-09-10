@@ -6,6 +6,8 @@ export interface CharacterRecipe {
   specVersion: 1;
   /** Optional for compatibility with the example in specification section 15. */
   assetVersion?: number;
+  /** Phase 5: re-export revision counter (spec section 24 / prompt 17). */
+  characterVersion?: number;
   id: string;
   body: {
     base: BodyType;

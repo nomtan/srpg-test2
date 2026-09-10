@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "generate:demo": "node scripts/generate-demo-assets.mjs",
     "build:base": "node scripts/build-base-model.mjs",
-    "verify:base": "node scripts/verify-base-model.mjs"
+    "verify:base": "node scripts/verify-base-model.mjs",
+    "verify:export": "node scripts/verify-export.mjs"
   },
   "engines": {
     "node": ">=22.18.0"

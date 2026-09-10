@@ -51,3 +51,54 @@ button.mini{padding:3px 8px;font-size:11px}
 .save-actions{display:flex;flex-wrap:wrap;gap:10px;padding:0 18px}
 .save-msg{padding:10px 18px 0;color:var(--accent);font-size:12px}
 @media(max-width:900px){.prompt-grid{grid-template-columns:1fr}}
+
+/* Phase 5 Character Builder + Godot Export */
+.builder-workspace{display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:16px}
+.builder-slots{display:flex;flex-direction:column}
+.slot-list{padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.slot-row{display:grid;grid-template-columns:1fr;gap:5px;font-size:12px;color:var(--muted)}
+.slot-label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:#e7edf4}
+.slot-label em{font-style:normal;font-size:10px;color:var(--muted)}
+.slot-fixed{border:1px solid #39495a;border-radius:5px;background:#101923;color:#e7edf4;padding:10px}
+.base-row{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:2px}
+.builder-slots>.muted{padding:0 14px 16px}
+.builder-controls{padding:20px;display:flex;flex-direction:column;gap:10px}
+.builder-controls h2{margin-top:8px}
+.control-block{display:flex;flex-direction:column;gap:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.slider{gap:6px}
+.slider span{display:flex;justify-content:space-between;color:#e7edf4;font-size:12px}
+.slider em{font-style:normal;color:var(--accent)}
+.palette-grid{flex-direction:row;flex-wrap:wrap;gap:12px}
+.recipe-actions{gap:8px}
+.recipe-actions button{text-align:left}
+.preview-warn-list,.export-warnings{padding:10px 18px;font-size:11px}
+.preview-warn-list ul,.export-warnings ul{margin:6px 0 0;padding-left:18px}
+.export-panel{margin-top:16px}
+.export-body{padding:18px;display:flex;flex-direction:column;gap:18px}
+.export-fields{display:flex;flex-direction:column;gap:12px;max-width:520px}
+.export-actions{display:flex;gap:10px}
+.export-hint{font-size:11px;margin:0}
+.export-validation .val-counts{padding:0}
+.export-validation .val-list{padding:8px 0 0}
+.export-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:12px 14px;max-width:520px}
+.step{display:flex;gap:10px;color:var(--muted)}
+.step.done{color:#8fd3bd}.step.active{color:#e7edf4}.step.failed{color:#f0928a}
+.step-mark{width:16px;text-align:center}
+.export-error{border:1px solid #6b2f2c;background:#2a1b1a;border-radius:6px;padding:12px 14px}
+.export-error strong{color:#f0928a}
+.export-result{border:1px solid #2f5047;background:#16241f;border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.export-result h3{font-size:15px;color:var(--accent);margin:0}
+.export-result h4{margin:6px 0 0;font-size:12px}
+.export-result dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:12px;margin:0}
+.export-result dt{color:var(--muted)}
+.export-files{list-style:none;margin:0;padding:0;font-size:11px;display:flex;flex-direction:column;gap:3px}
+.export-files code{color:var(--accent)}
+.export-result>button{align-self:flex-start}
+.round-trip{border-top:1px solid var(--line);padding-top:10px}
+.round-trip .val-counts{flex-wrap:wrap;align-items:center}
+.export-reimport{height:520px}
+.clip-buttons{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.clip-buttons .mini{padding:3px 7px;font-size:10px}
+.clip-buttons .on{background:#203b3b;color:var(--accent)}
+@media(max-width:1300px){.builder-workspace{grid-template-columns:260px minmax(0,1fr)}.builder-controls{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:16px 24px}.builder-controls .control-block{border-bottom:0}}
+@media(max-width:760px){.builder-workspace{grid-template-columns:1fr}.builder-controls{grid-template-columns:1fr}}

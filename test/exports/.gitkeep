@@ -1,0 +1,3 @@
+# Drop Character Builder "Export for Godot" output here.
+# Unzip vein.zip and copy vein/vein.glb (and vein/vein.character.json) into this folder,
+# then open res://test/character_export_test.tscn and press F6 (Run Current Scene).

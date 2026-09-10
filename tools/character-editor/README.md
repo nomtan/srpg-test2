@@ -1,4 +1,4 @@
-# Character Workshop — Phase 2 基準素体
+# Character Workshop — Phase 5 Godot Export
 
 正式素体は `assets/characters/base/base_1.bbmodel` です。Builder/Creatorで初期表示するGLBは
 このSourceから生成しています。仮のBase Bodyは一覧から除外しました。
@@ -6,7 +6,12 @@
 [解析一覧](./docs/base-model-analysis.md) を参照してください。
 Asset Creator（`/creator`）の定義・Preview・Validation・Prompt生成・保存は
 [Phase 4](./docs/phase-4.md) を参照してください。
-以下のPhase 1説明は初期基盤の説明で、素体・Libraryの現在の扱いはPhase 2/4を優先します。
+Character Builder（`/`）は装備13スロット + Body Scale + Palette + Animation + Recipe save/load を
+持つ合成ツールで、**Export for Godot** で `<id>.glb` + `<id>.png` + `<id>.character.json` を ZIP 出力します。
+Bake方式・Palette Bake・Scale変換・Round-trip・Test Scene は [Phase 5](./docs/phase-5.md)、
+Godot側の取り込み手順は [Godot Import Guide](./docs/godot-import-guide.md) を参照してください。
+`npm run verify:export` で Base GLB / Scale / Animation Mapping の headless チェックが走ります。
+以下のPhase 1説明は初期基盤の説明で、素体・Libraryの現在の扱いはPhase 2/4/5を優先します。
 
 既存 `nomtan/srpg-test2` 内で独立して動く Next.js / TypeScript / Three.js ツール。
 基準は [character-asset-tool-spec-v1.md](./character-asset-tool-spec-v1.md)。
