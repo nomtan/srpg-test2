@@ -10,6 +10,7 @@ import {
 } from "@/domain/builder-recipe";
 import { useMergedLibrary } from "@/features/asset-library/use-library";
 import { downloadBlob } from "@/features/asset-creator/zip";
+import { BuilderLibrarySave } from "@/features/library/builder-save";
 import { CharacterPreview } from "./character-preview";
 import { ExportPanel } from "./export/export-panel";
 
@@ -225,6 +226,8 @@ export function BuilderScreen() {
             {recipeMsg && <p className="save-msg">{recipeMsg}</p>}
             <p className="muted">Recipe は再編集用（localStorage 自動保存）。Godot 用の character.json は Export で別に生成します。</p>
           </div>
+
+          <BuilderLibrarySave recipe={recipe} name={charName} thumbnail={thumb} />
         </aside>
       </div>
 

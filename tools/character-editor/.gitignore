@@ -3,3 +3,7 @@ node_modules/
 out/
 *.tsbuildinfo
 next-env.d.ts
+
+# Phase 7 library working index (keep README, ignore records + binaries)
+library-data/*
+!library-data/README.md

@@ -1,7 +1,12 @@
-# Character Workshop — Phase 5 Godot Export
+# Character Workshop — Phase 7 Management Layer
 
 正式素体は `assets/characters/base/base_1.bbmodel` です。Builder/Creatorで初期表示するGLBは
 このSourceから生成しています。仮のBase Bodyは一覧から除外しました。
+
+Phase 7 で Asset / Character の一覧・検索・複製・バージョン管理・依存追跡・一括Validation・
+Stale検出・Batch Export・Registry Sync を行う管理レイヤーを追加しました
+（`/dashboard` `/assets` `/characters` `/validation`）。永続化は Next Route Handler 経由の
+`tools/character-editor/library-data/`。詳細は [Phase 7](./docs/phase-7.md) を参照してください。
 解析結果・再生成・ゲームとの未解決の差分は [Phase 2](./docs/phase-2.md) と
 [解析一覧](./docs/base-model-analysis.md) を参照してください。
 Asset Creator（`/creator`）の定義・Preview・Validation・Prompt生成・保存は

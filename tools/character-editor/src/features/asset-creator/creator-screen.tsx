@@ -17,6 +17,7 @@ import { buildPrompts } from "@/prompt/promptBuilder";
 import { BAKED_BASE_CLIPS, resolveAnimation } from "@/viewer/animation/animationMapping";
 import { useMergedLibrary } from "@/features/asset-library/use-library";
 import { saveUserAsset } from "@/features/asset-library/user-assets";
+import { CreatorLibrarySave } from "@/features/library/creator-save";
 import { CreatorPreview } from "./creator-preview";
 import { BASE_PARTS, BASE_REST_SIZE_METERS } from "./base-parts";
 import { inspectImage } from "./inspect";
@@ -481,11 +482,20 @@ export function CreatorScreen() {
       <section className="panel save-panel">
         <div className="panel-heading"><h2>Save Asset</h2></div>
         <div className="save-actions">
-          <button type="button" onClick={saveAsset}>Save Asset (Library)</button>
+          <button type="button" onClick={saveAsset}>Save Asset (localStorage)</button>
           <button type="button" onClick={downloadJson}>Download asset.json</button>
           <button type="button" onClick={downloadPackage}>Download Package (.zip)</button>
         </div>
         {saveMsg && <p className="save-msg">{saveMsg}</p>}
+        <CreatorLibrarySave
+          metadata={draftToAssetJson(draft)}
+          modelUrl={model?.url ?? null}
+          textureUrl={textureFile?.url ?? null}
+          thumbnail={thumb}
+        />
+        <p className="muted">
+          Phase 7: 「Save to Asset Library」は <code>library-data/assets/&lt;id&gt;/</code> に永続化し、Asset Library / Character Builder に即時反映します。
+        </p>
         <p className="muted">
           Save Asset は localStorage に保存し、Character Builder と共有します。リポジトリへの書き込みは Phase 4 では行いません。
           Package は <code>asset.json / model.glb / texture.png / thumbnail.png</code> をまとめた zip です。

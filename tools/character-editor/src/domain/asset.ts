@@ -13,8 +13,12 @@ export interface AssetMetadata {
   assetVersion: number;
   id: AssetId;
   name: string;
+  /** Optional free-text note surfaced in Asset Detail (spec section 7). */
+  description?: string;
   type: AssetCategory;
   bodyTypes: BodyType[];
+  /** Search / filter / future NPC generation tags (spec prompt 5). */
+  tags?: string[];
   equipment?: {
     slot: EquipmentSlot;
     handling?: WeaponHandling;
