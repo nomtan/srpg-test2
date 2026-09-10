@@ -1,0 +1,20 @@
+{
+  "specVersion": 1,
+  "assetVersion": 1,
+  "id": "base_body",
+  "name": "Base Body · base_1.bbmodel",
+  "type": "base",
+  "bodyTypes": [
+    "adult"
+  ],
+  "appearance": {
+    "paletteSlots": []
+  },
+  "hairPolicy": null,
+  "hideParts": [],
+  "model": "model.glb",
+  "source": {
+    "format": "bbmodel",
+    "path": "assets/characters/base/base_1.bbmodel"
+  }
+}

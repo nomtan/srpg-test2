@@ -1,0 +1,34 @@
+{
+  "name": "srpg-character-editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "generate:demo": "node scripts/generate-demo-assets.mjs",
+    "build:base": "node scripts/build-base-model.mjs",
+    "verify:base": "node scripts/verify-base-model.mjs"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.185.4",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.4",
+    "typescript": "6.0.3"
+  }
+}

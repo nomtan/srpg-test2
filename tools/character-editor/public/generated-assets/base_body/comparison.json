@@ -1,0 +1,156 @@
+{
+  "sourceSha256": "d57f3136af72644209e156afbe136ddbb3a6c2ec3105f4a4b79cf67c4d5a694a",
+  "sourceFidelity": {
+    "verified": true,
+    "groups": 46,
+    "visibleBodyMeshes": 20,
+    "comparedSourceVertices": 160,
+    "uvVerified": true,
+    "toleranceMeters": 0.000001
+  },
+  "generated": {
+    "bounds": {
+      "min": [
+        -0.29166666666666663,
+        -0.012038204714411721,
+        -0.584928383214915
+      ],
+      "max": [
+        0.29166666666666663,
+        1.8333333333333333,
+        0.6307297316051722
+      ],
+      "size": [
+        0.5833333333333333,
+        1.845371538047745,
+        1.2156581148200871
+      ]
+    },
+    "meshes": [
+      "ganmenn",
+      "mimi_left",
+      "mimi_right",
+      "kubi",
+      "dou",
+      "kata_left",
+      "kata_right",
+      "ude_left",
+      "tekubi_left",
+      "te_left",
+      "ude_right",
+      "tekubi_right",
+      "te_right",
+      "koshi",
+      "momo_right",
+      "ashikubi",
+      "ashisaki",
+      "momo_left",
+      "ashisaki",
+      "ashikubi"
+    ]
+  },
+  "comparisons": [
+    {
+      "path": "assets/characters/base/base.glb",
+      "bounds": {
+        "min": [
+          -0.25,
+          0,
+          -0.5
+        ],
+        "max": [
+          0.25,
+          1.6875,
+          0.5
+        ],
+        "size": [
+          0.5,
+          1.6875,
+          1
+        ]
+      },
+      "meshes": [
+        "te_right",
+        "tekubi_right",
+        "ude_right",
+        "te_left",
+        "tekubi_left",
+        "ude_left",
+        "kata_right",
+        "kata_left",
+        "dou",
+        "ganmenn",
+        "mimi_left",
+        "mimi_right",
+        "kubi",
+        "ashisaki",
+        "ashikubi",
+        "momo_left",
+        "ashisaki",
+        "ashikubi",
+        "momo_right",
+        "koshi"
+      ],
+      "commonGroupCount": 15,
+      "maxCommonGroupPivotDeltaMeters": 0.19558964897869202,
+      "identicalTriangles": false,
+      "identicalWorldVertexSet": false,
+      "generatedOnlyWorldPoints": 156,
+      "referenceOnlyWorldPoints": 304
+    },
+    {
+      "path": "assets/world_jrpg/explorer_base_1.glb",
+      "bounds": {
+        "min": [
+          -0.29166666666666663,
+          -0.012038204714411721,
+          -0.584928383214915
+        ],
+        "max": [
+          0.29166666666666663,
+          1.8333333333333333,
+          0.6307297316051722
+        ],
+        "size": [
+          0.5833333333333333,
+          1.845371538047745,
+          1.2156581148200871
+        ]
+      },
+      "meshes": [
+        "ganmenn",
+        "mimi_left",
+        "mimi_right",
+        "kubi",
+        "dou",
+        "kata_left",
+        "kata_right",
+        "ude_left",
+        "tekubi_left",
+        "te_left",
+        "ude_right",
+        "tekubi_right",
+        "te_right",
+        "koshi",
+        "momo_right",
+        "ashikubi",
+        "ashisaki",
+        "momo_left",
+        "ashisaki",
+        "ashikubi"
+      ],
+      "commonGroupCount": 15,
+      "maxCommonGroupPivotDeltaMeters": 0,
+      "identicalTriangles": true,
+      "identicalWorldVertexSet": true,
+      "generatedOnlyWorldPoints": 0,
+      "referenceOnlyWorldPoints": 0
+    }
+  ],
+  "parityGate": {
+    "status": "numeric_pass_visual_pending",
+    "numericParity": true,
+    "reason": "Rest-pose geometry, scale and orientation match Explorer within 1e-6 m. Browser/Godot visual review still required; animation and material appearance are outside this comparison.",
+    "equipmentAssemblyAllowed": false
+  }
+}

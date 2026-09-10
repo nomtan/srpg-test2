@@ -1,0 +1,19 @@
+import type { AssetId } from "./asset";
+import type { BodyPreset, BodyType, PaletteSlot, RecipeSlot } from "./constants";
+
+export interface BodyScale { height: number; bodyWidth: number; headScale: number }
+export interface CharacterRecipe {
+  specVersion: 1;
+  /** Optional for compatibility with the example in specification section 15. */
+  assetVersion?: number;
+  id: string;
+  body: {
+    base: BodyType;
+    preset: BodyPreset;
+    scale: BodyScale;
+    /** Optional concrete base asset, beyond the body's adult/child classification. */
+    assetId?: AssetId;
+  };
+  assets: Partial<Record<RecipeSlot, AssetId | null>>;
+  palette: Record<PaletteSlot, string>;
+}
