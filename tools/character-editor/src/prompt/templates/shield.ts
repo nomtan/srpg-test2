@@ -11,6 +11,8 @@ export const shieldTemplate: TypeTemplate = {
     "Hand clearance: leave space between the handle and the inner face for the hand volume.",
     "Body clearance: the inner face must not intersect the forearm or torso in idle pose.",
     "Keep the outline a single strong shape; the shield is a major silhouette element.",
+    "The Character Builder applies the standard off-hand grip rotation ([0, 0, 90] ZYX degrees) at the socket; " +
+      "author the shield upright and do not pre-rotate it.",
   ],
   negatives: () => [
     ...onlyThisAsset("shield", ["hand", "arm", "character", "environment", "straps rigged to the arm"]),

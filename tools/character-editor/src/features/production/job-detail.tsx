@@ -5,6 +5,7 @@
 import { useMemo, useRef, useState } from "react";
 import { ASSET_TYPE_LABELS } from "@/domain/asset-spec";
 import { DEFAULT_PALETTE } from "@/domain/phase3";
+import { GRIP_ORIENTATION_DEGREES } from "@/domain/base-rig";
 import { buildValidationSpec } from "@/domain/production-package";
 import { countIssues } from "@/domain/production-validation";
 import { buildRevisionPrompt } from "@/domain/production-revision";
@@ -147,6 +148,10 @@ export function JobDetail({ job, onChanged }: { job: ProductionJob; onChanged: (
           <code> model_r&lt;n&gt;.glb / texture_r&lt;n&gt;.png / source_r&lt;n&gt;.bbmodel</code> に正規化され、
           <code> asset-production/{job.id}/incoming/</code> へ保存されます。
         </p>
+        <p className="muted">
+          <code>.bbmodel</code> は保管と Validation の対象ですが、ブラウザでは解析しないため Preview は
+          GLB を表示します（Preview が変わらないのは正常です）。Texture は GLB の UV に従って貼られます。
+        </p>
         <div className="imports">
           <input ref={modelInput} type="file" accept=".glb" hidden onChange={(e) => pick("model", e.target.files?.[0])} />
           <input ref={textureInput} type="file" accept=".png" hidden onChange={(e) => pick("texture", e.target.files?.[0])} />
@@ -228,6 +233,11 @@ export function JobDetail({ job, onChanged }: { job: ProductionJob; onChanged: (
             animationSpeed={1}
             animationLoop
             referenceHair="none"
+            gripRotationDeg={
+              job.draft.type === "weapon" ? GRIP_ORIENTATION_DEGREES.main_hand
+                : job.draft.type === "shield" ? GRIP_ORIENTATION_DEGREES.off_hand
+                  : null
+            }
             captureSignal={-1}
           />
         )}

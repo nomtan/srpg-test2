@@ -37,6 +37,7 @@ hair_short_001-ai-package/
 ├─ texture-prompt.md       Texture Prompt
 ├─ technical-spec.md       座標規格・実測寸法・Budget・Naming・Animation
 ├─ validation-spec.json    Import 時の Validation が読む契約
+├─ asset.json              成果物に同梱させる metadata（そのままコピーさせる）
 ├─ README.md               使い方と非目標
 └─ reference/              登録した Reference 画像（あれば）
 ```
@@ -79,8 +80,37 @@ NAMING / REFERENCE INFORMATION / OUTPUT FORMAT / DO NOT / VALIDATION TARGET
 （Weapon のみ WEAPON ORIENTATION を追加）
 ```
 
-`promptVersion`（現在 **1**）は Prompt と Package と Revision に埋め込み、Template を変えた時に
-どの版で作られた Asset かを追跡できる（spec section 50）。
+`promptVersion`（現在 **2**）は Prompt と Package と Revision に埋め込み、Template を変えた時に
+どの版で作られた Asset かを追跡できる（spec section 50）。Package を再生成すると現在の版が
+押し直され、すでに納品済みの Revision は作られた時の版を保持する。
+
+- v1: Phase 9 初版
+- v2: `.bbmodel` を**必須成果物**化し、納品フォルダ構造の固定と asset.json の逐語提示を追加
+- v3: 左右の訂正（キャラクターの左は -Z）と、Character Builder が Hand Socket に適用する
+  Grip Rotation の明示
+
+### 成果物フォルダ（promptVersion 2）
+
+Model Prompt の `## DELIVERABLES` で、AI に渡す成果物の形を固定した。
+
+```
+sword_iron_001/
+├─ source/
+│   └─ sword_iron_001.bbmodel    editable Blockbench source (REQUIRED — the master file)
+├─ model.glb                     runtime mesh, exported from the .bbmodel
+├─ texture.png                   32x32, nearest-neighbor
+└─ asset.json                    metadata, copied verbatim from this prompt
+```
+
+- `.bbmodel` は「できれば」ではなく **必須**。`model.glb` はその `.bbmodel` から export させる。
+- ファイル名固定。zip などダウンロード可能な 1 フォルダとして返させ、`source/` を潰させない。
+- `## ASSET.JSON` に実際の asset.json を逐語で埋め込み、そのままコピーさせる
+  （Package 内の `asset.json` と同一内容）。`source.path` は常に `source/<id>.bbmodel`。
+- `thumbnail.png` は Workshop 側が作るので AI には生成させない旨も明記。
+- Grip Point は `.bbmodel` と `.glb` の**両方**に要求する。
+- `DO NOT` に「`.glb` だけの納品」「ファイル名・構造の変更」を追加。
+- Validation 側も `.bbmodel` 欠落を Info → **Warning**（`source_missing`）に格上げし、
+  Revision Prompt で `<id>/source/<id>.bbmodel` を要求する文面を自動生成する。
 
 ## 3. Asset Type 別 Prompt 設計
 
@@ -108,7 +138,7 @@ NAMING / REFERENCE INFORMATION / OUTPUT FORMAT / DO NOT / VALIDATION TARGET
 
 `technical-spec.md` と `validation-spec.json` は同じ数値から生成する。
 
-- **Coordinate system**: `+Y up / +X forward / +Z left`、1 unit = 1 m、Godot scale 1.0、
+- **Coordinate system**: `+Y up / +X forward / -Z left（+Z right）`、1 unit = 1 m、Godot scale 1.0、
   1 field cell = 1 m、`metersPerSourceUnit = 1/12`。**Phase 5 の実装値をそのまま引用**しており、
   Phase 9 で新しい Scale Rule は作っていない。
 - **Measured base body**（spec section 12）: `npm run build:measurements` が
@@ -124,6 +154,15 @@ NAMING / REFERENCE INFORMATION / OUTPUT FORMAT / DO NOT / VALIDATION TARGET
   **結果が Phase 2 の three.js 製 bounds と 1e-6 以内で一致することを自己検証**してから書き出す。
 - **Attachment**: socket、asset attachment point、grip alignment（`GRIP_ALIGNMENT` 由来）、
   socket transform（`pivot_only_uncalibrated` である旨も渡す）。
+- **Handedness（Phase 9 で訂正）**: 右手系では `forward × left = up` なので `+X × -Z = +Y`、
+  すなわち**キャラクターの左は -Z、右は +Z**。Source のグループ名は左右が逆に付いており
+  （`hand_left_te` が実際の右手）、`base-rig.ts` の `SOURCE_NODE_BY_SIDE` が物理的な左右から
+  Source ノード名を解決する。Source の綴りは変更していない。
+- **Grip Orientation**: `GRIP_ORIENTATION_DEGREES`（main_hand `[-180, 0, 90]` /
+  off_hand `[0, 0, 90]`、Blockbench ZYX degrees）。Source が `onehand_sword` /
+  `gread_sword` / `spear` に与えている回転そのままで、Prompt が要求する「刃は local +Y」で
+  作られた Asset を刃が前方（+X）を向く姿勢にする。Grip 取り付けの Asset にのみ適用し、
+  位置・スケールは触らない。
 - **Geometry budget**: profile（low / medium / high）と、その裏の作業値
   （low 400/1200 tris・medium 1200/3000・high 3000/6000、max material 2/3/4）。
   Prompt が名乗るのは profile 名、Validation が測るのは数値で、後から数値だけ調整できる。
@@ -167,6 +206,7 @@ Job Detail → Model(.glb) / Texture(.png) / Source(.bbmodel) を選択
 | Socket | 未定義 socket → **Error** |
 | BodyType | 未指定 → **Error** |
 | Animation compatibility | base が再生できない Animation Set → Warning / 個別 clip 欠落 → Info |
+| Source | `.bbmodel` が無い → Warning（promptVersion 2 で必須成果物になったため） |
 
 Score（spec section 40）は `100 − (Error×25 + Warning×8)`。**Score だけで登録可否を決めない**:
 Error が 1 つでもあれば verdict は `fail` で、UI 側も Approve ボタンを無効化する。
@@ -184,7 +224,7 @@ scale_too_large / scale_too_small / origin_offset / grip_missing / socket_unknow
 polygon_over_budget / material_over_budget / uv_missing / texture_wrong_size /
 texture_not_square / texture_missing / alpha_not_allowed / alpha_required /
 palette_slot_missing / palette_missing / possible_clipping / bounding_box_invalid /
-model_unreadable / animation_unavailable / bodytype_missing
+model_unreadable / animation_unavailable / bodytype_missing / source_missing
 ```
 
 出力例（実測値から自動生成）:
@@ -309,7 +349,7 @@ Library API と同じくサーバー側 route から環境変数を読む前提�
 ## 14. 現在の制約
 
 - **実ブラウザでの目視サインオフ未実施**。`typecheck` / `lint` / `next build` /
-  `verify:production`（51 チェック）は PASS、`/production` `/creator` の HTTP 200 と
+  `verify:production`（75 チェック）は PASS、`/production` `/creator` の HTTP 200 と
   production API の PUT / GET / move / DELETE・traversal 拒否はローカル dev サーバで確認済み。
   3D Preview・Animation Test・Approve の一連操作の目視確認は未実施。
 - Geometry Budget の数値は暫定。実 Asset が溜まってから再調整する前提（profile 名が契約）。
@@ -322,6 +362,9 @@ Library API と同じくサーバー側 route から環境変数を読む前提�
   Info（Base 側の制約）として報告する。Asset の修正対象にはしない。
 - Reference 画像は Package に同梱するだけ。AI への自動送信はしない。
 - Thumbnail は Approve 時に生成しない（Asset Creator の Capture Thumbnail は従来どおり）。
+  Prompt では AI に thumbnail.png を作らせない方針を明示している。
+- `.bbmodel` の中身は検証しない。存在の有無だけを見るため、`.glb` と実際に一致しているかは
+  人の目視確認が必要。
 - Production Job は 1 Asset ID = 1 Job。同じ Asset を並行して別ラインで作る運用は想定外。
 - 複数ユーザー同時編集は非対応（Phase 7 から変わらず）。
 

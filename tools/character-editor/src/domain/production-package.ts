@@ -5,7 +5,7 @@
 // the human/agent-readable prompts, so the same asset can be re-produced later from the package
 // alone.
 import type { AssetType } from "./asset-spec";
-import { ASSET_CATEGORY_DIR, draftToAssetJson, isWeapon } from "./asset-spec";
+import { ASSET_CATEGORY_DIR, assetJsonText, draftToAssetJson, isWeapon } from "./asset-spec";
 import type { PaletteSlot } from "./constants";
 import { COORDINATE_SYSTEM } from "./constants";
 import { DEFAULT_PALETTE } from "./phase3";
@@ -314,10 +314,17 @@ export function buildTechnicalSpec(job: ProductionJob): string {
     "",
     line("Root node", `\`${draft.id}\``),
     line("Required nodes", spec.model.requiredNodes.join(", ") || "(none)"),
-    line("Preferred source", "`.bbmodel` (editable Blockbench source)"),
-    line("Runtime", "`model.glb`"),
+    line("Source (required)", `\`source/${draft.id}.bbmodel\` — editable Blockbench master file`),
+    line("Runtime", "`model.glb`, exported from the .bbmodel"),
     line("Texture file", "`texture.png`"),
+    line("Metadata", "`asset.json` (shipped in this package; copy it unchanged)"),
     line("Target directory", `\`assets/character-assets/${ASSET_CATEGORY_DIR[draft.type]}/${draft.id}/\``),
+    "",
+    "### Delivery folder",
+    "",
+    "```",
+    deliveryTree(job),
+    "```",
     "",
     "## Animation compatibility",
     "",
@@ -352,15 +359,23 @@ export function buildPackageReadme(job: ProductionJob): string {
     "| `texture-prompt.md` | Prompt for producing the texture. |",
     "| `technical-spec.md` | Human-readable technical specification: coordinates, measured dimensions, budgets. |",
     "| `validation-spec.json` | The checks the asset is validated against on import. |",
+    "| `asset.json` | The metadata file the delivery must contain, ready to copy unchanged. |",
     job.references.some((r) => r.file) ? "| `reference/` | Reference images, with role and view recorded in `asset-definition.json`. |" : "",
     "",
     "## How to use this package",
     "",
     "1. Read `model-prompt.md` and `technical-spec.md`. They are self-contained; you do not need the repository.",
     `2. Produce **only** the ${draft.type} asset. The base character (\`${BASE_SOURCE_PATH}\`) must not be modified or re-exported.`,
-    "3. Deliver an editable `.bbmodel` if possible, plus `model.glb` and `texture.png`.",
-    "4. Return the files to the Character Workshop AI Production screen. They are validated against `validation-spec.json` automatically.",
-    "5. If validation fails, the tool generates a Revision Prompt describing exactly what to change.",
+    "3. Author the asset in Blockbench and export `model.glb` from that source. The `.bbmodel` is a **required** deliverable, not an optional extra.",
+    "4. Hand back one downloadable folder in exactly this shape:",
+    "",
+    "```",
+    deliveryTree(job),
+    "```",
+    "",
+    "   `asset.json` is the file shipped in this package — copy it unchanged. File names are fixed.",
+    "5. Return the files to the Character Workshop AI Production screen. They are validated against `validation-spec.json` automatically.",
+    "6. If validation fails, the tool generates a Revision Prompt describing exactly what to change.",
     "",
     "## Non-goals",
     "",
@@ -375,6 +390,29 @@ export function buildPackageReadme(job: ProductionJob): string {
     "spec (spec section 51).",
     "",
   ].filter((l) => l !== "").join("\n");
+}
+
+/**
+ * The asset.json the delivery must contain. The `.bbmodel` source is a required deliverable
+ * (spec section 35), so the path is always declared even if the Asset Creator draft has no file
+ * attached yet.
+ */
+export function buildDeliveryAssetJson(job: ProductionJob): string {
+  const id = job.draft.id.trim();
+  return assetJsonText({ ...job.draft, id, sourceFileName: `${id || "asset"}.bbmodel` });
+}
+
+/** The folder an AI agent must hand back, mirrored in the prompt and the package README. */
+export function deliveryTree(job: ProductionJob): string {
+  const id = job.draft.id.trim() || "<asset_id>";
+  return [
+    `${id}/`,
+    "├─ source/",
+    `│   └─ ${id}.bbmodel`,
+    "├─ model.glb",
+    "├─ texture.png",
+    "└─ asset.json",
+  ].join("\n");
 }
 
 export interface PackageTextFile {
@@ -396,6 +434,8 @@ export function buildProductionPackage(job: ProductionJob): PackageTextFile[] {
     { name: "texture-prompt.md", content: prompts.texture },
     { name: "technical-spec.md", content: buildTechnicalSpec(job) },
     { name: "validation-spec.json", content: JSON.stringify(buildValidationSpec(job), null, 2) + "\n" },
+    // Ship the exact asset.json the delivery must contain, so it can be copied instead of retyped.
+    { name: "asset.json", content: buildDeliveryAssetJson(job) },
     { name: "README.md", content: buildPackageReadme(job) },
   ];
 }

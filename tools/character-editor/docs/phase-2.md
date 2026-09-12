@@ -38,7 +38,7 @@ Groupの名前とUUIDは旧Sourceと共通だが、Pivot・部品形状・部品
 - 左上腕はX=-20°、右上腕はX=15°、左大腿はX=-7.5°、右大腿はX=7.5°のRest Poseを保持。
 - 首・肩・耳はMesh。独立Boneや新Skeletonは作らない。
 - `onehand_sword`、`gread_sword`、`spear`、`bow`、`shield`、`dagger_left/right`、`allow` を装備階層として分類。
-- 元の綴りや左右を変更しない。全46 GroupをGLB Nodeとして残し、非表示装備MeshはPreviewに出力しない。
+- 元の綴りを変更しない（左右の意味づけは SOURCE_NODE_BY_SIDE で解決する）。全46 GroupをGLB Nodeとして残し、非表示装備MeshはPreviewに出力しない。
 - Socketは既存Groupのローカル原点を示す `pivot_only_uncalibrated`。Gripとして校正済みではない。
 
 Materialは中立の単色。UVは保持するが、ゲームのPalette適用・色の一致は今回の範囲外。
@@ -50,7 +50,15 @@ Blockbench 5の保存済みFace順で三角化し、未対応形式やTexture追
 比較対象は `assets/world_jrpg/explorer_base_1.glb`。
 `scripts/world_jrpg/explorer_actor.gd` が読み込み、
 `tools/asset_gen/export_explorer_model.py` が同じ `base_1.bbmodel` から生成している。
-既存Exporterの1/12スケール、+X前方・+Y上・+Z左を採用する。軸変換、中心移動、姿勢の補正は行わない。
+既存Exporterの1/12スケール、+X前方・+Y上を採用する。軸変換、中心移動、姿勢の補正は行わない。
+
+**左右について（Phase 9 で訂正）**: 当初この文書は「+Z 左」としていたが、右手系では
+`forward × left = up`、つまり `+X × -Z = +Y` なので、**キャラクターの左は -Z、右は +Z** が正しい。
+Source のグループ名は左右が逆で、`hand_left_te`（z = +0.48 m）は実際には右手、
+`hand_right_te`（z = -0.44 m）は左手である。Source の武器階層もこれと整合しており、
+`onehand_sword` は `hand_left_te`＝実際の右手にぶら下がっている。
+Source の綴りは変更せず、`src/domain/base-rig.ts` の `SOURCE_NODE_BY_SIDE` が
+物理的な左右 → Source グループ名を解決する。
 
 静止姿勢のサイズはX=約0.583333m、Y=約1.845372m、Z=約1.215658m。
 傾いた脚を含む実形状のBoundsであり、地面よりわずかに下の頂点も勝手に持ち上げない。

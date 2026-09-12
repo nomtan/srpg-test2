@@ -86,6 +86,13 @@ export function validateDraft(draft: AssetDraft, ctx: ValidationContext): Valida
     if (!m.hasMesh) add("error", "model", "GLB に表示可能な Mesh がありません。");
     add("info", "model", `Mesh ${m.meshCount} / Material ${m.materialCount} / 三角形 ${m.triangleCount.toLocaleString()}`);
     if (m.materialCount > MAX_MATERIALS) add("warning", "model", `Material 数が多いです (${m.materialCount} > ${MAX_MATERIALS})。`);
+    // Without UVs a texture cannot map onto the mesh, so the Preview shows the untextured model
+    // even though the PNG imported fine. Say so rather than leaving it a mystery.
+    if (!m.hasUv) {
+      add("warning", "model", ctx.texture
+        ? `UV を持たない Mesh が ${m.meshesWithoutUv} 個あります。Texture は Preview / Runtime に反映されません。`
+        : `UV を持たない Mesh が ${m.meshesWithoutUv} 個あります。Texture を適用できません。`);
+    }
     if (m.triangleCount > MAX_TRIANGLES) add("warning", "model", `Polygon 数が多いです (${m.triangleCount} > ${MAX_TRIANGLES})。low-poly を維持してください。`);
     const [sx, sy, sz] = m.boundingBox.size;
     add("info", "model", `Bounding Box: ${sx.toFixed(3)} × ${sy.toFixed(3)} × ${sz.toFixed(3)} m`);

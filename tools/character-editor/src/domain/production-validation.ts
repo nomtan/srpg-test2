@@ -264,9 +264,14 @@ export function validateProduction(spec: ValidationSpec, input: ProductionInput)
     }
   }
 
-  // ---- Editable source ----
+  // ---- Editable source (spec section 35; required deliverable since promptVersion 2) ----
   if (!input.sourceFileName) {
-    add("info", "source_missing", "Source", "`.bbmodel` Source が未添付です（任意ですが、後の修正が楽になります）。");
+    add(
+      "warning",
+      "source_missing",
+      "Source",
+      "編集可能な `.bbmodel` Source がありません。GLB だけでは以降の修正ができないため、成果物として要求してください。",
+    );
   } else {
     add("info", "source_ok", "Source", `Source: ${input.sourceFileName}`);
   }

@@ -32,6 +32,14 @@ console.log("# Production Package");
     "asset-definition.json", "model-prompt.md", "texture-prompt.md",
     "technical-spec.md", "validation-spec.json", "README.md",
   ].every((n) => names.includes(n)), names.join(", "));
+  check("package ships a ready-to-copy asset.json", names.includes("asset.json"));
+
+  const deliveryJson = JSON.parse(files.find((f) => f.name === "asset.json").content);
+  check("delivery asset.json declares the required .bbmodel source",
+    deliveryJson.source?.format === "bbmodel" && deliveryJson.source.path === "source/hair_001.bbmodel",
+    JSON.stringify(deliveryJson.source));
+  check("delivery asset.json names the runtime files",
+    deliveryJson.model === "model.glb" && deliveryJson.texture === "texture.png");
 
   const definition = JSON.parse(files.find((f) => f.name === "asset-definition.json").content);
   check("asset-definition keeps the spec shape", definition.specVersion === 1
@@ -64,6 +72,41 @@ console.log("\n# Model Prompt sections");
     && prompt.includes("Do not manually rotate the character hand to fit the weapon."));
   check("asset-only isolation is stated", prompt.includes("Generate only the sword / weapon asset."));
   check("promptVersion marker", prompt.includes(`promptVersion: ${PROMPT_VERSION}`));
+}
+
+console.log("\n# Deliverables (folder structure + required .bbmodel)");
+{
+  for (const type of ["weapon", "hair"]) {
+    const job = jobFor(type);
+    const id = `${type}_001`;
+    const prompt = buildProductionPackage(job).find((f) => f.name === "model-prompt.md").content;
+    check(`${type}: DELIVERABLES section exists`, prompt.includes("## DELIVERABLES"));
+    check(`${type}: .bbmodel is required, not optional`,
+      prompt.includes(`\`source/${id}.bbmodel\` is REQUIRED, not optional`));
+    check(`${type}: glb must be exported from the .bbmodel`,
+      prompt.includes("`model.glb` must be exported *from it*"));
+    check(`${type}: folder tree is spelled out`, [
+      `${id}/`, "├─ source/", `│   └─ ${id}.bbmodel`, "├─ model.glb", "├─ texture.png", "└─ asset.json",
+    ].every((line) => prompt.includes(line)));
+    check(`${type}: fixed file names are stated`,
+      prompt.includes("File names are fixed.") && prompt.includes("downloadable archive"));
+    check(`${type}: glb-only delivery is forbidden`,
+      prompt.includes("Do not deliver only a `.glb`"));
+    check(`${type}: asset.json is embedded verbatim`,
+      prompt.includes("## ASSET.JSON") && prompt.includes(`"id": "${id}"`)
+      && prompt.includes(`"path": "source/${id}.bbmodel"`));
+    check(`${type}: validation target lists the delivery folder`,
+      prompt.includes(`Delivery folder \`${id}/\` contains source/${id}.bbmodel`));
+  }
+  const weaponPrompt = buildProductionPackage(jobFor("weapon")).find((f) => f.name === "model-prompt.md").content;
+  check("grip nodes are demanded in both the .bbmodel and the .glb",
+    weaponPrompt.includes("in BOTH the .bbmodel and the .glb"));
+  const readme = buildProductionPackage(jobFor("weapon")).find((f) => f.name === "README.md").content;
+  check("package README repeats the delivery tree",
+    readme.includes("weapon_001/") && readme.includes("└─ asset.json"));
+  const techSpec = buildProductionPackage(jobFor("weapon")).find((f) => f.name === "technical-spec.md").content;
+  check("technical spec lists the required source", techSpec.includes("Source (required)")
+    && techSpec.includes("source/weapon_001.bbmodel"));
 }
 
 console.log("\n# Per-type templates");
@@ -208,6 +251,18 @@ const goodModel = {
   const gripPrompt = buildRevisionPrompt({ job, spec, validation: missingGrip, includeWarnings: false });
   check("missing grip produces an actionable revision", gripPrompt.includes("`grip_main`")
     && gripPrompt.includes("socket_hand_right"));
+
+  const noSource = validateProduction(spec, {
+    model: { ...goodModel, nodeNames: ["sword", "grip_main"], boundingBox: { min: [-0.05, 0, -0.05], max: [0.05, 0.9, 0.05], size: [0.1, 0.9, 0.1] } },
+    texture: { width: 32, height: 32, hasAlpha: false },
+    sourceFileName: null,
+  });
+  check("a delivery without .bbmodel is flagged",
+    noSource.issues.some((i) => i.code === "source_missing" && i.level === "warning"));
+  const sourcePrompt = buildRevisionPrompt({ job, spec, validation: noSource, includeWarnings: true });
+  check("missing source produces a revision asking for the .bbmodel",
+    sourcePrompt.includes("weapon_001/source/weapon_001.bbmodel")
+    && sourcePrompt.includes("The .bbmodel is the master file"));
 }
 
 console.log("\n# Measurements");
@@ -217,6 +272,20 @@ console.log("\n# Measurements");
     baseSocket("socket_hand_right").worldPosition.some((v) => v !== 0));
   check("socket stays flagged as uncalibrated",
     baseSocket("socket_hand_right").status === "pivot_only_uncalibrated");
+  // Regression guard: the source spells the +Z side "_left", but +X forward / +Y up makes +Z the
+  // character's RIGHT (forward x left = up). Main Hand must land on +Z.
+  check("socket_hand_right is on the character's right (+Z)",
+    baseSocket("socket_hand_right").worldPosition[2] > 0,
+    JSON.stringify(baseSocket("socket_hand_right").worldPosition));
+  check("socket_hand_left is on the character's left (-Z)",
+    baseSocket("socket_hand_left").worldPosition[2] < 0,
+    JSON.stringify(baseSocket("socket_hand_left").worldPosition));
+  check("main hand resolves to the source node that holds the sword",
+    baseSocket("socket_hand_right").parent === "hand_left_te",
+    baseSocket("socket_hand_right").parent);
+  check("shoulders follow the same physical sides",
+    baseSocket("socket_shoulder_right").worldPosition[2] > 0
+    && baseSocket("socket_shoulder_left").worldPosition[2] < 0);
   check("character is ~2.5-3 heads tall", BASE_CHARACTER.headsTall > 2.4 && BASE_CHARACTER.headsTall < 3.4,
     String(BASE_CHARACTER.headsTall));
 }

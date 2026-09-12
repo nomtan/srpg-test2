@@ -4,9 +4,10 @@
 import { PROMPT_VERSION } from "@/domain/production-job";
 import { TYPE_TEMPLATES } from "./templates";
 import {
-  ISOMETRIC_LINES, NEGATIVE_LINES, STYLE_LINES, attachmentBlock, bullet, materialBlock,
-  namingBlock, orientationBlock, originBlock, outputBlock, polygonBlock, proportionBlock,
-  purposeBlock, referenceBlock, referenceModelBlock, scaleBlock, uvBlock, validationTargetBlock,
+  ISOMETRIC_LINES, NEGATIVE_LINES, STYLE_LINES, assetJsonBlock, attachmentBlock, bullet,
+  deliverablesBlock, materialBlock, namingBlock, orientationBlock, originBlock, outputBlock,
+  polygonBlock, proportionBlock, purposeBlock, referenceBlock, referenceModelBlock, scaleBlock,
+  uvBlock, validationTargetBlock,
 } from "./templates/common";
 import type { PromptContext } from "./promptTypes";
 
@@ -73,6 +74,12 @@ export function buildModelPrompt(ctx: PromptContext): string {
     "",
     "## OUTPUT FORMAT",
     outputBlock(ctx),
+    "",
+    "## DELIVERABLES",
+    deliverablesBlock(ctx),
+    "",
+    "## ASSET.JSON",
+    assetJsonBlock(ctx),
     "",
     "## DO NOT",
     bullet([...template.negatives(ctx), ...NEGATIVE_LINES]),

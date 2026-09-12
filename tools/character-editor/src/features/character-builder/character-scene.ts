@@ -7,6 +7,7 @@ import { PALETTE_SLOTS, type PaletteSlot } from "@/domain/constants";
 import { EXPORT_ASSET_SLOTS, type ExportAssetSlot } from "@/domain/character-export";
 import { SLOT_NODE_NAME, SLOT_SOCKET, clampScale } from "@/domain/builder-recipe";
 import { socketNodeName } from "@/features/asset-creator/base-parts";
+import { GRIP_ORIENTATION_DEGREES } from "@/domain/base-rig";
 import type { AssetLibrary, AssetLibraryEntry } from "@/features/asset-library/library";
 import { modelUrl, textureUrl } from "@/features/asset-library/library";
 
@@ -14,6 +15,23 @@ export const BASE_MODEL_URL = "/generated-assets/base_body/model.glb";
 /** Rig nodes that must survive the round-trip (prompt 23). base_1 is rigid-node animated, no skin. */
 export const REQUIRED_RIG_NODES = ["ganmen", "dou", "kahanshi", "hand_right_te", "hand_left_te", "foot_right", "foot_left"] as const;
 const HEAD_NODE = "ganmen";
+
+/**
+ * Grip-attached assets (main hand / off hand) take the project's standard weapon orientation.
+ * Everything else keeps the socket's own frame. Blockbench authors Euler in ZYX order.
+ */
+function applyGripOrientation(assetRoot: THREE.Object3D, slot: ExportAssetSlot): void {
+  const degrees = slot === "mainHand" ? GRIP_ORIENTATION_DEGREES.main_hand
+    : slot === "offHand" ? GRIP_ORIENTATION_DEGREES.off_hand
+      : null;
+  if (!degrees) return;
+  assetRoot.rotation.set(
+    THREE.MathUtils.degToRad(degrees[0]),
+    THREE.MathUtils.degToRad(degrees[1]),
+    THREE.MathUtils.degToRad(degrees[2]),
+    "ZYX",
+  );
+}
 
 export interface EquipmentPlacement {
   slot: ExportAssetSlot;
@@ -33,7 +51,10 @@ export interface BuiltCharacter {
   equipment: EquipmentPlacement[];
   hiddenParts: string[];
   hairPolicy: "hide" | "overlay" | null;
+  /** Problems that need a human decision. Drives the "警告 N 件" badge. */
   warnings: string[];
+  /** Things the builder corrected on its own. Reported, but not a problem to act on. */
+  notices: string[];
   /** Visible-mesh bounding box in the rest pose (metres). */
   restBox: { min: [number, number, number]; max: [number, number, number]; size: [number, number, number] };
   dispose(): void;
@@ -53,10 +74,41 @@ function tint(root: THREE.Object3D, hex: string) {
     if (!isMesh(o)) return;
     eachMaterial(o, (m) => {
       const std = m as THREE.MeshStandardMaterial;
+      // baseColor multiplies the map, so tinting a textured material only darkens it — and the
+      // texture already carries its own palette regions. Untextured materials still take the tint,
+      // which is what the export bakes as baseColorFactor.
+      if (std.map) return;
       if (std.color) std.color.set(hex);
       std.needsUpdate = true;
     });
   });
+}
+
+/**
+ * A MeshStandardMaterial with metalness > 0 and no environment map renders black: metals have no
+ * diffuse response, so with nothing to reflect there is nothing to show. This preview (and the
+ * Asset Library one) light the scene with a hemisphere + directional light and no env map, and the
+ * project's material spec is flat/unlit anyway, so strongly metallic assets are neutralised.
+ *
+ * Only materials at or above METALNESS_LIMIT are touched: a low value (the demo assets use 0.1)
+ * costs a few percent of brightness and is not worth rewriting — or reporting.
+ */
+const METALNESS_LIMIT = 0.5;
+
+function neutraliseMetalness(root: THREE.Object3D): number {
+  let fixed = 0;
+  root.traverse((o) => {
+    if (!isMesh(o)) return;
+    eachMaterial(o, (m) => {
+      const std = m as THREE.MeshStandardMaterial;
+      if (typeof std.metalness === "number" && std.metalness >= METALNESS_LIMIT) {
+        std.metalness = 0;
+        std.needsUpdate = true;
+        fixed += 1;
+      }
+    });
+  });
+  return fixed;
 }
 
 function pixelSampling(root: THREE.Object3D) {
@@ -119,6 +171,7 @@ export async function buildCharacterScene(
   opts: BuildOptions = {},
 ): Promise<BuiltCharacter> {
   const warnings: string[] = [];
+  const notices: string[] = [];
   const disposables: (() => void)[] = [];
   const loader = new GLTFLoader();
 
@@ -193,18 +246,30 @@ export async function buildCharacterScene(
     assetRoot.userData.slot = slot;
     assetRoot.userData.assetId = entry.metadata.id;
 
+    const metalFixed = neutraliseMetalness(assetRoot);
+    if (metalFixed) {
+      notices.push(`${slot} (${entry.metadata.id}): metalness ${METALNESS_LIMIT} 以上の Material ${metalFixed} 個を 0 にしました（環境マップが無いと真っ黒に描画されるため）。`);
+    }
+
     const texUrl = textureUrl(entry);
     if (texUrl) {
       try {
         const map = await loadTexture(texUrl);
         disposables.push(() => map.dispose());
+        let withoutUv = 0;
         assetRoot.traverse((o) => {
           if (!isMesh(o)) return;
+          // Assigning a map to UV-less geometry samples texel (0,0) for every pixel, which is how
+          // an asset ends up a flat single colour (usually black). Leave those meshes untextured.
+          if (!o.geometry?.getAttribute?.("uv")) { withoutUv += 1; return; }
           eachMaterial(o, (m) => {
             const std = m as THREE.MeshStandardMaterial;
             if ("map" in std) { std.map = map; std.needsUpdate = true; }
           });
         });
+        if (withoutUv) {
+          warnings.push(`${slot} (${entry.metadata.id}): UV を持たない Mesh が ${withoutUv} 個あるため texture を適用していません（適用すると単色になります）。`);
+        }
       } catch {
         warnings.push(`${slot} (${entry.metadata.id}) の texture を読み込めませんでした。`);
       }
@@ -217,6 +282,7 @@ export async function buildCharacterScene(
 
     (parentNode ?? baseRoot).add(assetRoot);
     if (!parentNode) warnings.push(`Socket 親ノード (${parentName ?? socket}) が見つかりません。CharacterRoot 直下に取り付けました: ${slot}`);
+    applyGripOrientation(assetRoot, slot);
 
     assetRoot.updateWorldMatrix(true, true);
     const wp = assetRoot.getWorldPosition(new THREE.Vector3());
@@ -248,7 +314,7 @@ export async function buildCharacterScene(
 
   return {
     root, baseRoot, clips, equipment,
-    hiddenParts: actualHidden, hairPolicy, warnings, restBox,
+    hiddenParts: actualHidden, hairPolicy, warnings, notices, restBox,
     dispose() {
       for (const d of disposables) d();
       root.traverse((o) => {

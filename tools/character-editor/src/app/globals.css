@@ -315,3 +315,14 @@ button.lib-row:hover{background:#1c2836}
 button.danger{border-color:#6b3a36;color:#f0928a}
 tr.selected td{background:#203b3b}
 @media(max-width:1150px){.production-workspace{grid-template-columns:1fr}}
+
+/* Header navigation: current route */
+.app-header nav a{position:relative}
+.app-header nav a.active{color:var(--accent)}
+.app-header nav a.active::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:2px;background:var(--accent);border-radius:1px}
+@media(max-width:760px){.app-header nav a.active::after{bottom:-4px}}
+
+/* Builder: self-corrected adjustments, reported apart from real warnings */
+.preview-notes{padding:10px 18px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+.preview-notes summary{cursor:pointer}
+.preview-notes ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}

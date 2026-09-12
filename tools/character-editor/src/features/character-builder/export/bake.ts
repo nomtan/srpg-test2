@@ -176,7 +176,8 @@ export async function bakeCharacter(input: BakeInput): Promise<BakeResult> {
       files: entries.map((e) => ({ name: e.name, bytes: e.data.byteLength })),
       validation,
       roundTrip: rt,
-      sceneWarnings: built.warnings,
+      // The exported GLB carries the corrected materials, so the corrections belong in the report.
+      sceneWarnings: [...built.warnings, ...built.notices.map((n) => `自動補正: ${n}`)],
     };
   } finally {
     built.dispose();

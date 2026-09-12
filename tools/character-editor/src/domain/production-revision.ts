@@ -152,6 +152,15 @@ export function instructionFor(issue: ProductionIssue, spec: ValidationSpec): Re
         issue: issue.message,
         revision: `Confirm the asset targets the ${spec.animation.set} animation set; the base character only provides the clips listed in validation-spec.json.`,
       };
+    case "source_missing":
+      return {
+        code: issue.code,
+        issue: "The delivery contains no editable Blockbench source.",
+        revision:
+          `Deliver \`${spec.assetId}/source/${spec.assetId}.bbmodel\` alongside model.glb. ` +
+          "The .bbmodel is the master file: export model.glb from it so the two match, and keep the " +
+          "same node names (including any grip nodes) in both.",
+      };
     case "bodytype_missing":
       return {
         code: issue.code,

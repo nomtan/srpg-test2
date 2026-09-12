@@ -40,6 +40,10 @@ export interface PromptContext {
   paletteReference: Partial<Record<PaletteSlot, string>>;
   references: ProductionReference[];
   animationTest: { set: string; roles: string[] };
+  /** Asset directory category, for the repository path the delivery folder lands at. */
+  categoryDir: string;
+  /** The exact asset.json the delivery must ship, embedded so nothing is re-typed by hand. */
+  assetJson: string;
 }
 
 export interface GeneratedPrompts {
@@ -56,6 +60,8 @@ export const BASE_MODEL_SIZE_METERS = { x: 0.5833, y: 1.8454, z: 1.2157 };
 export const COORD_SYSTEM = {
   up: "+Y",
   forward: "+X",
-  left: "+Z",
+  // forward x left = up requires +X x -Z = +Y, so the character's left is -Z.
+  left: "-Z",
+  right: "+Z",
   unit: "1 unit = 1 metre (Godot scale 1.0), base authored in Blockbench at 1/12 scale",
 };

@@ -1,4 +1,4 @@
-import { isWeapon, type AssetDraft } from "@/domain/asset-spec";
+import { ASSET_CATEGORY_DIR, assetJsonText, isWeapon, type AssetDraft } from "@/domain/asset-spec";
 import { DEFAULT_PALETTE } from "@/domain/phase3";
 import type { PaletteSlot } from "@/domain/constants";
 import {
@@ -25,6 +25,10 @@ export function contextFromDraft(draft: AssetDraft, options: PromptOptions = {})
   const weapon = isWeapon(draft.type);
   const profile = options.budgetProfile ?? TYPE_BUDGET[draft.type];
   const animationTest = TYPE_ANIMATION_TEST[draft.type];
+  // The `.bbmodel` source is a required deliverable (spec section 35), so the asset.json handed to
+  // the agent always declares it — even when the Asset Creator draft has no file attached yet.
+  const id = draft.id.trim();
+  const assetJson = assetJsonText({ ...draft, id, sourceFileName: `${id || "asset"}.bbmodel` });
   return {
     draft,
     type: draft.type,
@@ -58,6 +62,8 @@ export function contextFromDraft(draft: AssetDraft, options: PromptOptions = {})
     animationTest: weapon
       ? { set: draft.animationSet, roles: [...animationTest.roles] }
       : { set: animationTest.set, roles: [...animationTest.roles] },
+    categoryDir: ASSET_CATEGORY_DIR[draft.type],
+    assetJson,
   };
 }
 

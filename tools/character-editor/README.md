@@ -19,7 +19,9 @@ Phase 9 で AI Production Pipeline（`/production` と Asset Creator の AI Prod
 Import して自動 Validation・Base + Asset Preview・Animation Test・Revision Prompt 生成・
 Revision History・Approve / Reject / Needs Revision まで行います。Approve した Asset だけが
 Asset Library に登録され、Character Builder と Variation Generator から使えます。
-Prompt には base_1 から実測した寸法（head / hand / socket / 推奨武器全長）が入ります。
+Prompt には base_1 から実測した寸法（head / hand / socket / 推奨武器全長）が入り、成果物は
+`<id>/source/<id>.bbmodel` + `model.glb` + `texture.png` + `asset.json` の固定フォルダ構造で
+返させます（`.bbmodel` は必須成果物）。
 詳細は [Phase 9](./docs/phase-9.md) を参照してください。
 解析結果・再生成・ゲームとの未解決の差分は [Phase 2](./docs/phase-2.md) と
 [解析一覧](./docs/base-model-analysis.md) を参照してください。
@@ -71,7 +73,8 @@ headless で検証します。
 生成します。Phase 2 の three.js 製 bounds と 1e-6 以内で一致することを自己検証してから書き出し、
 Source には一切書き込みません。`verify:production` は Phase 9 の Package 構成・Asset Type 別
 Prompt・Validation 判定（Scale / Grip / Texture / Palette / UV）・Revision Prompt 生成を
-headless で検証します（51 チェック）。
+headless で検証します（79 チェック）。左右の取り違え（キャラクターの左は -Z）に対する
+回帰チェックもここに含まれます。
 
 ## 構成と実装範囲
 

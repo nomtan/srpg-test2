@@ -12,6 +12,7 @@ import {
   isWeapon, isSnakeCase, suggestId, type AssetDraft, type AssetType, type GripPoint,
 } from "@/domain/asset-spec";
 import { DEFAULT_PALETTE } from "@/domain/phase3";
+import { GRIP_ORIENTATION_DEGREES } from "@/domain/base-rig";
 import { countByLevel, validateDraft, type GlbStats, type TextureStats, type ValidationItem } from "@/domain/asset-validation";
 import { buildPrompts } from "@/prompt/promptBuilder";
 import { BAKED_BASE_CLIPS, resolveAnimation } from "@/viewer/animation/animationMapping";
@@ -25,6 +26,7 @@ import { inspectImage } from "./inspect";
 import { createZip, dataUrlToBytes, downloadBlob } from "./zip";
 
 const ANIM_ROLES = ["idle", "walk", "run", "attack"] as const;
+const weaponOrShield = (type: AssetType) => type === "weapon" || type === "shield";
 
 export function CreatorScreen() {
   const library = useMergedLibrary();
@@ -117,6 +119,10 @@ export function CreatorScreen() {
   );
 
   const paletteColor = draft.paletteSlots[0] ? palette[draft.paletteSlots[0]] : null;
+  // Weapons / shields attach by a grip point, so the preview uses the standard weapon orientation.
+  const gripRotationDeg = weaponOrShield(draft.type)
+    ? (draft.type === "shield" ? GRIP_ORIENTATION_DEGREES.off_hand : GRIP_ORIENTATION_DEGREES.main_hand)
+    : null;
   const referenceHair: "none" | "shown" | "hidden" =
     mode === "base" && HAIR_POLICY_TYPES.includes(draft.type)
       ? (draft.hairPolicy === "hide" ? "hidden" : "shown")
@@ -342,12 +348,18 @@ export function CreatorScreen() {
             <input ref={sourceInput} type="file" accept=".bbmodel" hidden onChange={(e) => onPickSource(e.target.files?.[0])} />
             <button type="button" onClick={() => modelInput.current?.click()}>Import Model (.glb)</button>
             <button type="button" onClick={() => textureInput.current?.click()}>Import Texture (.png)</button>
-            <button type="button" onClick={() => sourceInput.current?.click()}>Import Source (.bbmodel)</button>
+            <button type="button" onClick={() => sourceInput.current?.click()}>Link Source (.bbmodel)</button>
             <ul className="import-status">
               <li>Model: {model ? model.name : "—"}</li>
               <li>Texture: {textureFile ? `${textureFile.name}${textureStats ? ` (${textureStats.width}×${textureStats.height})` : ""}` : "—"}</li>
               <li>Source: {draft.sourceFileName ?? "—"}</li>
             </ul>
+            <p className="muted">
+              <code>.bbmodel</code> はブラウザで解析しないため Preview は変化しません。ここではファイル名を
+              <code> asset.json</code> の <code>source.path</code> に記録するだけで、ファイル自体は保存されません。
+              実ファイルを保管するのは AI Production の Import です。
+              Texture は Model の UV に従って貼られます（UV が無い GLB では反映されません）。
+            </p>
           </div>
 
           <div className="dir-hint">出力先: <code>{assetDir(draft)}/</code></div>
@@ -393,6 +405,7 @@ export function CreatorScreen() {
             animationSpeed={animSpeed}
             animationLoop={animLoop}
             referenceHair={referenceHair}
+            gripRotationDeg={gripRotationDeg}
             captureSignal={captureSignal}
             onThumbnail={setThumb}
             onModelStats={setGlbStats}

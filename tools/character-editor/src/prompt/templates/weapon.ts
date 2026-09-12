@@ -44,7 +44,10 @@ export const weaponTemplate: TypeTemplate = {
         "Do not manually rotate the character hand to fit the weapon.",
         `The asset is aligned by its grip node to ${ctx.attachment.gripAlignment.grip_main ?? "socket_hand_right"}; the character's hand pose is fixed.`,
         "Standard orientation: grip axis along local Y, blade / head toward +Y, the weapon's flat face toward local Z.",
-        "The socket alignment implemented in Phase 2-5 is authoritative; author to it rather than pre-rotating the mesh.",
+        "The Character Builder applies the project's standard grip rotation ([-180, 0, 90] ZYX degrees, " +
+          "matching the base source's own weapon placement) at the hand socket, which turns a blade-up asset " +
+          "into a blade-forward pose. Author the asset blade-up and let the tool orient it.",
+        "Do not pre-rotate the mesh to compensate: a pre-rotated asset ends up double-rotated.",
       ],
     },
   ],

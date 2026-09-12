@@ -6,7 +6,7 @@ import type { AssetDraft } from "@/domain/asset-spec";
 import { draftToAssetJson } from "@/domain/asset-spec";
 import type { LibraryIndex } from "@/domain/library-index";
 import {
-  newProductionJob, nextRevisionNumber, unknownProductionValidation,
+  PROMPT_VERSION, newProductionJob, nextRevisionNumber, unknownProductionValidation,
   type ProductionJob, type ProductionRevision, type ProductionStage,
 } from "@/domain/production-job";
 import { TYPE_ALPHA_POLICY, TYPE_BUDGET } from "@/domain/production-profile";
@@ -46,6 +46,9 @@ export async function upsertJobFromDraft(
     tags: patch.tags ?? base.tags,
     note: patch.note ?? base.note,
     packageGeneratedAt: now(),
+    // Regenerating the package re-stamps the current template version; already-delivered
+    // revisions keep the version they were produced under (spec section 50).
+    promptVersion: PROMPT_VERSION,
     // Keep a manually advanced status; only a fresh draft moves up to prompt_ready.
     status: base.status === "draft" ? "prompt_ready" : base.status,
   };

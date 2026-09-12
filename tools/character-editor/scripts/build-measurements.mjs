@@ -125,10 +125,14 @@ for (const [uuid, m] of meta) {
   partsByName.set(m.name, [...(partsByName.get(m.name) ?? []), uuid]);
 }
 const named = (name) => partsByName.get(name) ?? [];
-/** Left is +Z in this project's axis convention (Phase 2); some meshes share a name. */
+/**
+ * The character's LEFT is -Z (forward x left = up requires +X x -Z = +Y), and the source spells
+ * the +Z side "_left". Regions are keyed by the PHYSICAL side, so they resolve by geometry here
+ * and by SOURCE_NODE_BY_SIDE in base-rig.ts. See docs/phase-2.md.
+ */
 function pickSide(name, side) {
   const scored = named(name).map((uuid) => ({ uuid, z: finish(elementBox(uuid))?.center[2] ?? 0 }));
-  scored.sort((a, b) => (side === "left" ? b.z - a.z : a.z - b.z));
+  scored.sort((a, b) => (side === "left" ? a.z - b.z : b.z - a.z));
   return scored[0] ? [scored[0].uuid] : [];
 }
 const REGION_SOURCES = {
@@ -136,17 +140,18 @@ const REGION_SOURCES = {
   head_with_ears: [...named("ganmenn"), ...named("mimi_left"), ...named("mimi_right")],
   neck: named("kubi"),
   torso: named("dou"),
-  shoulder_left: named("kata_left"),
-  shoulder_right: named("kata_right"),
-  upper_arm_left: named("ude_left"),
-  upper_arm_right: named("ude_right"),
-  forearm_left: named("tekubi_left"),
-  forearm_right: named("tekubi_right"),
-  hand_left: named("te_left"),
-  hand_right: named("te_right"),
+  // Source "_left" meshes sit at +Z, which is the character's RIGHT.
+  shoulder_left: named("kata_right"),
+  shoulder_right: named("kata_left"),
+  upper_arm_left: named("ude_right"),
+  upper_arm_right: named("ude_left"),
+  forearm_left: named("tekubi_right"),
+  forearm_right: named("tekubi_left"),
+  hand_left: named("te_right"),
+  hand_right: named("te_left"),
   pelvis: named("koshi"),
-  thigh_left: named("momo_left"),
-  thigh_right: named("momo_right"),
+  thigh_left: named("momo_right"),
+  thigh_right: named("momo_left"),
   ankle_left: pickSide("ashikubi", "left"),
   ankle_right: pickSide("ashikubi", "right"),
   foot_left: pickSide("ashisaki", "left"),

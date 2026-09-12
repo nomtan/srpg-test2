@@ -14,6 +14,11 @@ const base = { specVersion: 1, assetVersion: 1, bodyTypes: ["adult"], hairPolicy
 function weapon(id: string, name: string, roots: string[], set: AnimationSet, handling: "one_hand" | "two_hand", socket: CharacterSocket): WorkshopAsset {
   return { ...base, bodyTypes: ["adult"], hideParts: [], id, name, type: "weapon", recipeSlot: "mainHand", equipment: { slot: "main_hand", handling, animationSet: set }, attachment: { main: { assetPoint: "authored_origin", characterSocket: socket } }, appearance: { paletteSlots: ["metal", "leather", "primary"] }, binding: { roots, kind: "source_group" } };
 }
+/**
+ * Phase 3 leftovers. The `characterSocket` values here mirror the SOURCE's own spelling
+ * (`onehand_sword` lives under `hand_left_te`), which is the character's RIGHT hand — see
+ * SOURCE_NODE_BY_SIDE in base-rig.ts. The Builder does not read these; it uses SLOT_SOCKET.
+ */
 export const SOURCE_EQUIPMENT: WorkshopAsset[] = [
   weapon("source_sword", "Sword · 既存Group", ["onehand_sword"], "onehand_sword", "one_hand", "socket_hand_left"),
   weapon("source_great_sword", "Great Sword · 既存Group", ["gread_sword"], "great_sword", "two_hand", "socket_hand_left"),

@@ -9,7 +9,8 @@
     "metersPerSourceUnit": 0.08333333333333333,
     "up": "+Y",
     "forward": "+X",
-    "left": "+Z",
+    "left": "-Z",
+    "right": "+Z",
     "axisConversion": "identity",
     "evidence": "tools/asset_gen/export_explorer_model.py uses base_1.bbmodel at 1/12 scale; explorer_actor.gd uses +X forward without an extra model scale."
   },
@@ -576,7 +577,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "arm_left",
+      "role": "arm_right",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -622,7 +623,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "forearm_left",
+      "role": "forearm_right",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -668,7 +669,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "hand_left",
+      "role": "hand_right",
       "animatedBy": [
         "animation.onehand_sword_idle",
         "animation.onehand_sword_run",
@@ -1274,7 +1275,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "arm_right",
+      "role": "arm_left",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -1320,7 +1321,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "forearm_right",
+      "role": "forearm_left",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -1450,7 +1451,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "hand_right",
+      "role": "hand_left",
       "animatedBy": [
         "animation.spear_idle",
         "animation.spear_run",
@@ -1755,7 +1756,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "leg_right",
+      "role": "leg_left",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -1801,7 +1802,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "lower_leg_right",
+      "role": "lower_leg_left",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -1837,7 +1838,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "leg_left",
+      "role": "leg_right",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -1883,7 +1884,7 @@
       "sourceVisibility": true,
       "sourceExport": true,
       "kind": "group",
-      "role": "lower_leg_left",
+      "role": "lower_leg_right",
       "animatedBy": [
         "animation.walk_mcp_test",
         "animation.run",
@@ -35566,23 +35567,6 @@
     },
     {
       "id": "socket_shoulder_left",
-      "parent": "hand_left",
-      "position": [
-        0,
-        0,
-        0
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
-      "parentUuid": "36dd86bd-c43d-52af-1b08-ac82418d115d"
-    },
-    {
-      "id": "socket_shoulder_right",
       "parent": "hand_right",
       "position": [
         0,
@@ -35599,8 +35583,8 @@
       "parentUuid": "46b555f0-559b-1ed3-1b9e-5b6cf267c296"
     },
     {
-      "id": "socket_arm_left",
-      "parent": "hand_left_kote",
+      "id": "socket_shoulder_right",
+      "parent": "hand_left",
       "position": [
         0,
         0,
@@ -35613,10 +35597,10 @@
       ],
       "space": "parent_local_runtime",
       "status": "pivot_only_uncalibrated",
-      "parentUuid": "108a6290-204e-7e07-f75b-ee3f930937bf"
+      "parentUuid": "36dd86bd-c43d-52af-1b08-ac82418d115d"
     },
     {
-      "id": "socket_arm_right",
+      "id": "socket_arm_left",
       "parent": "hand_right_kote",
       "position": [
         0,
@@ -35633,8 +35617,8 @@
       "parentUuid": "18db24a2-4f0a-8d6e-ec62-550d4ff84103"
     },
     {
-      "id": "socket_hand_left",
-      "parent": "hand_left_te",
+      "id": "socket_arm_right",
+      "parent": "hand_left_kote",
       "position": [
         0,
         0,
@@ -35647,10 +35631,10 @@
       ],
       "space": "parent_local_runtime",
       "status": "pivot_only_uncalibrated",
-      "parentUuid": "54b01c79-09f2-e290-63ef-06399d75ffcf"
+      "parentUuid": "108a6290-204e-7e07-f75b-ee3f930937bf"
     },
     {
-      "id": "socket_hand_right",
+      "id": "socket_hand_left",
       "parent": "hand_right_te",
       "position": [
         0,
@@ -35667,8 +35651,8 @@
       "parentUuid": "6cbe7933-4bd2-7da3-a1d4-470fc65bd740"
     },
     {
-      "id": "socket_foot_left",
-      "parent": "ashi_left",
+      "id": "socket_hand_right",
+      "parent": "hand_left_te",
       "position": [
         0,
         0,
@@ -35681,10 +35665,10 @@
       ],
       "space": "parent_local_runtime",
       "status": "pivot_only_uncalibrated",
-      "parentUuid": "7f2f4351-cf8d-18fa-ea64-50db16c7af23"
+      "parentUuid": "54b01c79-09f2-e290-63ef-06399d75ffcf"
     },
     {
-      "id": "socket_foot_right",
+      "id": "socket_foot_left",
       "parent": "ashi_right",
       "position": [
         0,
@@ -35699,6 +35683,23 @@
       "space": "parent_local_runtime",
       "status": "pivot_only_uncalibrated",
       "parentUuid": "1fa90114-5940-689e-9d9d-80028306ae1b"
+    },
+    {
+      "id": "socket_foot_right",
+      "parent": "ashi_left",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "space": "parent_local_runtime",
+      "status": "pivot_only_uncalibrated",
+      "parentUuid": "7f2f4351-cf8d-18fa-ea64-50db16c7af23"
     }
   ]
 }

@@ -20,6 +20,8 @@ export interface CharacterPreviewProps {
   captureSignal: number;
   onThumbnail?: (dataUrl: string) => void;
   onWarnings?: (warnings: string[]) => void;
+  /** Self-corrected adjustments; reported separately so they do not read as problems. */
+  onNotices?: (notices: string[]) => void;
   onRestSize?: (size: [number, number, number]) => void;
 }
 
@@ -144,9 +146,9 @@ export function CharacterPreview(props: CharacterPreviewProps) {
         reset();
         configureAnimation();
         latest.current.onWarnings?.(built.warnings);
+        latest.current.onNotices?.(built.notices);
         latest.current.onRestSize?.(built.restBox.size);
-        if (!built.warnings.length) setStatus("");
-        else setStatus(`警告 ${built.warnings.length} 件（詳細は下部）`);
+        setStatus(built.warnings.length ? `警告 ${built.warnings.length} 件（詳細は下部）` : "");
       })
       .catch((e) => {
         if (!alive) return;

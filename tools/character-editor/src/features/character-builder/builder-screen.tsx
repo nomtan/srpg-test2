@@ -46,6 +46,7 @@ export function BuilderScreen() {
   const [captureSignal, setCaptureSignal] = useState(-1);
   const [thumb, setThumb] = useState<string | null>(null);
   const [previewWarnings, setPreviewWarnings] = useState<string[]>([]);
+  const [previewNotices, setPreviewNotices] = useState<string[]>([]);
   const [restSize, setRestSize] = useState<[number, number, number] | null>(null);
   const [recipeMsg, setRecipeMsg] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -190,9 +191,16 @@ export function BuilderScreen() {
             captureSignal={captureSignal}
             onThumbnail={setThumb}
             onWarnings={setPreviewWarnings}
+            onNotices={setPreviewNotices}
             onRestSize={setRestSize}
           />
 
+          {previewNotices.length > 0 && (
+            <details className="preview-notes">
+              <summary>自動補正 {previewNotices.length} 件</summary>
+              <ul>{previewNotices.map((n, i) => <li key={i}>{n}</li>)}</ul>
+            </details>
+          )}
           {previewWarnings.length > 0 && (
             <details className="preview-warn-list">
               <summary>合成の警告 {previewWarnings.length} 件</summary>

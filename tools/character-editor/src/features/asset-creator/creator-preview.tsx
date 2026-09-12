@@ -25,6 +25,8 @@ export interface CreatorPreviewProps {
   animationLoop: boolean;
   /** Reference hair block at socket_hair to demo hairPolicy (spec section 13). */
   referenceHair: "none" | "shown" | "hidden";
+  /** Standard weapon orientation (Blockbench ZYX degrees) for grip-attached assets. */
+  gripRotationDeg?: readonly [number, number, number] | null;
   captureSignal: number;
   onThumbnail?: (dataUrl: string) => void;
   onModelStats?: (stats: GlbStats | null) => void;
@@ -67,21 +69,44 @@ export function CreatorPreview(props: CreatorPreviewProps) {
     referenceHair: THREE.Mesh | null;
   } | null>(null);
   const texture = useRef<{ url: string; map: THREE.Texture } | null>(null);
+  /** The map each material shipped with, so removing the imported texture restores the GLB's own. */
+  const originalMaps = useRef(new WeakMap<THREE.Material, THREE.Texture | null>());
   const captureRef = useRef(-1);
 
   function applyTexture() {
     const state = api.current;
     if (!state?.assetRoot) return;
+    let withoutUv = 0;
     state.assetRoot.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      // Without UVs every pixel samples texel (0,0), which turns the asset into one flat colour
+      // (usually black). Leave such meshes on their own material instead.
+      if (!mesh.geometry?.getAttribute?.("uv")) { withoutUv += 1; return; }
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        const material = m as THREE.MeshStandardMaterial;
+        if (!material || !("map" in material)) continue;
+        if (!originalMaps.current.has(material)) originalMaps.current.set(material, material.map ?? null);
+        material.map = texture.current ? texture.current.map : originalMaps.current.get(material) ?? null;
+        material.needsUpdate = true;
+      }
+    });
+    if (withoutUv && texture.current) {
+      setStatus(`UV を持たない Mesh が ${withoutUv} 個あるため Texture を適用していません。`);
+    }
+  }
+
+  /** Metalness with no environment map renders black; this scene is flat-lit like the Builder. */
+  function neutraliseMetalness(root: THREE.Object3D) {
+    root.traverse((object) => {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh) return;
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         const material = m as THREE.MeshStandardMaterial;
-        if (!("map" in material)) continue;
-        if (texture.current) {
-          material.map = texture.current.map;
+        if (material && typeof material.metalness === "number" && material.metalness > 0) {
+          material.metalness = 0;
+          material.needsUpdate = true;
         }
-        material.needsUpdate = true;
       }
     });
   }
@@ -96,7 +121,12 @@ export function CreatorPreview(props: CreatorPreviewProps) {
         if (!mesh.isMesh) return;
         for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
           const material = m as THREE.MeshStandardMaterial;
-          if (material.color && p.paletteColor) material.color.set(p.paletteColor);
+          // A base colour tint multiplies the texture, which reads as "my texture was ignored".
+          // The palette swatch is an untextured-preview aid, so it only applies when there is no map.
+          if (material.color) {
+            if (material.map) material.color.set(0xffffff);
+            else if (p.paletteColor) material.color.set(p.paletteColor);
+          }
           for (const value of Object.values(material)) {
             if (value instanceof THREE.Texture) {
               value.magFilter = THREE.NearestFilter;
@@ -226,6 +256,7 @@ export function CreatorPreview(props: CreatorPreviewProps) {
     if (assetModelUrl) {
       loads.push(loader.loadAsync(assetModelUrl).then((gltf) => {
         if (!alive) { disposeObject(gltf.scene); return; }
+        neutraliseMetalness(gltf.scene);
         state.assetRoot = gltf.scene;
       }).catch(() => {
         if (alive) { setFailed(true); setStatus("Asset GLB を読み込めませんでした。"); }
@@ -245,6 +276,14 @@ export function CreatorPreview(props: CreatorPreviewProps) {
           (socketNode ?? state.baseRoot).add(state.assetRoot);
           if (!socketNode) {
             setStatus(`Socket 親ノード (${parentName ?? p.socket}) が見つかりません。ルートに取り付けました。`);
+          }
+          if (p.gripRotationDeg) {
+            state.assetRoot.rotation.set(
+              THREE.MathUtils.degToRad(p.gripRotationDeg[0]),
+              THREE.MathUtils.degToRad(p.gripRotationDeg[1]),
+              THREE.MathUtils.degToRad(p.gripRotationDeg[2]),
+              "ZYX",
+            );
           }
         } else {
           scene.add(state.assetRoot);
@@ -333,18 +372,25 @@ export function CreatorPreview(props: CreatorPreviewProps) {
       texture.current.map.dispose();
       texture.current = null;
     }
-    if (!url) { applyTexture(); return; }
+    if (!url) { applyTexture(); applyDynamic(); return; }
     let alive = true;
-    new THREE.TextureLoader().load(url, (map) => {
-      if (!alive) { map.dispose(); return; }
-      map.colorSpace = THREE.SRGBColorSpace;
-      map.flipY = false;
-      map.magFilter = THREE.NearestFilter;
-      map.minFilter = THREE.NearestFilter;
-      map.generateMipmaps = false;
-      texture.current = { url, map };
-      applyTexture();
-    });
+    new THREE.TextureLoader().load(
+      url,
+      (map) => {
+        if (!alive) { map.dispose(); return; }
+        map.colorSpace = THREE.SRGBColorSpace;
+        map.flipY = false;
+        map.magFilter = THREE.NearestFilter;
+        map.minFilter = THREE.NearestFilter;
+        map.generateMipmaps = false;
+        texture.current = { url, map };
+        applyTexture();
+        // Re-run the dynamic pass so the palette tint releases the freshly applied map.
+        applyDynamic();
+      },
+      undefined,
+      () => { if (alive) setStatus("Texture を読み込めませんでした。"); },
+    );
     return () => { alive = false; };
   }, [assetTextureUrl]);
 
