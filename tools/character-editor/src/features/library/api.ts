@@ -3,6 +3,9 @@
 // Thin client for the Phase 7 Library API. All calls hit the local Next route handler which
 // reads/writes tools/character-editor/library-data/.
 import type { AssetRecord, CharacterRecord, LibraryIndex, RegistryFile } from "@/domain/library-index";
+import type { VariationPreset } from "@/domain/variation-preset";
+import type { PaletteLibrary } from "@/domain/variation-palette";
+import type { ProductionJob, ProductionStage } from "@/domain/production-job";
 
 const BASE = "/api/library";
 
@@ -36,6 +39,49 @@ export const putRegistry = (file: RegistryFile) =>
   jfetch<{ ok: true }>(`${BASE}/registry`, {
     method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(file),
   });
+
+// ---- Phase 8: Variation Presets / Palette Sets ----------------------------------
+export const fetchPresets = () => jfetch<VariationPreset[]>(`${BASE}/presets`);
+export const fetchPalettes = () => jfetch<PaletteLibrary>(`${BASE}/palettes`);
+
+export const putPreset = (preset: VariationPreset) =>
+  jfetch<{ ok: true }>(`${BASE}/preset/${preset.id}`, {
+    method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(preset),
+  });
+
+export const deletePreset = (id: string) =>
+  jfetch<{ ok: true }>(`${BASE}/preset/${id}`, { method: "DELETE" });
+
+export const putPalettes = (library: PaletteLibrary) =>
+  jfetch<{ ok: true }>(`${BASE}/palettes`, {
+    method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(library),
+  });
+
+// ---- Phase 9: AI Production jobs + staging files (spec section 36) ------------------
+export const fetchProductions = () => jfetch<ProductionJob[]>(`${BASE}/productions`);
+
+export const putProductionJob = (job: ProductionJob) =>
+  jfetch<{ ok: true }>(`${BASE}/production/${job.id}`, {
+    method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(job),
+  });
+
+export const deleteProductionJob = (id: string) =>
+  jfetch<{ ok: true }>(`${BASE}/production/${id}`, { method: "DELETE" });
+
+export const productionFileUrl = (id: string, stage: ProductionStage, name: string) =>
+  `${BASE}/production/${id}/file/${stage}/${encodeURIComponent(name)}`;
+
+export const putProductionFile = (id: string, stage: ProductionStage, name: string, data: Blob | ArrayBuffer | Uint8Array) =>
+  jfetch<{ ok: true; bytes: number }>(productionFileUrl(id, stage, name), {
+    method: "PUT", headers: { "content-type": "application/octet-stream" }, body: data as BodyInit,
+  });
+
+export const deleteProductionFile = (id: string, stage: ProductionStage, name: string) =>
+  jfetch<{ ok: true }>(productionFileUrl(id, stage, name), { method: "DELETE" });
+
+/** Promote or reject a delivered file between staging folders. */
+export const moveProductionFile = (id: string, from: ProductionStage, to: ProductionStage, name: string) =>
+  jfetch<{ ok: true }>(`${BASE}/production/${id}/move/${from}/${to}/${encodeURIComponent(name)}`, { method: "PUT" });
 
 export interface DeleteAssetError { error: "in_use"; usedByCount: number; usedBy: string[] }
 export const deleteAsset = (id: string, force = false) =>

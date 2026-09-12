@@ -1,4 +1,8 @@
 import type { AssetDraft, AssetType, GripPoint } from "@/domain/asset-spec";
+import type { PaletteSlot } from "@/domain/constants";
+import type { AlphaPolicy, AttachmentSpec, BudgetDefinition, BudgetProfile } from "@/domain/production-profile";
+import type { MeasuredBox, MeasuredSocket } from "@/domain/base-measurements";
+import type { ProductionReference } from "@/domain/production-job";
 
 export interface PromptContext {
   draft: AssetDraft;
@@ -16,6 +20,26 @@ export interface PromptContext {
   animationSet: string | null;
   weaponType: string | null;
   hairPolicy: string | null;
+
+  // ---- Phase 9 production context ----------------------------------------------------
+  /** Prompt Template version (spec section 50). */
+  promptVersion: number;
+  hideParts: string[];
+  attachment: AttachmentSpec;
+  budget: BudgetDefinition & { profile: BudgetProfile };
+  alphaPolicy: AlphaPolicy;
+  /** Measured socket transform from the Phase 2 mapping (spec section 15). */
+  socketInfo: MeasuredSocket | null;
+  /** Base body regions the asset has to fit, with measured boxes (spec section 12). */
+  fitRegions: { region: string; box: MeasuredBox }[];
+  /** Regions the asset must stay clear of. */
+  clearanceRegions: string[];
+  /** Recommended overall length for weapons, derived from the measured character height. */
+  weaponLength: { min: number; max: number } | null;
+  /** Palette slot -> current reference hex (spec section 21); guidance, not a fixed colour. */
+  paletteReference: Partial<Record<PaletteSlot, string>>;
+  references: ProductionReference[];
+  animationTest: { set: string; roles: string[] };
 }
 
 export interface GeneratedPrompts {

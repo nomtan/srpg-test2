@@ -30,6 +30,10 @@ export function modelUrl(entry: AssetLibraryEntry): string | null {
   if (entry.resolved?.model) return entry.resolved.model;
   return entry.metadata.model ? `${entry.baseUrl.replace(/\/$/, "")}/${entry.metadata.model}` : null;
 }
+export function thumbnailUrl(entry: AssetLibraryEntry): string | null {
+  if (entry.resolved?.thumbnail) return entry.resolved.thumbnail;
+  return entry.metadata.thumbnail ? `${entry.baseUrl.replace(/\/$/, "")}/${entry.metadata.thumbnail}` : null;
+}
 export function textureUrl(entry: AssetLibraryEntry): string | null {
   if (entry.resolved?.texture) return entry.resolved.texture;
   return entry.metadata.texture ? `${entry.baseUrl.replace(/\/$/, "")}/${entry.metadata.texture}` : null;

@@ -18,6 +18,7 @@ import { BAKED_BASE_CLIPS, resolveAnimation } from "@/viewer/animation/animation
 import { useMergedLibrary } from "@/features/asset-library/use-library";
 import { saveUserAsset } from "@/features/asset-library/user-assets";
 import { CreatorLibrarySave } from "@/features/library/creator-save";
+import { ProductionPanel } from "@/features/production/production-panel";
 import { CreatorPreview } from "./creator-preview";
 import { BASE_PARTS, BASE_REST_SIZE_METERS } from "./base-parts";
 import { inspectImage } from "./inspect";
@@ -449,6 +450,9 @@ export function CreatorScreen() {
           </div>
         )}
       </section>
+
+      {/* ---- AI Production (Phase 9) ---- */}
+      <ProductionPanel draft={draft} />
 
       {/* ---- Validation ---- */}
       <section className="panel validation-panel">

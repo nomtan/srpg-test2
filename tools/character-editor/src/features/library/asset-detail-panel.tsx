@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { bumpVersionHistory, type AssetRecord, type LibraryIndex } from "@/domain/library-index";
-import { BODY_TYPES, CHARACTER_SOCKETS, PALETTE_SLOTS, WEAPON_HANDLING, WEAPON_TYPES, ANIMATION_SETS, type BodyType, type CharacterSocket, type PaletteSlot } from "@/domain/constants";
+import { ASSET_RARITIES, BODY_TYPES, CHARACTER_SOCKETS, PALETTE_SLOTS, RARITY_WEIGHT, WEAPON_HANDLING, WEAPON_TYPES, ANIMATION_SETS, type AssetRarity, type BodyType, type CharacterSocket, type PaletteSlot } from "@/domain/constants";
 import { RECOMMENDED_SOCKET, type AssetType } from "@/domain/asset-spec";
 import { addTag, removeTag } from "@/domain/library-ids";
 import { validateAssetRecord } from "@/domain/library-validation";
@@ -93,6 +93,8 @@ export function AssetDetailPanel({ record, index, derived }: { record: AssetReco
               <dt>Animation Set</dt><dd>{m.equipment.animationSet ?? "—"}</dd>
             </>}
             <dt>Tags</dt><dd>{record.tags.join(", ") || "—"}</dd>
+            <dt>Rarity / Weight</dt>
+            <dd>{m.rarity ?? "—"} / {m.weight ?? (m.rarity ? RARITY_WEIGHT[m.rarity] : RARITY_WEIGHT.common)}<small className="muted"> (Variation Generator の抽選重み)</small></dd>
             <dt>Version</dt><dd>v{m.assetVersion} (前: {record.versionHistory.at(-1)?.previousVersion ?? "—"})</dd>
             <dt>Created / Updated</dt><dd>{new Date(record.createdAt).toLocaleString()} / {new Date(record.updatedAt).toLocaleString()}</dd>
             <dt>Model / Texture</dt><dd>{record.files.model ? "model.glb" : "—"} / {record.files.texture ? "texture.png" : "—"}</dd>
@@ -166,6 +168,8 @@ function AssetEditForm({ record, index, onDone }: { record: AssetRecord; index: 
   const [weaponType, setWeaponType] = useState(m.equipment?.weaponType ?? "sword");
   const [tags, setTags] = useState<string[]>([...record.tags]);
   const [tagInput, setTagInput] = useState("");
+  const [rarity, setRarity] = useState<AssetRarity | "">(m.rarity ?? "");
+  const [weight, setWeight] = useState<string>(m.weight != null ? String(m.weight) : "");
   const [modelFile, setModelFile] = useState<File | null>(null);
   const [textureFile, setTextureFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -185,6 +189,8 @@ function AssetEditForm({ record, index, onDone }: { record: AssetRecord; index: 
         description: description.trim() || undefined,
         bodyTypes,
         tags,
+        rarity: rarity || undefined,
+        weight: weight.trim() === "" ? undefined : Math.max(0, Number(weight) || 0),
         assetVersion: version,
         attachment,
         appearance: { paletteSlots },
@@ -225,6 +231,17 @@ function AssetEditForm({ record, index, onDone }: { record: AssetRecord; index: 
         <label>Handling<select value={handling} onChange={(e) => setHandling(e.target.value as typeof handling)}>{WEAPON_HANDLING.map((h) => <option key={h}>{h}</option>)}</select></label>
         <label>Animation Set<select value={animationSet} onChange={(e) => setAnimationSet(e.target.value as typeof animationSet)}>{ANIMATION_SETS.map((s) => <option key={s}>{s}</option>)}</select></label>
       </fieldset>}
+      <fieldset className="weapon-block"><legend>Variation Generator</legend>
+        <label>Rarity
+          <select value={rarity} onChange={(e) => setRarity(e.target.value as AssetRarity | "")}>
+            <option value="">— 未設定 (common 相当) —</option>
+            {ASSET_RARITIES.map((r) => <option key={r} value={r}>{r} (weight {RARITY_WEIGHT[r]})</option>)}
+          </select>
+        </label>
+        <label>Weight（数値を入れると Rarity より優先）
+          <input type="number" min={0} step={1} value={weight} placeholder="未設定" onChange={(e) => setWeight(e.target.value)} />
+        </label>
+      </fieldset>
       <div className="lib-tag-editor">
         <span>Tags</span>
         <ul className="chip-list">{tags.map((t) => <li key={t}>{t} <button className="mini" onClick={() => setTags(removeTag(tags, t))}>×</button></li>)}</ul>

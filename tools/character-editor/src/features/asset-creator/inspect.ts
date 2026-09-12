@@ -21,6 +21,7 @@ export async function inspectGlb(url: string): Promise<GlbStats> {
   const nodeNames: string[] = [];
   let meshCount = 0;
   let triangleCount = 0;
+  let meshesWithoutUv = 0;
   scene.traverse((object) => {
     if (object.name) nodeNames.push(object.name);
     const mesh = object as THREE.Mesh;
@@ -31,6 +32,7 @@ export async function inspectGlb(url: string): Promise<GlbStats> {
     const indexed = geo.getIndex();
     const verts = indexed ? indexed.count : geo.getAttribute("position")?.count ?? 0;
     triangleCount += Math.floor(verts / 3);
+    if (!geo.getAttribute("uv")) meshesWithoutUv += 1;
   });
   scene.updateWorldMatrix(true, true);
   const box = new THREE.Box3().setFromObject(scene);
@@ -47,6 +49,8 @@ export async function inspectGlb(url: string): Promise<GlbStats> {
       size: size.toArray() as [number, number, number],
     },
     nodeNames,
+    hasUv: meshCount > 0 && meshesWithoutUv === 0,
+    meshesWithoutUv,
   };
   disposeScene(scene);
   return stats;

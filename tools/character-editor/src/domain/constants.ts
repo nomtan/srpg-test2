@@ -25,6 +25,10 @@ export const BASE_ANIMATIONS = ["idle", "walk", "run", "damage", "death"] as con
 export const WEAPON_ANIMATIONS = ["idle", "walk", "run", "attack", "skill"] as const;
 export const PALETTE_SLOTS = ["primary", "secondary", "metal", "leather", "hair", "skin"] as const;
 export type PaletteSlot = typeof PALETTE_SLOTS[number];
+export const ASSET_RARITIES = ["common", "uncommon", "rare"] as const;
+export type AssetRarity = typeof ASSET_RARITIES[number];
+/** Phase 8: rarity is authoring shorthand; the generator converts it to a weight (spec prompt 10). */
+export const RARITY_WEIGHT: Record<AssetRarity, number> = { common: 10, uncommon: 4, rare: 1 };
 export const HAIR_POLICIES = ["hide", "overlay"] as const;
 export type HairPolicy = typeof HAIR_POLICIES[number];
 export const EQUIPMENT_SLOTS = ["hair", "headgear", "head_accessory", "chest_armor", "shoulder_left", "shoulder_right", "arm_armor", "gloves", "waist", "boots", "main_hand", "off_hand", "back"] as const;

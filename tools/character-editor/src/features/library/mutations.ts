@@ -4,6 +4,7 @@
 // refreshLibrary().
 import type { AssetMetadata } from "@/domain/asset";
 import type { CharacterRecipe } from "@/domain/character-recipe";
+import { markGenerationModified } from "@/domain/character-generation";
 import {
   bumpVersionHistory, newAssetRecord, newCharacterRecord,
   type AssetRecord, type CharacterRecord, type LibraryIndex,
@@ -107,9 +108,14 @@ export async function saveCharacter(
       history = bump.history;
       characterVersion = bump.version;
     }
+    // Phase 8 (spec section 49): a hand edit of generated output is flagged so a later
+    // "Regenerate from Preset" can tell it apart from untouched batch output.
+    const generation = changedRecipe
+      ? markGenerationModified(recipe.generation ?? existing.recipe.generation)
+      : recipe.generation ?? existing.recipe.generation;
     record = {
       ...existing,
-      recipe: { ...recipe, characterVersion },
+      recipe: { ...recipe, characterVersion, ...(generation ? { generation } : {}) },
       name: name.trim() || recipe.id,
       versionHistory: history,
       updatedAt: now(),
@@ -247,4 +253,52 @@ export async function runBulkValidation(index: LibraryIndex, which: "assets" | "
 
 function structuredCloneSafe<T>(value: T): T {
   return typeof structuredClone === "function" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+}
+
+
+// ---- Phase 8: Variation Generator commit (spec section 30-33) ----------------------
+
+export interface CommitVariationsInput {
+  variations: readonly { id: string; name: string; recipe: CharacterRecipe }[];
+  index: LibraryIndex;
+  /** Character tags applied to the whole batch (faction / role / preset tags). */
+  tags: string[];
+  onProgress?: (done: number, total: number) => void;
+}
+
+export interface CommitVariationsResult {
+  created: CharacterRecord[];
+  skipped: { id: string; reason: string }[];
+}
+
+/**
+ * Turn preview variations into Character Records. Only recipes are written — no GLB is baked here
+ * (spec section 30, 33, 35); Export happens later from the Character Library.
+ */
+export async function commitVariations(input: CommitVariationsInput): Promise<CommitVariationsResult> {
+  const { variations, index, tags } = input;
+  const assetsById = new Map(index.assets.map((a) => [a.metadata.id, a]));
+  const taken = new Set(index.characters.map((c) => c.recipe.id));
+  const created: CharacterRecord[] = [];
+  const skipped: { id: string; reason: string }[] = [];
+
+  for (let i = 0; i < variations.length; i++) {
+    const v = variations[i];
+    if (taken.has(v.id)) {
+      skipped.push({ id: v.id, reason: "同じ Character ID が既に存在します。" });
+      continue;
+    }
+    const record = newCharacterRecord(v.recipe, v.name, "variation");
+    record.tags = [...new Set(tags.filter(Boolean))].sort();
+    record.validation = toValidationState(validateCharacterRecord(record, { assetsById }));
+    try {
+      await putCharacterRecord(record);
+      taken.add(v.id);
+      created.push(record);
+    } catch (e) {
+      skipped.push({ id: v.id, reason: e instanceof Error ? e.message : String(e) });
+    }
+    input.onProgress?.(i + 1, variations.length);
+  }
+  return { created, skipped };
 }

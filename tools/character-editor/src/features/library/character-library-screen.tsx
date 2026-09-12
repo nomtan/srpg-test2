@@ -19,6 +19,7 @@ function CharacterLibraryInner() {
 
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("all");
+  const [preset, setPreset] = useState("all");
   const [sort, setSort] = useState<CharacterSort>("Newest");
   const [filter, setFilter] = useState<string | null>(params.get("filter"));
   const [selectedId, setSelectedId] = useState<string | null>(params.get("id"));
@@ -28,6 +29,11 @@ function CharacterLibraryInner() {
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
   const tags = useMemo(() => allTags(index.characters), [index.characters]);
+  // Phase 8: generated characters live in this same library; only the filter is new (spec 31, 46).
+  const generatorPresets = useMemo(
+    () => [...new Set(index.characters.map((c) => c.recipe.generation?.preset).filter((p): p is string => !!p))].sort(),
+    [index.characters],
+  );
 
   const rows = useMemo(() => {
     let list = [...index.characters];
@@ -35,9 +41,11 @@ function CharacterLibraryInner() {
     if (filter === "reexport") list = list.filter((c) => derived.exportEval.get(c.recipe.id)?.status === "reexport_required");
     if (filter === "missing") list = list.filter((c) => derived.graph.missingByCharacter[c.recipe.id]);
     if (filter === "registry") list = list.filter((c) => c.registry.status !== "registered");
+    if (filter === "generated") list = list.filter((c) => !!c.recipe.generation);
+    if (preset !== "all") list = list.filter((c) => c.recipe.generation?.preset === preset);
     list = searchCharacters(list, query);
     return sortCharacters(list, sort, derived.exportEval);
-  }, [index.characters, tag, filter, query, sort, derived]);
+  }, [index.characters, tag, filter, preset, query, sort, derived]);
 
   const selected = selectedId ? derived.charactersById.get(selectedId) ?? null : null;
 
@@ -99,11 +107,18 @@ function CharacterLibraryInner() {
             <li><button className={filter === "reexport" ? "on" : ""} onClick={() => setFilter("reexport")}>Re-export Required</button></li>
             <li><button className={filter === "missing" ? "on" : ""} onClick={() => setFilter("missing")}>Missing Dependency</button></li>
             <li><button className={filter === "registry" ? "on" : ""} onClick={() => setFilter("registry")}>Not Registered</button></li>
+            <li><button className={filter === "generated" ? "on" : ""} onClick={() => setFilter("generated")}>Generated (Variation)</button></li>
           </ul>
           <label className="lib-side-field">Tag
             <select value={tag} onChange={(e) => setTag(e.target.value)}>
               <option value="all">All tags</option>
               {tags.map((t) => <option key={t}>{t}</option>)}
+            </select>
+          </label>
+          <label className="lib-side-field">Variation Preset
+            <select value={preset} onChange={(e) => setPreset(e.target.value)}>
+              <option value="all">All presets</option>
+              {generatorPresets.map((p) => <option key={p}>{p}</option>)}
             </select>
           </label>
           <div className="lib-import">
@@ -142,7 +157,7 @@ function CharacterLibraryInner() {
                     <LibThumb src={r.thumbnail ? libFileUrl("character", r.recipe.id, "thumbnail.png") : null} symbol="☗" label={r.name} />
                   </button>
                   <button className="row-open lib-name" onClick={() => setSelectedId(r.recipe.id)}>
-                    <strong>{r.name}</strong><small>{r.recipe.id}{derived.graph.missingByCharacter[r.recipe.id] ? " · ⚠ missing" : ""}</small>
+                    <strong>{r.name}</strong><small>{r.recipe.id}{r.recipe.generation ? ` · ${r.recipe.generation.preset}` : ""}{derived.graph.missingByCharacter[r.recipe.id] ? " · ⚠ missing" : ""}</small>
                   </button>
                   <span onClick={() => setSelectedId(r.recipe.id)}>{r.recipe.body.base}</span>
                   <span>{r.recipe.assets.mainHand ?? "—"}</span>

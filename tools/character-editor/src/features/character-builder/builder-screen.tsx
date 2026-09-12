@@ -13,8 +13,9 @@ import { downloadBlob } from "@/features/asset-creator/zip";
 import { BuilderLibrarySave } from "@/features/library/builder-save";
 import { CharacterPreview } from "./character-preview";
 import { ExportPanel } from "./export/export-panel";
+import { BUILDER_NAME_KEY, BUILDER_RECIPE_KEY, readStagedName } from "./builder-storage";
 
-const RECIPE_KEY = "srpg-character-editor/builder-recipe/v1";
+const RECIPE_KEY = BUILDER_RECIPE_KEY;
 const ANIM_ROLES = ["idle", "walk", "run", "attack"] as const;
 const ANIM_SETS = ["default", ...ANIMATION_SETS] as const;
 const SCALE_KEYS = [
@@ -52,12 +53,20 @@ export function BuilderScreen() {
 
   useEffect(() => {
     // Deferred so the first client paint matches SSR (empty recipe), then hydrate from storage.
-    queueMicrotask(() => { setRecipe(loadStoredRecipe()); hydrated.current = true; });
+    queueMicrotask(() => {
+      setRecipe(loadStoredRecipe());
+      setCharName((n) => readStagedName(n));
+      hydrated.current = true;
+    });
   }, []);
   useEffect(() => {
     if (!hydrated.current) return;
     try { window.localStorage.setItem(RECIPE_KEY, recipeText(recipe)); } catch { /* quota — non-fatal */ }
   }, [recipe]);
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try { window.localStorage.setItem(BUILDER_NAME_KEY, charName); } catch { /* quota — non-fatal */ }
+  }, [charName]);
 
   // Weapon Animation Set (spec section 14): follow the equipped main-hand weapon unless overridden.
   const weaponSet = useMemo(() => {

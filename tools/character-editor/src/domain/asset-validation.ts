@@ -21,6 +21,9 @@ export interface GlbStats {
   triangleCount: number;
   boundingBox: { min: [number, number, number]; max: [number, number, number]; size: [number, number, number] };
   nodeNames: string[];
+  /** Phase 9: every mesh carries a UV set (checked by the production Validation Pipeline). */
+  hasUv: boolean;
+  meshesWithoutUv: number;
 }
 export interface TextureStats {
   width: number;

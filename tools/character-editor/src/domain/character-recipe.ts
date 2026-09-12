@@ -1,4 +1,5 @@
 import type { AssetId } from "./asset";
+import type { CharacterGeneration } from "./character-generation";
 import type { BodyPreset, BodyType, PaletteSlot, RecipeSlot } from "./constants";
 
 export interface BodyScale { height: number; bodyWidth: number; headScale: number }
@@ -18,4 +19,6 @@ export interface CharacterRecipe {
   };
   assets: Partial<Record<RecipeSlot, AssetId | null>>;
   palette: Record<PaletteSlot, string>;
+  /** Phase 8: present only for Variation Generator output (spec section 32). */
+  generation?: CharacterGeneration;
 }

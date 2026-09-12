@@ -1,4 +1,4 @@
-import type { AnimationSet, AssetCategory, BodyType, CharacterSocket, EquipmentSlot, HairPolicy, PaletteSlot, WeaponHandling, WeaponType } from "./constants";
+import type { AnimationSet, AssetCategory, AssetRarity, BodyType, CharacterSocket, EquipmentSlot, HairPolicy, PaletteSlot, WeaponHandling, WeaponType } from "./constants";
 
 export type AssetId = string;
 export type RuntimeAssetPath = `${string}.glb`;
@@ -17,8 +17,11 @@ export interface AssetMetadata {
   description?: string;
   type: AssetCategory;
   bodyTypes: BodyType[];
-  /** Search / filter / future NPC generation tags (spec prompt 5). */
+  /** Search / filter / Variation Generator tags (spec prompt 5). */
   tags?: string[];
+  /** Phase 8 optional draw rate. `weight` wins over `rarity`; both are optional (spec section 9-10). */
+  rarity?: AssetRarity;
+  weight?: number;
   equipment?: {
     slot: EquipmentSlot;
     handling?: WeaponHandling;
@@ -36,4 +39,17 @@ export interface AssetMetadata {
   thumbnail?: string;
   /** Optional source reference; never loaded by the browser preview. */
   source?: SourceAsset;
+  /** Phase 9 production provenance (spec section 49). Absent for hand-made assets. */
+  production?: AssetProduction;
+}
+
+/** How an asset was produced. Deliberately provider-agnostic (spec section 49 / 57). */
+export interface AssetProduction {
+  method: "ai_assisted" | "manual";
+  /** Production revision the approved files came from. */
+  revision: number;
+  status: "approved";
+  /** Prompt Template version used (spec section 50). */
+  promptVersion: number;
+  producedAt: string;
 }

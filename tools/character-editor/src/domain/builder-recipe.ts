@@ -5,6 +5,7 @@ import type { AssetCategory, CharacterSocket } from "./constants";
 import { BODY_PRESETS, PALETTE_SLOTS, SPEC_VERSION } from "./constants";
 import { DEFAULT_PALETTE, isHexColor } from "./phase3";
 import type { CharacterRecipe } from "./character-recipe";
+import { parseGeneration } from "./character-generation";
 import { EXPORT_ASSET_SLOTS, type ExportAssetSlot } from "./character-export";
 
 /** Library category that fills each equipment slot (used to filter the picker). */
@@ -125,6 +126,9 @@ export function validateRecipeShape(input: unknown): { recipe?: CharacterRecipe;
     ) as CharacterRecipe["assets"],
     palette: Object.fromEntries(PALETTE_SLOTS.map((s) => [s, String(palette[s]).toLowerCase()])) as CharacterRecipe["palette"],
   } as CharacterRecipe;
+  // Phase 8: keep the generation provenance through a Builder round-trip (spec section 48-49).
+  const generation = parseGeneration(raw.generation);
+  if (generation) recipe.generation = generation;
   return { recipe, issues };
 }
 

@@ -1,4 +1,4 @@
-# Character Workshop — Phase 7 Management Layer
+# Character Workshop — Phase 9 AI Production Pipeline
 
 正式素体は `assets/characters/base/base_1.bbmodel` です。Builder/Creatorで初期表示するGLBは
 このSourceから生成しています。仮のBase Bodyは一覧から除外しました。
@@ -7,6 +7,20 @@ Phase 7 で Asset / Character の一覧・検索・複製・バージョン管�
 Stale検出・Batch Export・Registry Sync を行う管理レイヤーを追加しました
 （`/dashboard` `/assets` `/characters` `/validation`）。永続化は Next Route Handler 経由の
 `tools/character-editor/library-data/`。詳細は [Phase 7](./docs/phase-7.md) を参照してください。
+Phase 8 で Character Variation Generator（`/variations`）を追加しました。Variation Preset /
+Asset Tag / Weighted Random / Asset Compatibility / Deterministic Seed で Character Recipe を
+一括生成し、Preview・単体Reroll・項目Lock・完全一致Duplicate検出を経て Character Library へ
+登録します。生成時に GLB は作らず、Export は従来どおり Character Library の Batch Export です。
+詳細は [Phase 8](./docs/phase-8.md) を参照してください。
+Phase 9 で AI Production Pipeline（`/production` と Asset Creator の AI Production パネル）を
+追加しました。Asset 定義から Provider 非依存の Production Package
+（`asset-definition.json` / `model-prompt.md` / `texture-prompt.md` / `technical-spec.md` /
+`validation-spec.json` / `README.md`）を生成し、外部 AI が作った `.bbmodel` / `.glb` / `.png` を
+Import して自動 Validation・Base + Asset Preview・Animation Test・Revision Prompt 生成・
+Revision History・Approve / Reject / Needs Revision まで行います。Approve した Asset だけが
+Asset Library に登録され、Character Builder と Variation Generator から使えます。
+Prompt には base_1 から実測した寸法（head / hand / socket / 推奨武器全長）が入ります。
+詳細は [Phase 9](./docs/phase-9.md) を参照してください。
 解析結果・再生成・ゲームとの未解決の差分は [Phase 2](./docs/phase-2.md) と
 [解析一覧](./docs/base-model-analysis.md) を参照してください。
 Asset Creator（`/creator`）の定義・Preview・Validation・Prompt生成・保存は
@@ -34,7 +48,8 @@ npm.cmd run verify:base
 npm.cmd run dev
 ```
 
-http://127.0.0.1:3000/ がCharacter Builder、`/creator` がAsset Creator。
+http://127.0.0.1:3000/ がCharacter Builder、`/creator` がAsset Creator、`/variations` が Variation Generator、
+`/production` が AI Production Queue。
 同ポート使用中なら `npm.cmd run dev -- --port 3100`。
 
 ```powershell
@@ -42,7 +57,21 @@ npm.cmd run typecheck
 npm.cmd run lint
 npm.cmd run build
 npm.cmd run generate:demo
+npm.cmd run verify:variation
+npm.cmd run build:measurements
+npm.cmd run verify:production
 ```
+
+`verify:variation` は Phase 8 生成ロジック（決定性 / Weight / Compatibility / Two-Hand /
+Duplicate / Lock 付き Reroll / 生成不可能 Preset の事前検出）を合成 Asset Library に対して
+headless で検証します。
+
+`build:measurements` は `analysis.json` を再走査して
+`public/generated-assets/base_body/measurements.json`（head / hand / socket などの実測寸法）を
+生成します。Phase 2 の three.js 製 bounds と 1e-6 以内で一致することを自己検証してから書き出し、
+Source には一切書き込みません。`verify:production` は Phase 9 の Package 構成・Asset Type 別
+Prompt・Validation 判定（Scale / Grip / Texture / Palette / UV）・Revision Prompt 生成を
+headless で検証します（51 チェック）。
 
 ## 構成と実装範囲
 
@@ -51,6 +80,8 @@ npm.cmd run generate:demo
 - `src/features/asset-library/`: ID索引、カテゴリ／BodyType絞り込み、仮データ。
 - `src/features/character-builder/`: 一覧選択、単体Preview、Metadata表示。
 - `src/features/asset-creator/`: 定義入力のレイアウトと仮GLB Preview。入力は保存・反映しない。
+- `src/features/production/`: Phase 9 の AI Production（Package 生成 / Queue / Import / Validation / Approve）。
+- `src/prompt/templates/`: Asset Type 別 Prompt Template（共通 + hair / headgear / armor / shoulder / weapon / shield / back）。
 - `src/components/preview/`: GLTFLoader、OrbitControls、Grid、読込状態、視点リセット、リサイズ、破棄処理。
 - `public/demo-assets/`: 自作の素体・剣・盾のGLB。`scripts/generate-demo-assets.mjs` から再生成可能。
 

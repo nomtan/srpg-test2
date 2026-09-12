@@ -22,6 +22,11 @@ export interface DerivedLibrary {
     reexportRequired: number;
     registryIssues: number;
     missingDependencies: number;
+    /** Phase 8: characters produced by the Variation Generator (spec section 31). */
+    generatedCharacters: number;
+    /** Phase 9: production jobs, and the two states that need a human next (spec section 54). */
+    productionJobs: number;
+    productionAwaitingAction: number;
   };
   recentAssets: AssetRecord[];
   recentCharacters: CharacterRecord[];
@@ -55,6 +60,11 @@ export function deriveLibrary(index: LibraryIndex): DerivedLibrary {
       reexportRequired: [...exportEval.values()].filter((e) => e.status === "reexport_required").length,
       registryIssues: registrySync.issueCount,
       missingDependencies: Object.keys(graph.missingByCharacter).length,
+      generatedCharacters: index.characters.filter((c) => !!c.recipe.generation).length,
+      productionJobs: index.productions.length,
+      productionAwaitingAction: index.productions.filter(
+        (p) => p.status === "validation_error" || p.status === "needs_revision",
+      ).length,
     },
     recentAssets: byUpdated(index.assets).slice(0, 6),
     recentCharacters: byUpdated(index.characters).slice(0, 6),

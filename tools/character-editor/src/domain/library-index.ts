@@ -4,6 +4,9 @@
 // few hundred assets stay searchable without loading every GLB (spec prompt 41-49).
 import type { AssetMetadata } from "./asset";
 import type { CharacterRecipe } from "./character-recipe";
+import type { VariationPreset } from "./variation-preset";
+import type { ProductionJob } from "./production-job";
+import { defaultPaletteLibrary, type PaletteLibrary } from "./variation-palette";
 
 export type ValidationStatus = "valid" | "warning" | "error" | "unknown";
 
@@ -132,7 +135,8 @@ export interface CharacterRecord {
   thumbnail: boolean;
   export: CharacterExportState;
   registry: CharacterRegistryState;
-  origin: "builder" | "import";
+  /** "variation" = created by the Phase 8 Variation Generator. */
+  origin: "builder" | "import" | "variation";
 }
 
 export interface RegistryEntry {
@@ -158,10 +162,19 @@ export interface LibraryIndex {
   assets: AssetRecord[];
   characters: CharacterRecord[];
   registry: RegistryFile;
+  /** Phase 8 Variation Presets (spec section 41). */
+  presets: VariationPreset[];
+  /** Phase 8 Palette Sets + Skin / Hair pools (spec section 18-19). */
+  palettes: PaletteLibrary;
+  /** Phase 9 AI Production jobs, one per asset being produced (spec section 3-4). */
+  productions: ProductionJob[];
 }
 
 export function emptyLibraryIndex(): LibraryIndex {
-  return { assets: [], characters: [], registry: emptyRegistryFile() };
+  return {
+    assets: [], characters: [], registry: emptyRegistryFile(),
+    presets: [], palettes: defaultPaletteLibrary(), productions: [],
+  };
 }
 
 /** Push a new version onto the history and return the next version number. */

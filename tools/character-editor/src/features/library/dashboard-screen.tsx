@@ -41,6 +41,10 @@ export function DashboardScreen() {
         <Link href="/characters?filter=reexport" className={`dash-card ${d.reexportRequired ? "warnc" : ""}`}><span className="dash-num">{d.reexportRequired}</span><span>Re-export Required</span></Link>
         <Link href="/characters?filter=registry" className={`dash-card ${d.registryIssues ? "warnc" : ""}`}><span className="dash-num">{d.registryIssues}</span><span>Registry Issues</span></Link>
         <Link href="/characters?filter=missing" className={`dash-card ${d.missingDependencies ? "danger" : ""}`}><span className="dash-num">{d.missingDependencies}</span><span>Missing Dependencies</span></Link>
+        <Link href="/variations" className="dash-card"><span className="dash-num">{index.presets.length}</span><span>Variation Presets</span></Link>
+        <Link href="/characters?filter=generated" className="dash-card"><span className="dash-num">{d.generatedCharacters}</span><span>Generated Characters</span></Link>
+        <Link href="/production" className="dash-card"><span className="dash-num">{d.productionJobs}</span><span>AI Production Jobs</span></Link>
+        <Link href="/production" className={`dash-card ${d.productionAwaitingAction ? "warnc" : ""}`}><span className="dash-num">{d.productionAwaitingAction}</span><span>Needs Revision / Error</span></Link>
       </div>
 
       <div className="dash-lower">
