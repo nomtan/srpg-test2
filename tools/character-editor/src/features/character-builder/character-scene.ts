@@ -8,6 +8,7 @@ import { EXPORT_ASSET_SLOTS, type ExportAssetSlot } from "@/domain/character-exp
 import { SLOT_NODE_NAME, SLOT_SOCKET, clampScale } from "@/domain/builder-recipe";
 import { socketNodeName } from "@/features/asset-creator/base-parts";
 import { applyGripAlignment, gripAlignmentFor } from "@/viewer/equipment/gripAlignment";
+import { tintBodyParts } from "@/viewer/palette/bodyPartTint";
 import type { AssetType } from "@/domain/asset-spec";
 import type { AssetLibrary, AssetLibraryEntry } from "@/features/asset-library/library";
 import { modelUrl, textureUrl } from "@/features/asset-library/library";
@@ -182,7 +183,15 @@ export async function buildCharacterScene(
 
   // ---- Palette: base body meshes use the skin slot. ----
   const palette = normalisePalette(recipe.palette);
-  if (opts.applyPalette !== false) tint(baseRoot, palette.skin);
+  const partColors = recipe.bodyPartColors ?? {};
+  if (opts.applyPalette !== false) {
+    const { applied, cloned } = tintBodyParts(baseRoot, palette.skin, partColors);
+    for (const material of cloned) disposables.push(() => material.dispose());
+    const unknown = Object.keys(partColors).filter((part) => !applied.includes(part));
+    if (unknown.length) {
+      warnings.push(`bodyPartColors の対象が Base に見つかりません: ${unknown.join(", ")}`);
+    }
+  }
 
   // ---- Equipment ----
   const selected: { slot: ExportAssetSlot; entry: AssetLibraryEntry }[] = [];

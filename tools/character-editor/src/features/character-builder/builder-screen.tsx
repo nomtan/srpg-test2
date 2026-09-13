@@ -14,6 +14,7 @@ import { BuilderLibrarySave } from "@/features/library/builder-save";
 import { CharacterPreview } from "./character-preview";
 import { ExportPanel } from "./export/export-panel";
 import { BUILDER_NAME_KEY, BUILDER_RECIPE_KEY, readStagedName } from "./builder-storage";
+import { BASE_PARTS } from "@/features/asset-creator/base-parts";
 
 const RECIPE_KEY = BUILDER_RECIPE_KEY;
 const ANIM_ROLES = ["idle", "walk", "run", "attack"] as const;
@@ -84,6 +85,18 @@ export function BuilderScreen() {
     setRecipe((r) => ({ ...r, body: { ...r.body, scale: { ...r.body.scale, [key]: clampScale(value) } } }));
   const setPalette = (slot: PaletteSlot, value: string) =>
     setRecipe((r) => ({ ...r, palette: { ...r.palette, [slot]: value } }));
+
+  /** Per-part override; clearing one drops the key so the part falls back to palette.skin. */
+  const setPartColor = (part: string, value: string | null) =>
+    setRecipe((r) => {
+      const next = { ...(r.bodyPartColors ?? {}) };
+      if (value === null) delete next[part];
+      else next[part] = value.toLowerCase();
+      const rest: CharacterRecipe = { ...r };
+      delete rest.bodyPartColors;
+      return Object.keys(next).length ? { ...rest, bodyPartColors: next } : rest;
+    });
+  const partColors = recipe.bodyPartColors ?? {};
 
   const optionsFor = useCallback((slot: ExportAssetSlot) => {
     const cats = SLOT_CATEGORY[slot];
@@ -232,6 +245,57 @@ export function BuilderScreen() {
                 {slot}
               </label>
             ))}
+          </div>
+
+          <h2>Body Part Colors</h2>
+          <div className="control-block part-colors">
+            <p className="muted">
+              個別に色を設定したパーツはその色が優先され、未設定のパーツは Palette の
+              <code> skin</code>（{recipe.palette.skin}）になります。
+            </p>
+            <ul>
+              {BASE_PARTS.map((part) => {
+                const override = partColors[part.name];
+                return (
+                  <li key={part.name} className={override ? "on" : undefined}>
+                    <input
+                      type="color"
+                      aria-label={`${part.name} の色`}
+                      value={override ?? recipe.palette.skin}
+                      onChange={(e) => setPartColor(part.name, e.target.value)}
+                    />
+                    <span className="part-name">
+                      {part.name}
+                      {part.hint && <em>{part.hint}</em>}
+                      {part.uuids.length > 1 && <small>左右同時</small>}
+                    </span>
+                    <button
+                      type="button"
+                      className="mini"
+                      disabled={!override}
+                      onClick={() => setPartColor(part.name, null)}
+                    >
+                      skin に戻す
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="part-colors-actions">
+              <span className="muted">{Object.keys(partColors).length} パーツを個別指定中</span>
+              <button
+                type="button"
+                className="mini"
+                disabled={!Object.keys(partColors).length}
+                onClick={() => setRecipe((r) => {
+                  const rest: CharacterRecipe = { ...r };
+                  delete rest.bodyPartColors;
+                  return rest;
+                })}
+              >
+                すべて skin に戻す
+              </button>
+            </div>
           </div>
 
           <h2>Recipe</h2>

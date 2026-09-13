@@ -13,7 +13,7 @@
     "build:base": "node scripts/build-base-model.mjs",
     "verify:base": "node scripts/verify-base-model.mjs",
     "build:measurements": "node scripts/build-measurements.mjs",
-    "verify:export": "node scripts/verify-export.mjs",
+    "verify:export": "node --import ./scripts/register-ts-alias.mjs scripts/verify-export.mjs",
     "verify:variation": "node --import ./scripts/register-ts-alias.mjs scripts/verify-variation.mjs",
     "verify:production": "node --import ./scripts/register-ts-alias.mjs scripts/verify-production.mjs"
   },

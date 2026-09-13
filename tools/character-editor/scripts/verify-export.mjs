@@ -81,5 +81,46 @@ ok(idPattern.test(sampleMeta.id), "sample character id is snake_case");
 ok(!idPattern.test("Vein 2"), "id validator rejects invalid characters");
 console.log("\nsample character.json:\n" + JSON.stringify(sampleMeta, null, 2));
 
+// ---- Per-body-part colour overrides (recipe.bodyPartColors) ------------------
+// The base GLB shares one material across all 20 body meshes, so an override must clone rather
+// than write onto the shared material — otherwise one part repaints the whole body.
+{
+  const THREE = await import("three");
+  const { tintBodyParts } = await import("../src/viewer/palette/bodyPartTint.ts");
+  const { validateRecipeShape, emptyRecipe, recipeText } = await import("../src/domain/builder-recipe.ts");
+
+  const shared = new THREE.MeshStandardMaterial({ color: 0xb7b7b7 });
+  const root = new THREE.Object3D();
+  for (const name of ["ganmenn", "mimi_left", "kubi", "dou", "te_left", "te_right", "koshi"]) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shared);
+    mesh.name = name;
+    root.add(mesh);
+  }
+  const hexOf = (n) => "#" + root.getObjectByName(n).material.color.getHexString();
+
+  const SKIN = "#d8aa85";
+  const { applied, cloned } = tintBodyParts(root, SKIN, { ganmenn: "#aa3333", te_left: "#22aa22", te_right: "#22aa22" });
+  ok(hexOf("ganmenn") === "#aa3333", "an overridden body part takes its own colour");
+  ok(hexOf("dou") === SKIN && hexOf("kubi") === SKIN, "body parts without an override fall back to palette.skin");
+  ok(hexOf("mimi_left") === SKIN && hexOf("koshi") === SKIN, "a part override does not leak onto the rest of the body");
+  ok(root.getObjectByName("te_left").material === root.getObjectByName("te_right").material,
+    "parts sharing a colour share one cloned material");
+  ok(root.getObjectByName("dou").material === shared, "fallback parts stay on the shared base material");
+  ok(cloned.length === 2, `only distinct colours are cloned (got ${cloned.length})`);
+  ok(JSON.stringify(applied) === JSON.stringify(["ganmenn", "te_left", "te_right"]), "applied part names are reported back");
+
+  tintBodyParts(root, "#000000", { ganmenn: "#aa3333" });
+  ok(hexOf("dou") === "#000000" && hexOf("ganmenn") === "#aa3333", "changing skin repaints only the fallback parts");
+
+  const withParts = { ...emptyRecipe(), bodyPartColors: { ganmenn: "#D8AA85", te_left: "#aa3333" } };
+  const parsed = validateRecipeShape(JSON.parse(recipeText(withParts)));
+  ok(parsed.recipe?.bodyPartColors?.ganmenn === "#d8aa85", "bodyPartColors survives a recipe round-trip, lower-cased");
+  const bad = validateRecipeShape({ ...JSON.parse(recipeText(emptyRecipe())), bodyPartColors: { dou: "red", koshi: "#112233" } });
+  ok(!!bad.recipe && bad.recipe.bodyPartColors?.koshi === "#112233" && bad.recipe.bodyPartColors?.dou === undefined,
+    "an invalid part colour is dropped without failing the recipe");
+  const none = validateRecipeShape(JSON.parse(recipeText(emptyRecipe())));
+  ok(none.recipe && !("bodyPartColors" in none.recipe), "no overrides leaves the key out of the recipe entirely");
+}
+
 console.log(`\n${fail.length ? `FAILED (${fail.length})` : "ALL PASS"} — ${fileURLToPath(new URL("../public/generated-assets/base_body/model.glb", here))}`);
 process.exit(fail.length ? 1 : 0);

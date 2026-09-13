@@ -98,6 +98,19 @@ export function validateRecipeShape(input: unknown): { recipe?: CharacterRecipe;
   for (const slot of PALETTE_SLOTS) {
     if (!isHexColor(palette[slot])) push("error", `palette.${slot} が #RRGGBB ではありません。`);
   }
+  // Per-part colour overrides are optional; a bad entry is dropped with a warning rather than
+  // failing the whole recipe, because the global skin colour is always a valid fallback.
+  const rawPartColors = (raw.bodyPartColors ?? {}) as Record<string, unknown>;
+  const bodyPartColors: Record<string, string> = {};
+  if (typeof rawPartColors !== "object" || Array.isArray(rawPartColors)) {
+    push("warning", "bodyPartColors がオブジェクトではありません。無視します。");
+  } else {
+    for (const [part, value] of Object.entries(rawPartColors)) {
+      if (isHexColor(value)) bodyPartColors[part] = String(value).toLowerCase();
+      else push("warning", `bodyPartColors.${part} が #RRGGBB ではありません。無視します。`);
+    }
+  }
+
   const assets = (raw.assets ?? {}) as Record<string, unknown>;
   if (typeof assets !== "object" || Array.isArray(assets)) push("error", "assets がオブジェクトではありません。");
   else for (const key of Object.keys(assets)) {
@@ -126,6 +139,7 @@ export function validateRecipeShape(input: unknown): { recipe?: CharacterRecipe;
     ) as CharacterRecipe["assets"],
     palette: Object.fromEntries(PALETTE_SLOTS.map((s) => [s, String(palette[s]).toLowerCase()])) as CharacterRecipe["palette"],
   } as CharacterRecipe;
+  if (Object.keys(bodyPartColors).length) recipe.bodyPartColors = bodyPartColors;
   // Phase 8: keep the generation provenance through a Builder round-trip (spec section 48-49).
   const generation = parseGeneration(raw.generation);
   if (generation) recipe.generation = generation;

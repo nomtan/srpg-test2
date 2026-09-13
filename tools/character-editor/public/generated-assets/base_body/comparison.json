@@ -1,5 +1,5 @@
 {
-  "sourceSha256": "d57f3136af72644209e156afbe136ddbb3a6c2ec3105f4a4b79cf67c4d5a694a",
+  "sourceSha256": "27b6f15882e6441f742ed6d4adf9f375de4dda1037040403dca759d134b94c26",
   "sourceFidelity": {
     "verified": true,
     "groups": 46,
@@ -95,7 +95,7 @@
       "maxCommonGroupPivotDeltaMeters": 0.19558964897869202,
       "identicalTriangles": false,
       "identicalWorldVertexSet": false,
-      "generatedOnlyWorldPoints": 156,
+      "generatedOnlyWorldPoints": 148,
       "referenceOnlyWorldPoints": 304
     },
     {

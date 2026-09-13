@@ -35,6 +35,8 @@ export interface CharacterExportMetadata {
   body: { base: BodyType; preset: BodyPreset; scale: CharacterExportScale };
   assets: Partial<CharacterExportAssets>;
   palette: Record<PaletteSlot, string>;
+  /** Per-body-part colour overrides; absent when the whole body uses palette.skin. */
+  bodyPartColors?: Record<string, string>;
   activeAnimationSet: string;
   /** Mapping layer (prompt 13): normalises the source clip names, incl. the "gread_sword" typo, without renaming clips in the GLB. */
   animations: AnimationMapping;
@@ -98,6 +100,9 @@ export function buildCharacterMetadata(input: BuildMetadataInput): CharacterExpo
     },
     assets,
     palette: { ...recipe.palette },
+    ...(recipe.bodyPartColors && Object.keys(recipe.bodyPartColors).length
+      ? { bodyPartColors: { ...recipe.bodyPartColors } }
+      : {}),
     activeAnimationSet,
     animations: buildAnimationMapping(),
     visibility: { hiddenParts: [...input.hiddenParts].sort(), hairPolicy: input.hairPolicy },
@@ -123,6 +128,7 @@ export function characterMetadataText(meta: CharacterExportMetadata): string {
     body: meta.body,
     assets: meta.assets,
     palette: meta.palette,
+    ...(meta.bodyPartColors ? { bodyPartColors: meta.bodyPartColors } : {}),
     activeAnimationSet: meta.activeAnimationSet,
     animations: meta.animations,
     visibility: meta.visibility,

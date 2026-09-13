@@ -28,6 +28,30 @@ Character Builder で構成したキャラクターを、Godot へ Import 可能
 
 Browser Export のみ（prompt 19）。リポジトリへの自動 commit はしない。
 
+## Body Part Colors
+
+Base Body の色は Palette の `skin` が全体に適用されるが、`recipe.bodyPartColors` で
+**パーツ単位の上書き**ができる。
+
+```jsonc
+"bodyPartColors": {
+  "ganmenn": "#d8aa85",   // 顔だけ別の色
+  "te_left": "#aa3333"
+}
+```
+
+- 指定のあるパーツはその色、**無いパーツは `palette.skin`** にフォールバックする。
+- キーは Base Model の mesh 名（`BASE_PARTS` と同じ 18 種）。未設定なら JSON にキー自体を書かない。
+- `ashikubi` / `ashisaki` は Base に左右2つずつ同名で存在するため、**左右同時に色が変わる**
+  （`hideParts` と同じ制約）。Builder の一覧では「左右同時」と表示する。
+- 不正な色は警告として捨て、Recipe 全体は失敗させない（`skin` に必ずフォールバックできるため）。
+- Export した `character.json` にも `bodyPartColors` が入る（未設定時はキーごと省略）。
+
+実装は `viewer/palette/bodyPartTint.ts`。Base GLB は **20 mesh すべてが 1 つの Material を共有**
+しているので、mesh の material に直接色を書くと全身が塗り変わる。上書きのあるパーツだけ Material
+を clone し、同じ色のパーツは clone を使い回す。フォールバックのパーツは共有 Material のまま
+`skin` を受け取る。`verify:export` に回帰チェックがある（漏れ出し・clone 数・Recipe 往復）。
+
 ## GLB 生成方式
 
 - `GLTFExporter.parse(CharacterRoot, …, { binary:true, onlyVisible:true, animations:baseClips, trs:true })`。
