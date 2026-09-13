@@ -71,6 +71,44 @@ export const FIT_REGIONS: Record<AssetType, BaseRegion[]> = {
   back: ["torso"],
 };
 
+/**
+ * How much larger than its fit region an asset should read, as a multiplier on the region's
+ * bounding box.
+ *
+ * 1.0 means "sits on the region at its size" and is right for anything that follows the body
+ * closely. Armour that is *worn over* a part has to overhang it, and a prompt that only quotes the
+ * bare body measurement produces a piece the same size as the limb — which reads as too small.
+ * Shoulder pauldrons are the clearest case, so they carry a real coverage factor.
+ *
+ * Only change a value with a produced asset to point at: this number goes straight into the
+ * Model Prompt as a target size in metres.
+ */
+export const TYPE_COVERAGE: Record<AssetType, number> = {
+  hair: 1,
+  headgear: 1,
+  head_accessory: 1,
+  chest_armor: 1,
+  // A pauldron sits over the shoulder and overhangs it; 1x reads as a shoulder pad, not armour.
+  shoulder_left: 1.5,
+  shoulder_right: 1.5,
+  arm_armor: 1,
+  gloves: 1,
+  waist: 1,
+  boots: 1,
+  weapon: 1,
+  shield: 1,
+  back: 1,
+};
+
+/** The size an asset should aim for: its fit region scaled by the coverage factor. */
+export function targetSizeFor(type: AssetType): { region: BaseRegion; size: number[]; coverage: number } | null {
+  const region = FIT_REGIONS[type][0];
+  const box = region ? baseRegion(region) : null;
+  if (!box) return null;
+  const coverage = TYPE_COVERAGE[type];
+  return { region, coverage, size: box.size.map((v) => Math.round(v * coverage * 1e4) / 1e4) };
+}
+
 /** Regions the asset must stay clear of; a bounding-box overlap becomes a clipping warning. */
 export const CLEARANCE_REGIONS: Record<AssetType, BaseRegion[]> = {
   hair: [],

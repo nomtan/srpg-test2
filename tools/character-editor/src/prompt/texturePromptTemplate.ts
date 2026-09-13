@@ -97,7 +97,7 @@ export function buildTexturePrompt(ctx: PromptContext): string {
     bullet(template.texture(ctx)),
     "",
     "## REFERENCE INFORMATION",
-    referenceBlock(ctx),
+    referenceBlock(ctx, "texture"),
     "",
     "## OUTPUT FORMAT",
     bullet([

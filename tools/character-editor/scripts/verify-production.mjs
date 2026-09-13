@@ -112,6 +112,37 @@ console.log("\n# Deliverables (folder structure + required .bbmodel)");
     && techSpec.includes("source/weapon_001.bbmodel"));
 }
 
+console.log("\n# Attached whole-character illustration");
+{
+  const cases = [
+    ["shoulder_left", "the shoulder pauldron on the character's LEFT side", "LEFT"],
+    ["shoulder_right", "the shoulder pauldron on the character's RIGHT side", "RIGHT"],
+    ["hair", "the hairstyle", null],
+    ["weapon", "the weapon held in the character's hand", null],
+  ];
+  for (const [type, part, side] of cases) {
+    const files = buildProductionPackage(jobFor(type));
+    const model = files.find((f) => f.name === "model-prompt.md").content;
+    const texture = files.find((f) => f.name === "texture-prompt.md").content;
+    check(`${type}: the prompt names the part to crop to`,
+      model.includes(`design authority for **${part} only**`), part);
+    check(`${type}: whole-character art is expected`,
+      model.includes("The image will usually show the whole character."));
+    check(`${type}: the document still wins over the illustration`,
+      model.includes("The SCALE and PROPORTION sections win over the illustration.")
+      && model.includes("never overrides the attachment contract"));
+    check(`${type}: the texture prompt gets the colour-region variant`,
+      texture.includes("how the colour and material regions divide")
+      && texture.includes("PALETTE SLOTS and GRADIENT RULE sections win"));
+    if (side) {
+      check(`${type}: the correct side is called out`, model.includes(`Model only the ${side} one`));
+    }
+  }
+  check("the instruction is present even with no registered reference",
+    buildProductionPackage(jobFor("hair")).find((f) => f.name === "model-prompt.md").content
+      .includes("If an image is attached to this request"));
+}
+
 console.log("\n# Per-type templates");
 {
   check("every asset type maps to a template file",
@@ -132,6 +163,14 @@ console.log("\n# Per-type templates");
   check("shoulder rules", prompts.shoulder_left.includes("LEFT shoulder piece")
     && prompts.shoulder_left.includes("Avoid head collision")
     && prompts.shoulder_left.includes("Avoid chest collision"));
+  for (const side of ["shoulder_left", "shoulder_right"]) {
+    check(`${side}: a target asset size is stated, not just the body region`,
+      prompts[side].includes("Target asset size: about 0.3126 x 0.3125 x 0.1875 m")
+      && prompts[side].includes("worn OVER that body part"));
+    check(`${side}: the pauldron must overhang the shoulder`,
+      prompts[side].includes("roughly 1.5x the bare shoulder")
+      && prompts[side].includes("Do not build it flush"));
+  }
   check("shield rules", prompts.shield.includes("off hand")
     && prompts.shield.includes("grip_main")
     && prompts.shield.includes("Hand clearance")
@@ -206,6 +245,20 @@ const goodModel = {
 
   const noPaletteSpec = buildValidationSpec(jobFor("hair", { paletteSlots: ["primary"] }));
   const paletteFail = validateProduction(noPaletteSpec, { model: goodModel, texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: null });
+  // A pauldron built flush to the bare shoulder is what "too small" looked like in practice.
+  const shoulderSpec = buildValidationSpec(jobFor("shoulder_left"));
+  const pauldron = (longest) => ({
+    ...goodModel,
+    nodeNames: ["shoulder_left_001"],
+    boundingBox: { min: [-longest / 2, -longest / 2, -0.09], max: [longest / 2, longest / 2, 0.09], size: [longest, longest, 0.18] },
+  });
+  const flush = validateProduction(shoulderSpec, { model: pauldron(0.2084), texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: "s.bbmodel" });
+  check("a shoulder built flush to the bare shoulder is flagged as too small",
+    flush.issues.some((i) => i.code === "scale_too_small"));
+  const sized = validateProduction(shoulderSpec, { model: pauldron(0.3126), texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: "s.bbmodel" });
+  check("a shoulder at the 1.5x target passes", sized.verdict === "pass",
+    JSON.stringify(sized.issues.filter((i) => i.level !== "info")));
+
   check("hair without the hair palette slot fails",
     paletteFail.issues.some((i) => i.code === "palette_slot_missing" && i.level === "error"));
 }

@@ -34,6 +34,8 @@ export interface PromptContext {
   fitRegions: { region: string; box: MeasuredBox }[];
   /** Regions the asset must stay clear of. */
   clearanceRegions: string[];
+  /** Size the asset should aim for: the fit region scaled by its coverage factor. */
+  targetSize: { region: string; size: number[]; coverage: number } | null;
   /** Recommended overall length for weapons, derived from the measured character height. */
   weaponLength: { min: number; max: number } | null;
   /** Palette slot -> current reference hex (spec section 21); guidance, not a fixed colour. */

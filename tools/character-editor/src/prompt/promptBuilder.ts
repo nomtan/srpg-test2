@@ -6,7 +6,7 @@ import {
   type AlphaPolicy, type BudgetProfile,
 } from "@/domain/production-profile";
 import {
-  CLEARANCE_REGIONS, FIT_REGIONS, baseRegion, baseSocket, recommendedWeaponLength,
+  CLEARANCE_REGIONS, FIT_REGIONS, baseRegion, baseSocket, recommendedWeaponLength, targetSizeFor,
 } from "@/domain/base-measurements";
 import { PROMPT_VERSION, type ProductionReference } from "@/domain/production-job";
 import { buildModelPrompt } from "./modelPromptTemplate";
@@ -56,6 +56,7 @@ export function contextFromDraft(draft: AssetDraft, options: PromptOptions = {})
       .map((region) => ({ region, box: baseRegion(region) }))
       .filter((entry) => !!entry.box),
     clearanceRegions: [...CLEARANCE_REGIONS[draft.type]],
+    targetSize: targetSizeFor(draft.type),
     weaponLength: weapon ? recommendedWeaponLength(draft.weaponType) : null,
     paletteReference: options.paletteReference ?? DEFAULT_PALETTE,
     references: options.references ?? [],

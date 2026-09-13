@@ -19,8 +19,12 @@ import { PRODUCTION_STATUSES } from "./production-status";
  *    asset.json block.
  * 3: corrected handedness (the character's left is -Z, not +Z) and the grip rotation the
  *    Character Builder applies at the hand sockets.
+ * 4: the Model Prompt states a target asset size, not just the body region it fits. Shoulder
+ *    pauldrons carry a 1.5x coverage factor after 1x output read as too small.
+ * 5: REFERENCE INFORMATION states how to work from an attached whole-character illustration —
+ *    which part to crop to, what to take from it, and what the document still overrides.
  */
-export const PROMPT_VERSION = 3;
+export const PROMPT_VERSION = 5;
 export const PRODUCTION_SPEC_VERSION = 1;
 
 export const REFERENCE_ROLES = ["shape", "style", "color", "concept"] as const;
@@ -33,7 +37,8 @@ export const REFERENCE_ROLE_LABEL: Record<ReferenceRole, string> = {
   concept: "Concept",
 };
 
-export const REFERENCE_VIEWS = ["front", "back", "side", "three_quarter", "concept", "other"] as const;
+/** `full_body` marks whole-character art: the prompt tells the agent which part to crop to. */
+export const REFERENCE_VIEWS = ["full_body", "front", "back", "side", "three_quarter", "concept", "other"] as const;
 export type ReferenceView = typeof REFERENCE_VIEWS[number];
 
 export interface ProductionReference {

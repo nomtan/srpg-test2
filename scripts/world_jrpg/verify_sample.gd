@@ -48,12 +48,35 @@ func pad_button(button: JoyButton, pressed: bool) -> void:
 	Input.parse_input_event(event)
 	Input.flush_buffered_events()
 
+func verify_follow_camera(world: Node3D) -> void:
+	var saved_position: Vector3 = world.player.position
+	var saved_focus: Vector3 = world.focus
+	var stable := true
+	# Changing frame times used to change horizontal camera lag, even while
+	# the runner moved at a constant speed. Exercise both axes and reversal.
+	for direction in [Vector3.RIGHT, Vector3.FORWARD, Vector3.LEFT]:
+		for frame in 90:
+			var delta := 1.0 / (30.0 if frame % 30 < 15 else 120.0)
+			world.player.position += direction * 16.0 * delta
+			world._update_follow_focus(delta)
+			stable = stable and is_equal_approx(world.focus.x, world.player.position.x) and is_equal_approx(world.focus.z, world.player.position.z)
+	check(stable, "Sprint camera keeps horizontal framing stable across frame times and directions")
+	world.focus.y = world.player.position.y
+	world._update_follow_focus(0.1)
+	var one_step: float = world.focus.y
+	world.focus.y = world.player.position.y
+	for frame in 10: world._update_follow_focus(0.01)
+	check(is_equal_approx(world.focus.y, one_step), "Height follow smoothing is independent of frame subdivisions")
+	world.player.position = saved_position
+	world.focus = saved_focus
+
 func _run() -> void:
 	seed(7319)
 	root.size = Vector2i(1280, 720)
 	var world := World.new()
 	root.add_child(world)
 	world.set_process(false)
+	verify_follow_camera(world)
 	var weather: Node = world.field_weather
 	var previous_time: int = weather.time_index
 	var previous_weather: int = weather.weather_index
@@ -76,6 +99,15 @@ func _run() -> void:
 	Input.flush_buffered_events()
 	world._process(0.01)
 	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.16) and world.player.running, "Running is 16 units per second, twice previous speed")
+	world.player._process(0)
+	check(is_equal_approx(world.player.animation_player.speed_scale, 1.25), "World sprint speed drives moderate animation cadence")
+	var chunk_key := Vector2i(floori(world.player.position.x / world.CHUNK), floori(world.player.position.z / world.CHUNK))
+	var saved_obstacles: Array = world.obstacle_chunks.get(chunk_key, [])
+	world.obstacle_chunks[chunk_key] = [Rect2(Vector2(world.player.position.x - 1, world.player.position.z - 1), Vector2(2, 2))]
+	world._process(0.01)
+	world.player._process(0)
+	check(not world.player.walking and world.player.animation_player.current_animation == "idle", "Blocked sprint stops locomotion animation")
+	world.obstacle_chunks[chunk_key] = saved_obstacles
 	move_key = move_key.duplicate()
 	sprint_key = sprint_key.duplicate()
 	move_key.pressed = false

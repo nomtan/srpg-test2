@@ -29,8 +29,10 @@ export const TYPE_LONGEST_AXIS_RATIO: Record<AssetType, [number, number]> = {
   headgear: [0.22, 0.55],
   head_accessory: [0.04, 0.35],
   chest_armor: [0.18, 0.5],
-  shoulder_left: [0.06, 0.3],
-  shoulder_right: [0.06, 0.3],
+  // A pauldron targets ~1.5x the 0.208 m shoulder box (~0.31 m); the old 0.06 floor let a piece
+  // built flush to the bare shoulder pass without comment.
+  shoulder_left: [0.12, 0.24],
+  shoulder_right: [0.12, 0.24],
   arm_armor: [0.06, 0.3],
   gloves: [0.04, 0.2],
   waist: [0.1, 0.45],

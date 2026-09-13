@@ -543,6 +543,7 @@ func _process(delta: float) -> void:
 	if mode != "explore": return
 	player.walking = false
 	player.running = false
+	player.locomotion_speed = 0.0
 	var motion := Vector2(float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)), float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
 	motion = (motion + GamepadInput.stick()).limit_length()
 	var look := GamepadInput.stick(true)
@@ -558,6 +559,7 @@ func _process(delta: float) -> void:
 		player.running = Input.is_physical_key_pressed(KEY_SHIFT) or GamepadInput.held(JOY_BUTTON_RIGHT_SHOULDER)
 		var velocity := (Vector3(cos(yaw), 0, -sin(yaw)) * motion.x + Vector3(sin(yaw), 0, cos(yaw)) * motion.y) * (RUN_SPEED if player.running else WALK_SPEED)
 		player.world_facing = velocity.normalized()
+		var start_position: Vector3 = player.position
 		# Substeps keep water, cliffs and building bounds solid at low frame rates.
 		var steps := maxi(1, ceili(velocity.length() * delta / 0.18))
 		for i in steps:
@@ -565,10 +567,12 @@ func _process(delta: float) -> void:
 				var next: Vector3 = player.position + offset * delta / steps
 				if _can_walk(next, player.position):
 					player.position = Vector3(next.x, _surface(next.x, next.z) + 0.05, next.z)
-		player.walking = true
+		var moved := Vector2(player.position.x - start_position.x, player.position.z - start_position.z)
+		player.walking = not moved.is_zero_approx()
+		if delta > 0.0: player.locomotion_speed = moved.length() / delta
 		player.facing = (1 if motion.x > 0 else 2) if absf(motion.x) > absf(motion.y) else (0 if motion.y > 0 else 3)
 	if not overview:
-		focus = focus.lerp(player.position + Vector3(0, 1, 0), minf(1, delta * 10))
+		_update_follow_focus(delta)
 		_update_camera()
 	location_text.text = "%s   /   探索中" % _region()
 	prompt_text.text = "目標 : 町へ下り、橋の先の街道を調べる" if not cleared else "街道は安全になった。自由に各地を探索しよう。"
@@ -580,6 +584,13 @@ func _process(delta: float) -> void:
 		encounter_rearm = false
 	if not cleared and not encounter_rearm and player.position.distance_to(encounter_position) < float(story.encounter.radius):
 		_show_dialog(story.encounter.title, story.encounter.lines, _start_battle)
+
+func _update_follow_focus(delta: float) -> void:
+	# Horizontal lag varies with frame time and makes a fast runner rock
+	# forward/back in screen space. Only soften the stepped terrain height.
+	focus.x = player.position.x
+	focus.z = player.position.z
+	focus.y = lerpf(focus.y, player.position.y + 1.0, 1.0 - exp(-10.0 * delta))
 
 func _region() -> String:
 	var p := player.position
@@ -616,6 +627,7 @@ func _close_dialog() -> void:
 
 func _start_battle() -> void:
 	mode = "battle"
+	player.locomotion_speed = -1.0
 	encounter_marker.hide()
 	return_position = player.position
 	battle = Skirmish.new()

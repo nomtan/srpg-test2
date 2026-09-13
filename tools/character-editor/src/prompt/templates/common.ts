@@ -2,6 +2,7 @@
 //
 // Every block here is reused by all asset types. Type-specific rules live in their own template
 // file next to this one, so no single giant prompt string exists (spec section 26).
+import type { AssetType } from "@/domain/asset-spec";
 import { BASE_CHARACTER, BASE_COORDINATE_INFO } from "@/domain/base-measurements";
 import { ALPHA_POLICY_LABEL } from "@/domain/production-profile";
 import { REFERENCE_ROLE_LABEL } from "@/domain/production-job";
@@ -87,9 +88,26 @@ export function scaleBlock(ctx: PromptContext): string {
 export function proportionBlock(ctx: PromptContext): string {
   const lines = ctx.fitRegions.map(
     ({ region, box }) =>
-      `${region}: ${box.size.join(" x ")} m (bounding box), centre ${box.center.join(", ")} m, Y range ${box.min[1]} - ${box.max[1]} m`,
+      `Body region \`${region}\` measures ${box.size.join(" x ")} m (bounding box), centre ${box.center.join(", ")} m, Y range ${box.min[1]} - ${box.max[1]} m`,
   );
   if (!lines.length) lines.push("No measured fit region for this asset type; keep proportions consistent with the character height above.");
+
+  const target = ctx.targetSize;
+  if (target && target.coverage !== 1) {
+    // The body measurement alone produces a piece the same size as the limb, which reads as too
+    // small for anything worn over it. State the size the asset itself should be.
+    lines.push(
+      `**Target asset size: about ${target.size.join(" x ")} m** — roughly ${target.coverage}x the ` +
+      `\`${target.region}\` region, because this piece is worn OVER that body part and has to overhang it.`,
+    );
+    lines.push(
+      `An asset that merely matches the ${target.region} measurement (${ctx.fitRegions[0]?.box.size.join(" x ")} m) ` +
+      "is too small and will be sent back for revision.",
+    );
+  } else if (target) {
+    lines.push(`Target asset size: about ${target.size.join(" x ")} m, following the \`${target.region}\` region closely.`);
+  }
+
   if (ctx.clearanceRegions.length) {
     lines.push(`Keep clearance from: ${ctx.clearanceRegions.join(", ")}`);
   }
@@ -276,16 +294,89 @@ export function validationTargetBlock(ctx: PromptContext): string {
 }
 
 /** Spec section 24-25: references carry a role so the prompt can use them differently. */
-export function referenceBlock(ctx: PromptContext): string {
-  if (!ctx.references.length) return "No reference images supplied. Follow the written style rules above.";
-  const byRole = ctx.references.map((ref) => {
-    const label = REFERENCE_ROLE_LABEL[ref.role];
-    const how =
-      ref.role === "shape" ? "match the silhouette and proportions, not the rendering style"
-        : ref.role === "style" ? "match the rendering / surface treatment, not the exact shape"
-          : ref.role === "color" ? "use only as a hue guide; final colours come from the palette slots"
-            : "overall intent only; do not copy verbatim";
-    return `${label} — ${ref.file ?? "(note only)"} [${ref.view}]: ${how}${ref.note ? ` · ${ref.note}` : ""}`;
-  });
-  return bullet(byRole);
+/**
+ * What to crop a whole-character illustration down to, per asset type. Concept art is usually one
+ * full-body drawing, so the prompt has to name the part instead of leaving the agent to guess.
+ */
+export const REFERENCE_FOCUS: Record<AssetType, string> = {
+  hair: "the hairstyle",
+  headgear: "the helmet / headwear",
+  head_accessory: "the head accessory (ornament, band, pin)",
+  chest_armor: "the torso armour",
+  shoulder_left: "the shoulder pauldron on the character's LEFT side",
+  shoulder_right: "the shoulder pauldron on the character's RIGHT side",
+  arm_armor: "the forearm armour / bracer",
+  gloves: "the gloves",
+  waist: "the belt / waist piece",
+  boots: "the boots",
+  weapon: "the weapon held in the character's hand",
+  shield: "the shield",
+  back: "the equipment mounted on the character's back",
+};
+
+/**
+ * Spec section 24-25, extended for the common workflow: a single full-body illustration is
+ * attached to the request and the agent has to produce ONE part from it.
+ *
+ * The protocol is stated unconditionally, because the image is usually attached directly to the
+ * AI session rather than registered in the tool — the package cannot know it is there.
+ */
+export function referenceBlock(ctx: PromptContext, focus: "geometry" | "texture" = "geometry"): string {
+  const part = REFERENCE_FOCUS[ctx.type];
+  const side = ctx.attachment.side;
+
+  const protocol = [
+    `Treat any attached illustration as the design authority for **${part} only**.`,
+    "The image will usually show the whole character. Everything outside that part is context for " +
+      "consistency, never something to model or paint.",
+    focus === "texture"
+      ? "Take from it: how the colour and material regions divide, trim placement, wear level, motif shapes."
+      : "Take from it: silhouette, shape language, proportion within the part, where plates / straps / " +
+        "trim divide, decorative motifs.",
+    "Do not take from it: overall scale, camera perspective, lighting, painted rendering, line weight, " +
+      "or any neighbouring part of the character.",
+    focus === "texture"
+      ? "The PALETTE SLOTS and GRADIENT RULE sections win over the illustration: reduce painted shading " +
+        `to flat blocks that recolour cleanly at ${ctx.textureResolution}x${ctx.textureResolution}.`
+      : "The SCALE and PROPORTION sections win over the illustration. Concept art is not to scale: " +
+        "reproject the design onto the target size given above rather than copying image proportions.",
+    "The STYLE and budget sections win over the illustration. Reduce painted detail to blocky low-poly " +
+      "geometry and keep only what still reads at isometric distance; drop the rest.",
+    side !== "center"
+      ? `The illustration shows both sides. Model only the ${side.toUpperCase()} one — the character's own ` +
+        `${side}, which is ${side === "left" ? "-Z" : "+Z"} in this project. Check the side before exporting.`
+      : "",
+    "If the part is hidden, cropped, or ambiguous in the image, choose the simplest reading consistent " +
+      "with what is visible; do not invent unrelated detail.",
+    "Keep it consistent with the rest of the character in the image — material, trim colour and wear " +
+      "level — so parts produced separately still read as one set.",
+    "The illustration never overrides the attachment contract: socket, attachment point and orientation " +
+      "come from this document.",
+  ];
+
+  const lines = [
+    "**If an image is attached to this request:**",
+    "",
+    bullet(protocol),
+  ];
+
+  if (ctx.references.length) {
+    const registered = ctx.references.map((ref) => {
+      const label = REFERENCE_ROLE_LABEL[ref.role];
+      const how =
+        ref.role === "shape" ? "match the silhouette and proportions, not the rendering style"
+          : ref.role === "style" ? "match the rendering / surface treatment, not the exact shape"
+            : ref.role === "color" ? "use only as a hue guide; final colours come from the palette slots"
+              : "overall intent only; do not copy verbatim";
+      const scope = ref.view === "full_body"
+        ? ` · whole-character art: use ${part} from it and ignore the rest`
+        : "";
+      return `${label} — ${ref.file ?? "(note only)"} [${ref.view}]: ${how}${scope}${ref.note ? ` · ${ref.note}` : ""}`;
+    });
+    lines.push("", "**Reference files shipped with this package:**", "", bullet(registered));
+  } else {
+    lines.push("", "No reference file is shipped with this package; the written rules above are the specification.");
+  }
+
+  return lines.join("\n");
 }

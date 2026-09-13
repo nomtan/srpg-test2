@@ -88,6 +88,10 @@ NAMING / REFERENCE INFORMATION / OUTPUT FORMAT / DO NOT / VALIDATION TARGET
 - v2: `.bbmodel` を**必須成果物**化し、納品フォルダ構造の固定と asset.json の逐語提示を追加
 - v3: 左右の訂正（キャラクターの左は -Z）と、Character Builder が Hand Socket に適用する
   Grip Rotation の明示
+- v4: Model Prompt が「フィットする体の部位の寸法」だけでなく **Asset 自身の目標サイズ**を明示。
+  Shoulder は Coverage 1.5 倍（実生成が小さすぎたため）
+- v5: **添付された全身1枚絵の扱い**を明文化。どの部位に絞るか、何を取り込み何を捨てるか、
+  この文書が優先する範囲を Model / Texture 双方に記載
 
 ### 成果物フォルダ（promptVersion 2）
 
@@ -164,11 +168,26 @@ sword_iron_001/
   - 無い場合、Shield は **Bounding Box の中心**を Socket に合わせる（腕は盾の中心の裏に来るため）
   - 無い場合、Weapon は原点のままにして警告する（Grip が無いこと自体が Validation の Error）
   Asset を親に付ける前（＝Asset 自身のローカル空間）で測るため、Socket 側の姿勢に影響されない。
+- **Reference（添付画像）**: 全身デザインの1枚絵を AI セッションに添付して実行する運用が主なので、
+  REFERENCE INFORMATION は **Package に Reference が登録されていなくても常に**指示を出す
+  （画像はツールではなく AI 側に添付されるため、Package からは存在を知りようがない）。
+  `REFERENCE_FOCUS`（`templates/common.ts`）が Asset Type ごとに「絵のどの部分に絞るか」を
+  日本語でなく英語の名詞句で持つ。Shoulder など左右のある Type は
+  `attachment.side` から「LEFT のみ・-Z 側」といった取り違え防止の一文を足す。
+  優先順位は **この文書 > 1枚絵**（Scale / Proportion / Style / Budget / Attachment は文書が勝つ）。
+  Texture Prompt では色・素材の区切りに焦点を当てた文面へ切り替える。
+  登録済み Reference には `view: "full_body"` を用意し、Production Panel の既定値にしてある。
 - **Grip Orientation**: `GRIP_ORIENTATION_DEGREES`（main_hand `[-180, 0, 90]` /
   off_hand `[0, 0, 90]`、Blockbench ZYX degrees）。Source が `onehand_sword` /
   `gread_sword` / `spear` に与えている回転そのままで、Prompt が要求する「刃は local +Y」で
   作られた Asset を刃が前方（+X）を向く姿勢にする。Grip 取り付けの Asset にのみ適用し、
   位置・スケールは触らない。
+- **Coverage / 目標サイズ**（`TYPE_COVERAGE` in `base-measurements.ts`）: Fit Region の
+  Bounding Box に対して Asset がどれだけ大きいべきかの倍率。既定 1.0 だが、体の上に**被せる**
+  装備は部位と同寸だと小さく見える。Shoulder は **1.5**（0.2084 → 0.3126 m）。
+  Prompt の PROPORTION / GEOMETRY に実寸 m で出し、Validation の longestAxis レンジも
+  これに合わせて `[0.12, 0.24]`（= 0.2214 - 0.4429 m）に絞ってあるので、素の肩と同寸の成果物は
+  `scale_too_small` で検出される。値を変えるときは実際の生成物を根拠にすること。
 - **Geometry budget**: profile（low / medium / high）と、その裏の作業値
   （low 400/1200 tris・medium 1200/3000・high 3000/6000、max material 2/3/4）。
   Prompt が名乗るのは profile 名、Validation が測るのは数値で、後から数値だけ調整できる。

@@ -1,0 +1,61 @@
+{
+  "kind": "asset",
+  "metadata": {
+    "specVersion": 1,
+    "assetVersion": 2,
+    "id": "shoulder_left_001",
+    "name": "shoulder_left_001",
+    "type": "shoulder_left",
+    "bodyTypes": [
+      "adult"
+    ],
+    "attachment": {
+      "main": {
+        "assetPoint": "fixture_origin",
+        "characterSocket": "socket_shoulder_left"
+      }
+    },
+    "appearance": {
+      "paletteSlots": [
+        "primary",
+        "metal"
+      ]
+    },
+    "hairPolicy": null,
+    "hideParts": [],
+    "model": "model.glb",
+    "texture": "texture.png",
+    "thumbnail": "thumbnail.png",
+    "source": {
+      "format": "bbmodel",
+      "path": "source/shoulder_left_001.bbmodel"
+    }
+  },
+  "tags": [],
+  "favorite": false,
+  "validation": {
+    "status": "valid",
+    "checkedAt": "2026-09-13T01:38:36.445Z",
+    "issues": []
+  },
+  "versionHistory": [
+    {
+      "version": 1,
+      "previousVersion": null,
+      "updatedAt": "2026-09-13T01:27:04.123Z",
+      "note": "created"
+    },
+    {
+      "version": 2,
+      "previousVersion": 1,
+      "updatedAt": "2026-09-13T01:38:36.445Z",
+      "note": "updated from Asset Creator"
+    }
+  ],
+  "createdAt": "2026-09-13T01:27:04.123Z",
+  "updatedAt": "2026-09-13T01:38:36.445Z",
+  "files": {
+    "source": null
+  },
+  "origin": "creator"
+}

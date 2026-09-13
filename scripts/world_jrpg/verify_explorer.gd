@@ -22,20 +22,35 @@ func run() -> void:
 	actor.walking = true
 	actor._process(0)
 	check(player.current_animation == "walk", "Walking selects walk")
+	actor.locomotion_speed = 4.5
+	actor._process(0)
+	check(is_equal_approx(player.speed_scale, 1.0), "Normal walking keeps native cadence")
 	player.advance(0.2)
 	player.advance(0)
 	var head: Node3D = actor.model.find_child("ganmen", true, false)
 	var walk_head := head.transform
+	var walk_phase := player.current_animation_position / player.current_animation_length
 	actor.running = true
+	actor.locomotion_speed = 16.0
 	actor._process(0)
+	check(is_equal_approx(player.current_animation_position / player.current_animation_length, walk_phase), "Walk to run preserves stride phase")
+	check(is_equal_approx(player.speed_scale, 1.25), "Sprint cadence stays at a moderate 1.25x")
+	actor.locomotion_speed = 8.0
+	actor._process(0)
+	check(is_equal_approx(player.speed_scale, 0.625), "Partial-speed running slows the cadence without restarting")
 	player.advance(0.2)
 	player.advance(0)
 	check(player.current_animation == "run" and head.transform != walk_head, "Running selects original run pose")
+	var run_phase := player.current_animation_position / player.current_animation_length
+	actor.running = false
+	actor._process(0)
+	check(is_equal_approx(player.current_animation_position / player.current_animation_length, run_phase), "Run to walk preserves stride phase")
 	actor.walking = false
 	actor._process(0)
 	player.advance(0.2)
 	player.advance(0)
 	check(player.current_animation == "idle" and head.rotation.is_zero_approx(), "Stopping resets run-only head rotation")
+	check(is_equal_approx(player.speed_scale, 1.0), "Stopping resets playback speed")
 	actor.world_facing = Vector3.FORWARD
 	actor._process(0)
 	check((actor.model.basis * Vector3.RIGHT).is_equal_approx(Vector3.FORWARD), "3D model faces world movement direction")

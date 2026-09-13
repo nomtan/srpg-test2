@@ -40,7 +40,8 @@ export function ProductionPanel({ draft }: { draft: AssetDraft }) {
   const [message, setMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [refRole, setRefRole] = useState<ReferenceRole>("shape");
-  const [refView, setRefView] = useState<ReferenceView>("front");
+  // Whole-character concept art is the common case, so it is the default view.
+  const [refView, setRefView] = useState<ReferenceView>("full_body");
   const [refNote, setRefNote] = useState("");
 
   const effectiveBudget = budgetProfile ?? stored?.budgetProfile ?? TYPE_BUDGET[draft.type];
