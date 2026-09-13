@@ -59,6 +59,21 @@ async function readJson<T>(p: string): Promise<T | null> {
   try { return JSON.parse(await fs.readFile(p, "utf8")) as T; } catch { return null; }
 }
 
+/**
+ * Records are committed to Git, so the same logical record must always serialise byte-identically.
+ * Key order follows `order` first (the shape a reader expects), then any remaining keys sorted, so
+ * a field added by a newer version is preserved rather than dropped.
+ */
+function canonical<T extends object>(value: T, order: readonly string[]): Record<string, unknown> {
+  const source = value as Record<string, unknown>;
+  const rest = Object.keys(source).filter((k) => !order.includes(k)).sort();
+  const out: Record<string, unknown> = {};
+  for (const key of [...order, ...rest]) {
+    if (key in source && source[key] !== undefined) out[key] = source[key];
+  }
+  return out;
+}
+
 async function writeJson(p: string, value: unknown) {
   await fs.mkdir(path.dirname(p), { recursive: true });
   await fs.writeFile(p, JSON.stringify(value, null, 2) + "\n", "utf8");
@@ -85,12 +100,23 @@ async function withAssetFileFlags(id: string, rec: AssetRecord): Promise<AssetRe
     exists(path.join(dir, "texture.png")),
     exists(path.join(dir, "thumbnail.png")),
   ]);
-  return { ...rec, files: { ...rec.files, model, texture, thumbnail } };
+  return { ...rec, files: { source: rec.files?.source ?? null, model, texture, thumbnail } };
 }
+
+const ASSET_RECORD_KEYS = [
+  "kind", "metadata", "tags", "favorite", "validation", "versionHistory",
+  "createdAt", "updatedAt", "files", "origin",
+] as const;
 
 export async function writeAssetRecord(rec: AssetRecord): Promise<void> {
   await ensureDirs();
-  await writeJson(path.join(ASSETS_DIR, safeId(rec.metadata.id), "index.json"), rec);
+  // `files.model/texture/thumbnail` are recomputed from disk on every read, so persisting them
+  // only produces diff noise (and goes stale). `source` is real data and stays.
+  const persisted = { ...rec, files: { source: rec.files.source } };
+  await writeJson(
+    path.join(ASSETS_DIR, safeId(rec.metadata.id), "index.json"),
+    canonical(persisted, ASSET_RECORD_KEYS),
+  );
 }
 
 export async function deleteAssetDir(id: string): Promise<void> {
@@ -105,9 +131,21 @@ export async function readCharacterRecord(id: string): Promise<CharacterRecord |
   return { ...rec, thumbnail };
 }
 
+const CHARACTER_RECORD_KEYS = [
+  "kind", "recipe", "name", "tags", "favorite", "validation", "versionHistory",
+  "createdAt", "updatedAt", "export", "registry", "origin",
+] as const;
+
 export async function writeCharacterRecord(rec: CharacterRecord): Promise<void> {
   await ensureDirs();
-  await writeJson(path.join(CHARS_DIR, safeId(rec.recipe.id), "index.json"), rec);
+  // `thumbnail` is a disk check performed on read, so it must not reach the committed JSON.
+  // canonical() preserves unknown keys on purpose, so drop this one explicitly.
+  const persisted: Record<string, unknown> = { ...rec };
+  delete persisted.thumbnail;
+  await writeJson(
+    path.join(CHARS_DIR, safeId(rec.recipe.id), "index.json"),
+    canonical(persisted, CHARACTER_RECORD_KEYS),
+  );
 }
 
 export async function deleteCharacterDir(id: string): Promise<void> {

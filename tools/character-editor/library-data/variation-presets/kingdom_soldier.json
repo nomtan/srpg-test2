@@ -1,0 +1,195 @@
+{
+  "specVersion": 1,
+  "presetVersion": 1,
+  "id": "kingdom_soldier",
+  "name": "Kingdom Soldier",
+  "description": "kingdom / soldier の一般 Variation Preset。",
+  "faction": "kingdom",
+  "role": "soldier",
+  "suggestedRole": "soldier",
+  "bodyTypes": [
+    "adult"
+  ],
+  "genderExpression": "any",
+  "count": 20,
+  "seed": 12345,
+  "bodyScale": {
+    "profile": "normal",
+    "height": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "bodyWidth": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "headScale": {
+      "min": 0.97,
+      "max": 1.03
+    }
+  },
+  "shoulderMode": "symmetric",
+  "slots": {
+    "hair": {
+      "presence": "optional",
+      "probability": 0.85,
+      "tags": [
+        "human"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headgear": {
+      "presence": "optional",
+      "probability": 0.4,
+      "tags": [
+        "kingdom",
+        "soldier"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headAccessory": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "chestArmor": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "kingdom",
+        "soldier"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderLeft": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [
+        "kingdom"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderRight": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [
+        "kingdom"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "armArmor": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "gloves": {
+      "presence": "optional",
+      "probability": 0.4,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "waist": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "boots": {
+      "presence": "optional",
+      "probability": 0.6,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "mainHand": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "kingdom"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [
+        "sword",
+        "spear"
+      ],
+      "weights": {}
+    },
+    "offHand": {
+      "presence": "optional",
+      "probability": 0.4,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "back": {
+      "presence": "forbidden",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    }
+  },
+  "palette": {
+    "setId": "kingdom",
+    "slots": {
+      "primary": {
+        "mode": "set"
+      },
+      "secondary": {
+        "mode": "set"
+      },
+      "metal": {
+        "mode": "set"
+      },
+      "leather": {
+        "mode": "set"
+      },
+      "hair": {
+        "mode": "pool"
+      },
+      "skin": {
+        "mode": "pool"
+      }
+    }
+  },
+  "tags": [],
+  "idPrefix": "kingdom_soldier",
+  "namePrefix": "Kingdom Soldier",
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}

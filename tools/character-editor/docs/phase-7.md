@@ -33,8 +33,12 @@ library-data/
   registry.json                    RegistryFile  (Godot character registry のミラー)
 ```
 
-`library-data/` は開発マシンの作業インデックスなので `.gitignore` 済み（README のみ追跡）。
-リリース対象の portable asset は従来どおり `assets/character-assets/<category>/<id>/`。
+`library-data/` は **Git 管理下のソースデータ**（1レコード1 JSON + Asset バイナリ）。Asset 1件あたり
+25〜40 KB なので LFS は不要。`asset-production/*/incoming|rejected/` と再生成可能な Character Export
+だけ `.gitignore` で除外する。派生フィールド（`files.model/texture/thumbnail`、`thumbnail`）は
+読み込み時にディスクから再計算するため保存しない。`canonical()` でキー順を固定し、同じレコードは
+常に同じバイト列になる。
+リリース対象の portable asset は従来どおり `assets/character-assets/<category>/<id>/`（未書き出し）。
 一覧は Thumbnail(PNG) と index.json のみ読み込み、GLB は 3D Preview を開いた時だけ
 `GET /api/library/<kind>/<id>/file/<name>` で取得する（spec prompt 49）。
 
@@ -183,8 +187,8 @@ Duplicate は `nextDuplicateId()` で `…_001 → …_002`（連番が無けれ
 - 実ブラウザでの目視サインオフ未実施（typecheck / lint / `next build` PASS、
   `/api/library` の GET/PUT/DELETE・delete guard(409/force)・4 画面 HTTP 200 は
   ローカル dev サーバで確認済み）。
-- `library-data/` は `.gitignore` 済みの作業インデックス。チーム共有は Export Library Index
-  の JSON を手動でやり取りする前提。複数ユーザー同時編集は非対応（prompt 50）。
+- `library-data/` は Git 管理。共有は commit 経由で、履歴は `git log`。複数ユーザーの同時編集は
+  引き続き非対応（prompt 50）で、衝突は Git のマージで解決する前提。
 - Godot 側の registry.json 実読み込みコードは本 Phase では追加していない（editor 側で
   ミラーを書き出すところまで）。実際の Godot import 連携は次段階。
 - Version History は番号と時刻のみ。差分ビューアは無し。

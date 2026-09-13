@@ -158,6 +158,12 @@ sword_iron_001/
   すなわち**キャラクターの左は -Z、右は +Z**。Source のグループ名は左右が逆に付いており
   （`hand_left_te` が実際の右手）、`base-rig.ts` の `SOURCE_NODE_BY_SIDE` が物理的な左右から
   Source ノード名を解決する。Source の綴りは変更していない。
+- **Attachment Alignment**: `viewer/equipment/gripAlignment.ts`。Grip 取り付けの Asset は
+  Socket に「原点」ではなく**宣言された取り付け点**を合わせる。
+  - `attachment.main.assetPoint`（既定 `grip_main`）のノードがあれば、そのノードが Socket に来る
+  - 無い場合、Shield は **Bounding Box の中心**を Socket に合わせる（腕は盾の中心の裏に来るため）
+  - 無い場合、Weapon は原点のままにして警告する（Grip が無いこと自体が Validation の Error）
+  Asset を親に付ける前（＝Asset 自身のローカル空間）で測るため、Socket 側の姿勢に影響されない。
 - **Grip Orientation**: `GRIP_ORIENTATION_DEGREES`（main_hand `[-180, 0, 90]` /
   off_hand `[0, 0, 90]`、Blockbench ZYX degrees）。Source が `onehand_sword` /
   `gread_sword` / `spear` に与えている回転そのままで、Prompt が要求する「刃は local +Y」で

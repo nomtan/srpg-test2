@@ -5,7 +5,7 @@
 import { useMemo, useRef, useState } from "react";
 import { ASSET_TYPE_LABELS } from "@/domain/asset-spec";
 import { DEFAULT_PALETTE } from "@/domain/phase3";
-import { GRIP_ORIENTATION_DEGREES } from "@/domain/base-rig";
+import { gripAlignmentFor } from "@/viewer/equipment/gripAlignment";
 import { buildValidationSpec } from "@/domain/production-package";
 import { countIssues } from "@/domain/production-validation";
 import { buildRevisionPrompt } from "@/domain/production-revision";
@@ -233,11 +233,7 @@ export function JobDetail({ job, onChanged }: { job: ProductionJob; onChanged: (
             animationSpeed={1}
             animationLoop
             referenceHair="none"
-            gripRotationDeg={
-              job.draft.type === "weapon" ? GRIP_ORIENTATION_DEGREES.main_hand
-                : job.draft.type === "shield" ? GRIP_ORIENTATION_DEGREES.off_hand
-                  : null
-            }
+            gripAlignment={gripAlignmentFor(job.draft.type)}
             captureSignal={-1}
           />
         )}

@@ -1,0 +1,193 @@
+{
+  "specVersion": 1,
+  "presetVersion": 1,
+  "id": "elf_warrior",
+  "name": "Elf Warrior",
+  "description": "elf / soldier の一般 Variation Preset。",
+  "faction": "elf",
+  "role": "soldier",
+  "suggestedRole": "soldier",
+  "bodyTypes": [
+    "adult"
+  ],
+  "genderExpression": "any",
+  "count": 10,
+  "seed": 72345,
+  "bodyScale": {
+    "profile": "slightly_slim",
+    "height": {
+      "min": 0.97,
+      "max": 1.05
+    },
+    "bodyWidth": {
+      "min": 0.9,
+      "max": 0.99
+    },
+    "headScale": {
+      "min": 0.98,
+      "max": 1.04
+    }
+  },
+  "shoulderMode": "symmetric",
+  "slots": {
+    "hair": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "elf"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headgear": {
+      "presence": "optional",
+      "probability": 0.3,
+      "tags": [
+        "elf"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headAccessory": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "chestArmor": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "elf",
+        "light",
+        "medium"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderLeft": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [
+        "elf"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderRight": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [
+        "elf"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "armArmor": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "gloves": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "waist": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "boots": {
+      "presence": "optional",
+      "probability": 0.7,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "mainHand": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [
+        "sword",
+        "spear"
+      ],
+      "weights": {}
+    },
+    "offHand": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "back": {
+      "presence": "optional",
+      "probability": 0.25,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    }
+  },
+  "palette": {
+    "setId": "elf",
+    "slots": {
+      "primary": {
+        "mode": "set"
+      },
+      "secondary": {
+        "mode": "set"
+      },
+      "metal": {
+        "mode": "set"
+      },
+      "leather": {
+        "mode": "set"
+      },
+      "hair": {
+        "mode": "pool"
+      },
+      "skin": {
+        "mode": "pool"
+      }
+    }
+  },
+  "tags": [],
+  "idPrefix": "elf_warrior",
+  "namePrefix": "Elf Warrior",
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}

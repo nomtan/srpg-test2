@@ -7,7 +7,8 @@ import { PALETTE_SLOTS, type PaletteSlot } from "@/domain/constants";
 import { EXPORT_ASSET_SLOTS, type ExportAssetSlot } from "@/domain/character-export";
 import { SLOT_NODE_NAME, SLOT_SOCKET, clampScale } from "@/domain/builder-recipe";
 import { socketNodeName } from "@/features/asset-creator/base-parts";
-import { GRIP_ORIENTATION_DEGREES } from "@/domain/base-rig";
+import { applyGripAlignment, gripAlignmentFor } from "@/viewer/equipment/gripAlignment";
+import type { AssetType } from "@/domain/asset-spec";
 import type { AssetLibrary, AssetLibraryEntry } from "@/features/asset-library/library";
 import { modelUrl, textureUrl } from "@/features/asset-library/library";
 
@@ -15,23 +16,6 @@ export const BASE_MODEL_URL = "/generated-assets/base_body/model.glb";
 /** Rig nodes that must survive the round-trip (prompt 23). base_1 is rigid-node animated, no skin. */
 export const REQUIRED_RIG_NODES = ["ganmen", "dou", "kahanshi", "hand_right_te", "hand_left_te", "foot_right", "foot_left"] as const;
 const HEAD_NODE = "ganmen";
-
-/**
- * Grip-attached assets (main hand / off hand) take the project's standard weapon orientation.
- * Everything else keeps the socket's own frame. Blockbench authors Euler in ZYX order.
- */
-function applyGripOrientation(assetRoot: THREE.Object3D, slot: ExportAssetSlot): void {
-  const degrees = slot === "mainHand" ? GRIP_ORIENTATION_DEGREES.main_hand
-    : slot === "offHand" ? GRIP_ORIENTATION_DEGREES.off_hand
-      : null;
-  if (!degrees) return;
-  assetRoot.rotation.set(
-    THREE.MathUtils.degToRad(degrees[0]),
-    THREE.MathUtils.degToRad(degrees[1]),
-    THREE.MathUtils.degToRad(degrees[2]),
-    "ZYX",
-  );
-}
 
 export interface EquipmentPlacement {
   slot: ExportAssetSlot;
@@ -280,9 +264,26 @@ export async function buildCharacterScene(
       if (paletteSlot && PALETTE_SLOTS.includes(paletteSlot)) tint(assetRoot, palette[paletteSlot]);
     }
 
+    // Grip-attached assets are oriented and offset so their attachment point lands on the socket;
+    // do it while the asset is still detached so the anchor is measured in its own local space.
+    if (slot === "mainHand" || slot === "offHand") {
+      const alignment = gripAlignmentFor(
+        entry.metadata.type as AssetType,
+        slot === "mainHand" ? "main_hand" : "off_hand",
+        entry.metadata.attachment?.main?.assetPoint ?? "grip_main",
+      );
+      if (alignment) {
+        const placed = applyGripAlignment(assetRoot, alignment);
+        if (placed.placedBy === "center") {
+          notices.push(`${slot} (${entry.metadata.id}): ${alignment.attachmentNode} ノードが無いため、モデル中心を Socket に合わせました。`);
+        } else if (placed.placedBy === "origin") {
+          warnings.push(`${slot} (${entry.metadata.id}): ${alignment.attachmentNode} ノードがありません。Asset の原点をそのまま Socket に取り付けています。`);
+        }
+      }
+    }
+
     (parentNode ?? baseRoot).add(assetRoot);
     if (!parentNode) warnings.push(`Socket 親ノード (${parentName ?? socket}) が見つかりません。CharacterRoot 直下に取り付けました: ${slot}`);
-    applyGripOrientation(assetRoot, slot);
 
     assetRoot.updateWorldMatrix(true, true);
     const wp = assetRoot.getWorldPosition(new THREE.Vector3());

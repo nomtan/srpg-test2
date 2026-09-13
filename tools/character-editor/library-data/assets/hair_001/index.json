@@ -1,0 +1,57 @@
+{
+  "kind": "asset",
+  "metadata": {
+    "specVersion": 1,
+    "assetVersion": 1,
+    "id": "hair_001",
+    "name": "hair_001",
+    "type": "hair",
+    "bodyTypes": [
+      "adult"
+    ],
+    "attachment": {
+      "main": {
+        "assetPoint": "fixture_origin",
+        "characterSocket": "socket_hair"
+      }
+    },
+    "appearance": {
+      "paletteSlots": [
+        "hair"
+      ]
+    },
+    "hairPolicy": null,
+    "hideParts": [],
+    "model": "model.glb",
+    "texture": "texture.png",
+    "thumbnail": "thumbnail.png",
+    "source": {
+      "format": "bbmodel",
+      "path": "source/hair_oo1.bbmodel"
+    }
+  },
+  "tags": [],
+  "favorite": false,
+  "validation": {
+    "status": "valid",
+    "checkedAt": "2026-09-12T23:12:24.223Z",
+    "issues": []
+  },
+  "versionHistory": [
+    {
+      "version": 1,
+      "previousVersion": null,
+      "updatedAt": "2026-09-12T23:12:24.223Z",
+      "note": "created"
+    }
+  ],
+  "createdAt": "2026-09-12T23:12:24.223Z",
+  "updatedAt": "2026-09-12T23:12:24.223Z",
+  "files": {
+    "model": false,
+    "texture": false,
+    "thumbnail": false,
+    "source": null
+  },
+  "origin": "creator"
+}

@@ -1,7 +1,11 @@
 "use client";
 
-// Phase 4 persistence: saved assets live in localStorage so the Asset Creator and the
-// Character Builder share one library within a browser profile. No repository write.
+// Legacy Phase 4 persistence. Retired: library-data/ is the Git-tracked store now, and a
+// localStorage blob cannot be committed, reviewed or shared.
+//
+// The read path stays so assets saved before the switch keep showing up in the pickers instead of
+// vanishing; re-save them through "Save to Asset Library" to bring them into Git. Nothing writes
+// here any more.
 import { useSyncExternalStore } from "react";
 import type { AssetMetadata } from "@/domain/asset";
 
@@ -41,6 +45,7 @@ export function loadUserAssets(): UserAsset[] {
   return read();
 }
 
+/** @deprecated Nothing calls this: assets are saved to library-data/ via the Library API. */
 export function saveUserAsset(asset: UserAsset): { replaced: boolean } {
   const assets = read();
   const index = assets.findIndex((a) => a.metadata.id === asset.metadata.id);

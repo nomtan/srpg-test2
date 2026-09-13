@@ -1,0 +1,71 @@
+{
+  "kind": "asset",
+  "metadata": {
+    "specVersion": 1,
+    "assetVersion": 3,
+    "id": "headgear_001",
+    "name": "headgear_001",
+    "type": "headgear",
+    "bodyTypes": [
+      "adult"
+    ],
+    "attachment": {
+      "main": {
+        "assetPoint": "fixture_origin",
+        "characterSocket": "socket_headgear"
+      }
+    },
+    "appearance": {
+      "paletteSlots": [
+        "primary",
+        "secondary",
+        "metal"
+      ]
+    },
+    "hairPolicy": "hide",
+    "hideParts": [],
+    "model": "model.glb",
+    "texture": "texture.png",
+    "thumbnail": "thumbnail.png",
+    "source": {
+      "format": "bbmodel",
+      "path": "source/headgear_001.bbmodel"
+    }
+  },
+  "tags": [],
+  "favorite": false,
+  "validation": {
+    "status": "valid",
+    "checkedAt": "2026-09-12T23:32:27.291Z",
+    "issues": []
+  },
+  "versionHistory": [
+    {
+      "version": 1,
+      "previousVersion": null,
+      "updatedAt": "2026-09-12T23:28:54.574Z",
+      "note": "created"
+    },
+    {
+      "version": 2,
+      "previousVersion": 1,
+      "updatedAt": "2026-09-12T23:31:31.212Z",
+      "note": "updated from Asset Creator"
+    },
+    {
+      "version": 3,
+      "previousVersion": 2,
+      "updatedAt": "2026-09-12T23:32:27.291Z",
+      "note": "updated from Asset Creator"
+    }
+  ],
+  "createdAt": "2026-09-12T23:28:54.574Z",
+  "updatedAt": "2026-09-12T23:32:27.291Z",
+  "files": {
+    "model": true,
+    "texture": true,
+    "thumbnail": true,
+    "source": null
+  },
+  "origin": "creator"
+}

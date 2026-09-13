@@ -10,6 +10,9 @@ import { validateProduction } from "../src/domain/production-validation.ts";
 import { buildRevisionPrompt, revisionInstructions } from "../src/domain/production-revision.ts";
 import { BASE_CHARACTER, baseRegion, baseSocket } from "../src/domain/base-measurements.ts";
 import { TYPE_TEMPLATE_FILE } from "../src/prompt/templates/index.ts";
+import * as THREE from "three";
+import { readFileSync } from "node:fs";
+import { applyGripAlignment, gripAlignmentFor } from "../src/viewer/equipment/gripAlignment.ts";
 
 let failures = 0;
 const check = (name, condition, detail = "") => {
@@ -288,6 +291,61 @@ console.log("\n# Measurements");
     && baseSocket("socket_shoulder_left").worldPosition[2] < 0);
   check("character is ~2.5-3 heads tall", BASE_CHARACTER.headsTall > 2.4 && BASE_CHARACTER.headsTall < 3.4,
     String(BASE_CHARACTER.headsTall));
+}
+
+console.log("\n# Grip alignment (attachment point lands on the socket)");
+{
+  /** Rebuild a GLB's node tree as plain Object3D + Box meshes, so the math can run headless. */
+  function loadAsObject3D(file) {
+    const buf = readFileSync(file);
+    const json = JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString("utf8"));
+    const objects = json.nodes.map((n) => {
+      let object;
+      if (n.mesh !== undefined) {
+        const a = json.accessors[json.meshes[n.mesh].primitives[0].attributes.POSITION];
+        const size = a.min.map((v, i) => Math.max(a.max[i] - v, 1e-6));
+        object = new THREE.Mesh(new THREE.BoxGeometry(...size));
+        object.geometry.translate(...a.min.map((v, i) => v + size[i] / 2));
+      } else {
+        object = new THREE.Object3D();
+      }
+      object.name = n.name ?? "";
+      object.position.fromArray(n.translation ?? [0, 0, 0]);
+      return object;
+    });
+    json.nodes.forEach((n, i) => { for (const c of n.children ?? []) objects[i].add(objects[c]); });
+    const root = new THREE.Object3D();
+    root.name = "asset_root";
+    for (const i of json.scenes[json.scene ?? 0].nodes) root.add(objects[i]);
+    return root;
+  }
+
+  const shield = loadAsObject3D("public/demo-assets/demo_shield_001/model.glb");
+  const beforeCentre = new THREE.Box3().setFromObject(shield).getCenter(new THREE.Vector3());
+  const shieldPlaced = applyGripAlignment(shield, gripAlignmentFor("shield"));
+  const socket = new THREE.Object3D();
+  socket.add(shield);
+  socket.updateMatrixWorld(true);
+  const afterCentre = new THREE.Box3().setFromObject(shield).getCenter(new THREE.Vector3());
+
+  check("a shield without a grip node is centred on the socket", shieldPlaced.placedBy === "center");
+  check("the shield centre was off the socket before", beforeCentre.length() > 0.1, String(beforeCentre.length()));
+  check("the shield centre now sits on the socket", afterCentre.length() < 1e-6,
+    afterCentre.toArray().map((v) => v.toFixed(4)).join(", "));
+
+  const sword = loadAsObject3D("library-data/assets/sword_iron_001/model.glb");
+  const swordPlaced = applyGripAlignment(sword, gripAlignmentFor("weapon"));
+  const grip = sword.getObjectByName("grip_main");
+  const socket2 = new THREE.Object3D();
+  socket2.add(sword);
+  socket2.updateMatrixWorld(true);
+  const gripWorld = grip.getWorldPosition(new THREE.Vector3());
+  check("a weapon is placed by its grip_main node", swordPlaced.placedBy === "node");
+  check("grip_main sits exactly on the socket", gripWorld.length() < 1e-6,
+    gripWorld.toArray().map((v) => v.toFixed(4)).join(", "));
+  const bladeDir = new THREE.Vector3(0, 1, 0).applyQuaternion(sword.quaternion);
+  check("the standard grip rotation points the blade forward (+X)", bladeDir.x > 0.99,
+    bladeDir.toArray().map((v) => v.toFixed(3)).join(", "));
 }
 
 console.log(failures === 0 ? "\nAll production checks passed." : `\n${failures} check(s) failed.`);

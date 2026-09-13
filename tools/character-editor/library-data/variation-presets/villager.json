@@ -1,0 +1,187 @@
+{
+  "specVersion": 1,
+  "presetVersion": 1,
+  "id": "villager",
+  "name": "Villager",
+  "description": "civilian / villager の一般 Variation Preset。",
+  "faction": "civilian",
+  "role": "villager",
+  "suggestedRole": "villager",
+  "bodyTypes": [
+    "adult"
+  ],
+  "genderExpression": "any",
+  "count": 20,
+  "seed": 62345,
+  "bodyScale": {
+    "profile": "normal",
+    "height": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "bodyWidth": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "headScale": {
+      "min": 0.97,
+      "max": 1.03
+    }
+  },
+  "shoulderMode": "none",
+  "slots": {
+    "hair": {
+      "presence": "optional",
+      "probability": 0.95,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headgear": {
+      "presence": "optional",
+      "probability": 0.2,
+      "tags": [
+        "villager",
+        "common"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headAccessory": {
+      "presence": "optional",
+      "probability": 0.15,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "chestArmor": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [
+        "villager",
+        "common"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderLeft": {
+      "presence": "forbidden",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderRight": {
+      "presence": "forbidden",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "armArmor": {
+      "presence": "forbidden",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "gloves": {
+      "presence": "optional",
+      "probability": 0.2,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "waist": {
+      "presence": "optional",
+      "probability": 0.4,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "boots": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "mainHand": {
+      "presence": "optional",
+      "probability": 0.2,
+      "tags": [
+        "villager",
+        "common"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "offHand": {
+      "presence": "forbidden",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "back": {
+      "presence": "optional",
+      "probability": 0.2,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    }
+  },
+  "palette": {
+    "setId": "villager",
+    "slots": {
+      "primary": {
+        "mode": "set"
+      },
+      "secondary": {
+        "mode": "set"
+      },
+      "metal": {
+        "mode": "set"
+      },
+      "leather": {
+        "mode": "set"
+      },
+      "hair": {
+        "mode": "pool"
+      },
+      "skin": {
+        "mode": "pool"
+      }
+    }
+  },
+  "tags": [],
+  "idPrefix": "villager",
+  "namePrefix": "Villager",
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}

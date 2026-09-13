@@ -6,7 +6,10 @@
 Phase 7 で Asset / Character の一覧・検索・複製・バージョン管理・依存追跡・一括Validation・
 Stale検出・Batch Export・Registry Sync を行う管理レイヤーを追加しました
 （`/dashboard` `/assets` `/characters` `/validation`）。永続化は Next Route Handler 経由の
-`tools/character-editor/library-data/`。詳細は [Phase 7](./docs/phase-7.md) を参照してください。
+`tools/character-editor/library-data/` で、**1レコード1 JSON + Asset バイナリを Git 管理**します
+（詳細は [library-data/README](./library-data/README.md)）。Asset Creator の旧
+「Save Asset (localStorage)」は Git 管理できないため廃止しました。
+詳細は [Phase 7](./docs/phase-7.md) を参照してください。
 Phase 8 で Character Variation Generator（`/variations`）を追加しました。Variation Preset /
 Asset Tag / Weighted Random / Asset Compatibility / Deterministic Seed で Character Recipe を
 一括生成し、Preview・単体Reroll・項目Lock・完全一致Duplicate検出を経て Character Library へ

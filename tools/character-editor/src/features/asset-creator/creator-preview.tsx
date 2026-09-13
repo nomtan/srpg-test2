@@ -7,6 +7,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { AnimationController } from "@/viewer/animation/AnimationController";
 import type { CharacterSocket } from "@/domain/constants";
 import type { GlbStats } from "@/domain/asset-validation";
+import { applyGripAlignment, type GripAlignment } from "@/viewer/equipment/gripAlignment";
 import { socketNodeName } from "./base-parts";
 import { inspectGlb } from "./inspect";
 
@@ -25,8 +26,8 @@ export interface CreatorPreviewProps {
   animationLoop: boolean;
   /** Reference hair block at socket_hair to demo hairPolicy (spec section 13). */
   referenceHair: "none" | "shown" | "hidden";
-  /** Standard weapon orientation (Blockbench ZYX degrees) for grip-attached assets. */
-  gripRotationDeg?: readonly [number, number, number] | null;
+  /** Orientation + attachment-point alignment for grip-attached assets (weapon / shield). */
+  gripAlignment?: GripAlignment | null;
   captureSignal: number;
   onThumbnail?: (dataUrl: string) => void;
   onModelStats?: (stats: GlbStats | null) => void;
@@ -273,17 +274,11 @@ export function CreatorPreview(props: CreatorPreviewProps) {
           const socketNode = parentName
             ? state.baseRoot.getObjectByName(parentName)
             : null;
+          // Align while detached: the anchor is measured in the asset's own local space.
+          if (p.gripAlignment) applyGripAlignment(state.assetRoot, p.gripAlignment);
           (socketNode ?? state.baseRoot).add(state.assetRoot);
           if (!socketNode) {
             setStatus(`Socket 親ノード (${parentName ?? p.socket}) が見つかりません。ルートに取り付けました。`);
-          }
-          if (p.gripRotationDeg) {
-            state.assetRoot.rotation.set(
-              THREE.MathUtils.degToRad(p.gripRotationDeg[0]),
-              THREE.MathUtils.degToRad(p.gripRotationDeg[1]),
-              THREE.MathUtils.degToRad(p.gripRotationDeg[2]),
-              "ZYX",
-            );
           }
         } else {
           scene.add(state.assetRoot);

@@ -24,8 +24,10 @@ node TRS チャンネルとして `public/generated-assets/base_body/model.glb` 
 
 ## Asset 保存
 
-`localStorage`（`src/features/asset-library/user-assets.ts`）に metadata + data URL で保存し、
-`useMergedLibrary()` が静的 Library（base + demo）へ合流させる。リポジトリへは書かない。
+**Phase 10 で `localStorage` 保存は廃止した**。保存先は Git 管理下の `library-data/assets/<id>/`
+（Phase 7 の Library API）だけで、`src/features/asset-library/user-assets.ts` は既存データが
+消えないよう読み込みのみ残している。`useMergedLibrary()` が静的 Library（base + demo）、
+filesystem library、legacy localStorage を合流させる。
 併せて `asset.json` 単体 DL と store-only zip（`asset.json` / `model.glb` / `texture.png` /
 `thumbnail.png`）を出力できる。
 

@@ -1,0 +1,197 @@
+{
+  "specVersion": 1,
+  "presetVersion": 1,
+  "id": "empire_knight",
+  "name": "Empire Knight",
+  "description": "empire / knight の一般 Variation Preset。",
+  "faction": "empire",
+  "role": "knight",
+  "suggestedRole": "knight",
+  "bodyTypes": [
+    "adult"
+  ],
+  "genderExpression": "any",
+  "count": 8,
+  "seed": 42345,
+  "bodyScale": {
+    "profile": "slightly_large",
+    "height": {
+      "min": 1,
+      "max": 1.08
+    },
+    "bodyWidth": {
+      "min": 1,
+      "max": 1.1
+    },
+    "headScale": {
+      "min": 0.96,
+      "max": 1.02
+    }
+  },
+  "shoulderMode": "symmetric",
+  "slots": {
+    "hair": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [
+        "human"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headgear": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "empire",
+        "knight",
+        "heavy"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "headAccessory": {
+      "presence": "optional",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "chestArmor": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "empire",
+        "knight",
+        "heavy"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderLeft": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "empire",
+        "heavy"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "shoulderRight": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [
+        "empire",
+        "heavy"
+      ],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "armArmor": {
+      "presence": "optional",
+      "probability": 0.7,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "gloves": {
+      "presence": "optional",
+      "probability": 0.7,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "waist": {
+      "presence": "optional",
+      "probability": 0.5,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "boots": {
+      "presence": "optional",
+      "probability": 0.8,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "mainHand": {
+      "presence": "required",
+      "probability": 0.35,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [
+        "sword",
+        "great_sword"
+      ],
+      "weights": {}
+    },
+    "offHand": {
+      "presence": "optional",
+      "probability": 0.6,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    },
+    "back": {
+      "presence": "optional",
+      "probability": 0.3,
+      "tags": [],
+      "excludeTags": [],
+      "assetIds": [],
+      "weaponTypes": [],
+      "weights": {}
+    }
+  },
+  "palette": {
+    "setId": "empire",
+    "slots": {
+      "primary": {
+        "mode": "set"
+      },
+      "secondary": {
+        "mode": "set"
+      },
+      "metal": {
+        "mode": "set"
+      },
+      "leather": {
+        "mode": "set"
+      },
+      "hair": {
+        "mode": "pool"
+      },
+      "skin": {
+        "mode": "pool"
+      }
+    }
+  },
+  "tags": [],
+  "idPrefix": "empire_knight",
+  "namePrefix": "Empire Knight",
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}

@@ -1,0 +1,71 @@
+{
+  "kind": "asset",
+  "metadata": {
+    "specVersion": 1,
+    "assetVersion": 3,
+    "id": "sword_iron_001",
+    "name": "Iron Sword 01",
+    "type": "weapon",
+    "bodyTypes": [
+      "adult"
+    ],
+    "attachment": {
+      "main": {
+        "assetPoint": "grip_main",
+        "characterSocket": "socket_hand_right"
+      }
+    },
+    "appearance": {
+      "paletteSlots": [
+        "metal",
+        "leather",
+        "primary"
+      ]
+    },
+    "hairPolicy": null,
+    "hideParts": [],
+    "model": "model.glb",
+    "texture": "texture.png",
+    "thumbnail": "thumbnail.png",
+    "equipment": {
+      "slot": "main_hand",
+      "handling": "one_hand",
+      "animationSet": "onehand_sword",
+      "weaponType": "sword"
+    },
+    "tags": []
+  },
+  "tags": [],
+  "favorite": false,
+  "validation": {
+    "status": "valid",
+    "checkedAt": "2026-09-12T08:24:32.121Z",
+    "issues": []
+  },
+  "versionHistory": [
+    {
+      "version": 1,
+      "previousVersion": null,
+      "updatedAt": "2026-09-12T07:38:40.490Z",
+      "note": "created"
+    },
+    {
+      "version": 2,
+      "previousVersion": 1,
+      "updatedAt": "2026-09-12T07:42:03.369Z",
+      "note": "updated from Asset Creator"
+    },
+    {
+      "version": 3,
+      "previousVersion": 2,
+      "updatedAt": "2026-09-12T08:24:32.073Z",
+      "note": "metadata / files updated"
+    }
+  ],
+  "createdAt": "2026-09-12T07:38:40.490Z",
+  "updatedAt": "2026-09-12T08:24:32.121Z",
+  "files": {
+    "source": null
+  },
+  "origin": "creator"
+}

@@ -12,12 +12,11 @@ import {
   isWeapon, isSnakeCase, suggestId, type AssetDraft, type AssetType, type GripPoint,
 } from "@/domain/asset-spec";
 import { DEFAULT_PALETTE } from "@/domain/phase3";
-import { GRIP_ORIENTATION_DEGREES } from "@/domain/base-rig";
+import { gripAlignmentFor } from "@/viewer/equipment/gripAlignment";
 import { countByLevel, validateDraft, type GlbStats, type TextureStats, type ValidationItem } from "@/domain/asset-validation";
 import { buildPrompts } from "@/prompt/promptBuilder";
 import { BAKED_BASE_CLIPS, resolveAnimation } from "@/viewer/animation/animationMapping";
 import { useMergedLibrary } from "@/features/asset-library/use-library";
-import { saveUserAsset } from "@/features/asset-library/user-assets";
 import { CreatorLibrarySave } from "@/features/library/creator-save";
 import { ProductionPanel } from "@/features/production/production-panel";
 import { CreatorPreview } from "./creator-preview";
@@ -26,7 +25,6 @@ import { inspectImage } from "./inspect";
 import { createZip, dataUrlToBytes, downloadBlob } from "./zip";
 
 const ANIM_ROLES = ["idle", "walk", "run", "attack"] as const;
-const weaponOrShield = (type: AssetType) => type === "weapon" || type === "shield";
 
 export function CreatorScreen() {
   const library = useMergedLibrary();
@@ -50,7 +48,6 @@ export function CreatorScreen() {
   const [validation, setValidation] = useState<ValidationItem[] | null>(null);
   const [thumb, setThumb] = useState<string | null>(null);
   const [captureSignal, setCaptureSignal] = useState(-1);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [showHideParts, setShowHideParts] = useState(false);
 
   const modelInput = useRef<HTMLInputElement>(null);
@@ -119,10 +116,8 @@ export function CreatorScreen() {
   );
 
   const paletteColor = draft.paletteSlots[0] ? palette[draft.paletteSlots[0]] : null;
-  // Weapons / shields attach by a grip point, so the preview uses the standard weapon orientation.
-  const gripRotationDeg = weaponOrShield(draft.type)
-    ? (draft.type === "shield" ? GRIP_ORIENTATION_DEGREES.off_hand : GRIP_ORIENTATION_DEGREES.main_hand)
-    : null;
+  // Weapons / shields attach by a grip point, so the preview aligns that point to the socket.
+  const gripAlignment = gripAlignmentFor(draft.type);
   const referenceHair: "none" | "shown" | "hidden" =
     mode === "base" && HAIR_POLICY_TYPES.includes(draft.type)
       ? (draft.hairPolicy === "hide" ? "hidden" : "shown")
@@ -148,33 +143,6 @@ export function CreatorScreen() {
       setTimeout(() => setCopied(null), 1500);
     } catch {
       setCopied(null);
-    }
-  }
-
-  async function saveAsset() {
-    const items = validateDraft(draft, {
-      existingIds, model: glbStats, texture: textureStats,
-      baseSize: BASE_REST_SIZE_METERS, hasSourceFile: !!draft.sourceFileName,
-    });
-    setValidation(items);
-    if (items.some((i) => i.level === "error")) {
-      setSaveMsg("Error があります。修正してから保存してください。");
-      return;
-    }
-    const metadata = draftToAssetJson(draft);
-    const toDataUrl = (url: string | null | undefined) =>
-      url ? fetch(url).then((r) => r.blob()).then(blobToDataUrl) : Promise.resolve(undefined);
-    const [modelData, textureData, thumbData] = await Promise.all([
-      toDataUrl(model?.url), toDataUrl(textureFile?.url), Promise.resolve(thumb ?? undefined),
-    ]);
-    try {
-      const { replaced } = saveUserAsset({
-        metadata, model: modelData, texture: textureData, thumbnail: thumbData,
-        savedAt: new Date().toISOString(),
-      });
-      setSaveMsg(`${replaced ? "更新" : "保存"}しました: ${metadata.id} — Character Builder の Asset Library に表示されます。`);
-    } catch (error) {
-      setSaveMsg(error instanceof Error ? error.message : "保存に失敗しました。");
     }
   }
 
@@ -405,7 +373,7 @@ export function CreatorScreen() {
             animationSpeed={animSpeed}
             animationLoop={animLoop}
             referenceHair={referenceHair}
-            gripRotationDeg={gripRotationDeg}
+            gripAlignment={gripAlignment}
             captureSignal={captureSignal}
             onThumbnail={setThumb}
             onModelStats={setGlbStats}
@@ -499,11 +467,9 @@ export function CreatorScreen() {
       <section className="panel save-panel">
         <div className="panel-heading"><h2>Save Asset</h2></div>
         <div className="save-actions">
-          <button type="button" onClick={saveAsset}>Save Asset (localStorage)</button>
           <button type="button" onClick={downloadJson}>Download asset.json</button>
           <button type="button" onClick={downloadPackage}>Download Package (.zip)</button>
         </div>
-        {saveMsg && <p className="save-msg">{saveMsg}</p>}
         <CreatorLibrarySave
           metadata={draftToAssetJson(draft)}
           modelUrl={model?.url ?? null}
@@ -511,22 +477,16 @@ export function CreatorScreen() {
           thumbnail={thumb}
         />
         <p className="muted">
-          Phase 7: 「Save to Asset Library」は <code>library-data/assets/&lt;id&gt;/</code> に永続化し、Asset Library / Character Builder に即時反映します。
+          「Save to Asset Library」が唯一の保存先です。<code>library-data/assets/&lt;id&gt;/</code> に
+          <code>index.json</code> と GLB / Texture / Thumbnail を書き出し、Git 管理下に入ります。
+          Asset Library / Character Builder には即時反映されます。
         </p>
         <p className="muted">
-          Save Asset は localStorage に保存し、Character Builder と共有します。リポジトリへの書き込みは Phase 4 では行いません。
-          Package は <code>asset.json / model.glb / texture.png / thumbnail.png</code> をまとめた zip です。
+          Package は <code>asset.json / model.glb / texture.png / thumbnail.png</code> をまとめた zip で、
+          リポジトリ外へ持ち出す用です。旧「Save Asset (localStorage)」は Git 管理できないため廃止しました
+          （既存の localStorage 保存分は読み込みのみ継続します）。
         </p>
       </section>
     </>
   );
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
 }

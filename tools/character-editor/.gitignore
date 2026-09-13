@@ -4,6 +4,11 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 
-# Phase 7 library working index (keep README, ignore records + binaries)
-library-data/*
-!library-data/README.md
+# library-data/ is Git-tracked source data: one JSON per record plus the asset binaries
+# (model.glb / texture.png / thumbnail.png / .bbmodel). They are small — tens of KB per asset —
+# and reviewing them as part of a commit is the point.
+#
+# Only the transient sides stay out: AI deliveries that have not been approved, and anything the
+# tool can regenerate from a record.
+library-data/asset-production/*/incoming/
+library-data/asset-production/*/rejected/

@@ -1,0 +1,173 @@
+{
+  "specVersion": 1,
+  "updatedAt": "2026-09-12T01:00:57.854Z",
+  "sets": [
+    {
+      "id": "kingdom",
+      "name": "Kingdom",
+      "colors": {
+        "primary": [
+          "#263f70",
+          "#314f82",
+          "#1f3560"
+        ],
+        "secondary": [
+          "#d8d8d8",
+          "#a8a8a8",
+          "#c3c9d1"
+        ],
+        "metal": [
+          "#929292",
+          "#b0b0b0",
+          "#7f8a95"
+        ],
+        "leather": [
+          "#6b4a2f",
+          "#5a3b26",
+          "#7d5a3a"
+        ],
+        "hair": [],
+        "skin": []
+      }
+    },
+    {
+      "id": "empire",
+      "name": "Empire",
+      "colors": {
+        "primary": [
+          "#5c1f24",
+          "#71272c",
+          "#43171b"
+        ],
+        "secondary": [
+          "#2c2c30",
+          "#3c3c42",
+          "#1f1f23"
+        ],
+        "metal": [
+          "#8b8f96",
+          "#a3a7ad",
+          "#6f757d"
+        ],
+        "leather": [
+          "#4a2f21",
+          "#5d3c29",
+          "#38241a"
+        ],
+        "hair": [],
+        "skin": []
+      }
+    },
+    {
+      "id": "elf",
+      "name": "Elf",
+      "colors": {
+        "primary": [
+          "#2f5d46",
+          "#3b7256",
+          "#254c39"
+        ],
+        "secondary": [
+          "#d6cfae",
+          "#c2b994",
+          "#e3ddc4"
+        ],
+        "metal": [
+          "#b9ad7a",
+          "#cfc496",
+          "#9c9166"
+        ],
+        "leather": [
+          "#6e5a37",
+          "#836c44",
+          "#57462b"
+        ],
+        "hair": [
+          "#d9c38a",
+          "#b79b63",
+          "#cfd3d8",
+          "#8a6a3d"
+        ],
+        "skin": []
+      }
+    },
+    {
+      "id": "villager",
+      "name": "Villager",
+      "colors": {
+        "primary": [
+          "#7a6a4f",
+          "#8a7a5c",
+          "#6a5a42",
+          "#95795a"
+        ],
+        "secondary": [
+          "#c9bda3",
+          "#b3a68c",
+          "#ded4bd"
+        ],
+        "metal": [
+          "#8a8a8a",
+          "#9a9a9a"
+        ],
+        "leather": [
+          "#6b4a2f",
+          "#7d5a3a",
+          "#5a3b26"
+        ],
+        "hair": [],
+        "skin": []
+      }
+    },
+    {
+      "id": "bandit",
+      "name": "Bandit",
+      "colors": {
+        "primary": [
+          "#4a3a2c",
+          "#5b4736",
+          "#3a2d23",
+          "#63452c"
+        ],
+        "secondary": [
+          "#3c3a36",
+          "#4d4a44",
+          "#2b2a27"
+        ],
+        "metal": [
+          "#7d7d7d",
+          "#8f8f8f",
+          "#6a6a6a"
+        ],
+        "leather": [
+          "#4a2f21",
+          "#3a251a",
+          "#5d3c29"
+        ],
+        "hair": [],
+        "skin": []
+      }
+    }
+  ],
+  "skinPool": [
+    "#f3d3bd",
+    "#e8bda0",
+    "#d8aa85",
+    "#c08e6a",
+    "#a9734f",
+    "#8a5a3b",
+    "#6b4430"
+  ],
+  "hairPool": [
+    "#1d1613",
+    "#36251c",
+    "#4a3527",
+    "#6b4a2f",
+    "#8a6a3d",
+    "#b79b63",
+    "#d9c38a",
+    "#7a3b2a",
+    "#5a5a63",
+    "#cfd3d8"
+  ]
+}
