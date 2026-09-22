@@ -60,6 +60,16 @@ def main():
     common,_ = glb(ROOT/'assets/characters/_shared/animations/common_combat.glb')
     assert {a['name'] for a in common['animations']}=={'idle','walk','attack_melee','cast_magic','hit'}
     (ART/'portable_validation.json').write_text(json.dumps(portable,indent=2),encoding='utf-8')
+    godot = json.loads((ART/'godot_validation.json').read_text(encoding='utf-8'))
+    assert godot['passed'], 'Godot structural checks must pass before reporting'
+    acceptance = {'structural_checks_passed':True, 'visual_acceptance_passed':False,
+                  'ready_for_game_integration':False, 'ready_for_other_six_characters':False,
+                  'visual_review_report':'docs/asset/character_model_phase1_report.md',
+                  'unresolved':['robe/shoulder deformation', 'walk foot penetration',
+                                'neck seam and residual hair after head swap',
+                                'palette mask gaps and semantic leakage',
+                                'baked cape emblem remains under transparent overlay']}
+    (ART/'acceptance.json').write_text(json.dumps(acceptance,indent=2),encoding='utf-8')
     sheet('animations_contact_sheet.jpg',[
         [(key+'_'+clip,key+' / '+clip) for clip in ['idle','walk','attack_melee','cast_magic','hit']]
         for key in PATHS])

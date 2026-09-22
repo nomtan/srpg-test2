@@ -1,0 +1,32 @@
+{
+  "adventure": {
+    "raw_sha256_preserved": true,
+    "embedded_original_texture_preserved": true,
+    "body_meshes": 1,
+    "skeletons": 1,
+    "bones": 26,
+    "head_extra_skeletons": 0,
+    "per_character_animations": 0,
+    "socket_local_identity": true
+  },
+  "knight": {
+    "raw_sha256_preserved": true,
+    "embedded_original_texture_preserved": true,
+    "body_meshes": 1,
+    "skeletons": 1,
+    "bones": 26,
+    "head_extra_skeletons": 0,
+    "per_character_animations": 0,
+    "socket_local_identity": true
+  },
+  "black_mage": {
+    "raw_sha256_preserved": true,
+    "embedded_original_texture_preserved": true,
+    "body_meshes": 1,
+    "skeletons": 1,
+    "bones": 26,
+    "head_extra_skeletons": 0,
+    "per_character_animations": 0,
+    "socket_local_identity": true
+  }
+}

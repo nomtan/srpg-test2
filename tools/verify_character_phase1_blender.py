@@ -39,6 +39,8 @@ def load_actions():
 
 
 def render(scene,name):
+    if '--no-render' in sys.argv:
+        return
     scene.render.filepath = str(ART/(name+'.png'))
     bpy.ops.render.render(write_still=True)
 
@@ -67,8 +69,15 @@ def main():
             if action.slots: rig.animation_data.action_slot = action.slots[0]
             maximum = 0
             floors = []
+            initial_pose = None
+            changed = False
             for frame in [1, int(action.frame_range[1]*.25), int(action.frame_range[1]*.5), int(action.frame_range[1]*.75), int(action.frame_range[1])]:
                 scene.frame_set(frame)
+                pose = [value for pb in rig.pose.bones for row in pb.matrix_basis for value in row]
+                if initial_pose is None:
+                    initial_pose = pose
+                else:
+                    changed |= max(abs(a-b) for a,b in zip(initial_pose,pose))>1e-4
                 assert rig.pose.bones['Root'].location.length<1e-7
                 for part in ['Body','HeadBase']:
                     obj = scene.objects[part]
@@ -83,8 +92,9 @@ def main():
                             maximum=max(maximum,(mesh.vertices[i].co-mesh.vertices[j].co).length/old)
                     ev.to_mesh_clear()
             scene.frame_set(int(action.frame_range[1]*.25))
+            assert changed, (key,name,'Action did not animate the character')
             render(scene,key+'_'+name)
-            report[name] = {'max_edge_stretch':maximum, 'floor_range': [min(floors),max(floors)],'shared_action':True}
+            report[name] = {'max_edge_stretch':maximum, 'floor_range': [min(floors),max(floors)],'shared_action':True,'actual_pose_change':changed}
         rig.animation_data.action = None
         for pb in rig.pose.bones:
             pb.rotation_euler=(0,0,0)

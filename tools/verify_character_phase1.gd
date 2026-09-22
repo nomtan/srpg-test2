@@ -95,14 +95,20 @@ func run() -> void:
 			check(moved > 0, key + " actually animates " + clip)
 			motions[clip] = {"moving_bones": moved, "head_moved": not initial.is_equal_approx(skeleton.get_bone_global_pose(head_index))}
 		player.pause()
+		# Imported BoneAttachments receive their first deferred skeleton update
+		# after the process-frame signal. Allow initialization to settle first.
+		await process_frame
+		await process_frame
 		var sockets := {}
 		for label in ["HeadSocket", "WeaponSocket_R", "WeaponSocket_L"]:
 			sockets[label] = model.find_child(label, true, false) != null
 			check(sockets[label], key + " socket " + label)
 			var node := model.find_child(label,true,false) as Node3D
 			var bone: String = {"HeadSocket":"Head", "WeaponSocket_R":"Hand_R", "WeaponSocket_L":"Hand_L"}[label]
-			var expected_transform := skeleton.global_transform * skeleton.get_bone_global_pose(skeleton.find_bone(bone))
 			await process_frame
+			var expected_transform := skeleton.global_transform * skeleton.get_bone_global_pose(skeleton.find_bone(bone))
+			if not node.global_transform.is_equal_approx(expected_transform):
+				print("SOCKET_DIAGNOSTIC ", key, " ", label, " actual=", node.global_transform, " expected=", expected_transform)
 			check(node.global_transform.is_equal_approx(expected_transform), key + " socket bone frame " + label)
 		for other: String in SOURCES:
 			if other == key: continue

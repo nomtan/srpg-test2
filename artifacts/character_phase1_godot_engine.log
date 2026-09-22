@@ -35,8 +35,11 @@ PASS adventure in-place hit
 PASS adventure reuses hit
 PASS adventure actually animates hit
 PASS adventure socket HeadSocket
+PASS adventure socket bone frame HeadSocket
 PASS adventure socket WeaponSocket_R
+PASS adventure socket bone frame WeaponSocket_R
 PASS adventure socket WeaponSocket_L
+PASS adventure socket bone frame WeaponSocket_L
 PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
 PASS knight rigid head has no extra skeleton
 PASS adventure follows swapped knight
@@ -91,8 +94,11 @@ PASS knight in-place hit
 PASS knight reuses hit
 PASS knight actually animates hit
 PASS knight socket HeadSocket
+PASS knight socket bone frame HeadSocket
 PASS knight socket WeaponSocket_R
+PASS knight socket bone frame WeaponSocket_R
 PASS knight socket WeaponSocket_L
+PASS knight socket bone frame WeaponSocket_L
 PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
 PASS adventure rigid head has no extra skeleton
 PASS knight follows swapped adventure
@@ -147,8 +153,11 @@ PASS black_mage in-place hit
 PASS black_mage reuses hit
 PASS black_mage actually animates hit
 PASS black_mage socket HeadSocket
+PASS black_mage socket bone frame HeadSocket
 PASS black_mage socket WeaponSocket_R
+PASS black_mage socket bone frame WeaponSocket_R
 PASS black_mage socket WeaponSocket_L
+PASS black_mage socket bone frame WeaponSocket_L
 PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
 PASS adventure rigid head has no extra skeleton
 PASS black_mage follows swapped adventure

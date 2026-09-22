@@ -1,0 +1,14 @@
+{
+  "structural_checks_passed": true,
+  "visual_acceptance_passed": false,
+  "ready_for_game_integration": false,
+  "ready_for_other_six_characters": false,
+  "visual_review_report": "docs/asset/character_model_phase1_report.md",
+  "unresolved": [
+    "robe/shoulder deformation",
+    "walk foot penetration",
+    "neck seam and residual hair after head swap",
+    "palette mask gaps and semantic leakage",
+    "baked cape emblem remains under transparent overlay"
+  ]
+}
