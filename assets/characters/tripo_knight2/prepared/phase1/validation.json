@@ -1,0 +1,30 @@
+{
+  "source_sha256": "586698b309f36efe6fe5653a0d847d2c35531e340ea1ebc155830e7b6e74aad1",
+  "source_image_sha256": "6e052cc7e125a437fe434b60aa3591f1f3edced21f1f521a886659a959f23382",
+  "source_vertices": 33751,
+  "body_vertices": 25635,
+  "head_vertices": 8788,
+  "body_triangles": 31595,
+  "head_triangles": 11041,
+  "materials": 1,
+  "bones": 26,
+  "seam_blender_z": 0.55,
+  "fit_displacement_max": 0.143804917587073,
+  "fit_displacement_mean": 0.04001914239830852,
+  "palette": {
+    "resolution": [
+      512,
+      512
+    ],
+    "channel_pixels": [
+      29201,
+      14701,
+      0
+    ],
+    "cape_pixels": 14807,
+    "method": "conservative UV triangle raster + clothing color labels; visual review required"
+  },
+  "actions_in_character": 0,
+  "weight_source": "existing Tripo + local cloth correction",
+  "status": "structural pilot; see visual acceptance report"
+}

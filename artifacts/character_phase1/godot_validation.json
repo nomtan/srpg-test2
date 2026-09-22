@@ -1,0 +1,95 @@
+{
+  "characters": {
+    "adventure": {
+      "bones": 26,
+      "clips": {
+        "attack_melee": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "cast_magic": {
+          "head_moved": false,
+          "moving_bones": 6
+        },
+        "hit": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "idle": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "walk": {
+          "head_moved": false,
+          "moving_bones": 12
+        }
+      },
+      "sockets": {
+        "HeadSocket": true,
+        "WeaponSocket_L": true,
+        "WeaponSocket_R": true
+      }
+    },
+    "black_mage": {
+      "bones": 26,
+      "clips": {
+        "attack_melee": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "cast_magic": {
+          "head_moved": false,
+          "moving_bones": 6
+        },
+        "hit": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "idle": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "walk": {
+          "head_moved": false,
+          "moving_bones": 12
+        }
+      },
+      "sockets": {
+        "HeadSocket": true,
+        "WeaponSocket_L": true,
+        "WeaponSocket_R": true
+      }
+    },
+    "knight": {
+      "bones": 26,
+      "clips": {
+        "attack_melee": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "cast_magic": {
+          "head_moved": false,
+          "moving_bones": 6
+        },
+        "hit": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "idle": {
+          "head_moved": true,
+          "moving_bones": 15
+        },
+        "walk": {
+          "head_moved": false,
+          "moving_bones": 12
+        }
+      },
+      "sockets": {
+        "HeadSocket": true,
+        "WeaponSocket_L": true,
+        "WeaponSocket_R": true
+      }
+    }
+  },
+  "passed": true
+}

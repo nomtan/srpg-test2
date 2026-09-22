@@ -1,0 +1,161 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+PASS GLB import res://assets/characters/_shared/animations/common_combat.glb
+ ┖╴common_combat
+    ┠╴MasterRig
+    ┃  ┖╴Skeleton3D
+    ┃     ┖╴@PhysicalBoneSimulator3D@2
+    ┖╴AnimationPlayer
+
+PASS shared animation player exists
+PASS shared clip idle
+PASS shared clip walk
+PASS shared clip attack_melee
+PASS shared clip cast_magic
+PASS shared clip hit
+PASS palette/emblem shader loaded
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS adventure has one skeleton
+PASS adventure 26 bones
+PASS adventure in-place idle
+PASS adventure reuses idle
+PASS adventure actually animates idle
+PASS adventure in-place walk
+PASS adventure reuses walk
+PASS adventure actually animates walk
+PASS adventure in-place attack_melee
+PASS adventure reuses attack_melee
+PASS adventure actually animates attack_melee
+PASS adventure in-place cast_magic
+PASS adventure reuses cast_magic
+PASS adventure actually animates cast_magic
+PASS adventure in-place hit
+PASS adventure reuses hit
+PASS adventure actually animates hit
+PASS adventure socket HeadSocket
+PASS adventure socket WeaponSocket_R
+PASS adventure socket WeaponSocket_L
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS knight rigid head has no extra skeleton
+PASS adventure follows swapped knight
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/head_default.glb
+PASS black_mage rigid head has no extra skeleton
+PASS adventure follows swapped black_mage
+PASS adventure original albedo imported
+PASS adventure palette mask imported
+PASS adventure independent primary/secondary
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS knight has one skeleton
+PASS knight 26 bones
+PASS knight shared bind 0
+PASS knight shared bind 1
+PASS knight shared bind 2
+PASS knight shared bind 3
+PASS knight shared bind 4
+PASS knight shared bind 5
+PASS knight shared bind 6
+PASS knight shared bind 7
+PASS knight shared bind 8
+PASS knight shared bind 9
+PASS knight shared bind 10
+PASS knight shared bind 11
+PASS knight shared bind 12
+PASS knight shared bind 13
+PASS knight shared bind 14
+PASS knight shared bind 15
+PASS knight shared bind 16
+PASS knight shared bind 17
+PASS knight shared bind 18
+PASS knight shared bind 19
+PASS knight shared bind 20
+PASS knight shared bind 21
+PASS knight shared bind 22
+PASS knight shared bind 23
+PASS knight shared bind 24
+PASS knight shared bind 25
+PASS knight in-place idle
+PASS knight reuses idle
+PASS knight actually animates idle
+PASS knight in-place walk
+PASS knight reuses walk
+PASS knight actually animates walk
+PASS knight in-place attack_melee
+PASS knight reuses attack_melee
+PASS knight actually animates attack_melee
+PASS knight in-place cast_magic
+PASS knight reuses cast_magic
+PASS knight actually animates cast_magic
+PASS knight in-place hit
+PASS knight reuses hit
+PASS knight actually animates hit
+PASS knight socket HeadSocket
+PASS knight socket WeaponSocket_R
+PASS knight socket WeaponSocket_L
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS adventure rigid head has no extra skeleton
+PASS knight follows swapped adventure
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/head_default.glb
+PASS black_mage rigid head has no extra skeleton
+PASS knight follows swapped black_mage
+PASS knight original albedo imported
+PASS knight palette mask imported
+PASS knight independent primary/secondary
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/body.glb
+PASS black_mage has one skeleton
+PASS black_mage 26 bones
+PASS black_mage shared bind 0
+PASS black_mage shared bind 1
+PASS black_mage shared bind 2
+PASS black_mage shared bind 3
+PASS black_mage shared bind 4
+PASS black_mage shared bind 5
+PASS black_mage shared bind 6
+PASS black_mage shared bind 7
+PASS black_mage shared bind 8
+PASS black_mage shared bind 9
+PASS black_mage shared bind 10
+PASS black_mage shared bind 11
+PASS black_mage shared bind 12
+PASS black_mage shared bind 13
+PASS black_mage shared bind 14
+PASS black_mage shared bind 15
+PASS black_mage shared bind 16
+PASS black_mage shared bind 17
+PASS black_mage shared bind 18
+PASS black_mage shared bind 19
+PASS black_mage shared bind 20
+PASS black_mage shared bind 21
+PASS black_mage shared bind 22
+PASS black_mage shared bind 23
+PASS black_mage shared bind 24
+PASS black_mage shared bind 25
+PASS black_mage in-place idle
+PASS black_mage reuses idle
+PASS black_mage actually animates idle
+PASS black_mage in-place walk
+PASS black_mage reuses walk
+PASS black_mage actually animates walk
+PASS black_mage in-place attack_melee
+PASS black_mage reuses attack_melee
+PASS black_mage actually animates attack_melee
+PASS black_mage in-place cast_magic
+PASS black_mage reuses cast_magic
+PASS black_mage actually animates cast_magic
+PASS black_mage in-place hit
+PASS black_mage reuses hit
+PASS black_mage actually animates hit
+PASS black_mage socket HeadSocket
+PASS black_mage socket WeaponSocket_R
+PASS black_mage socket WeaponSocket_L
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS adventure rigid head has no extra skeleton
+PASS black_mage follows swapped adventure
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS knight rigid head has no extra skeleton
+PASS black_mage follows swapped knight
+PASS black_mage original albedo imported
+PASS black_mage palette mask imported
+PASS black_mage independent primary/secondary
+PHASE1_GODOT_COMPLETE true

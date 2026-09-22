@@ -1,0 +1,92 @@
+{
+  "adventure": {
+    "source_sha256": "30f5d3c29d850dc7858f41b04e0b7aee3f20071ba13048ddf467e65636dacc2a",
+    "source_image_sha256": "2cf4001107aa4cce762fa07f16103291d76470ef7045016f0abfab3ef8a8a64d",
+    "source_vertices": 33415,
+    "body_vertices": 19799,
+    "head_vertices": 14332,
+    "body_triangles": 22997,
+    "head_triangles": 16312,
+    "materials": 1,
+    "bones": 26,
+    "seam_blender_z": 0.55,
+    "fit_displacement_max": 0.20050069266066448,
+    "fit_displacement_mean": 0.011310949774697855,
+    "palette": {
+      "resolution": [
+        512,
+        512
+      ],
+      "channel_pixels": [
+        5819,
+        25911,
+        0
+      ],
+      "cape_pixels": 14680,
+      "method": "conservative UV triangle raster + clothing color labels; visual review required"
+    },
+    "actions_in_character": 0,
+    "weight_source": "spatial fallback (raw has no rig)",
+    "status": "structural pilot; see visual acceptance report"
+  },
+  "knight": {
+    "source_sha256": "586698b309f36efe6fe5653a0d847d2c35531e340ea1ebc155830e7b6e74aad1",
+    "source_image_sha256": "6e052cc7e125a437fe434b60aa3591f1f3edced21f1f521a886659a959f23382",
+    "source_vertices": 33751,
+    "body_vertices": 25635,
+    "head_vertices": 8788,
+    "body_triangles": 31595,
+    "head_triangles": 11041,
+    "materials": 1,
+    "bones": 26,
+    "seam_blender_z": 0.55,
+    "fit_displacement_max": 0.143804917587073,
+    "fit_displacement_mean": 0.04001914239830852,
+    "palette": {
+      "resolution": [
+        512,
+        512
+      ],
+      "channel_pixels": [
+        29201,
+        14701,
+        0
+      ],
+      "cape_pixels": 14807,
+      "method": "conservative UV triangle raster + clothing color labels; visual review required"
+    },
+    "actions_in_character": 0,
+    "weight_source": "existing Tripo + local cloth correction",
+    "status": "structural pilot; see visual acceptance report"
+  },
+  "black_mage": {
+    "source_sha256": "d5d1d39fe9f2b1a30342fbe3c2402a26a2ec1fcc33da9a6af16148394aadb906",
+    "source_image_sha256": "7ebb4ca3a2b82ca71b636e9f6f85e4e5620d7cf410bffd2fc9d01504a069a085",
+    "source_vertices": 34880,
+    "body_vertices": 21413,
+    "head_vertices": 16167,
+    "body_triangles": 25050,
+    "head_triangles": 20524,
+    "materials": 1,
+    "bones": 26,
+    "seam_blender_z": 0.55,
+    "fit_displacement_max": 0.4469278952206068,
+    "fit_displacement_mean": 0.0920506216930036,
+    "palette": {
+      "resolution": [
+        512,
+        512
+      ],
+      "channel_pixels": [
+        18805,
+        16488,
+        0
+      ],
+      "cape_pixels": 0,
+      "method": "conservative UV triangle raster + clothing color labels; visual review required"
+    },
+    "actions_in_character": 0,
+    "weight_source": "spatial fallback (raw has no rig)",
+    "status": "structural pilot; see visual acceptance report"
+  }
+}

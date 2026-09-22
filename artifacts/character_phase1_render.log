@@ -1,0 +1,35 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+PASS GLB import res://assets/characters/_shared/animations/common_combat.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_black_mage/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_adventure/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/body.glb
+PASS GLB import res://assets/characters/tripo_knight2/prepared/phase1/head_default.glb
+PHASE1_SHADER_CAPTURES_COMPLETE

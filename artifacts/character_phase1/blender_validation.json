@@ -1,0 +1,128 @@
+{
+  "adventure": {
+    "walk": {
+      "max_edge_stretch": 5.059817518842543,
+      "floor_range": [
+        -0.03155858814716339,
+        4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "idle": {
+      "max_edge_stretch": 3.127991719296338,
+      "floor_range": [
+        4.6566128730773926e-09,
+        4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "hit": {
+      "max_edge_stretch": 3.160126645282698,
+      "floor_range": [
+        4.6566128730773926e-09,
+        4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "cast_magic": {
+      "max_edge_stretch": 3.1248339038187134,
+      "floor_range": [
+        4.6566128730773926e-09,
+        4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "attack_melee": {
+      "max_edge_stretch": 3.2020348833684436,
+      "floor_range": [
+        4.6566128730773926e-09,
+        4.6566128730773926e-09
+      ],
+      "shared_action": true
+    }
+  },
+  "knight": {
+    "walk": {
+      "max_edge_stretch": 6.85695371680373,
+      "floor_range": [
+        -0.01603216677904129,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "idle": {
+      "max_edge_stretch": 4.164058871849349,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "hit": {
+      "max_edge_stretch": 4.021065930416718,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "cast_magic": {
+      "max_edge_stretch": 4.021065930416718,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "attack_melee": {
+      "max_edge_stretch": 4.599172626298391,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    }
+  },
+  "black_mage": {
+    "walk": {
+      "max_edge_stretch": 14.651362404548843,
+      "floor_range": [
+        -0.00813319906592369,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "idle": {
+      "max_edge_stretch": 14.7330476888839,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "hit": {
+      "max_edge_stretch": 14.630463205473417,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "cast_magic": {
+      "max_edge_stretch": 14.629344561197989,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    },
+    "attack_melee": {
+      "max_edge_stretch": 14.629344561197989,
+      "floor_range": [
+        -4.6566128730773926e-09,
+        -4.6566128730773926e-09
+      ],
+      "shared_action": true
+    }
+  }
+}
