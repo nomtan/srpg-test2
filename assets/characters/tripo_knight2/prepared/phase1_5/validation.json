@@ -4,9 +4,9 @@
   "source_pose_reconstruction_max_error_m": 3.8743019104003906e-07,
   "a_to_t_only_max_displacement_m": 0.13990649974582176,
   "body_vertices": 25612,
-  "head_vertices": 5528,
+  "head_vertices": 5562,
   "body_triangles": 31540,
-  "head_triangles": 10779,
+  "head_triangles": 11033,
   "bones": [
     {
       "name": "Root",
@@ -1053,8 +1053,8 @@
   "neck_overlap_m": 0.015,
   "combination_offsets": {},
   "palette": {
-    "primary_pixels": 143049,
-    "secondary_pixels": 34266,
+    "primary_pixels": 127066,
+    "secondary_pixels": 27974,
     "supports_emblem": true,
     "resolution": [
       1024,

@@ -102,8 +102,8 @@ func pose(item: Dictionary,clip: String,fraction: float) -> void:
 func capture(name: String) -> void:
 	if not screenshots: return
 	# Allow uniform and visibility changes through both scene and render updates.
-	await process_frame
-	await process_frame
+	for frame in range(8):
+		await process_frame
 	await RenderingServer.frame_post_draw
 	var path:=ProjectSettings.globalize_path(OUT+name+".png")
 	check(root.get_texture().get_image().save_png(path)==OK,"capture "+name)
@@ -159,6 +159,9 @@ func run() -> void:
 		await pose(item,"idle",0.0)
 		item.head.visible=false
 		await capture(key+"_body_only")
+		item.model.rotation.y=PI
+		await capture(key+"_body_only_back")
+		item.model.rotation.y=0
 		item.head.visible=true
 		for variant in range(4):
 			item.material.set_shader_parameter("change_primary",variant in [1,3])
@@ -181,6 +184,8 @@ func run() -> void:
 			var item:=actor(body,head)
 			await pose(item,"idle",.25)
 			await capture(body+"_with_"+head)
+			await pose(item,"hit",.5)
+			await capture(body+"_with_"+head+"_hit")
 			item.model.free()
 	var file:=FileAccess.open(OUT+"godot_validation.json",FileAccess.WRITE)
 	file.store_string(JSON.stringify({"passed":not failed,"characters":results,"rendered":screenshots},"  "))

@@ -1,5 +1,5 @@
 {
-  "changed_pixels": 43890,
-  "method": "cloth-only harmonic patch from surrounding original blue; raw retained",
+  "changed_pixels": 45576,
+  "method": "selected cloth panel repaint, original blue palette and continuous object-space fold shading; raw retained",
   "outside_selected_region_changed": false
 }

@@ -91,9 +91,9 @@ def semantic_head(mesh,key,pixels):
     r,g,b=rgb.T
     hue,sat,val=hsv(rgb)
     if key=='adventure':
-        scarf=(r>g*2.2)&(b<r*.42)
+        scarf=(r>g*1.65)&(b<r*.48)
         green=(hue>.17)&(hue<.40)&(sat>.12)
-        selected=(z>.588)|((z>.544)&~scarf&~green)
+        selected=(z>.615)|((z>.544)&~scarf&~green)
     elif key=='knight':
         blue=(b>r*1.45)&(b>g*1.2)&(sat>.40)
         selected=(z>.614)|((z>.586)&~blue&(abs(x)<.19))
@@ -105,7 +105,8 @@ def semantic_head(mesh,key,pixels):
         low_tress=((z>.395)&((abs(x)>.11)|((y>.03)&(z>.442)))&hair)|side_tress
         face=(z>.465)&(y<-.055)&(abs(x)<.155)
         hat_edge=(z>.475)&(hue>.65)&(hue<.88)&((abs(x)>.18)|(abs(y)>.17))
-        selected=(z>.475)|low_tress|face|hat_edge
+        back_tress=(y>.045)&(z>.435)&~purple
+        selected=(z>.475)|low_tress|face|hat_edge|back_tress
     # Smooth only ambiguous boundary faces; preserve hard clothing-color vetoes.
     by_vertex={}
     for p in mesh.data.polygons:
@@ -350,10 +351,11 @@ def neck_overlap(head,key,rig):
     p=PROFILES[key]
     z=p['head']
     mat=bpy.data.materials.new('NeckOverlapSkin')
-    mat.diffuse_color=(.72,.47,.32,1)
+    skin=(.14,.17,.23,1) if key=='knight' else (.95,.72,.40,1)
+    mat.diffuse_color=skin
     mat.use_nodes=True
     bsdf=mat.node_tree.nodes.get('Principled BSDF')
-    bsdf.inputs['Base Color'].default_value=(.72,.47,.32,1)
+    bsdf.inputs['Base Color'].default_value=skin
     bsdf.inputs['Roughness'].default_value=1
     head.data.materials.append(mat)
     bm=bmesh.new()
@@ -361,24 +363,82 @@ def neck_overlap(head,key,rig):
     # Weld only coincident seam duplicates to identify the actual cut boundary;
     # per-corner UVs are retained. Close the neck interior, not eyes or hat gaps.
     bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=1e-6)
-    boundary=[e for e in bm.edges if e.is_boundary and all(v.co.z<z+.075 for v in e.verts)]
-    if boundary:
-        caps=bmesh.ops.holes_fill(bm,edges=boundary,sides=0)['faces']
-        head['neck_cap_faces']=len(caps)
-        for face in caps: face.material_index=len(head.data.materials)-1
-        bmesh.ops.recalc_face_normals(bm,faces=caps)
+    if key in ('adventure','knight'):
+        # Refine only the already semantically separated neck/helmet rim.
+        # Mage is explicitly excluded so its low hair is never plane-trimmed.
+        rim=z+(.020 if key=='adventure' else -.015)
+        bmesh.ops.bisect_plane(bm,geom=list(bm.verts)+list(bm.edges)+list(bm.faces),
+            plane_co=(0,0,rim),plane_no=(0,0,1),dist=1e-7,clear_inner=True)
+        bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=1e-6)
+    else:
+        rim=z+.006
+    boundary={e for e in bm.edges if e.is_boundary}
+    caps=[]
+    while boundary:
+        seed=boundary.pop(); group={seed}; pending=[seed]
+        while pending:
+            edge=pending.pop()
+            for v in edge.verts:
+                for other in v.link_edges:
+                    if other in boundary:
+                        boundary.remove(other); group.add(other); pending.append(other)
+        vertices={v for e in group for v in e.verts}
+        if key in ('adventure','knight') and len(group)>50 and min(v.co.z for v in vertices)<z+.075:
+            for v in vertices: v.co.z=rim
+            caps.extend(bmesh.ops.holes_fill(bm,edges=list(group),sides=0)['faces'])
+        elif key=='black_mage' and len(group)>50 and min(v.co.z for v in vertices)<z+.075:
+            # A non-planar 300-edge n-gon triangulates through the chin. Close
+            # the seam with an explicit inward fan instead of a flat n-gon.
+            for _ in range(4):
+                updated={}
+                for v in vertices:
+                    adjacent=[e.other_vert(v) for e in v.link_edges if e in group]
+                    if len(adjacent)==2:
+                        updated[v]=v.co*.65+(adjacent[0].co+adjacent[1].co)*.175
+                for v,co in updated.items(): v.co=co
+            center=bm.verts.new((0,.015,z-.015))
+            ring={}
+            lower={}
+            for v in vertices:
+                angle=math.atan2((v.co.y-.015)/.075,v.co.x/.070)
+                ring[v]=bm.verts.new((.070*math.cos(angle),.015+.075*math.sin(angle),z-.015))
+                lower[v]=bm.verts.new((v.co.x,v.co.y,z-.015)) if v.co.z>z-.015 else v
+            for edge in group:
+                original_loop=edge.link_loops[0]
+                a,b=original_loop.vert,original_loop.link_loop_next.vert
+                # Extend boundary colors downward before closing the underside.
+                # A direct high-back-to-center fan can cut through the face.
+                wall_vertices=list(dict.fromkeys((b,a,lower[a],lower[b])))
+                if len(wall_vertices)>=3:
+                    wall=bm.faces.new(wall_vertices)
+                    wall.material_index=original_loop.face.material_index
+                    uv_layer=bm.loops.layers.uv.active
+                    ua=original_loop[uv_layer].uv.copy()
+                    ub=original_loop.link_loop_next[uv_layer].uv.copy()
+                    for loop in wall.loops:
+                        loop[uv_layer].uv=ua if loop.vert in (a,lower[a]) else ub
+                caps.append(bm.faces.new((lower[b],lower[a],ring[a],ring[b])))
+                caps.append(bm.faces.new((ring[b],ring[a],center)))
+        else:
+            # Preserve original small eye/accessory openings above the neck.
+            if max(v.co.z for v in vertices)<z+.04:
+                caps.extend(bmesh.ops.holes_fill(bm,edges=list(group),sides=0)['faces'])
+    head['neck_cap_faces']=len(caps)
+    for face in caps: face.material_index=len(head.data.materials)-1
+    # Keep original face winding (especially disconnected eye surfaces).
+    # New ring faces inherit their boundary orientation from the source face.
     bm.to_mesh(head.data)
     bm.free()
-    bpy.ops.mesh.primitive_cylinder_add(vertices=32,radius=1,depth=1,location=(0,.015,z+.006))
-    plug=bpy.context.object
-    plug.name='NeckOverlap'
-    plug.scale=(.07,.075,.042)
-    bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
-    plug.data.materials.append(mat)
-    # The neck plug extends 15mm below the socket; body-specific offsets are zero.
-    activate(head)
-    plug.select_set(True)
-    bpy.ops.object.join()
+    # The connected neck ring extends 15mm below the socket. A separate sphere
+    # would intersect the chin cap and produce visible overlapping surfaces.
+    if key in ('adventure','knight'):
+        bottom=z-.015
+        bpy.ops.mesh.primitive_cylinder_add(vertices=48,radius=1,depth=max(.008,rim-bottom+.006),location=(0,.015,(rim+bottom)/2))
+        plug=bpy.context.object
+        plug.scale=(.065,.075,1)
+        bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
+        plug.data.materials.append(mat)
+        activate(head);plug.select_set(True);bpy.ops.object.join()
     head.parent=rig
     head.matrix_world=Matrix.Identity(4)
     head.vertex_groups.clear()
@@ -395,6 +455,8 @@ def raster_regions(body,key,pixels,out):
     secondary_region=np.zeros((size,size),dtype=bool)
     caperegion=np.zeros((size,size),dtype=bool)
     cleanregion=np.zeros((size,size),dtype=bool)
+    clothshade=np.ones((size,size),dtype=np.float32)
+    hemregion=np.zeros((size,size),dtype=bool)
     uv=body.data.uv_layers.active.data
     body.data.calc_loop_triangles()
     for tri in body.data.loop_triangles:
@@ -419,15 +481,23 @@ def raster_regions(body,key,pixels,out):
         if key=='adventure' and ((z>.49 and abs(x)<.20) or (y>.045 and z>.18)):
             secondary_region[yy[inside],xx[inside]]=True
         cape=key=='knight' and y>.075 and .065<z<.51 and abs(x)<(.12+.30*(.50-z))
-        tabard=key=='knight' and y<-.075 and z<.32 and abs(x)<.115
+        tabard=key=='knight' and y<-.075 and .105<z<.32 and abs(x)<.105
         if cape: caperegion[yy[inside],xx[inside]]=True
-        if cape or tabard: cleanregion[yy[inside],xx[inside]]=True
+        if cape or tabard:
+            cleanregion[yy[inside],xx[inside]]=True
+            xyz=np.array([body.data.vertices[i].co[:] for i in tri.vertices])
+            wx=u*xyz[0,0]+v*xyz[1,0]+(1-u-v)*xyz[2,0]
+            wz=u*xyz[0,2]+v*xyz[1,2]+(1-u-v)*xyz[2,2]
+            shade=.88+.10*np.cos(wx*48)+.06*(wz/.5)
+            clothshade[yy[inside],xx[inside]]=shade[inside]
+            if cape:
+                hemregion[yy[inside],xx[inside]]=(wz[inside]<.105)
     # Sample at higher resolution but keep the original texture's color values.
     indices=np.minimum((np.arange(size)+.5)*pixels.shape[0]/size,pixels.shape[0]-1).astype(int)
     rgb=pixels[indices[:,None],indices[None,:],:3]
     hue,sat,val=hsv(rgb)
     if key=='adventure':
-        primary=(hue>.11)&(hue<.43)&(sat>.10)&(rgb[...,1]>rgb[...,0]*.88)&(rgb[...,1]>rgb[...,2]*1.1)
+        primary=(hue>.085)&(hue<.43)&(sat>.10)&(sat<.55)&(rgb[...,1]>rgb[...,0]*.72)&(rgb[...,1]>rgb[...,2]*1.1)
         secondary=((hue>.94)|(hue<.028))&(sat>.45)&secondary_region
     elif key=='knight':
         blue=(hue>.53)&(hue<.76)&(sat>.38)
@@ -465,20 +535,17 @@ def raster_regions(body,key,pixels,out):
         for _ in range(2):
             safe=safe|np.roll(safe,1,0)|np.roll(safe,-1,0)|np.roll(safe,1,1)|np.roll(safe,-1,1)
         native_blue=(pixels[...,2]>pixels[...,0]*1.6)&(pixels[...,2]>pixels[...,1]*1.25)
-        remove=safe&~native_blue
+        hem=hemregion.reshape(n,factor,n,factor).any(axis=(1,3))
         for _ in range(2):
-            remove=(remove|np.roll(remove,1,0)|np.roll(remove,-1,0)|np.roll(remove,1,1)|np.roll(remove,-1,1))&safe
+            hem=hem|np.roll(hem,1,0)|np.roll(hem,-1,0)|np.roll(hem,1,1)|np.roll(hem,-1,1)
+        remove=safe&~hem
         clean=pixels.copy()
-        blue=native_blue&safe&~remove
+        blue=native_blue&safe
         seed=np.median(pixels[blue,:3],axis=0)
-        clean[remove,:3]=seed
-        # Harmonic patch from nearby original cloth. Restrict the write to glyphs.
-        # Clamp samples to the known cloth palette so nearby gold borders cannot bleed in.
-        low=np.quantile(pixels[blue,:3],.12,axis=0)
-        high=np.quantile(pixels[blue,:3],.88,axis=0)
-        for _ in range(450):
-            mean=(np.roll(clean[:,:,:3],1,0)+np.roll(clean[:,:,:3],-1,0)+np.roll(clean[:,:,:3],1,1)+np.roll(clean[:,:,:3],-1,1))*.25
-            clean[remove,:3]=np.clip(mean[remove],low,high)
+        # Repaint complete selected panels: glyph shadows are also baked into blue
+        # pixels, so hue-based healing cannot remove the old symbol completely.
+        shade=clothshade.reshape(n,factor,n,factor).mean(axis=(1,3))
+        clean[remove,:3]=seed*shade[remove,None]
         cleaned=save('body_albedo_clean',clean,False)
         # Cleaned glyph texels are cloth too; include them in the palette mask.
         repaired=np.repeat(np.repeat(remove,factor,axis=0),factor,axis=1)
@@ -487,7 +554,7 @@ def raster_regions(body,key,pixels,out):
         cape=np.zeros_like(mask); cape[caperegion,:3]=1; cape[...,3]=1
         save('cape_mask',cape)
         write_json(out/'clean_albedo_audit.json',{'changed_pixels':int(remove.sum()),
-            'method':'cloth-only harmonic patch from surrounding original blue; raw retained',
+            'method':'selected cloth panel repaint, original blue palette and continuous object-space fold shading; raw retained',
             'outside_selected_region_changed':bool(np.any(clean[~remove]!=pixels[~remove]))})
     save('palette_mask',mask)
     return cleaned,{'primary_pixels':int(mask[...,0].sum()),'secondary_pixels':int(mask[...,1].sum()),
@@ -681,13 +748,15 @@ def build(key,motion):
         'animation_source_sha256':hashlib.sha256((ROOT/'assets/characters/_shared/animations/common_combat.blend').read_bytes()).hexdigest(),
         'acceptance':'pending visual and runtime verification'}
     write_json(out/'validation.json',result)
-    render_preview(key,rig,body,head)
+    if '--skip-preview' not in sys.argv:
+        render_preview(key,rig,body,head)
     return result
 
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--only',nargs='+',choices=list(SOURCES))
+    parser.add_argument('--skip-preview',action='store_true',help='Use the separate Godot render verification instead')
     args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
     verify_protected()
     motion=extract_source()

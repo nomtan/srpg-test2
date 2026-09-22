@@ -3,10 +3,10 @@
   "skeleton_strategy": "native bind; shared names, hierarchy and axes",
   "source_pose_reconstruction_max_error_m": 6.014238617006113e-07,
   "a_to_t_only_max_displacement_m": 0.17229062053662916,
-  "body_vertices": 19787,
-  "head_vertices": 9971,
-  "body_triangles": 23731,
-  "head_triangles": 19934,
+  "body_vertices": 19673,
+  "head_vertices": 10299,
+  "body_triangles": 23610,
+  "head_triangles": 20579,
   "bones": [
     {
       "name": "Root",
@@ -1054,7 +1054,7 @@
   "combination_offsets": {},
   "palette": {
     "primary_pixels": 63960,
-    "secondary_pixels": 23002,
+    "secondary_pixels": 22986,
     "supports_emblem": false,
     "resolution": [
       1024,

@@ -53,6 +53,8 @@ def main():
     (ART/'preservation.json').write_text(json.dumps({'unchanged_files':len(protected),'all_protected_files_unchanged':True},indent=2))
     sheet('animations_contact_sheet.jpg',[[(k+'_'+a,k+' / '+a) for a in ['idle','walk','attack_melee','cast_magic','hit']] for k in SOURCES])
     sheet('head_swaps_contact_sheet.jpg',[[(b+'_with_'+h,b+' body + '+h+' head') for h in SOURCES if b!=h] for b in SOURCES])
+    sheet('head_swaps_hit_contact_sheet.jpg',[[(b+'_with_'+h+'_hit',b+' body + '+h+' head / hit') for h in SOURCES if b!=h] for b in SOURCES])
+    sheet('body_split_contact_sheet.jpg',[[(k+'_body_only',k+' body / front'),(k+'_body_only_back',k+' body / back')] for k in SOURCES])
     sheet('palette_contact_sheet.jpg',[[(k+'_palette_'+str(i),k+' / '+v) for i,v in enumerate(['original','primary','secondary','both'])] for k in SOURCES])
     sheet('emblem_contact_sheet.jpg',[[('knight_emblem_'+str(i),v) for i,v in enumerate(['clean / disabled','transparent diamond','transparent ring'])]])
     sheet('native_pose_contact_sheet.jpg',[[(k+'_raw_front',k+' raw'),(k+'_palette_0',k+' prepared')] for k in SOURCES])

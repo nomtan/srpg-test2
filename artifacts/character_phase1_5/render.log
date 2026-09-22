@@ -99,6 +99,7 @@ PASS adventure hit WeaponSocket_R follows Hand_R
 PASS adventure hit WeaponSocket_L follows Hand_L
 PASS adventure hit BackSocket follows Chest
 PASS capture adventure_body_only
+PASS capture adventure_body_only_back
 PASS capture adventure_palette_0
 PASS capture adventure_palette_1
 PASS capture adventure_palette_2
@@ -204,6 +205,7 @@ PASS knight hit WeaponSocket_R follows Hand_R
 PASS knight hit WeaponSocket_L follows Hand_L
 PASS knight hit BackSocket follows Chest
 PASS capture knight_body_only
+PASS capture knight_body_only_back
 PASS capture knight_palette_0
 PASS capture knight_palette_1
 PASS capture knight_palette_2
@@ -311,6 +313,7 @@ PASS black_mage hit WeaponSocket_R follows Hand_R
 PASS black_mage hit WeaponSocket_L follows Hand_L
 PASS black_mage hit BackSocket follows Chest
 PASS capture black_mage_body_only
+PASS capture black_mage_body_only_back
 PASS capture black_mage_palette_0
 PASS capture black_mage_palette_1
 PASS capture black_mage_palette_2
@@ -379,6 +382,7 @@ PASS adventure rotation-only walk/12
 PASS adventure rotation-only walk/13
 PASS adventure rotation-only walk/14
 PASS capture adventure_with_knight
+PASS capture adventure_with_knight_hit
 PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/body.glb
 PASS adventure one skeleton
 PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/head_default.glb
@@ -442,6 +446,7 @@ PASS adventure rotation-only walk/12
 PASS adventure rotation-only walk/13
 PASS adventure rotation-only walk/14
 PASS capture adventure_with_black_mage
+PASS capture adventure_with_black_mage_hit
 PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/body.glb
 PASS knight one skeleton
 PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/head_default.glb
@@ -506,6 +511,7 @@ PASS knight rotation-only walk/12
 PASS knight rotation-only walk/13
 PASS knight rotation-only walk/14
 PASS capture knight_with_adventure
+PASS capture knight_with_adventure_hit
 PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/body.glb
 PASS knight one skeleton
 PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/head_default.glb
@@ -570,6 +576,7 @@ PASS knight rotation-only walk/12
 PASS knight rotation-only walk/13
 PASS knight rotation-only walk/14
 PASS capture knight_with_black_mage
+PASS capture knight_with_black_mage_hit
 PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/body.glb
 PASS black_mage one skeleton
 PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/head_default.glb
@@ -633,6 +640,7 @@ PASS black_mage rotation-only walk/12
 PASS black_mage rotation-only walk/13
 PASS black_mage rotation-only walk/14
 PASS capture black_mage_with_adventure
+PASS capture black_mage_with_adventure_hit
 PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/body.glb
 PASS black_mage one skeleton
 PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/head_default.glb
@@ -696,4 +704,5 @@ PASS black_mage rotation-only walk/12
 PASS black_mage rotation-only walk/13
 PASS black_mage rotation-only walk/14
 PASS capture black_mage_with_knight
+PASS capture black_mage_with_knight_hit
 PHASE1_5_GODOT_COMPLETE true
