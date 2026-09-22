@@ -1,0 +1,699 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/body.glb
+PASS adventure one skeleton
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/head_default.glb
+PASS adventure rigid head
+PASS texture res://assets/characters/tripo_adventure/prepared/phase1_5/palette_mask.png
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/animations/common_combat.glb
+PASS adventure rotation-only attack_melee/0
+PASS adventure rotation-only attack_melee/1
+PASS adventure rotation-only attack_melee/2
+PASS adventure rotation-only attack_melee/3
+PASS adventure rotation-only attack_melee/4
+PASS adventure rotation-only attack_melee/5
+PASS adventure rotation-only attack_melee/6
+PASS adventure rotation-only attack_melee/7
+PASS adventure rotation-only attack_melee/8
+PASS adventure rotation-only attack_melee/9
+PASS adventure rotation-only cast_magic/0
+PASS adventure rotation-only cast_magic/1
+PASS adventure rotation-only cast_magic/2
+PASS adventure rotation-only cast_magic/3
+PASS adventure rotation-only cast_magic/4
+PASS adventure rotation-only cast_magic/5
+PASS adventure rotation-only cast_magic/6
+PASS adventure rotation-only cast_magic/7
+PASS adventure rotation-only cast_magic/8
+PASS adventure rotation-only hit/0
+PASS adventure rotation-only hit/1
+PASS adventure rotation-only hit/2
+PASS adventure rotation-only hit/3
+PASS adventure rotation-only hit/4
+PASS adventure rotation-only hit/5
+PASS adventure rotation-only hit/6
+PASS adventure rotation-only hit/7
+PASS adventure rotation-only hit/8
+PASS adventure rotation-only hit/9
+PASS adventure rotation-only hit/10
+PASS adventure rotation-only idle/0
+PASS adventure rotation-only idle/1
+PASS adventure rotation-only idle/2
+PASS adventure rotation-only idle/3
+PASS adventure rotation-only idle/4
+PASS adventure rotation-only idle/5
+PASS adventure rotation-only idle/6
+PASS adventure rotation-only idle/7
+PASS adventure rotation-only idle/8
+PASS adventure rotation-only idle/9
+PASS adventure rotation-only idle/10
+PASS adventure rotation-only walk/0
+PASS adventure rotation-only walk/1
+PASS adventure rotation-only walk/2
+PASS adventure rotation-only walk/3
+PASS adventure rotation-only walk/4
+PASS adventure rotation-only walk/5
+PASS adventure rotation-only walk/6
+PASS adventure rotation-only walk/7
+PASS adventure rotation-only walk/8
+PASS adventure rotation-only walk/9
+PASS adventure rotation-only walk/10
+PASS adventure rotation-only walk/11
+PASS adventure rotation-only walk/12
+PASS adventure rotation-only walk/13
+PASS adventure rotation-only walk/14
+PASS adventure moves idle
+PASS adventure no root translation idle
+PASS capture adventure_idle
+PASS adventure idle HeadSocket follows Head
+PASS adventure idle WeaponSocket_R follows Hand_R
+PASS adventure idle WeaponSocket_L follows Hand_L
+PASS adventure idle BackSocket follows Chest
+PASS adventure moves walk
+PASS adventure no root translation walk
+PASS capture adventure_walk
+PASS adventure walk HeadSocket follows Head
+PASS adventure walk WeaponSocket_R follows Hand_R
+PASS adventure walk WeaponSocket_L follows Hand_L
+PASS adventure walk BackSocket follows Chest
+PASS adventure moves attack_melee
+PASS adventure no root translation attack_melee
+PASS capture adventure_attack_melee
+PASS adventure attack_melee HeadSocket follows Head
+PASS adventure attack_melee WeaponSocket_R follows Hand_R
+PASS adventure attack_melee WeaponSocket_L follows Hand_L
+PASS adventure attack_melee BackSocket follows Chest
+PASS adventure moves cast_magic
+PASS adventure no root translation cast_magic
+PASS capture adventure_cast_magic
+PASS adventure cast_magic HeadSocket follows Head
+PASS adventure cast_magic WeaponSocket_R follows Hand_R
+PASS adventure cast_magic WeaponSocket_L follows Hand_L
+PASS adventure cast_magic BackSocket follows Chest
+PASS adventure moves hit
+PASS adventure no root translation hit
+PASS capture adventure_hit
+PASS adventure hit HeadSocket follows Head
+PASS adventure hit WeaponSocket_R follows Hand_R
+PASS adventure hit WeaponSocket_L follows Hand_L
+PASS adventure hit BackSocket follows Chest
+PASS capture adventure_body_only
+PASS capture adventure_palette_0
+PASS capture adventure_palette_1
+PASS capture adventure_palette_2
+PASS capture adventure_palette_3
+PASS capture adventure_back
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/body.glb
+PASS knight one skeleton
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/head_default.glb
+PASS knight rigid head
+PASS texture res://assets/characters/tripo_knight2/prepared/phase1_5/palette_mask.png
+PASS texture res://assets/characters/tripo_knight2/prepared/phase1_5/cape_mask.png
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/animations/common_combat.glb
+PASS knight rotation-only attack_melee/0
+PASS knight rotation-only attack_melee/1
+PASS knight rotation-only attack_melee/2
+PASS knight rotation-only attack_melee/3
+PASS knight rotation-only attack_melee/4
+PASS knight rotation-only attack_melee/5
+PASS knight rotation-only attack_melee/6
+PASS knight rotation-only attack_melee/7
+PASS knight rotation-only attack_melee/8
+PASS knight rotation-only attack_melee/9
+PASS knight rotation-only cast_magic/0
+PASS knight rotation-only cast_magic/1
+PASS knight rotation-only cast_magic/2
+PASS knight rotation-only cast_magic/3
+PASS knight rotation-only cast_magic/4
+PASS knight rotation-only cast_magic/5
+PASS knight rotation-only cast_magic/6
+PASS knight rotation-only cast_magic/7
+PASS knight rotation-only cast_magic/8
+PASS knight rotation-only hit/0
+PASS knight rotation-only hit/1
+PASS knight rotation-only hit/2
+PASS knight rotation-only hit/3
+PASS knight rotation-only hit/4
+PASS knight rotation-only hit/5
+PASS knight rotation-only hit/6
+PASS knight rotation-only hit/7
+PASS knight rotation-only hit/8
+PASS knight rotation-only hit/9
+PASS knight rotation-only hit/10
+PASS knight rotation-only idle/0
+PASS knight rotation-only idle/1
+PASS knight rotation-only idle/2
+PASS knight rotation-only idle/3
+PASS knight rotation-only idle/4
+PASS knight rotation-only idle/5
+PASS knight rotation-only idle/6
+PASS knight rotation-only idle/7
+PASS knight rotation-only idle/8
+PASS knight rotation-only idle/9
+PASS knight rotation-only idle/10
+PASS knight rotation-only walk/0
+PASS knight rotation-only walk/1
+PASS knight rotation-only walk/2
+PASS knight rotation-only walk/3
+PASS knight rotation-only walk/4
+PASS knight rotation-only walk/5
+PASS knight rotation-only walk/6
+PASS knight rotation-only walk/7
+PASS knight rotation-only walk/8
+PASS knight rotation-only walk/9
+PASS knight rotation-only walk/10
+PASS knight rotation-only walk/11
+PASS knight rotation-only walk/12
+PASS knight rotation-only walk/13
+PASS knight rotation-only walk/14
+PASS knight semantic hierarchy matches
+PASS knight moves idle
+PASS knight no root translation idle
+PASS capture knight_idle
+PASS knight idle HeadSocket follows Head
+PASS knight idle WeaponSocket_R follows Hand_R
+PASS knight idle WeaponSocket_L follows Hand_L
+PASS knight idle BackSocket follows Chest
+PASS knight moves walk
+PASS knight no root translation walk
+PASS capture knight_walk
+PASS knight walk HeadSocket follows Head
+PASS knight walk WeaponSocket_R follows Hand_R
+PASS knight walk WeaponSocket_L follows Hand_L
+PASS knight walk BackSocket follows Chest
+PASS knight moves attack_melee
+PASS knight no root translation attack_melee
+PASS capture knight_attack_melee
+PASS knight attack_melee HeadSocket follows Head
+PASS knight attack_melee WeaponSocket_R follows Hand_R
+PASS knight attack_melee WeaponSocket_L follows Hand_L
+PASS knight attack_melee BackSocket follows Chest
+PASS knight moves cast_magic
+PASS knight no root translation cast_magic
+PASS capture knight_cast_magic
+PASS knight cast_magic HeadSocket follows Head
+PASS knight cast_magic WeaponSocket_R follows Hand_R
+PASS knight cast_magic WeaponSocket_L follows Hand_L
+PASS knight cast_magic BackSocket follows Chest
+PASS knight moves hit
+PASS knight no root translation hit
+PASS capture knight_hit
+PASS knight hit HeadSocket follows Head
+PASS knight hit WeaponSocket_R follows Hand_R
+PASS knight hit WeaponSocket_L follows Hand_L
+PASS knight hit BackSocket follows Chest
+PASS capture knight_body_only
+PASS capture knight_palette_0
+PASS capture knight_palette_1
+PASS capture knight_palette_2
+PASS capture knight_palette_3
+PASS capture knight_back
+PASS capture knight_emblem_0
+PASS capture knight_emblem_1
+PASS capture knight_emblem_2
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/body.glb
+PASS black_mage one skeleton
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/head_default.glb
+PASS black_mage rigid head
+PASS texture res://assets/characters/tripo_black_mage/prepared/phase1_5/palette_mask.png
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/animations/common_combat.glb
+PASS black_mage rotation-only attack_melee/0
+PASS black_mage rotation-only attack_melee/1
+PASS black_mage rotation-only attack_melee/2
+PASS black_mage rotation-only attack_melee/3
+PASS black_mage rotation-only attack_melee/4
+PASS black_mage rotation-only attack_melee/5
+PASS black_mage rotation-only attack_melee/6
+PASS black_mage rotation-only attack_melee/7
+PASS black_mage rotation-only attack_melee/8
+PASS black_mage rotation-only attack_melee/9
+PASS black_mage rotation-only cast_magic/0
+PASS black_mage rotation-only cast_magic/1
+PASS black_mage rotation-only cast_magic/2
+PASS black_mage rotation-only cast_magic/3
+PASS black_mage rotation-only cast_magic/4
+PASS black_mage rotation-only cast_magic/5
+PASS black_mage rotation-only cast_magic/6
+PASS black_mage rotation-only cast_magic/7
+PASS black_mage rotation-only cast_magic/8
+PASS black_mage rotation-only hit/0
+PASS black_mage rotation-only hit/1
+PASS black_mage rotation-only hit/2
+PASS black_mage rotation-only hit/3
+PASS black_mage rotation-only hit/4
+PASS black_mage rotation-only hit/5
+PASS black_mage rotation-only hit/6
+PASS black_mage rotation-only hit/7
+PASS black_mage rotation-only hit/8
+PASS black_mage rotation-only hit/9
+PASS black_mage rotation-only hit/10
+PASS black_mage rotation-only idle/0
+PASS black_mage rotation-only idle/1
+PASS black_mage rotation-only idle/2
+PASS black_mage rotation-only idle/3
+PASS black_mage rotation-only idle/4
+PASS black_mage rotation-only idle/5
+PASS black_mage rotation-only idle/6
+PASS black_mage rotation-only idle/7
+PASS black_mage rotation-only idle/8
+PASS black_mage rotation-only idle/9
+PASS black_mage rotation-only idle/10
+PASS black_mage rotation-only walk/0
+PASS black_mage rotation-only walk/1
+PASS black_mage rotation-only walk/2
+PASS black_mage rotation-only walk/3
+PASS black_mage rotation-only walk/4
+PASS black_mage rotation-only walk/5
+PASS black_mage rotation-only walk/6
+PASS black_mage rotation-only walk/7
+PASS black_mage rotation-only walk/8
+PASS black_mage rotation-only walk/9
+PASS black_mage rotation-only walk/10
+PASS black_mage rotation-only walk/11
+PASS black_mage rotation-only walk/12
+PASS black_mage rotation-only walk/13
+PASS black_mage rotation-only walk/14
+PASS black_mage semantic hierarchy matches
+PASS black_mage moves idle
+PASS black_mage no root translation idle
+PASS capture black_mage_idle
+PASS black_mage idle HeadSocket follows Head
+PASS black_mage idle WeaponSocket_R follows Hand_R
+PASS black_mage idle WeaponSocket_L follows Hand_L
+PASS black_mage idle BackSocket follows Chest
+PASS black_mage moves walk
+PASS black_mage no root translation walk
+PASS capture black_mage_walk
+PASS black_mage walk HeadSocket follows Head
+PASS black_mage walk WeaponSocket_R follows Hand_R
+PASS black_mage walk WeaponSocket_L follows Hand_L
+PASS black_mage walk BackSocket follows Chest
+PASS black_mage moves attack_melee
+PASS black_mage no root translation attack_melee
+PASS capture black_mage_attack_melee
+PASS black_mage attack_melee HeadSocket follows Head
+PASS black_mage attack_melee WeaponSocket_R follows Hand_R
+PASS black_mage attack_melee WeaponSocket_L follows Hand_L
+PASS black_mage attack_melee BackSocket follows Chest
+PASS black_mage moves cast_magic
+PASS black_mage no root translation cast_magic
+PASS capture black_mage_cast_magic
+PASS black_mage cast_magic HeadSocket follows Head
+PASS black_mage cast_magic WeaponSocket_R follows Hand_R
+PASS black_mage cast_magic WeaponSocket_L follows Hand_L
+PASS black_mage cast_magic BackSocket follows Chest
+PASS black_mage moves hit
+PASS black_mage no root translation hit
+PASS capture black_mage_hit
+PASS black_mage hit HeadSocket follows Head
+PASS black_mage hit WeaponSocket_R follows Hand_R
+PASS black_mage hit WeaponSocket_L follows Hand_L
+PASS black_mage hit BackSocket follows Chest
+PASS capture black_mage_body_only
+PASS capture black_mage_palette_0
+PASS capture black_mage_palette_1
+PASS capture black_mage_palette_2
+PASS capture black_mage_palette_3
+PASS capture black_mage_back
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/body.glb
+PASS adventure one skeleton
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/head_default.glb
+PASS knight rigid head
+PASS texture res://assets/characters/tripo_adventure/prepared/phase1_5/palette_mask.png
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/animations/common_combat.glb
+PASS adventure rotation-only attack_melee/0
+PASS adventure rotation-only attack_melee/1
+PASS adventure rotation-only attack_melee/2
+PASS adventure rotation-only attack_melee/3
+PASS adventure rotation-only attack_melee/4
+PASS adventure rotation-only attack_melee/5
+PASS adventure rotation-only attack_melee/6
+PASS adventure rotation-only attack_melee/7
+PASS adventure rotation-only attack_melee/8
+PASS adventure rotation-only attack_melee/9
+PASS adventure rotation-only cast_magic/0
+PASS adventure rotation-only cast_magic/1
+PASS adventure rotation-only cast_magic/2
+PASS adventure rotation-only cast_magic/3
+PASS adventure rotation-only cast_magic/4
+PASS adventure rotation-only cast_magic/5
+PASS adventure rotation-only cast_magic/6
+PASS adventure rotation-only cast_magic/7
+PASS adventure rotation-only cast_magic/8
+PASS adventure rotation-only hit/0
+PASS adventure rotation-only hit/1
+PASS adventure rotation-only hit/2
+PASS adventure rotation-only hit/3
+PASS adventure rotation-only hit/4
+PASS adventure rotation-only hit/5
+PASS adventure rotation-only hit/6
+PASS adventure rotation-only hit/7
+PASS adventure rotation-only hit/8
+PASS adventure rotation-only hit/9
+PASS adventure rotation-only hit/10
+PASS adventure rotation-only idle/0
+PASS adventure rotation-only idle/1
+PASS adventure rotation-only idle/2
+PASS adventure rotation-only idle/3
+PASS adventure rotation-only idle/4
+PASS adventure rotation-only idle/5
+PASS adventure rotation-only idle/6
+PASS adventure rotation-only idle/7
+PASS adventure rotation-only idle/8
+PASS adventure rotation-only idle/9
+PASS adventure rotation-only idle/10
+PASS adventure rotation-only walk/0
+PASS adventure rotation-only walk/1
+PASS adventure rotation-only walk/2
+PASS adventure rotation-only walk/3
+PASS adventure rotation-only walk/4
+PASS adventure rotation-only walk/5
+PASS adventure rotation-only walk/6
+PASS adventure rotation-only walk/7
+PASS adventure rotation-only walk/8
+PASS adventure rotation-only walk/9
+PASS adventure rotation-only walk/10
+PASS adventure rotation-only walk/11
+PASS adventure rotation-only walk/12
+PASS adventure rotation-only walk/13
+PASS adventure rotation-only walk/14
+PASS capture adventure_with_knight
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/body.glb
+PASS adventure one skeleton
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/head_default.glb
+PASS black_mage rigid head
+PASS texture res://assets/characters/tripo_adventure/prepared/phase1_5/palette_mask.png
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/animations/common_combat.glb
+PASS adventure rotation-only attack_melee/0
+PASS adventure rotation-only attack_melee/1
+PASS adventure rotation-only attack_melee/2
+PASS adventure rotation-only attack_melee/3
+PASS adventure rotation-only attack_melee/4
+PASS adventure rotation-only attack_melee/5
+PASS adventure rotation-only attack_melee/6
+PASS adventure rotation-only attack_melee/7
+PASS adventure rotation-only attack_melee/8
+PASS adventure rotation-only attack_melee/9
+PASS adventure rotation-only cast_magic/0
+PASS adventure rotation-only cast_magic/1
+PASS adventure rotation-only cast_magic/2
+PASS adventure rotation-only cast_magic/3
+PASS adventure rotation-only cast_magic/4
+PASS adventure rotation-only cast_magic/5
+PASS adventure rotation-only cast_magic/6
+PASS adventure rotation-only cast_magic/7
+PASS adventure rotation-only cast_magic/8
+PASS adventure rotation-only hit/0
+PASS adventure rotation-only hit/1
+PASS adventure rotation-only hit/2
+PASS adventure rotation-only hit/3
+PASS adventure rotation-only hit/4
+PASS adventure rotation-only hit/5
+PASS adventure rotation-only hit/6
+PASS adventure rotation-only hit/7
+PASS adventure rotation-only hit/8
+PASS adventure rotation-only hit/9
+PASS adventure rotation-only hit/10
+PASS adventure rotation-only idle/0
+PASS adventure rotation-only idle/1
+PASS adventure rotation-only idle/2
+PASS adventure rotation-only idle/3
+PASS adventure rotation-only idle/4
+PASS adventure rotation-only idle/5
+PASS adventure rotation-only idle/6
+PASS adventure rotation-only idle/7
+PASS adventure rotation-only idle/8
+PASS adventure rotation-only idle/9
+PASS adventure rotation-only idle/10
+PASS adventure rotation-only walk/0
+PASS adventure rotation-only walk/1
+PASS adventure rotation-only walk/2
+PASS adventure rotation-only walk/3
+PASS adventure rotation-only walk/4
+PASS adventure rotation-only walk/5
+PASS adventure rotation-only walk/6
+PASS adventure rotation-only walk/7
+PASS adventure rotation-only walk/8
+PASS adventure rotation-only walk/9
+PASS adventure rotation-only walk/10
+PASS adventure rotation-only walk/11
+PASS adventure rotation-only walk/12
+PASS adventure rotation-only walk/13
+PASS adventure rotation-only walk/14
+PASS capture adventure_with_black_mage
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/body.glb
+PASS knight one skeleton
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/head_default.glb
+PASS adventure rigid head
+PASS texture res://assets/characters/tripo_knight2/prepared/phase1_5/palette_mask.png
+PASS texture res://assets/characters/tripo_knight2/prepared/phase1_5/cape_mask.png
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/animations/common_combat.glb
+PASS knight rotation-only attack_melee/0
+PASS knight rotation-only attack_melee/1
+PASS knight rotation-only attack_melee/2
+PASS knight rotation-only attack_melee/3
+PASS knight rotation-only attack_melee/4
+PASS knight rotation-only attack_melee/5
+PASS knight rotation-only attack_melee/6
+PASS knight rotation-only attack_melee/7
+PASS knight rotation-only attack_melee/8
+PASS knight rotation-only attack_melee/9
+PASS knight rotation-only cast_magic/0
+PASS knight rotation-only cast_magic/1
+PASS knight rotation-only cast_magic/2
+PASS knight rotation-only cast_magic/3
+PASS knight rotation-only cast_magic/4
+PASS knight rotation-only cast_magic/5
+PASS knight rotation-only cast_magic/6
+PASS knight rotation-only cast_magic/7
+PASS knight rotation-only cast_magic/8
+PASS knight rotation-only hit/0
+PASS knight rotation-only hit/1
+PASS knight rotation-only hit/2
+PASS knight rotation-only hit/3
+PASS knight rotation-only hit/4
+PASS knight rotation-only hit/5
+PASS knight rotation-only hit/6
+PASS knight rotation-only hit/7
+PASS knight rotation-only hit/8
+PASS knight rotation-only hit/9
+PASS knight rotation-only hit/10
+PASS knight rotation-only idle/0
+PASS knight rotation-only idle/1
+PASS knight rotation-only idle/2
+PASS knight rotation-only idle/3
+PASS knight rotation-only idle/4
+PASS knight rotation-only idle/5
+PASS knight rotation-only idle/6
+PASS knight rotation-only idle/7
+PASS knight rotation-only idle/8
+PASS knight rotation-only idle/9
+PASS knight rotation-only idle/10
+PASS knight rotation-only walk/0
+PASS knight rotation-only walk/1
+PASS knight rotation-only walk/2
+PASS knight rotation-only walk/3
+PASS knight rotation-only walk/4
+PASS knight rotation-only walk/5
+PASS knight rotation-only walk/6
+PASS knight rotation-only walk/7
+PASS knight rotation-only walk/8
+PASS knight rotation-only walk/9
+PASS knight rotation-only walk/10
+PASS knight rotation-only walk/11
+PASS knight rotation-only walk/12
+PASS knight rotation-only walk/13
+PASS knight rotation-only walk/14
+PASS capture knight_with_adventure
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/body.glb
+PASS knight one skeleton
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/head_default.glb
+PASS black_mage rigid head
+PASS texture res://assets/characters/tripo_knight2/prepared/phase1_5/palette_mask.png
+PASS texture res://assets/characters/tripo_knight2/prepared/phase1_5/cape_mask.png
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/animations/common_combat.glb
+PASS knight rotation-only attack_melee/0
+PASS knight rotation-only attack_melee/1
+PASS knight rotation-only attack_melee/2
+PASS knight rotation-only attack_melee/3
+PASS knight rotation-only attack_melee/4
+PASS knight rotation-only attack_melee/5
+PASS knight rotation-only attack_melee/6
+PASS knight rotation-only attack_melee/7
+PASS knight rotation-only attack_melee/8
+PASS knight rotation-only attack_melee/9
+PASS knight rotation-only cast_magic/0
+PASS knight rotation-only cast_magic/1
+PASS knight rotation-only cast_magic/2
+PASS knight rotation-only cast_magic/3
+PASS knight rotation-only cast_magic/4
+PASS knight rotation-only cast_magic/5
+PASS knight rotation-only cast_magic/6
+PASS knight rotation-only cast_magic/7
+PASS knight rotation-only cast_magic/8
+PASS knight rotation-only hit/0
+PASS knight rotation-only hit/1
+PASS knight rotation-only hit/2
+PASS knight rotation-only hit/3
+PASS knight rotation-only hit/4
+PASS knight rotation-only hit/5
+PASS knight rotation-only hit/6
+PASS knight rotation-only hit/7
+PASS knight rotation-only hit/8
+PASS knight rotation-only hit/9
+PASS knight rotation-only hit/10
+PASS knight rotation-only idle/0
+PASS knight rotation-only idle/1
+PASS knight rotation-only idle/2
+PASS knight rotation-only idle/3
+PASS knight rotation-only idle/4
+PASS knight rotation-only idle/5
+PASS knight rotation-only idle/6
+PASS knight rotation-only idle/7
+PASS knight rotation-only idle/8
+PASS knight rotation-only idle/9
+PASS knight rotation-only idle/10
+PASS knight rotation-only walk/0
+PASS knight rotation-only walk/1
+PASS knight rotation-only walk/2
+PASS knight rotation-only walk/3
+PASS knight rotation-only walk/4
+PASS knight rotation-only walk/5
+PASS knight rotation-only walk/6
+PASS knight rotation-only walk/7
+PASS knight rotation-only walk/8
+PASS knight rotation-only walk/9
+PASS knight rotation-only walk/10
+PASS knight rotation-only walk/11
+PASS knight rotation-only walk/12
+PASS knight rotation-only walk/13
+PASS knight rotation-only walk/14
+PASS capture knight_with_black_mage
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/body.glb
+PASS black_mage one skeleton
+PASS load res://assets/characters/tripo_adventure/prepared/phase1_5/head_default.glb
+PASS adventure rigid head
+PASS texture res://assets/characters/tripo_black_mage/prepared/phase1_5/palette_mask.png
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/animations/common_combat.glb
+PASS black_mage rotation-only attack_melee/0
+PASS black_mage rotation-only attack_melee/1
+PASS black_mage rotation-only attack_melee/2
+PASS black_mage rotation-only attack_melee/3
+PASS black_mage rotation-only attack_melee/4
+PASS black_mage rotation-only attack_melee/5
+PASS black_mage rotation-only attack_melee/6
+PASS black_mage rotation-only attack_melee/7
+PASS black_mage rotation-only attack_melee/8
+PASS black_mage rotation-only attack_melee/9
+PASS black_mage rotation-only cast_magic/0
+PASS black_mage rotation-only cast_magic/1
+PASS black_mage rotation-only cast_magic/2
+PASS black_mage rotation-only cast_magic/3
+PASS black_mage rotation-only cast_magic/4
+PASS black_mage rotation-only cast_magic/5
+PASS black_mage rotation-only cast_magic/6
+PASS black_mage rotation-only cast_magic/7
+PASS black_mage rotation-only cast_magic/8
+PASS black_mage rotation-only hit/0
+PASS black_mage rotation-only hit/1
+PASS black_mage rotation-only hit/2
+PASS black_mage rotation-only hit/3
+PASS black_mage rotation-only hit/4
+PASS black_mage rotation-only hit/5
+PASS black_mage rotation-only hit/6
+PASS black_mage rotation-only hit/7
+PASS black_mage rotation-only hit/8
+PASS black_mage rotation-only hit/9
+PASS black_mage rotation-only hit/10
+PASS black_mage rotation-only idle/0
+PASS black_mage rotation-only idle/1
+PASS black_mage rotation-only idle/2
+PASS black_mage rotation-only idle/3
+PASS black_mage rotation-only idle/4
+PASS black_mage rotation-only idle/5
+PASS black_mage rotation-only idle/6
+PASS black_mage rotation-only idle/7
+PASS black_mage rotation-only idle/8
+PASS black_mage rotation-only idle/9
+PASS black_mage rotation-only idle/10
+PASS black_mage rotation-only walk/0
+PASS black_mage rotation-only walk/1
+PASS black_mage rotation-only walk/2
+PASS black_mage rotation-only walk/3
+PASS black_mage rotation-only walk/4
+PASS black_mage rotation-only walk/5
+PASS black_mage rotation-only walk/6
+PASS black_mage rotation-only walk/7
+PASS black_mage rotation-only walk/8
+PASS black_mage rotation-only walk/9
+PASS black_mage rotation-only walk/10
+PASS black_mage rotation-only walk/11
+PASS black_mage rotation-only walk/12
+PASS black_mage rotation-only walk/13
+PASS black_mage rotation-only walk/14
+PASS capture black_mage_with_adventure
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/body.glb
+PASS black_mage one skeleton
+PASS load res://assets/characters/tripo_knight2/prepared/phase1_5/head_default.glb
+PASS knight rigid head
+PASS texture res://assets/characters/tripo_black_mage/prepared/phase1_5/palette_mask.png
+PASS load res://assets/characters/tripo_black_mage/prepared/phase1_5/animations/common_combat.glb
+PASS black_mage rotation-only attack_melee/0
+PASS black_mage rotation-only attack_melee/1
+PASS black_mage rotation-only attack_melee/2
+PASS black_mage rotation-only attack_melee/3
+PASS black_mage rotation-only attack_melee/4
+PASS black_mage rotation-only attack_melee/5
+PASS black_mage rotation-only attack_melee/6
+PASS black_mage rotation-only attack_melee/7
+PASS black_mage rotation-only attack_melee/8
+PASS black_mage rotation-only attack_melee/9
+PASS black_mage rotation-only cast_magic/0
+PASS black_mage rotation-only cast_magic/1
+PASS black_mage rotation-only cast_magic/2
+PASS black_mage rotation-only cast_magic/3
+PASS black_mage rotation-only cast_magic/4
+PASS black_mage rotation-only cast_magic/5
+PASS black_mage rotation-only cast_magic/6
+PASS black_mage rotation-only cast_magic/7
+PASS black_mage rotation-only cast_magic/8
+PASS black_mage rotation-only hit/0
+PASS black_mage rotation-only hit/1
+PASS black_mage rotation-only hit/2
+PASS black_mage rotation-only hit/3
+PASS black_mage rotation-only hit/4
+PASS black_mage rotation-only hit/5
+PASS black_mage rotation-only hit/6
+PASS black_mage rotation-only hit/7
+PASS black_mage rotation-only hit/8
+PASS black_mage rotation-only hit/9
+PASS black_mage rotation-only hit/10
+PASS black_mage rotation-only idle/0
+PASS black_mage rotation-only idle/1
+PASS black_mage rotation-only idle/2
+PASS black_mage rotation-only idle/3
+PASS black_mage rotation-only idle/4
+PASS black_mage rotation-only idle/5
+PASS black_mage rotation-only idle/6
+PASS black_mage rotation-only idle/7
+PASS black_mage rotation-only idle/8
+PASS black_mage rotation-only idle/9
+PASS black_mage rotation-only idle/10
+PASS black_mage rotation-only walk/0
+PASS black_mage rotation-only walk/1
+PASS black_mage rotation-only walk/2
+PASS black_mage rotation-only walk/3
+PASS black_mage rotation-only walk/4
+PASS black_mage rotation-only walk/5
+PASS black_mage rotation-only walk/6
+PASS black_mage rotation-only walk/7
+PASS black_mage rotation-only walk/8
+PASS black_mage rotation-only walk/9
+PASS black_mage rotation-only walk/10
+PASS black_mage rotation-only walk/11
+PASS black_mage rotation-only walk/12
+PASS black_mage rotation-only walk/13
+PASS black_mage rotation-only walk/14
+PASS capture black_mage_with_knight
+PHASE1_5_GODOT_COMPLETE true

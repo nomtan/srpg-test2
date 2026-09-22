@@ -1,0 +1,150 @@
+{
+  "characters": {
+    "adventure": {
+      "clips": {
+        "attack_melee": {
+          "moving_bones": 3
+        },
+        "cast_magic": {
+          "moving_bones": 6
+        },
+        "hit": {
+          "moving_bones": 15
+        },
+        "idle": {
+          "moving_bones": 15
+        },
+        "walk": {
+          "moving_bones": 12
+        }
+      },
+      "hierarchy": {
+        "Cape_01_L": "Chest",
+        "Cape_01_R": "Chest",
+        "Cape_02_L": "Cape_01_L",
+        "Cape_02_R": "Cape_01_R",
+        "Chest": "Spine",
+        "Foot_L": "LowerLeg_L",
+        "Foot_R": "LowerLeg_R",
+        "Hand_L": "LowerArm_L",
+        "Hand_R": "LowerArm_R",
+        "Head": "Neck",
+        "Hips": "Root",
+        "LowerArm_L": "UpperArm_L",
+        "LowerArm_R": "UpperArm_R",
+        "LowerLeg_L": "UpperLeg_L",
+        "LowerLeg_R": "UpperLeg_R",
+        "Neck": "Chest",
+        "Root": "",
+        "Shoulder_L": "Chest",
+        "Shoulder_R": "Chest",
+        "Skirt_01": "Hips",
+        "Skirt_02": "Skirt_01",
+        "Spine": "Hips",
+        "UpperArm_L": "Shoulder_L",
+        "UpperArm_R": "Shoulder_R",
+        "UpperLeg_L": "Hips",
+        "UpperLeg_R": "Hips"
+      },
+      "sockets_checked": 20
+    },
+    "black_mage": {
+      "clips": {
+        "attack_melee": {
+          "moving_bones": 3
+        },
+        "cast_magic": {
+          "moving_bones": 6
+        },
+        "hit": {
+          "moving_bones": 15
+        },
+        "idle": {
+          "moving_bones": 15
+        },
+        "walk": {
+          "moving_bones": 12
+        }
+      },
+      "hierarchy": {
+        "Cape_01_L": "Chest",
+        "Cape_01_R": "Chest",
+        "Cape_02_L": "Cape_01_L",
+        "Cape_02_R": "Cape_01_R",
+        "Chest": "Spine",
+        "Foot_L": "LowerLeg_L",
+        "Foot_R": "LowerLeg_R",
+        "Hand_L": "LowerArm_L",
+        "Hand_R": "LowerArm_R",
+        "Head": "Neck",
+        "Hips": "Root",
+        "LowerArm_L": "UpperArm_L",
+        "LowerArm_R": "UpperArm_R",
+        "LowerLeg_L": "UpperLeg_L",
+        "LowerLeg_R": "UpperLeg_R",
+        "Neck": "Chest",
+        "Root": "",
+        "Shoulder_L": "Chest",
+        "Shoulder_R": "Chest",
+        "Skirt_01": "Hips",
+        "Skirt_02": "Skirt_01",
+        "Spine": "Hips",
+        "UpperArm_L": "Shoulder_L",
+        "UpperArm_R": "Shoulder_R",
+        "UpperLeg_L": "Hips",
+        "UpperLeg_R": "Hips"
+      },
+      "sockets_checked": 20
+    },
+    "knight": {
+      "clips": {
+        "attack_melee": {
+          "moving_bones": 3
+        },
+        "cast_magic": {
+          "moving_bones": 6
+        },
+        "hit": {
+          "moving_bones": 15
+        },
+        "idle": {
+          "moving_bones": 15
+        },
+        "walk": {
+          "moving_bones": 12
+        }
+      },
+      "hierarchy": {
+        "Cape_01_L": "Chest",
+        "Cape_01_R": "Chest",
+        "Cape_02_L": "Cape_01_L",
+        "Cape_02_R": "Cape_01_R",
+        "Chest": "Spine",
+        "Foot_L": "LowerLeg_L",
+        "Foot_R": "LowerLeg_R",
+        "Hand_L": "LowerArm_L",
+        "Hand_R": "LowerArm_R",
+        "Head": "Neck",
+        "Hips": "Root",
+        "LowerArm_L": "UpperArm_L",
+        "LowerArm_R": "UpperArm_R",
+        "LowerLeg_L": "UpperLeg_L",
+        "LowerLeg_R": "UpperLeg_R",
+        "Neck": "Chest",
+        "Root": "",
+        "Shoulder_L": "Chest",
+        "Shoulder_R": "Chest",
+        "Skirt_01": "Hips",
+        "Skirt_02": "Skirt_01",
+        "Spine": "Hips",
+        "UpperArm_L": "Shoulder_L",
+        "UpperArm_R": "Shoulder_R",
+        "UpperLeg_L": "Hips",
+        "UpperLeg_R": "Hips"
+      },
+      "sockets_checked": 20
+    }
+  },
+  "passed": true,
+  "rendered": true
+}

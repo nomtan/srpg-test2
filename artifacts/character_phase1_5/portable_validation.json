@@ -1,0 +1,20 @@
+{
+  "adventure": {
+    "one_body_skeleton": true,
+    "rigid_head": true,
+    "five_rotation_only_baked_clips": true,
+    "socket_bind_identity": true
+  },
+  "knight": {
+    "one_body_skeleton": true,
+    "rigid_head": true,
+    "five_rotation_only_baked_clips": true,
+    "socket_bind_identity": true
+  },
+  "black_mage": {
+    "one_body_skeleton": true,
+    "rigid_head": true,
+    "five_rotation_only_baked_clips": true,
+    "socket_bind_identity": true
+  }
+}
