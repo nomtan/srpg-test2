@@ -31,6 +31,33 @@ export const BASE_PARTS: BasePart[] = Object.values(
     }, {}),
 );
 
+/**
+ * Node name -> body part name is NOT reliable after loading the base GLB.
+ *
+ * GLTFLoader uniquifies duplicate node names, so the base model's two `ashisaki` / `ashikubi`
+ * meshes arrive as `ashisaki` + `ashisaki_1`, and the torso mesh `dou` collides with the group
+ * node of the same name and arrives as `dou_1`. Matching on the name silently misses those.
+ *
+ * Every mesh node carries its Blockbench element UUID in `extras.sourceUuid`, which GLTFLoader
+ * puts into `userData`. That is stable and unique, so resolve through it.
+ */
+const PART_NAME_BY_UUID: Record<string, string> = Object.fromEntries(
+  BASE_PARTS.flatMap((part) => part.uuids.map((uuid) => [uuid, part.name])),
+);
+
+/** The body part a loaded base-GLB object belongs to, or null if it is not a body part. */
+const BASE_PART_NAMES = new Set(BASE_PARTS.map((p) => p.name));
+
+export function basePartNameOf(object: { name?: string; userData?: Record<string, unknown> }): string | null {
+  const uuid = object.userData?.sourceUuid;
+  if (typeof uuid === "string") return PART_NAME_BY_UUID[uuid] ?? null;
+  // Fallback for objects that lost their extras: strip GLTFLoader's "_1" disambiguation suffix.
+  const name = object.name ?? "";
+  const stripped = name.replace(/_\d+$/, "");
+  if (BASE_PART_NAMES.has(name)) return name;
+  return BASE_PART_NAMES.has(stripped) ? stripped : null;
+}
+
 /** Which base GLB group node an asset attaches under, for a given socket. */
 export function socketNodeName(socket: CharacterSocket): string | null {
   return baseSocketDefinitions.find((s) => s.id === socket)?.parent ?? null;

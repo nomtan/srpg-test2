@@ -1,0 +1,7 @@
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+ERROR: Shift selects the dedicated run with existing sprint cadence
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://artifacts/meshy_hero2/toon/diagnose.gd:11)
+       [1] run (res://artifacts/meshy_hero2/toon/diagnose.gd:74)

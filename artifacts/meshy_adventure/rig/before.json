@@ -1,0 +1,40 @@
+{
+  "AdventurerBody": {
+    "vertices": "28b2b836bf4bf898af17cab2c6fe1d3ceafccaf8b95d2cb56970b337732e0a59",
+    "polygons": "ee61f36392db2a38ce0fa1717d147075b13781ca570f20928ee179b58ccc2f16",
+    "uv0": "46dc961aef722c7c5e2987e5f664c730c383a034be958d8aa4a1bac46a2372a1",
+    "normals": "21cbea5ca29445f1940023268336a446a7b4f48978289b0524411151c9ceeb63",
+    "shape_keys": {}
+  },
+  "Face": {
+    "vertices": "9ea5470d6fb4e97738bfcb27766eb902054fc194b99b8881574ae64ad708c439",
+    "polygons": "4aca70c6e846981f22b1437f0eeb6c5b03aaeb213969bef36744d049875de531",
+    "uv0": "ed855f7678fd2cf1cae176c84e2990c9739631a35b73193f69bbb3c10566f46f",
+    "normals": "599ef15ad686e244b2b94858b7a828bc5855b82804a7651ab39416a416a66289",
+    "shape_keys": {
+      "Basis": "9ea5470d6fb4e97738bfcb27766eb902054fc194b99b8881574ae64ad708c439",
+      "Smile": "01a9b3bdda3400848e313c4cb7b3e98658843c0c93c4aef2d3669fc8c58e1057",
+      "Blink": "e25a1d1b6c2453f0193127cd975764dc174d1f871abde453888ac46ad0176902",
+      "Angry": "c73950611de1a3c0d855ee817496b056cdbd32e5bce3936fba484df88050c36d"
+    }
+  },
+  "Hair_Tousled": {
+    "vertices": "68fa2adafc1833b7d5fb6e373118307d1a96b2b7c7dc5ddf5fe5502e5283c34a",
+    "polygons": "d72912558f8a2f16a681ce84799b8ef1bcc77ab6ebcec7df222dcd5092442531",
+    "uv0": "95c05d92cf9613515506688ffca1e9d98cbdc1b3d59b9271400c19f9002e9342",
+    "normals": "6131e8d0b34e7528dde333dec086100bafd5171740f041fb2778ce075669c4e6",
+    "shape_keys": {}
+  },
+  "Hair_Swept": {
+    "vertices": "a4bb92a7bfc4e82ef0506237a1f5839fc0ff48cf407b118b962c298b5819302e",
+    "polygons": "d72912558f8a2f16a681ce84799b8ef1bcc77ab6ebcec7df222dcd5092442531",
+    "uv0": "95c05d92cf9613515506688ffca1e9d98cbdc1b3d59b9271400c19f9002e9342",
+    "normals": "fed8a88c5bb0e49b4985a6766eec914475eb759611775b85fb2c06dc425b9801",
+    "shape_keys": {}
+  },
+  "images": {
+    "Image_0": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+    "Image_1": "0462f27bef4ed81565c2fd902472756937f020e2a65bca73d850b831708df8f0",
+    "normal": "6a816582780c50310ddc0e0f63e33de009d6ec5b0e3f878c62e49f9b6742bf38"
+  }
+}

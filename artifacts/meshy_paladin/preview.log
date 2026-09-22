@@ -1,0 +1,24 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Sample spawns the configured Meshy model
+PASS: Sample uses the paladin GLB
+PASS: Idle and walk import successfully
+PASS: Walk keeps its original loop duration
+PASS: All 24 bones are imported
+PASS: Skin and color / normal / roughness textures are retained
+PASS: Movement animates the skeleton
+PASS: Sprint reuses the walk at the existing moderate cadence
+PASS: Sprint does not restart the walk
+PASS: Stopping returns the feet to the planted idle pose
+PASS: Model faces movement (1.0, 0.0, 0.0)
+PASS: Model faces movement (0.0, 0.0, -1.0)
+PASS: Model faces movement (-1.0, 0.0, 0.0)
+PASS: Model faces movement (0.0, 0.0, 1.0)
+PASS: Original 2D mode still works
+PASS: Returning to the paladin preserves position
+ERROR: Condition "f.is_null()" is true.
+   at: _save_to_cache (drivers/gles3/shader_gles3.cpp:645)

@@ -23,8 +23,12 @@ import { PRODUCTION_STATUSES } from "./production-status";
  *    pauldrons carry a 1.5x coverage factor after 1x output read as too small.
  * 5: REFERENCE INFORMATION states how to work from an attached whole-character illustration —
  *    which part to crop to, what to take from it, and what the document still overrides.
+ * 6: STYLE quotes the measured head proportion instead of a fixed "2.5-3 heads" band, which had
+ *    started contradicting the measurements shipped in the same prompt.
+ * 7: sockets are calibrated to their body region instead of sitting on the parent group's rotation
+ *    pivot, so the quoted socket position is the real attachment point.
  */
-export const PROMPT_VERSION = 5;
+export const PROMPT_VERSION = 7;
 export const PRODUCTION_SPEC_VERSION = 1;
 
 export const REFERENCE_ROLES = ["shape", "style", "color", "concept"] as const;

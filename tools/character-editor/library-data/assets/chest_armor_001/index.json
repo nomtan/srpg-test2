@@ -2,7 +2,7 @@
   "kind": "asset",
   "metadata": {
     "specVersion": 1,
-    "assetVersion": 2,
+    "assetVersion": 3,
     "id": "chest_armor_001",
     "name": "chest_armor_001",
     "type": "chest_armor",
@@ -37,7 +37,7 @@
   "favorite": false,
   "validation": {
     "status": "valid",
-    "checkedAt": "2026-09-12T23:42:58.007Z",
+    "checkedAt": "2026-09-13T15:12:52.034Z",
     "issues": []
   },
   "versionHistory": [
@@ -52,14 +52,17 @@
       "previousVersion": 1,
       "updatedAt": "2026-09-12T23:42:58.006Z",
       "note": "updated from Asset Creator"
+    },
+    {
+      "version": 3,
+      "previousVersion": 2,
+      "updatedAt": "2026-09-13T15:12:52.034Z",
+      "note": "updated from Asset Creator"
     }
   ],
   "createdAt": "2026-09-12T23:42:36.385Z",
-  "updatedAt": "2026-09-12T23:42:58.007Z",
+  "updatedAt": "2026-09-13T15:12:52.034Z",
   "files": {
-    "model": true,
-    "texture": true,
-    "thumbnail": true,
     "source": null
   },
   "origin": "creator"

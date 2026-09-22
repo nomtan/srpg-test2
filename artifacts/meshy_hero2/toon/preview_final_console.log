@@ -1,0 +1,42 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Sample spawns the hero2 GLB
+PASS: Imported AnimationPlayer exists
+PASS: Imported clip: idle
+PASS: Duration and loop preserved: idle
+PASS: Imported clip: walk
+PASS: Duration and loop preserved: walk
+PASS: Imported clip: run
+PASS: Duration and loop preserved: run
+PASS: All 26 bones, including cape chains, imported
+PASS: Skin and Toon ShaderMaterial imported
+PASS: Original Base Color texture retained
+PASS: GLB post-import applied the Toon look
+PASS: Thin outline follows the same skeleton
+PASS: Baked outline uses its own unshaded material
+PASS: Movement input walks and translates the hero
+PASS: Walk-to-run keeps stride phase
+Animated bones: ["pelvis", "spine", "chest", "head", "upper_arm.L", "forearm.L", "hand.L", "cape.L", "cape_tip.L", "upper_arm.R", "forearm.R", "hand.R", "cape.R", "cape_tip.R", "thigh.L", "shin.L", "foot.L", "thigh.R", "shin.R", "foot.R"]
+PASS: Run deforms pelvis
+PASS: Run deforms spine
+PASS: Run deforms head
+PASS: Run deforms upper_arm.L
+PASS: Run deforms upper_arm.R
+PASS: Run deforms thigh.L
+PASS: Run deforms thigh.R
+PASS: Run deforms shin.L
+PASS: Run deforms shin.R
+PASS: Run deforms cape.L
+PASS: Run deforms cape.R
+PASS: Run deforms cape_tip.L
+PASS: Run deforms cape_tip.R
+PASS: Releasing movement returns to idle
+PASS: Stopping resets every bone, including run-only rotations
+PASS: Facing follows movement (1.0, 0.0, 0.0)
+PASS: Facing follows movement (0.0, 0.0, -1.0)
+PASS: Facing follows movement (-1.0, 0.0, 0.0)
+PASS: Facing follows movement (0.0, 0.0, 1.0)
+PASS: 2D toggle remains available
+PASS: 3D toggle preserves position

@@ -1,0 +1,93 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Sprint camera keeps horizontal framing stable across frame times and directions
+PASS: Height follow smoothing is independent of frame subdivisions
+PASS: LB/RB no longer change time or weather
+PASS: Walking retains 4.5 units per second
+PASS: Running is 16 units per second, twice previous speed
+PASS: World sprint speed drives moderate animation cadence
+PASS: Blocked sprint stops locomotion animation
+PASS: Releasing movement returns to idle
+PASS: All 16 time/weather button combinations apply to particles, terrain and natural vegetation
+PASS: Morning changes sunlight direction
+PASS: Night/cloudy changes light and retains visible cloud sky
+PASS: 400 x 400 world: 9.765625 times original area
+PASS: Exploration connected land: 137417 cells
+PASS: Walk from spawn to NPC: adventurer
+PASS: Walk from spawn to NPC: tripo_knight
+PASS: Walk from spawn to NPC: tripo_hero
+PASS: Walk from spawn to NPC: guide
+PASS: Walk from spawn to NPC: merchant
+PASS: Walk from spawn to NPC: guard
+PASS: Landmark route: (87, 80)
+PASS: Landmark route: (100, 25)
+PASS: Landmark route: (24, 30)
+PASS: Landmark route: (47, 105)
+PASS: Landmark route: (47, 117)
+PASS: Landmark route: (370, 80)
+PASS: Landmark route: (210, 350)
+PASS: Landmark route: (305, 65)
+PASS: Landmark route: (350, 300)
+PASS: Cliff edge blocks walking
+PASS: House collision
+PASS: Sea collision
+PASS: Dialogue locks exploration
+PASS: Gamepad A advances dialogue
+PASS: Gamepad B closes dialogue
+PASS: Arrival triggers encounter event
+PASS: Encounter keeps explorer visible on world map
+PASS: Battle entry preserves the exact exploration camera transform
+PASS: Gamepad X switches battle hero to original 2D actor
+PASS: V restores 3D without teleporting or replacing battle actor
+PASS: Exact exploration actor reused
+PASS: Natural canopy cutaway is enabled in battle
+PASS: Starting battle does not teleport the explorer
+PASS: Enemies spawn on reachable world terrain
+PASS: Overlay follows only valid world surfaces
+PASS: Main combat/CT/skill implementations reused
+PASS: CT speed selects ready hero
+PASS: Battle menu has initial controller focus
+PASS: Left stick pans the camera without moving hero or grid cursor
+PASS: Left stick cannot change action menu focus
+PASS: Right stick rotates the view with exploration controls instead of panning
+PASS: D-pad selects the next action
+PASS: D-pad returns to movement action
+PASS: Gamepad A opens movement and releases menu focus
+PASS: D-pad selects a destination without changing the camera
+PASS: Left stick remains camera-only while choosing a destination
+PASS: Gamepad B restores menu focus
+PASS: Menu movement animates the exploration actor
+PASS: Provisional move can be canceled before action
+PASS: Battle camera rotates, zooms and pans
+PASS: Wait preserves CT 20 and chosen facing
+PASS: CT schedules enemy turns
+PASS: Both camera sticks work during enemy turns while destination selection is disabled
+PASS: Camera input remains available during enemy action
+PASS: Turn changes preserve camera position
+PASS: Skill confirmation shows preview without spending AP
+PASS: Canceling skill preview does not consume action
+PASS: Main guard skill consumes AP and applies defense buff
+PASS: Second skill is blocked within the same turn
+PASS: Weather UI works during battle without resetting combat
+PASS: Movement is also allowed after action
+PASS: Action resets CT to 0
+PASS: Normal attack needs confirmation and shows damage/hit preview
+PASS: Second attack blocked
+PASS: Victory ends encounter on same map
+PASS: Natural canopy is restored after battle
+PASS: Victory preserves last tactical position
+PASS: Exploration resumes where battle ended
+PASS: Battle cleanup preserves explorer
+PASS: Defeat recovers at encounter entry on same map
+PASS: Defeat cannot immediately retrigger encounter
+PASS: Leaving encounter allows a retry
+PASS: Battle entry retains camera at cliff / bridge: (35.0, 59.0)
+PASS: Cliff / river obstacles excluded: (35.0, 59.0)
+PASS: Tactical grid samples multiple terrain elevations
+PASS: Height-aware mouse picking: (35.0, 59.0)
+PASS: Battle entry retains camera at cliff / bridge: (51.10619, 80.0)
+PASS: Cliff / river obstacles excluded: (51.10619, 80.0)
+PASS: Height-aware mouse picking: (51.10619, 80.0)

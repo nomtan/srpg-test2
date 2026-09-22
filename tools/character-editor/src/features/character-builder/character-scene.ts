@@ -6,8 +6,9 @@ import type { CharacterRecipe } from "@/domain/character-recipe";
 import { PALETTE_SLOTS, type PaletteSlot } from "@/domain/constants";
 import { EXPORT_ASSET_SLOTS, type ExportAssetSlot } from "@/domain/character-export";
 import { SLOT_NODE_NAME, SLOT_SOCKET, clampScale } from "@/domain/builder-recipe";
-import { socketNodeName } from "@/features/asset-creator/base-parts";
-import { applyGripAlignment, gripAlignmentFor } from "@/viewer/equipment/gripAlignment";
+import { basePartNameOf, socketNodeName } from "@/features/asset-creator/base-parts";
+import { baseSocket } from "@/domain/base-measurements";
+import { applyGripAlignment, applySocketOffset, gripAlignmentFor } from "@/viewer/equipment/gripAlignment";
 import { tintBodyParts } from "@/viewer/palette/bodyPartTint";
 import type { AssetType } from "@/domain/asset-spec";
 import type { AssetLibrary, AssetLibraryEntry } from "@/features/asset-library/library";
@@ -185,7 +186,7 @@ export async function buildCharacterScene(
   const palette = normalisePalette(recipe.palette);
   const partColors = recipe.bodyPartColors ?? {};
   if (opts.applyPalette !== false) {
-    const { applied, cloned } = tintBodyParts(baseRoot, palette.skin, partColors);
+    const { applied, cloned } = tintBodyParts(baseRoot, palette.skin, partColors, basePartNameOf);
     for (const material of cloned) disposables.push(() => material.dispose());
     const unknown = Object.keys(partColors).filter((part) => !applied.includes(part));
     if (unknown.length) {
@@ -273,22 +274,26 @@ export async function buildCharacterScene(
       if (paletteSlot && PALETTE_SLOTS.includes(paletteSlot)) tint(assetRoot, palette[paletteSlot]);
     }
 
-    // Grip-attached assets are oriented and offset so their attachment point lands on the socket;
-    // do it while the asset is still detached so the anchor is measured in its own local space.
-    if (slot === "mainHand" || slot === "offHand") {
-      const alignment = gripAlignmentFor(
-        entry.metadata.type as AssetType,
-        slot === "mainHand" ? "main_hand" : "off_hand",
-        entry.metadata.attachment?.main?.assetPoint ?? "grip_main",
-      );
-      if (alignment) {
-        const placed = applyGripAlignment(assetRoot, alignment);
-        if (placed.placedBy === "center") {
-          notices.push(`${slot} (${entry.metadata.id}): ${alignment.attachmentNode} ノードが無いため、モデル中心を Socket に合わせました。`);
-        } else if (placed.placedBy === "origin") {
-          warnings.push(`${slot} (${entry.metadata.id}): ${alignment.attachmentNode} ノードがありません。Asset の原点をそのまま Socket に取り付けています。`);
-        }
+    // Place the asset on the socket's calibrated attachment point, not on the parent group's
+    // rotation pivot. Do it while the asset is still detached so any grip anchor is measured in
+    // the asset's own local space.
+    const socketOffset = baseSocket(socket)?.position ?? [0, 0, 0];
+    const alignment = slot === "mainHand" || slot === "offHand"
+      ? gripAlignmentFor(
+          entry.metadata.type as AssetType,
+          slot === "mainHand" ? "main_hand" : "off_hand",
+          entry.metadata.attachment?.main?.assetPoint ?? "grip_main",
+        )
+      : null;
+    if (alignment) {
+      const placed = applyGripAlignment(assetRoot, alignment, socketOffset);
+      if (placed.placedBy === "center") {
+        notices.push(`${slot} (${entry.metadata.id}): ${alignment.attachmentNode} ノードが無いため、モデル中心を Socket に合わせました。`);
+      } else if (placed.placedBy === "origin") {
+        warnings.push(`${slot} (${entry.metadata.id}): ${alignment.attachmentNode} ノードがありません。Asset の原点をそのまま Socket に取り付けています。`);
       }
+    } else {
+      applySocketOffset(assetRoot, socketOffset);
     }
 
     (parentNode ?? baseRoot).add(assetRoot);
@@ -307,7 +312,13 @@ export async function buildCharacterScene(
   const actualHidden: string[] = [];
   baseRoot.traverse((o) => {
     if (!isMesh(o) || !o.name) return;
-    if (hiddenSet.has(o.name)) { o.visible = false; if (!actualHidden.includes(o.name)) actualHidden.push(o.name); }
+    // Resolve through the element UUID: GLTFLoader renamed the duplicate `ashisaki` / `ashikubi`
+    // meshes and the torso, so a plain name match silently misses them.
+    const part = basePartNameOf(o);
+    if (part && hiddenSet.has(part)) {
+      o.visible = false;
+      if (!actualHidden.includes(part)) actualHidden.push(part);
+    }
   });
   for (const part of hiddenSet) if (!actualHidden.includes(part)) warnings.push(`hideParts 対象が Base に見つかりません: ${part}`);
 

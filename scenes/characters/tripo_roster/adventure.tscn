@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/tripo_adventure/prepared/character.glb" id="1"]
+[ext_resource type="Script" path="res://scripts/character/tripo_roster_character.gd" id="2"]
+
+[node name="TripoAdventure" type="Node3D"]
+script = ExtResource("2")
+character_id = "adventure"
+display_name = "冒険者"
+
+[node name="Model" parent="." instance=ExtResource("1")]
+scale = Vector3(2.25, 2.25, 2.25)
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.55, 0)
+billboard = 1
+text = "冒険者"
+font_size = 24
+pixel_size = 0.010
+no_depth_test = false

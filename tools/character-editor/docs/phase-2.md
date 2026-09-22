@@ -39,7 +39,10 @@ Groupの名前とUUIDは旧Sourceと共通だが、Pivot・部品形状・部品
 - 首・肩・耳はMesh。独立Boneや新Skeletonは作らない。
 - `onehand_sword`、`gread_sword`、`spear`、`bow`、`shield`、`dagger_left/right`、`allow` を装備階層として分類。
 - 元の綴りを変更しない（左右の意味づけは SOURCE_NODE_BY_SIDE で解決する）。全46 GroupをGLB Nodeとして残し、非表示装備MeshはPreviewに出力しない。
-- Socketは既存Groupのローカル原点を示す `pivot_only_uncalibrated`。Gripとして校正済みではない。
+- Socket は当初、既存 Group のローカル原点（＝回転 Pivot）を指す `pivot_only_uncalibrated` だった。
+  **Phase 10 で校正済み**: Pivot は取り付け点ではなく、socket_chest は胴体から 0.53 m、socket_back は
+  0.50 m ずれていた。現在は各 Socket が担当する Body Region の中心に置かれ（`SOCKET_REGION` in
+  `scripts/build-measurements.mjs`）、オフセットは親ノードのローカル系で保存される。
 
 Materialは中立の単色。UVは保持するが、ゲームのPalette適用・色の一致は今回の範囲外。
 Blockbench 5の保存済みFace順で三角化し、未対応形式やTexture追加時には変換を停止する。

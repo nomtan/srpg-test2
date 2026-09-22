@@ -1,0 +1,12 @@
+{
+  "mesh_objects": 234,
+  "triangles_after_bevel": 12470,
+  "height_metres": 2.2,
+  "nonmanifold_meshes": [],
+  "material_count": 15,
+  "skeletal_rig": false,
+  "animations": false,
+  "front_axis_blender": "-Y",
+  "front_axis_gltf": "+Z",
+  "studio_in_glb": false
+}

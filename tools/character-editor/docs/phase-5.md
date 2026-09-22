@@ -50,7 +50,28 @@ Base Body の色は Palette の `skin` が全体に適用されるが、`recipe.
 実装は `viewer/palette/bodyPartTint.ts`。Base GLB は **20 mesh すべてが 1 つの Material を共有**
 しているので、mesh の material に直接色を書くと全身が塗り変わる。上書きのあるパーツだけ Material
 を clone し、同じ色のパーツは clone を使い回す。フォールバックのパーツは共有 Material のまま
-`skin` を受け取る。`verify:export` に回帰チェックがある（漏れ出し・clone 数・Recipe 往復）。
+`skin` を受け取る。
+
+### パーツの特定は名前ではなく element UUID で行う
+
+**GLTFLoader は重複するノード名に連番を付けて一意化する。** Base GLB を読み込むと:
+
+```
+ashisaki → ashisaki, ashisaki_1     (左右2つ)
+ashikubi → ashikubi, ashikubi_1     (左右2つ)
+dou      → dou_1                    (グループ `dou` と衝突するため mesh 側が改名される)
+```
+
+そのため名前一致では**足の片側しか塗られず、胴体は一度も一致しない**。各 mesh ノードには
+Blockbench の element UUID が `extras.sourceUuid`（読み込み後は `userData.sourceUuid`）として
+入っているので、`basePartNameOf()`（`features/asset-creator/base-parts.ts`）がこれで解決する。
+
+**`hideParts` も同じ経路に統一した**。Phase 4 のドキュメントは「左右同名パーツは同時に隠れる」と
+書いていたが、実際には同じ理由で片側しか隠れておらず、`dou` は一度も隠せていなかった。
+
+`verify:export` に回帰チェックがある。実際の Base GLB を GLTFLoader で読み込み、
+ashisaki / ashikubi が 2 mesh とも解決されること、dou が解決されること、両足が同時に塗られること、
+色の漏れ出しが無いこと、clone 数、Recipe 往復を検証する。
 
 ## GLB 生成方式
 

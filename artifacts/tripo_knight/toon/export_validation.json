@@ -1,0 +1,13 @@
+{
+  "source_unchanged": true,
+  "base_color_bytes_unchanged": true,
+  "base_color_sha256": "e2067516d3ec2293849b7efad441b2794f95f645e41b25f971e3d7cdf65259c0",
+  "animation_names": [
+    "idle",
+    "run",
+    "walk"
+  ],
+  "skins": 1,
+  "bones": 26,
+  "original_rig_excluded": true
+}

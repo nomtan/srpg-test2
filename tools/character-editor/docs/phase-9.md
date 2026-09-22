@@ -147,7 +147,8 @@ sword_iron_001/
   Phase 9 で新しい Scale Rule は作っていない。
 - **Measured base body**（spec section 12）: `npm run build:measurements` が
   `public/generated-assets/base_body/measurements.json` を生成する。
-  - `character`: 高さ 1.8454 m、bounds、head 0.5833 m、約 3.16 heads tall
+  - `character`: 高さ / bounds / head サイズ / 頭身（すべて Source から再生成。Prompt も
+    固定値ではなくこの実測値を引用するので、Base を編集しても文面が矛盾しない）
   - `regions`: head / head_with_ears / neck / torso / shoulder L,R / upper_arm / forearm /
     hand / pelvis / thigh / ankle / foot の world bounding box（19 領域）
   - `sockets`: 14 socket の Phase 2 定義値（position / rotation / scale）＋実測 world position
@@ -157,7 +158,8 @@ sword_iron_001/
 - 生成スクリプトは Outliner を build-base-model.mjs と同じ変換モデルで再走査し、
   **結果が Phase 2 の three.js 製 bounds と 1e-6 以内で一致することを自己検証**してから書き出す。
 - **Attachment**: socket、asset attachment point、grip alignment（`GRIP_ALIGNMENT` 由来）、
-  socket transform（`pivot_only_uncalibrated` である旨も渡す）。
+  socket transform。**Socket は Phase 10 で校正済み**（`calibrated_to_region_centre`）で、
+  Prompt が渡す座標は実際の取り付け点。Fit Region と同じアンカーを共有する。
 - **Handedness（Phase 9 で訂正）**: 右手系では `forward × left = up` なので `+X × -Z = +Y`、
   すなわち**キャラクターの左は -Z、右は +Z**。Source のグループ名は左右が逆に付いており
   （`hand_left_te` が実際の右手）、`base-rig.ts` の `SOURCE_NODE_BY_SIDE` が物理的な左右から

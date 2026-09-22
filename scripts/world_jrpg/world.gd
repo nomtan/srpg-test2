@@ -20,9 +20,16 @@ var distance := 23.0
 var hud: CanvasLayer
 const Actor = preload("res://scripts/world_jrpg/pixel_actor.gd")
 const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
+const AdventurerNPC = preload("res://scenes/characters/adventurer_npc.tscn")
+const TripoKnightNPC = preload("res://scenes/characters/tripo_knight_npc.tscn")
+const TripoHeroNPC = preload("res://scenes/characters/tripo_hero_npc.tscn")
 const WALK_SPEED := 4.5
 const RUN_SPEED := 16.0
 @export var use_3d_player := true
+@export var player_model: PackedScene
+@export var character_roster: Array[PackedScene] = []
+var player_roster_index := -1
+var character_text: Label
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
 var player: Node3D
@@ -376,10 +383,41 @@ func _build_details(parent: Node3D) -> void:
 func _spawn_characters() -> void:
 	story = JSON.parse_string(FileAccess.get_file_as_string(story_path))
 	player = Explorer.new()
+	if player_model: player.model_scene = player_model
 	player.use_3d = use_3d_player
 	player.name = "Explorer"
 	add_child(player)
 	player.position = Vector3(32, 14.05, 60)
+	if character_roster.is_empty():
+		# Separate stationary job-body preview, on the clear starting plateau.
+		var adventurer := AdventurerNPC.instantiate() as Node3D
+		add_child(adventurer)
+		adventurer.position = Vector3(30.5, _surface(30.5, 57.5) + 0.05, 57.5)
+		adventurer.rotation.y = -0.65
+		npcs.append({"actor": adventurer, "data": {
+			"id": "adventurer", "name": "冒険者", "job_id": "adventurer",
+			"lines": ["やあ、旅の仲間だね。ここから一緒に世界を見渡してみよう。"]
+		}})
+		var knight := TripoKnightNPC.instantiate() as Node3D
+		add_child(knight)
+		knight.position = adventurer.position + Vector3(-2.4, 0, -1.8)
+		knight.position.y = _surface(knight.position.x, knight.position.z) + 0.05
+		knight.rotation.y = adventurer.rotation.y
+		npcs.append({"actor": knight, "data": {
+			"id": "tripo_knight", "name": "騎士",
+			"lines": ["この辺りの見張りは任せてくれ。"]
+		}})
+		var hero := TripoHeroNPC.instantiate() as Node3D
+		add_child(hero)
+		hero.position = knight.position + Vector3(-2.4, 0, -1.8)
+		hero.position.y = _surface(hero.position.x, hero.position.z) + 0.05
+		hero.rotation.y = knight.rotation.y
+		npcs.append({"actor": hero, "data": {
+			"id": "tripo_hero", "name": "勇者",
+			"lines": ["準備はできているよ。一緒に冒険へ出かけよう。"]
+		}})
+	else:
+		_spawn_tripo_roster()
 	for data: Dictionary in story.npcs:
 		var actor := Actor.new()
 		actor.palette_name = data.palette
@@ -505,9 +543,14 @@ func _setup_hud() -> void:
 	location_text = Label.new()
 	info.add_child(location_text)
 	var help := Label.new()
-	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\n右ドラッグ : 視点   ホイール : 距離   M : 全景\n1–4 : 景観を見る   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話　B 閉じる　Y 全景　LT/RT 距離\n十字 景観　Back UI　V / X：2D・3D切替"
+	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
+	if not character_roster.is_empty():
+		help.text = help.text.replace("2D・3D切替", "操作キャラ切替")
 	help.add_theme_font_size_override("font_size", 16)
 	info.add_child(help)
+	if not character_roster.is_empty():
+		character_text = Label.new()
+		info.add_child(character_text)
 	prompt_text = Label.new()
 	prompt_text.modulate = Color("edcf94")
 	info.add_child(prompt_text)
@@ -522,6 +565,24 @@ func _setup_hud() -> void:
 	dialog_text.add_theme_font_size_override("font_size", 22)
 	dialog_panel.add_child(dialog_text)
 	dialog_panel.hide()
+
+func _spawn_tripo_roster() -> void:
+	var initial_visual := player.model.get_node_or_null("Model") as Node3D
+	for index in character_roster.size():
+		var actor := character_roster[index].instantiate() as Node3D
+		add_child(actor)
+		if initial_visual and actor.get_node("Model").scene_file_path == initial_visual.scene_file_path:
+			player_roster_index = index
+			character_text.text = "操作キャラ：" + actor.display_name
+		# Three rows on the clear starting plateau, with room to walk between them.
+		var x := 24.5 + float(index % 3) * 3.6
+		var z := 57.0 - floorf(float(index) / 3.0) * 3.6
+		actor.position = Vector3(x, _surface(x, z) + 0.05, z)
+		actor.rotation.y = -0.65
+		npcs.append({"actor": actor, "data": {
+			"id": "tripo_" + actor.character_id, "name": actor.display_name,
+			"lines": Array(actor.dialogue)
+		}})
 
 func _focus_player() -> void:
 	overview = false
@@ -552,7 +613,7 @@ func _process(delta: float) -> void:
 		pitch = clampf(pitch + look.y * delta * 1.5, 0.2, 1.35)
 		distance = clampf(distance * exp(-GamepadInput.zoom() * delta), 9.0, SIZE * 1.8)
 		_update_camera()
-	if motion.length_squared() > 0:
+	if motion.length_squared() > 0 and not player.attacking:
 		if overview:
 			distance = 27
 			_focus_player()
@@ -609,7 +670,9 @@ func _region() -> String:
 
 func _show_dialog(speaker: String, lines: Array, after: Callable = Callable()) -> void:
 	mode = "dialog"
-	if player: player.walking = false
+	if player:
+		player.walking = false
+		player.cancel_attack()
 	dialog_lines = []
 	for line in lines: dialog_lines.append(speaker + "\n\n" + str(line) + "\n\n[E / Enter] 次へ    [Esc] 閉じる")
 	dialog_index = 0
@@ -627,6 +690,7 @@ func _close_dialog() -> void:
 
 func _start_battle() -> void:
 	mode = "battle"
+	player.cancel_attack()
 	player.locomotion_speed = -1.0
 	encounter_marker.hide()
 	return_position = player.position
@@ -653,16 +717,26 @@ func _finish_battle(won: bool) -> void:
 	_show_dialog("街道の襲撃", [story.encounter.victory if won else story.encounter.defeat])
 
 func _input(event: InputEvent) -> void:
-	# Available in exploration, dialogue and battle; does not replace the actor.
-	var toggle: bool = (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_V) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
+	# B switches in exploration; dialogue/battle keep B for close/cancel.
+	# V and L3 remain available in every mode without replacing the gameplay actor.
+	var toggle: bool = event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_V
+	if event is InputEventJoypadButton and event.pressed:
+		toggle = event.button_index == JOY_BUTTON_LEFT_STICK or (event.button_index == JOY_BUTTON_B and mode == "explore")
 	if toggle and player:
-		use_3d_player = not use_3d_player
-		player.set_3d_enabled(use_3d_player)
+		if not character_roster.is_empty():
+			player_roster_index = (player_roster_index + 1) % character_roster.size()
+			use_3d_player = true
+			player.use_3d = true
+			player.set_model_scene(character_roster[player_roster_index], true)
+			character_text.text = "操作キャラ：" + player.model.display_name
+		else:
+			use_3d_player = not use_3d_player
+			player.set_3d_enabled(use_3d_player)
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
-	event = GamepadInput.as_key(event, {JOY_BUTTON_A: KEY_E, JOY_BUTTON_B: KEY_ESCAPE, JOY_BUTTON_Y: KEY_M, JOY_BUTTON_RIGHT_STICK: KEY_R, JOY_BUTTON_BACK: KEY_H, JOY_BUTTON_DPAD_UP: KEY_1, JOY_BUTTON_DPAD_RIGHT: KEY_2, JOY_BUTTON_DPAD_DOWN: KEY_3, JOY_BUTTON_DPAD_LEFT: KEY_4})
 	if mode == "battle": return
+	event = GamepadInput.as_key(event, {JOY_BUTTON_A: KEY_E, JOY_BUTTON_B: KEY_ESCAPE, JOY_BUTTON_X: KEY_J, JOY_BUTTON_Y: KEY_K, JOY_BUTTON_LEFT_SHOULDER: KEY_M, JOY_BUTTON_RIGHT_STICK: KEY_R, JOY_BUTTON_BACK: KEY_H, JOY_BUTTON_DPAD_UP: KEY_1, JOY_BUTTON_DPAD_RIGHT: KEY_2, JOY_BUTTON_DPAD_DOWN: KEY_3, JOY_BUTTON_DPAD_LEFT: KEY_4})
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "dialog":
 			if event.keycode == KEY_ESCAPE: _close_dialog()
@@ -673,6 +747,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		match event.keycode:
+			KEY_J, KEY_K:
+				player.attack(event.keycode == KEY_K)
+				get_viewport().set_input_as_handled()
 			KEY_E:
 				for npc in npcs:
 					if player.position.distance_to(npc.actor.position) < 3.2:

@@ -1,0 +1,36 @@
+{
+  "preserved": {
+    "vertices": "32f541267739a5ecfd616306e54563237cdab9b9da0a986f922767145a2f9bd3",
+    "topology": "b72295cf61f0a0595b632b10864c410d5101d076752ad7f4ea2a058aeb708157",
+    "uv": "400b6fe74ae1820e4d56f875be65b71cc5da4f0efc409fe252f06f29ff0696ef",
+    "weights": "92abc2379fa8be06cc0ab27ecc8f8f30b36de3ebb0cf42dfedae55dba5769304",
+    "groups": "374ff0a40d243cf49ca6d0117194a1ab00d43f34deffd14996bf980cc3e22987",
+    "images": {
+      "Image_0": "347cb6deb3530bd430b9fe1997061cd181518e09c82534140ae7dd80b420b691",
+      "Image_1": "f01f2986583d1eb20dd7f2c768f7121fee4189f55b6de5e389fae572ce4d4178",
+      "normal": "78eca9b9775d42553185116c7314151d19983513d4ee540d4e27018a323c665c"
+    },
+    "actions": {
+      "idle": "3b73b89335fa5a000be731f2a496afa558b5ad4187fdbce2608cbb41c0e2fb20",
+      "run": "e13885461f100fac68c93d238e34fc05e488778f279e58b519aafc9ae00bbd79",
+      "walk": "9d033957035e67bacd5c5df6632f28951c85e33a37341df2d4333cf4c46bc1c9"
+    }
+  },
+  "bones": 26,
+  "subdivision": false,
+  "normal_map": false,
+  "bands": [
+    0.68,
+    0.84,
+    1.0
+  ],
+  "thresholds": [
+    0.0,
+    0.28,
+    0.6
+  ],
+  "original_scene": "Original",
+  "toon_scene": "Toon",
+  "smooth_faces": 824,
+  "outline_width_source_units": 0.003
+}

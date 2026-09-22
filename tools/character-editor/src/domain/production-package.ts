@@ -11,7 +11,7 @@ import { COORDINATE_SYSTEM } from "./constants";
 import { DEFAULT_PALETTE } from "./phase3";
 import {
   BASE_CHARACTER, BASE_COORDINATE_INFO, BASE_SOURCE_PATH, CLEARANCE_REGIONS, FIT_REGIONS,
-  baseRegion, baseSocket, recommendedWeaponLength, type MeasuredBox,
+  baseRegion, baseSocket, recommendedWeaponLength, targetSizeFor, type MeasuredBox,
 } from "./base-measurements";
 import {
   ALPHA_POLICY_LABEL, BUDGET_DEFINITION, TYPE_ANIMATION_TEST, attachmentSpecFor,
@@ -44,6 +44,14 @@ export const TYPE_LONGEST_AXIS_RATIO: Record<AssetType, [number, number]> = {
 
 /** Beyond this multiple of the plausible range the size is reported as an error, not a warning. */
 export const SIZE_ERROR_MARGIN = 1.5;
+
+/**
+ * Tolerance around a coverage-derived target size. A fixed fraction of the character height drifts
+ * away from the body as soon as the base model changes — when the shoulder widened, the prompt
+ * started asking for a size the validator rejected. Deriving the range from the same target the
+ * prompt states keeps the two in step automatically.
+ */
+export const TARGET_SIZE_TOLERANCE = { min: 0.75, max: 1.35 } as const;
 
 export interface ValidationSpec {
   specVersion: 1;
@@ -106,6 +114,16 @@ export function buildValidationSpec(job: ProductionJob): ValidationSpec {
   const socketInfo = baseSocket(draft.socket);
   const weaponRange = isWeapon(draft.type) ? recommendedWeaponLength(draft.weaponType) : null;
   const [lo, hi] = TYPE_LONGEST_AXIS_RATIO[draft.type];
+  // Types that are worn OVER a body part state a target size in the prompt; the accepted range has
+  // to follow that target, not an independent fraction of the character height.
+  const target = targetSizeFor(draft.type);
+  const targetRange = target && target.coverage !== 1
+    ? {
+        min: Math.round(Math.max(...target.size) * TARGET_SIZE_TOLERANCE.min * 1e4) / 1e4,
+        max: Math.round(Math.max(...target.size) * TARGET_SIZE_TOLERANCE.max * 1e4) / 1e4,
+        errorMargin: SIZE_ERROR_MARGIN,
+      }
+    : null;
   const animation = TYPE_ANIMATION_TEST[draft.type];
 
   const box = (region: string) => ({ region, box: baseRegion(region as never) });
@@ -126,7 +144,7 @@ export function buildValidationSpec(job: ProductionJob): ValidationSpec {
       maxOriginOffset: Math.max(0.2, BASE_CHARACTER.height * 0.25),
       longestAxis: weaponRange
         ? { min: weaponRange.min, max: weaponRange.max, errorMargin: SIZE_ERROR_MARGIN }
-        : {
+        : targetRange ?? {
             min: Math.round(BASE_CHARACTER.height * lo * 1e4) / 1e4,
             max: Math.round(BASE_CHARACTER.height * hi * 1e4) / 1e4,
             errorMargin: SIZE_ERROR_MARGIN,

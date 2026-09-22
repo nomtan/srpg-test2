@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/tripo_butler/prepared/character.glb" id="1"]
+[ext_resource type="Script" path="res://scripts/character/tripo_roster_character.gd" id="2"]
+
+[node name="TripoButler" type="Node3D"]
+script = ExtResource("2")
+character_id = "butler"
+display_name = "執事"
+
+[node name="Model" parent="." instance=ExtResource("1")]
+scale = Vector3(2.25, 2.25, 2.25)
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.55, 0)
+billboard = 1
+text = "執事"
+font_size = 24
+pixel_size = 0.010
+no_depth_test = false

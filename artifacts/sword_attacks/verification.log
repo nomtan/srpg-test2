@@ -1,0 +1,102 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Initial knight equips the requested sword
+PASS: Face button starts sword/slash
+PASS: Attack does not switch model or camera
+PASS: Sprint stops and attack runs at native speed
+PASS: Locomotion cannot overwrite attack
+PASS: Repeated and competing attacks cannot interrupt the swing
+PASS: Movement input is locked during the swing
+PASS: Attack animates the actual hand bones
+PASS: Sword socket follows the animated right hand
+PASS: Attack has no gameplay root drift
+PASS: Attack completes and returns to idle
+PASS: Face button starts sword/overhead
+PASS: Attack does not switch model or camera
+PASS: Sprint stops and attack runs at native speed
+PASS: Locomotion cannot overwrite attack
+PASS: Repeated and competing attacks cannot interrupt the swing
+PASS: Movement input is locked during the swing
+PASS: Attack animates the actual hand bones
+PASS: Sword socket follows the animated right hand
+PASS: Attack has no gameplay root drift
+PASS: Attack completes and returns to idle
+PASS: Button releases do not start attacks
+PASS: Keyboard alternative starts an attack
+PASS: Keyboard echo cannot start an attack
+PASS: Keyboard alternative starts an attack
+PASS: Keyboard echo cannot start an attack
+PASS: Dialogue cancels attacks and ignores attack buttons
+PASS: Character switch equips sword and clears attack: scholar
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: scholar: blade stays above ground in sword/slash (0.73)
+PASS: Both one-shot attacks exist on replacement
+PASS: scholar: blade stays above ground in sword/overhead (0.19)
+PASS: Character switch equips sword and clears attack: warrior
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: warrior: blade stays above ground in sword/slash (0.78)
+PASS: Both one-shot attacks exist on replacement
+PASS: warrior: blade stays above ground in sword/overhead (0.23)
+PASS: Character switch equips sword and clears attack: white_mage
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: white_mage: blade stays above ground in sword/slash (0.77)
+PASS: Both one-shot attacks exist on replacement
+PASS: white_mage: blade stays above ground in sword/overhead (0.22)
+PASS: Character switch equips sword and clears attack: adventure
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: adventure: blade stays above ground in sword/slash (0.80)
+PASS: Both one-shot attacks exist on replacement
+PASS: adventure: blade stays above ground in sword/overhead (0.25)
+PASS: Character switch equips sword and clears attack: black_mage
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: black_mage: blade stays above ground in sword/slash (0.59)
+PASS: Both one-shot attacks exist on replacement
+PASS: black_mage: blade stays above ground in sword/overhead (0.05)
+PASS: Character switch equips sword and clears attack: butler
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: butler: blade stays above ground in sword/slash (0.79)
+PASS: Both one-shot attacks exist on replacement
+PASS: butler: blade stays above ground in sword/overhead (0.25)
+PASS: Character switch equips sword and clears attack: chief_butler
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: chief_butler: blade stays above ground in sword/slash (0.81)
+PASS: Both one-shot attacks exist on replacement
+PASS: chief_butler: blade stays above ground in sword/overhead (0.26)
+PASS: Character switch equips sword and clears attack: hero
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: hero: blade stays above ground in sword/slash (0.78)
+PASS: Both one-shot attacks exist on replacement
+PASS: hero: blade stays above ground in sword/overhead (0.23)
+PASS: Character switch equips sword and clears attack: knight
+PASS: Replacement has exactly one sword
+PASS: Both one-shot attacks exist on replacement
+PASS: knight: blade stays above ground in sword/slash (0.90)
+PASS: Both one-shot attacks exist on replacement
+PASS: knight: blade stays above ground in sword/overhead (0.35)
+PASS: Character switching wraps back to the original knight
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: Player equipment does not modify placed NPCs
+PASS: LB retains access to the overview camera
+PASS: Exploration attacks cannot bypass turn-based battle rules
+SWORD_COMBAT: PASSED

@@ -17,6 +17,8 @@ var base_jump_height := 1
 var speed_modifier := 1.0
 var player_selectable := true
 var allowed_weapon_types: Array[int] = []
+## Optional shared job-body visual; identity belongs to the character's appearance.
+var body_scene_path: String = ""
 
 static func create(id: String, display_name: String, values: Dictionary, skills: Array[Dictionary] = [], rank: JobRank = JobRank.BASIC, bonuses: Dictionary = {}, requirements: Dictionary = {}) -> JobData:
 	var job := JobData.new()

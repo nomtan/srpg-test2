@@ -1,0 +1,43 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Separate adventurer NPC spawned in actual exploration sample
+PASS: Existing controllable hero unchanged
+PASS: NPC stands near the start without overlapping player
+PASS: NPC feet placed on terrain
+PASS: NPC participates in existing collision avoidance
+PASS: NPC uses existing interaction/dialogue system
+PASS: Each GLB contains only its requested part
+PASS: Original texture and cel shader: SharedAdventurerBody
+PASS: Original texture and cel shader: FaceSlot
+PASS: Original texture and cel shader: HairSlot
+PASS: Characters reuse the same job-body mesh resource
+PASS: Character recipes are independent even with a shared preset
+PASS: Expression available: smile
+PASS: Expression morph resets correctly: Smile
+PASS: Expression morph resets correctly: Blink
+PASS: Expression morph resets correctly: Angry
+PASS: Expression available: blink
+PASS: Expression morph resets correctly: Smile
+PASS: Expression morph resets correctly: Blink
+PASS: Expression morph resets correctly: Angry
+PASS: Expression available: angry
+PASS: Expression morph resets correctly: Smile
+PASS: Expression morph resets correctly: Blink
+PASS: Expression morph resets correctly: Angry
+PASS: Expression available: neutral
+PASS: Expression morph resets correctly: Smile
+PASS: Expression morph resets correctly: Blink
+PASS: Expression morph resets correctly: Angry
+PASS: Unsupported appearance values fail without replacing parts
+PASS: Second hairstyle can be selected
+PASS: Hair swap preserves shared body and world position
+PASS: Appearance changes do not affect another character
+PASS: Face is independently replaceable
+PASS: Face replacement preserves body and expression control
+PASS: Per-character face texture can be replaced
+PASS: Face identity edit leaves body material intact
+PASS: Movement input controls hero while adventurer stays still
+PASS: Adventure body registered to adventurer job

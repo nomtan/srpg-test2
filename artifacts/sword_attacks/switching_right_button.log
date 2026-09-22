@@ -1,0 +1,208 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Initial knight is matched to the placed roster
+PASS: idle: switches in roster order to scholar
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to warrior
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to white_mage
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to adventure
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to black_mage
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to butler
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to chief_butler
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to hero
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to knight
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Nine presses wrap back to the knight
+PASS: walk: switches in roster order to scholar
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to warrior
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to white_mage
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to adventure
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to black_mage
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to butler
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to chief_butler
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to hero
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to knight
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: Nine presses wrap back to the knight
+PASS: run: switches in roster order to scholar
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to warrior
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to white_mage
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to adventure
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to black_mage
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to butler
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to chief_butler
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to hero
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to knight
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: Nine presses wrap back to the knight
+PASS: Button release and keyboard repeat do not switch
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Right face button cancels battle selection without switching character
+PASS: Battle keeps the same gameplay hero when the model changes
+PASS: Switching also works in battle
+PASS: Switching also works in dialogue without advancing it
+PASS: Right face button closes dialogue without switching character
+TRIPO_SWITCHING: PASSED

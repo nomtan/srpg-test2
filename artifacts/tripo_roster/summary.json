@@ -1,0 +1,92 @@
+[
+  {
+    "source": "assets\\characters\\tripo_adventure\\adventure.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 837
+  },
+  {
+    "source": "assets\\characters\\tripo_black_mage\\black_mage.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 522
+  },
+  {
+    "source": "assets\\characters\\tripo_butler\\butler.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 808
+  },
+  {
+    "source": "assets\\characters\\tripo_chief_butler\\chief_butler.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 820
+  },
+  {
+    "source": "assets\\characters\\tripo_hiro\\hero.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 695
+  },
+  {
+    "source": "assets\\characters\\tripo_knight2\\knigth.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 2354
+  },
+  {
+    "source": "assets\\characters\\tripo_scholar\\scholar.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 1266
+  },
+  {
+    "source": "assets\\characters\\tripo_warrior\\warrior.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 1323
+  },
+  {
+    "source": "assets\\characters\\tripo_white_mage\\white_mage.glb",
+    "bones": 26,
+    "clips": [
+      "idle",
+      "walk",
+      "run"
+    ],
+    "face_polygons": 1113
+  }
+]

@@ -1,0 +1,58 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: All 30 fitted bones imported
+PASS: Exactly one skeleton drives body, face and hair
+PASS: Stationary NPC starts its idle animation
+PASS: Clip imported: idle
+PASS: Clip duration and loop: idle
+PASS: Clip imported: rig_check
+PASS: Clip duration and loop: rig_check
+PASS: Shared skin binding: SharedAdventurerBody
+PASS: Every vertex has normalized weights: SharedAdventurerBody
+PASS: Shared skin binding: FaceSlot
+PASS: Every vertex has normalized weights: FaceSlot
+PASS: Shared skin binding: HairSlot
+PASS: Every vertex has normalized weights: HairSlot
+ERROR: Mouth uses stable rest coordinates under skinning
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] check (res://scripts/world_jrpg/verify_adventurer_rig.gd:12)
+       [1] run (res://scripts/world_jrpg/verify_adventurer_rig.gd:74)
+PASS: Expression rest coordinates survive GLB axis/UV conversion
+PASS: Pose animates head
+PASS: Pose animates chest
+PASS: Pose animates upper_arm.L
+PASS: Pose animates forearm.L
+PASS: Pose animates hand.L
+PASS: Pose animates thigh.L
+PASS: Pose animates shin.L
+PASS: Pose animates foot.L
+PASS: Pose animates cape.L
+PASS: Pose animates cape_tip.L
+PASS: Pose animates coat_front.L
+PASS: Pose animates coat_back.L
+PASS: Skin actually deforms SharedAdventurerBody (0.501 m)
+PASS: Skin actually deforms FaceSlot (0.154 m)
+PASS: Skin actually deforms HairSlot (0.198 m)
+PASS: Hair swapped during a pose stays on shared skeleton
+PASS: Face swapped during a pose stays on shared skeleton
+PASS: Expressions and identity still work while skinned
+PASS: Swaps do not accumulate extra skeletons
+PASS: Characters share mesh data but have independent poses
+PASS: Another character keeps its neutral head pose
+PASS: Returning to idle resets every animated bone
+PASS: Rig and animations never translate the stationary NPC
+PASS: No ground penetration in idle (0.000000 m)
+PASS: No ground penetration in rig_check (-0.000078 m)
+ERROR: Condition "f.is_null()" is true.
+   at: _save_to_cache (drivers/gles3/shader_gles3.cpp:645)
+ERROR: Condition "f.is_null()" is true.
+   at: _save_to_cache (drivers/gles3/shader_gles3.cpp:645)
+ERROR: Condition "f.is_null()" is true.
+   at: _save_to_cache (drivers/gles3/shader_gles3.cpp:645)
+ERROR: Condition "f.is_null()" is true.
+   at: _save_to_cache (drivers/gles3/shader_gles3.cpp:645)

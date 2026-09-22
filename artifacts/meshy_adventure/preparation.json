@@ -1,0 +1,13 @@
+{
+  "source_vertices": 17618,
+  "source_polygons": 35320,
+  "parts": {
+    "AdventurerBody": 23926,
+    "Face": 1818,
+    "Hair_Tousled": 9576
+  },
+  "base_color_sha256": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+  "height": 2.2,
+  "contract": "Blender +Z up/-Y front; glTF +Y up/+Z front, sole at origin",
+  "source_preserved": "Adventure_Original scene and artifacts/meshy_adventure backups"
+}

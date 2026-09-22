@@ -1,0 +1,397 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[   0% ] first_scan_filesystem | Started プロジェクトの初期化 (5 steps)
+[   0% ] first_scan_filesystem | ファイル構造をスキャン中...
+[  16% ] first_scan_filesystem | グローバルクラス名を読み込み中...
+[  33% ] first_scan_filesystem | GDExtensionを検証中...
+[  50% ] first_scan_filesystem | 自動読み込みスクリプトを作成中...
+[  66% ] first_scan_filesystem | プラグインを初期化中...
+
+=== MCP SERVER STARTING ===
+Creating command handler...
+Connecting command handler signals...
+Port 9080 taken (err 22), trying next...
+MCP WebSocket listening on port 9081
+Loading MCP Status Panel...
+=== MCP SERVER INITIALIZED ===
+
+Command handler initializing...
+WebSocket server reference set: @EditorPlugin@18495:<EditorPlugin#1565549201179>
+SCRIPT ERROR: Parse Error: Class "AshenMCP_NodeCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/node_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:24)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/node_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:24)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_ScriptCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/script_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:25)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/script_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:25)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_SceneCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/scene_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:26)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/scene_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:26)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_ProjectCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/project_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:27)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/project_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:27)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_EditorCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/editor_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:28)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/editor_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:28)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_EditorScriptCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/editor_script_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:29)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/editor_script_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:29)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_AnimationCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/animation_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:30)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/animation_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:30)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_AudioCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/audio_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:31)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/audio_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:31)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_IntrospectionCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/introspection_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:32)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/introspection_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:32)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_VisualizerCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/visualizer_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:33)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/visualizer_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:33)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+   at: _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:35)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:35)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+Command handler initialized and ready to process commands
+[  83% ] first_scan_filesystem | ファイルスキャンを開始...
+[ DONE ] first_scan_filesystem
+
+WARNING: UID duplicate detected between res://godot_mcp/commands/animation_commands.gd and res://addons/godot_mcp/commands/animation_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/audio_commands.gd and res://addons/godot_mcp/commands/audio_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/base_command_processor.gd and res://addons/godot_mcp/commands/base_command_processor.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/editor_commands.gd and res://addons/godot_mcp/commands/editor_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/editor_script_commands.gd and res://addons/godot_mcp/commands/editor_script_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/introspection_commands.gd and res://addons/godot_mcp/commands/introspection_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/node_commands.gd and res://addons/godot_mcp/commands/node_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/project_commands.gd and res://addons/godot_mcp/commands/project_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/scene_commands.gd and res://addons/godot_mcp/commands/scene_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/script_commands.gd and res://addons/godot_mcp/commands/script_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/visualizer_commands.gd and res://addons/godot_mcp/commands/visualizer_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/ui/mcp_panel.gd and res://addons/godot_mcp/ui/mcp_panel.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/ui/mcp_panel.tscn and res://addons/godot_mcp/ui/mcp_panel.tscn.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/utils/node_utils.gd and res://addons/godot_mcp/utils/node_utils.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/utils/resource_utils.gd and res://addons/godot_mcp/utils/resource_utils.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/utils/script_utils.gd and res://addons/godot_mcp/utils/script_utils.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/command_handler.gd and res://addons/godot_mcp/command_handler.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/mcp_server.gd and res://addons/godot_mcp/mcp_server.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/websocket_server.gd and res://addons/godot_mcp/websocket_server.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+[   0% ] update_scripts_classes | Started グローバルクラスを登録中... (16 steps)
+[   0% ] update_scripts_classes | AshenMCP_AnimationCommands
+[   5% ] update_scripts_classes | AshenMCP_AudioCommands
+[  11% ] update_scripts_classes | AshenMCP_BaseCommandProcessor
+[  17% ] update_scripts_classes | AshenMCP_EditorCommands
+[  23% ] update_scripts_classes | AshenMCP_EditorScriptCommands
+[  29% ] update_scripts_classes | AshenMCP_IntrospectionCommands
+[  35% ] update_scripts_classes | AshenMCP_NodeCommands
+[  41% ] update_scripts_classes | AshenMCP_ProjectCommands
+[  47% ] update_scripts_classes | AshenMCP_SceneCommands
+[  52% ] update_scripts_classes | AshenMCP_ScriptCommands
+[  58% ] update_scripts_classes | AshenMCP_VisualizerCommands
+[  64% ] update_scripts_classes | AshenMCP_NodeUtils
+[  70% ] update_scripts_classes | AshenMCP_ResourceUtils
+[  76% ] update_scripts_classes | AshenMCP_ScriptUtils
+[  82% ] update_scripts_classes | AshenMCP_WebSocketServer
+[  88% ] update_scripts_classes | 
+[ DONE ] update_scripts_classes
+
+[   0% ] _update_scan_actions | Started アクションをスキャン中... (9 steps)
+[   0% ] _update_scan_actions | original_standard_idle.png
+[  10% ] _update_scan_actions | toon_agx_idle.png
+[  20% ] _update_scan_actions | female_base.glb
+[  30% ] _update_scan_actions | Adventure.blend
+[  40% ] _update_scan_actions | Adventure_modular.blend
+[  50% ] _update_scan_actions | hero.blend
+[  60% ] _update_scan_actions | hero2.blend
+[  70% ] _update_scan_actions | knight_toon.blend
+[  80% ] _update_scan_actions | knight_toon.glb
+[ DONE ] _update_scan_actions
+
+[   0% ] reimport | Started アセットを(再)インポート中 (4 steps)
+[   0% ] reimport | 再インポートするファイルを準備中...
+[  20% ] reimport | 再インポートするファイルを準備中...
+[  40% ] reimport | 再インポートするファイルを準備中...
+[  60% ] reimport | 再インポートするファイルを準備中...
+[   0% ] reimport | 再インポート前の操作を実行中...
+[   0% ] preload_reimporting_scene | Started 再読み込みのためのシーンの準備 (1 steps)
+[   0% ] preload_reimporting_scene | シーン [空] を分析中
+[  50% ] preload_reimporting_scene | 準備が完了しました。
+[ DONE ] preload_reimporting_scene
+
+[   0% ] reimport | original_standard_idle.png
+[  20% ] reimport | toon_agx_idle.png
+[  40% ] reimport | knight_toon_knight_3d_model_basecolor.jpg
+[  60% ] reimport | knight_toon.glb
+[   0% ] import | Started シーンをインポート (104 steps)
+[   0% ] import | シーンをインポート中...
+ERROR: Unable to find node 25 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 24 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 15 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 14 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 1 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 0 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 5 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 4 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 3 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 2 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 7 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 6 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 11 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 10 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 9 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 8 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 13 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 12 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 18 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 17 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 16 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 21 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 20 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 19 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 23 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 22 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 25 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 24 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 15 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 14 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 1 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 0 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 5 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 4 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 3 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 2 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 7 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 6 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 11 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 10 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 9 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 8 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 13 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 12 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 18 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 17 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 16 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 21 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 20 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 19 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 23 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 22 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 25 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 24 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 15 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 14 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 1 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 0 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 5 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 4 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 3 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 2 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 7 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 6 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 11 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 10 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 9 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 8 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 13 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 12 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 18 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 17 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 16 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 21 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 20 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 19 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 23 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+ERROR: Unable to find node 22 for animation.
+   at: _import_animation (modules/gltf/gltf_document.cpp:5465)
+[   1% ] import | カスタムスクリプトの実行中...
+[  99% ] import | 保存中...
+[ DONE ] import
+
+[  80% ] reimport | アセットインポートを終了しています...
+[ DONE ] reimport
+
+[   0% ] reimport | Started アセットを(再)インポート中 (4 steps)
+[   0% ] reimport | 再インポート後の操作を実行中...
+[ DONE ] reimport
+
+[   0% ] loading_editor_layout | Started エディターの読み込み (5 steps)
+[   0% ] loading_editor_layout | エディターレイアウトを読み込み中...
+[  16% ] loading_editor_layout | ドックを読み込み中...
+[  33% ] loading_editor_layout | シーンを再オープン中...
+[  50% ] loading_editor_layout | 中央エディターを読み込み中...
+[  66% ] loading_editor_layout | プラグインのウィンドウレイアウトを読み込み中...
+[  83% ] loading_editor_layout | エディターレイアウトの準備完了。
+[ DONE ] loading_editor_layout
+
+=== MCP SERVER SHUTDOWN ===
+ERROR: Cannot save file 'C:/Users/nomur/AppData/Roaming/Godot/editor_settings-4.6.tres'.
+   at: save (scene/resources/resource_format_text.cpp:1756)
+ERROR: Error saving editor settings to C:/Users/nomur/AppData/Roaming/Godot/editor_settings-4.6.tres
+   at: save (editor/settings/editor_settings.cpp:1404)

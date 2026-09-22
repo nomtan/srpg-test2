@@ -8,7 +8,7 @@ import { newProductionJob, PROMPT_VERSION } from "../src/domain/production-job.t
 import { buildProductionPackage, buildValidationSpec } from "../src/domain/production-package.ts";
 import { validateProduction } from "../src/domain/production-validation.ts";
 import { buildRevisionPrompt, revisionInstructions } from "../src/domain/production-revision.ts";
-import { BASE_CHARACTER, baseRegion, baseSocket } from "../src/domain/base-measurements.ts";
+import { BASE_CHARACTER, baseRegion, baseSocket, targetSizeFor } from "../src/domain/base-measurements.ts";
 import { TYPE_TEMPLATE_FILE } from "../src/prompt/templates/index.ts";
 import * as THREE from "three";
 import { readFileSync } from "node:fs";
@@ -164,11 +164,14 @@ console.log("\n# Per-type templates");
     && prompts.shoulder_left.includes("Avoid head collision")
     && prompts.shoulder_left.includes("Avoid chest collision"));
   for (const side of ["shoulder_left", "shoulder_right"]) {
+    // Derive the expectation: the numbers move with base_1.bbmodel, the rule does not.
+    const expected = targetSizeFor(side);
     check(`${side}: a target asset size is stated, not just the body region`,
-      prompts[side].includes("Target asset size: about 0.3126 x 0.3125 x 0.1875 m")
-      && prompts[side].includes("worn OVER that body part"));
+      prompts[side].includes(`Target asset size: about ${expected.size.join(" x ")} m`)
+      && prompts[side].includes("worn OVER that body part"),
+      expected.size.join(" x "));
     check(`${side}: the pauldron must overhang the shoulder`,
-      prompts[side].includes("roughly 1.5x the bare shoulder")
+      prompts[side].includes(`roughly ${targetSizeFor(side).coverage}x the bare shoulder`)
       && prompts[side].includes("Do not build it flush"));
   }
   check("shield rules", prompts.shield.includes("off hand")
@@ -247,16 +250,22 @@ const goodModel = {
   const paletteFail = validateProduction(noPaletteSpec, { model: goodModel, texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: null });
   // A pauldron built flush to the bare shoulder is what "too small" looked like in practice.
   const shoulderSpec = buildValidationSpec(jobFor("shoulder_left"));
-  const pauldron = (longest) => ({
+  // Build the box from the real per-axis proportions: the longest shoulder axis is X (front/back),
+  // so a cube of that length would be 0.5 m tall and hit the head for reasons unrelated to size.
+  const pauldron = (size) => ({
     ...goodModel,
     nodeNames: ["shoulder_left_001"],
-    boundingBox: { min: [-longest / 2, -longest / 2, -0.09], max: [longest / 2, longest / 2, 0.09], size: [longest, longest, 0.18] },
+    boundingBox: { min: size.map((v) => -v / 2), max: size.map((v) => v / 2), size },
   });
-  const flush = validateProduction(shoulderSpec, { model: pauldron(0.2084), texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: "s.bbmodel" });
+  // Flush = the bare shoulder's own longest axis; the target = what the prompt asks for. Both are
+  // read from the model so the check survives an edit to base_1.bbmodel.
+  const bareShoulder = baseRegion("shoulder_left").size;
+  const shoulderTarget = targetSizeFor("shoulder_left").size;
+  const flush = validateProduction(shoulderSpec, { model: pauldron(bareShoulder), texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: "s.bbmodel" });
   check("a shoulder built flush to the bare shoulder is flagged as too small",
     flush.issues.some((i) => i.code === "scale_too_small"));
-  const sized = validateProduction(shoulderSpec, { model: pauldron(0.3126), texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: "s.bbmodel" });
-  check("a shoulder at the 1.5x target passes", sized.verdict === "pass",
+  const sized = validateProduction(shoulderSpec, { model: pauldron(shoulderTarget), texture: { width: 32, height: 32, hasAlpha: false }, sourceFileName: "s.bbmodel" });
+  check("a shoulder at the coverage target passes", sized.verdict === "pass",
     JSON.stringify(sized.issues.filter((i) => i.level !== "info")));
 
   check("hair without the hair palette slot fails",
@@ -326,8 +335,12 @@ console.log("\n# Measurements");
   check("head box is measured, not guessed", baseRegion("head").size[0] > 0);
   check("hand socket has a rest-pose world position",
     baseSocket("socket_hand_right").worldPosition.some((v) => v !== 0));
-  check("socket stays flagged as uncalibrated",
-    baseSocket("socket_hand_right").status === "pivot_only_uncalibrated");
+  check("sockets are calibrated to their body region",
+    baseSocket("socket_hand_right").status === "calibrated_to_region_centre",
+    baseSocket("socket_hand_right").status);
+  check("the prompt quotes the calibrated socket, not the group pivot",
+    buildProductionPackage(jobFor("chest_armor")).find((f) => f.name === "model-prompt.md").content
+      .includes(`Socket rest-pose world position: ${JSON.stringify(baseSocket("socket_chest").worldPosition)} m`));
   // Regression guard: the source spells the +Z side "_left", but +X forward / +Y up makes +Z the
   // character's RIGHT (forward x left = up). Main Hand must land on +Z.
   check("socket_hand_right is on the character's right (+Z)",
@@ -342,8 +355,13 @@ console.log("\n# Measurements");
   check("shoulders follow the same physical sides",
     baseSocket("socket_shoulder_right").worldPosition[2] > 0
     && baseSocket("socket_shoulder_left").worldPosition[2] < 0);
-  check("character is ~2.5-3 heads tall", BASE_CHARACTER.headsTall > 2.4 && BASE_CHARACTER.headsTall < 3.4,
-    String(BASE_CHARACTER.headsTall));
+  // The exact figure follows the art, so assert the band that makes it a stylised character at all
+  // (realistic human proportion is ~7.5 heads) rather than a narrow literal that goes stale.
+  check("character proportion is stylised, not realistic",
+    BASE_CHARACTER.headsTall > 2 && BASE_CHARACTER.headsTall < 5, String(BASE_CHARACTER.headsTall));
+  check("the prompt quotes the measured proportion rather than a fixed band",
+    buildProductionPackage(jobFor("hair")).find((f) => f.name === "model-prompt.md").content
+      .includes(`this base measures ${BASE_CHARACTER.headsTall} heads tall`));
 }
 
 console.log("\n# Grip alignment (attachment point lands on the socket)");

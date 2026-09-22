@@ -1,0 +1,8 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PLACEMENT: knight=(28.1, 14.05, 55.7) adventurer=(30.5, 14.05, 57.5) separation=2.99999928474426 ground_clearance=0.05000019073486 blocks_movement=true
+MODEL: tripo_node_65127bc1-b77b-447d-b4ad-5931ced800e2 bounds=[P: (-0.391357, 0.0, -0.240181), S: (0.782715, 0.977966, 0.480362)] scale=(2.25, 2.25, 2.25) material=tripo_mat_65127bc1-b77b-447d-b4ad-5931ced800e2 (res://assets/characters/tripo_knight/knight+3d+model.glb::StandardMaterial3D_pn5ex):<StandardMaterial3D#-9223372003484891653> base_color=(res://assets/characters/tripo_knight/knight+3d+model_knight_3d_model_basecolor.jpg):<CompressedTexture2D#-9223372004457970198>

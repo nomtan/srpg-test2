@@ -1,0 +1,18 @@
+{
+  "rigid_head_vertices": 14624,
+  "cape_hem_vertices": 1098,
+  "clips": {
+    "idle": {
+      "max_head_edge_length_error": 2.988961657519884e-08,
+      "normals_finite": true
+    },
+    "walk": {
+      "max_head_edge_length_error": 3.549624819770836e-08,
+      "normals_finite": true
+    },
+    "run": {
+      "max_head_edge_length_error": 2.9267148472095217e-08,
+      "normals_finite": true
+    }
+  }
+}

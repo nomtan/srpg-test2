@@ -1,0 +1,40 @@
+{
+  "source_vertices": 17618,
+  "source_polygons": 35320,
+  "parts": {
+    "AdventurerBody": 23926,
+    "Face": 1818,
+    "Hair_Tousled": 9576
+  },
+  "base_color_sha256": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+  "height": 2.2,
+  "contract": "Blender +Z up/-Y front; glTF +Y up/+Z front, sole at origin",
+  "source_preserved": "Adventure_Original scene and artifacts/meshy_adventure backups",
+  "original_blend_unchanged": true,
+  "exports": {
+    "adventurer_body.glb": {
+      "meshes": 1,
+      "original_base_color_sha256": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+      "morphs": []
+    },
+    "face_default.glb": {
+      "meshes": 1,
+      "original_base_color_sha256": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+      "morphs": [
+        "Smile",
+        "Blink",
+        "Angry"
+      ]
+    },
+    "hair_swept.glb": {
+      "meshes": 1,
+      "original_base_color_sha256": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+      "morphs": []
+    },
+    "hair_tousled.glb": {
+      "meshes": 1,
+      "original_base_color_sha256": "17d07a1c57938fd15f098ba6eb0da7ad5b4c041bcb302f81fb997bf513188422",
+      "morphs": []
+    }
+  }
+}

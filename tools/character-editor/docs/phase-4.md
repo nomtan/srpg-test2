@@ -44,6 +44,8 @@ assets/character-assets/<category>/<id>/
 - パリティゲート（`comparison.json`）の「実画面 目視確認」「equipmentAssemblyAllowed:false」は
   未解決のまま。Phase 4 はユーザー指示により Base + Asset Preview を先行実装している。
 - Socket は既存 Group Pivot に取り付けるだけ（校正なし）。IK なし、Grip は位置整合の目視まで。
-- hideParts は Body Part の mesh 名一致で非表示（左右同名パーツは同時に隠れる）。
+- hideParts は element UUID で解決して非表示にする（`basePartNameOf()`）。左右同名の
+  `ashikubi` / `ashisaki` は同時に隠れる。名前一致では GLTFLoader の改名（`ashisaki_1` / `dou_1`）で
+  取りこぼすため、Phase 10 で UUID 解決に修正した。
 - AI API 送信 / 3D・Texture 自動生成 / Blockbench・Blender 操作 / Godot Export /
   Character GLB Bake / Physics / Runtime Modular は Phase 5 以降。

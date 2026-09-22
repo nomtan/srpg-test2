@@ -4,7 +4,7 @@ const BATTLE_ENVIRONMENT: Environment = preload("res://assets/environment/battle
 const VISUAL_THEME: MapVisualTheme = preload("res://assets/terrain/theme_default.tres")
 const CHARACTER_MODEL := "res://assets/characters/py/base_body.glb"
 const CHARACTER_FACE_TEXTURE := "res://assets/characters/textures/anime_face_vain.png"
-
+	
 func _ready() -> void:
 	_build_environment()
 	_build_camera()

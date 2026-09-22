@@ -1,0 +1,29 @@
+{
+  "adventurer_body.glb": {
+    "bones": 30,
+    "meshes": 1,
+    "texture_unchanged": true,
+    "clips": [
+      "idle",
+      "rig_check"
+    ]
+  },
+  "face_default.glb": {
+    "bones": 30,
+    "meshes": 1,
+    "texture_unchanged": true,
+    "clips": []
+  },
+  "hair_tousled.glb": {
+    "bones": 30,
+    "meshes": 1,
+    "texture_unchanged": true,
+    "clips": []
+  },
+  "hair_swept.glb": {
+    "bones": 30,
+    "meshes": 1,
+    "texture_unchanged": true,
+    "clips": []
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "adventure": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 4.4048755809544815e-08,
+      "Head_Shell": 8.11475856510313e-08
+    }
+  },
+  "black_mage": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 6.149426375057221e-08,
+      "Head_Shell": 9.579806364845567e-08
+    }
+  },
+  "butler": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 3.5209115289980275e-08,
+      "Head_Shell": 7.174853217106758e-08
+    }
+  },
+  "chief_butler": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 6.460620383119675e-08,
+      "Head_Shell": 8.11543730550035e-08
+    }
+  },
+  "hero": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 3.43717136974675e-08,
+      "Head_Shell": 7.83432025364128e-08
+    }
+  },
+  "knight": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 7.05899880770744e-08,
+      "Head_Shell": 7.875756463660011e-08
+    }
+  },
+  "scholar": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 7.225595788362682e-08,
+      "Head_Shell": 7.893741876818794e-08
+    }
+  },
+  "warrior": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 6.968399318685314e-08,
+      "Head_Shell": 8.710818039103785e-08
+    }
+  },
+  "white_mage": {
+    "saved_file_verified": true,
+    "source_and_textures_preserved": true,
+    "rigid_distance_max_error": {
+      "Face_Default": 5.881085385350815e-08,
+      "Head_Shell": 8.876275370273135e-08
+    }
+  }
+}

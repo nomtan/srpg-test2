@@ -3,7 +3,7 @@
   "generator": "scripts/build-measurements.mjs",
   "source": {
     "path": "assets/characters/base/base_1.bbmodel",
-    "sha256": "27b6f15882e6441f742ed6d4adf9f375de4dda1037040403dca759d134b94c26",
+    "sha256": "bdc4f64e13d33a7cb9b503f4fff285804dfaf787cc0bf03ae2ee2699a719518d",
     "format": "free"
   },
   "coordinates": {
@@ -19,86 +19,86 @@
   "units": "metres",
   "metersPerSourceUnit": 0.08333333333333333,
   "character": {
-    "height": 1.8454,
+    "height": 1.75,
     "size": [
-      0.5833,
-      1.8454,
-      1.2157
+      0.5417,
+      1.75,
+      1.1653
     ],
     "min": [
-      -0.2917,
-      -0.012,
-      -0.5849
+      -0.2708,
+      0,
+      -0.5827
     ],
     "max": [
-      0.2917,
-      1.8333,
-      0.6307
+      0.2708,
+      1.75,
+      0.5827
     ],
-    "headHeight": 0.5833,
-    "headsTall": 3.1637,
+    "headHeight": 0.5,
+    "headsTall": 3.5,
     "note": "Visible exported body meshes in rest pose, including the tilted legs."
   },
   "regions": {
     "head": {
       "min": [
-        -0.2917,
+        -0.2708,
         1.25,
         -0.2917
       ],
       "max": [
-        0.2917,
-        1.8333,
+        0.2708,
+        1.75,
         0.2917
       ],
       "size": [
-        0.5834,
-        0.5833,
+        0.5416,
+        0.5,
         0.5834
       ],
       "center": [
         0,
-        1.5417,
+        1.5,
         0
       ]
     },
     "head_with_ears": {
       "min": [
-        -0.2917,
+        -0.2708,
         1.25,
         -0.375
       ],
       "max": [
-        0.2917,
-        1.8333,
+        0.2708,
+        1.75,
         0.375
       ],
       "size": [
-        0.5834,
-        0.5833,
+        0.5416,
+        0.5,
         0.75
       ],
       "center": [
         0,
-        1.5417,
+        1.5,
         0
       ]
     },
     "neck": {
       "min": [
-        -0.125,
+        -0.1042,
         1.0833,
-        -0.125
+        -0.1042
       ],
       "max": [
-        0.125,
+        0.1042,
         1.25,
-        0.125
+        0.1042
       ],
       "size": [
-        0.25,
+        0.2084,
         0.1667,
-        0.25
+        0.2084
       ],
       "center": [
         0,
@@ -108,19 +108,19 @@
     },
     "torso": {
       "min": [
-        -0.1667,
-        0.8125,
-        -0.25
+        -0.125,
+        0.7917,
+        -0.2708
       ],
       "max": [
-        0.1667,
-        1.1875,
-        0.25
+        0.125,
+        1.2083,
+        0.2708
       ],
       "size": [
-        0.3334,
-        0.375,
-        0.5
+        0.25,
+        0.4166,
+        0.5416
       ],
       "center": [
         0,
@@ -130,195 +130,195 @@
     },
     "shoulder_left": {
       "min": [
-        -0.1042,
-        0.9375,
+        -0.125,
+        0.9792,
         -0.3542
       ],
       "max": [
-        0.1042,
-        1.1458,
+        0.125,
+        1.1875,
         -0.2292
       ],
       "size": [
-        0.2084,
+        0.25,
         0.2083,
         0.125
       ],
       "center": [
         0,
-        1.0417,
+        1.0834,
         -0.2917
       ]
     },
     "shoulder_right": {
       "min": [
-        -0.1042,
-        0.9375,
+        -0.125,
+        0.9792,
         0.2292
       ],
       "max": [
-        0.1042,
-        1.1458,
+        0.125,
+        1.1875,
         0.3542
       ],
       "size": [
-        0.2084,
+        0.25,
         0.2083,
         0.125
       ],
       "center": [
         0,
-        1.0417,
+        1.0834,
         0.2917
       ]
     },
     "upper_arm_left": {
       "min": [
-        -0.1042,
-        0.6942,
-        -0.531
+        -0.0833,
+        0.8591,
+        -0.4829
       ],
       "max": [
-        0.1042,
-        1.1505,
-        -0.2219
+        0.0833,
+        1.151,
+        -0.2408
       ],
       "size": [
-        0.2084,
-        0.4563,
-        0.3091
+        0.1666,
+        0.2919,
+        0.2421
       ],
       "center": [
         0,
-        0.9224,
-        -0.3764
+        1.0051,
+        -0.3618
       ]
     },
     "upper_arm_right": {
       "min": [
-        -0.1042,
-        0.6953,
-        0.2212
+        -0.0833,
+        0.8591,
+        0.2408
       ],
       "max": [
-        0.1042,
-        1.1581,
-        0.5595
+        0.0833,
+        1.151,
+        0.4829
       ],
       "size": [
-        0.2084,
-        0.4628,
-        0.3383
+        0.1666,
+        0.2919,
+        0.2421
       ],
       "center": [
         0,
-        0.9267,
-        0.3903
+        1.0051,
+        0.3619
       ]
     },
     "forearm_left": {
       "min": [
-        -0.1042,
-        0.6539,
-        -0.5418
+        -0.0833,
+        0.7416,
+        -0.5256
       ],
       "max": [
-        0.1042,
-        0.8688,
-        -0.2974
+        0.0833,
+        0.9552,
+        -0.312
       ],
       "size": [
-        0.2084,
-        0.2149,
-        0.2444
+        0.1666,
+        0.2136,
+        0.2136
       ],
       "center": [
         0,
-        0.7614,
-        -0.4196
+        0.8484,
+        -0.4188
       ]
     },
     "forearm_right": {
       "min": [
-        -0.1042,
-        0.6562,
-        0.321
+        -0.0833,
+        0.7416,
+        0.312
       ],
       "max": [
-        0.1042,
-        0.884,
-        0.5737
+        0.0833,
+        0.9552,
+        0.5256
       ],
       "size": [
-        0.2084,
-        0.2278,
-        0.2527
+        0.1666,
+        0.2136,
+        0.2136
       ],
       "center": [
         0,
-        0.7701,
-        0.4474
+        0.8484,
+        0.4188
       ]
     },
     "hand_left": {
       "min": [
-        -0.1042,
-        0.4929,
-        -0.5849
+        -0.0833,
+        0.585,
+        -0.5827
       ],
       "max": [
-        0.1042,
-        0.7078,
-        -0.3406
+        0.0833,
+        0.7986,
+        -0.369
       ],
       "size": [
-        0.2084,
-        0.2149,
-        0.2443
+        0.1666,
+        0.2136,
+        0.2137
       ],
       "center": [
         0,
-        0.6003,
-        -0.4627
+        0.6918,
+        -0.4758
       ]
     },
     "hand_right": {
       "min": [
-        -0.1042,
-        0.4996,
-        0.378
+        -0.0833,
+        0.585,
+        0.369
       ],
       "max": [
-        0.1042,
-        0.7274,
-        0.6307
+        0.0833,
+        0.7986,
+        0.5827
       ],
       "size": [
-        0.2084,
-        0.2278,
-        0.2527
+        0.1666,
+        0.2136,
+        0.2137
       ],
       "center": [
         0,
-        0.6135,
-        0.5044
+        0.6918,
+        0.4759
       ]
     },
     "pelvis": {
       "min": [
-        -0.1667,
-        0.5,
-        -0.25
+        -0.125,
+        0.5417,
+        -0.2708
       ],
       "max": [
-        0.1667,
-        0.8333,
-        0.25
+        0.125,
+        0.7917,
+        0.2708
       ],
       "size": [
-        0.3334,
-        0.3333,
-        0.5
+        0.25,
+        0.25,
+        0.5416
       ],
       "center": [
         0,
@@ -328,134 +328,134 @@
     },
     "thigh_left": {
       "min": [
-        -0.125,
-        0.2358,
-        -0.3232
+        -0.1042,
+        0.25,
+        -0.2708
       ],
       "max": [
-        0.125,
-        0.5989,
-        -0.0319
+        0.1042,
+        0.5833,
+        -0.0625
       ],
       "size": [
-        0.25,
-        0.3631,
-        0.2913
+        0.2084,
+        0.3333,
+        0.2083
       ],
       "center": [
         0,
-        0.4174,
-        -0.1775
+        0.4167,
+        -0.1666
       ]
     },
     "thigh_right": {
       "min": [
-        -0.125,
-        0.2358,
-        0.0319
+        -0.1042,
+        0.25,
+        0.0625
       ],
       "max": [
-        0.125,
-        0.5989,
-        0.3232
+        0.1042,
+        0.5833,
+        0.2708
       ],
       "size": [
-        0.25,
-        0.3631,
-        0.2913
+        0.2084,
+        0.3333,
+        0.2083
       ],
       "center": [
         0,
-        0.4174,
-        0.1775
+        0.4167,
+        0.1667
       ]
     },
     "ankle_left": {
       "min": [
         -0.125,
-        -0.012,
-        -0.3559
+        0,
+        -0.2917
       ],
       "max": [
         0.125,
-        0.3511,
-        -0.0645
+        0.3333,
+        -0.0417
       ],
       "size": [
         0.25,
-        0.3631,
-        0.2914
+        0.3333,
+        0.25
       ],
       "center": [
         0,
-        0.1696,
-        -0.2102
+        0.1667,
+        -0.1667
       ]
     },
     "ankle_right": {
       "min": [
         -0.125,
-        -0.012,
-        0.0645
+        0,
+        0.0417
       ],
       "max": [
         0.125,
-        0.3511,
-        0.3559
+        0.3333,
+        0.2917
       ],
       "size": [
         0.25,
-        0.3631,
-        0.2914
+        0.3333,
+        0.25
       ],
       "center": [
         0,
-        0.1696,
-        0.2102
+        0.1667,
+        0.1667
       ]
     },
     "foot_left": {
       "min": [
         -0.125,
-        -0.012,
-        -0.3559
+        0,
+        -0.2917
       ],
       "max": [
         0.2083,
-        0.1858,
-        -0.0862
+        0.1667,
+        -0.0417
       ],
       "size": [
         0.3333,
-        0.1978,
-        0.2697
+        0.1667,
+        0.25
       ],
       "center": [
         0.0417,
-        0.0869,
-        -0.221
+        0.0833,
+        -0.1667
       ]
     },
     "foot_right": {
       "min": [
         -0.125,
-        -0.012,
-        0.0862
+        0,
+        0.0417
       ],
       "max": [
         0.2083,
-        0.1858,
-        0.3559
+        0.1667,
+        0.2917
       ],
       "size": [
         0.3333,
-        0.1978,
-        0.2697
+        0.1667,
+        0.25
       ],
       "center": [
         0.0417,
-        0.0869,
-        0.2211
+        0.0833,
+        0.1667
       ]
     }
   },
@@ -465,7 +465,7 @@
       "parentUuid": "66b9f859-f008-acde-ad81-738de02c92e5",
       "position": [
         0,
-        0,
+        0.25,
         0
       ],
       "rotation": [
@@ -479,8 +479,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "head",
       "worldPosition": [
+        0,
+        1.5,
+        0
+      ],
+      "pivotWorldPosition": [
         0,
         1.25,
         0
@@ -491,7 +497,7 @@
       "parentUuid": "66b9f859-f008-acde-ad81-738de02c92e5",
       "position": [
         0,
-        0,
+        0.25,
         0
       ],
       "rotation": [
@@ -505,8 +511,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "head",
       "worldPosition": [
+        0,
+        1.5,
+        0
+      ],
+      "pivotWorldPosition": [
         0,
         1.25,
         0
@@ -517,7 +529,7 @@
       "parentUuid": "66b9f859-f008-acde-ad81-738de02c92e5",
       "position": [
         0,
-        0,
+        0.25,
         0
       ],
       "rotation": [
@@ -531,8 +543,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "head",
       "worldPosition": [
+        0,
+        1.5,
+        0
+      ],
+      "pivotWorldPosition": [
         0,
         1.25,
         0
@@ -543,8 +561,8 @@
       "parentUuid": "f1e53ffc-0626-0603-d20c-00c41ebe0a09",
       "position": [
         0,
-        0,
-        0
+        0.3333,
+        -0.4167
       ],
       "rotation": [
         0,
@@ -557,8 +575,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "torso",
       "worldPosition": [
+        0,
+        1,
+        0
+      ],
+      "pivotWorldPosition": [
         0,
         0.6667,
         0.4167
@@ -569,7 +593,7 @@
       "parentUuid": "cffc85d9-dec8-092b-25d9-ac7ac1d8c2ec",
       "position": [
         0,
-        0,
+        0.5,
         0
       ],
       "rotation": [
@@ -583,8 +607,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "torso",
       "worldPosition": [
+        0,
+        1,
+        0
+      ],
+      "pivotWorldPosition": [
         0,
         0.5,
         0
@@ -595,7 +625,7 @@
       "parentUuid": "8b6bd2ca-f339-31e2-ad4b-487fdb7e1492",
       "position": [
         0,
-        0,
+        -0.1666,
         0
       ],
       "rotation": [
@@ -609,8 +639,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "pelvis",
       "worldPosition": [
+        0,
+        0.6667,
+        0
+      ],
+      "pivotWorldPosition": [
         0,
         0.8333,
         0
@@ -621,8 +657,8 @@
       "parentUuid": "46b555f0-559b-1ed3-1b9e-5b6cf267c296",
       "position": [
         0,
-        0,
-        0
+        0.0143,
+        0.0391
       ],
       "rotation": [
         0,
@@ -635,8 +671,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "shoulder_left",
       "worldPosition": [
+        0,
+        1.0834,
+        -0.2917
+      ],
+      "pivotWorldPosition": [
         0,
         1.0833,
         -0.3333
@@ -647,8 +689,8 @@
       "parentUuid": "36dd86bd-c43d-52af-1b08-ac82418d115d",
       "position": [
         0,
-        0,
-        0
+        0.0143,
+        -0.0391
       ],
       "rotation": [
         0,
@@ -661,8 +703,14 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "shoulder_right",
       "worldPosition": [
+        0,
+        1.0834,
+        0.2917
+      ],
+      "pivotWorldPosition": [
         0,
         1.0833,
         0.3333
@@ -673,7 +721,7 @@
       "parentUuid": "18db24a2-4f0a-8d6e-ec62-550d4ff84103",
       "position": [
         0,
-        0,
+        -0.0833,
         0
       ],
       "rotation": [
@@ -687,11 +735,17 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "forearm_left",
       "worldPosition": [
         0,
-        0.8419,
-        -0.398
+        0.8484,
+        -0.4188
+      ],
+      "pivotWorldPosition": [
+        0,
+        0.9267,
+        -0.3903
       ]
     },
     "socket_arm_right": {
@@ -699,7 +753,7 @@
       "parentUuid": "108a6290-204e-7e07-f75b-ee3f930937bf",
       "position": [
         0,
-        0,
+        -0.0833,
         0
       ],
       "rotation": [
@@ -713,11 +767,17 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "forearm_right",
       "worldPosition": [
         0,
         0.8484,
         0.4188
+      ],
+      "pivotWorldPosition": [
+        0,
+        0.9267,
+        0.3903
       ]
     },
     "socket_hand_left": {
@@ -725,7 +785,7 @@
       "parentUuid": "6cbe7933-4bd2-7da3-a1d4-470fc65bd740",
       "position": [
         0,
-        0,
+        -0.0833,
         0
       ],
       "rotation": [
@@ -739,11 +799,17 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "hand_left",
       "worldPosition": [
         0,
-        0.6809,
-        -0.4412
+        0.6918,
+        -0.4758
+      ],
+      "pivotWorldPosition": [
+        0,
+        0.7701,
+        -0.4473
       ]
     },
     "socket_hand_right": {
@@ -751,8 +817,8 @@
       "parentUuid": "54b01c79-09f2-e290-63ef-06399d75ffcf",
       "position": [
         0,
-        0,
-        0
+        -0.0833,
+        0.0001
       ],
       "rotation": [
         0,
@@ -765,20 +831,26 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "hand_right",
       "worldPosition": [
         0,
         0.6918,
-        0.4758
+        0.4759
+      ],
+      "pivotWorldPosition": [
+        0,
+        0.7701,
+        0.4473
       ]
     },
     "socket_foot_left": {
       "parent": "ashi_right",
       "parentUuid": "1fa90114-5940-689e-9d9d-80028306ae1b",
       "position": [
-        0,
-        0,
-        0
+        -0.0833,
+        -0.1666,
+        -0.0417
       ],
       "rotation": [
         0,
@@ -791,11 +863,17 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "ankle_left",
       "worldPosition": [
+        0,
+        0.1667,
+        -0.1667
+      ],
+      "pivotWorldPosition": [
         0.0833,
-        0.3293,
-        -0.1471
+        0.3333,
+        -0.125
       ]
     },
     "socket_foot_right": {
@@ -803,8 +881,8 @@
       "parentUuid": "7f2f4351-cf8d-18fa-ea64-50db16c7af23",
       "position": [
         0,
-        0,
-        0
+        -0.1666,
+        0.0417
       ],
       "rotation": [
         0,
@@ -817,58 +895,64 @@
         1
       ],
       "space": "parent_local_runtime",
-      "status": "pivot_only_uncalibrated",
+      "status": "calibrated_to_region_centre",
+      "region": "ankle_right",
       "worldPosition": [
         0,
-        0.3293,
-        0.1471
+        0.1667,
+        0.1667
+      ],
+      "pivotWorldPosition": [
+        0,
+        0.3333,
+        0.125
       ]
     }
   },
   "recommendedLength": {
     "sword": {
-      "min": 0.7751,
-      "max": 1.0703,
+      "min": 0.735,
+      "max": 1.015,
       "ratioOfCharacterHeight": [
         0.42,
         0.58
       ]
     },
     "great_sword": {
-      "min": 1.1072,
-      "max": 1.4763,
+      "min": 1.05,
+      "max": 1.4,
       "ratioOfCharacterHeight": [
         0.6,
         0.8
       ]
     },
     "spear": {
-      "min": 1.5686,
-      "max": 2.1222,
+      "min": 1.4875,
+      "max": 2.0125,
       "ratioOfCharacterHeight": [
         0.85,
         1.15
       ]
     },
     "bow": {
-      "min": 1.015,
-      "max": 1.4763,
+      "min": 0.9625,
+      "max": 1.4,
       "ratioOfCharacterHeight": [
         0.55,
         0.8
       ]
     },
     "dagger": {
-      "min": 0.3322,
-      "max": 0.5536,
+      "min": 0.315,
+      "max": 0.525,
       "ratioOfCharacterHeight": [
         0.18,
         0.3
       ]
     },
     "staff": {
-      "min": 1.4763,
-      "max": 1.9377,
+      "min": 1.4,
+      "max": 1.8375,
       "ratioOfCharacterHeight": [
         0.8,
         1.05
@@ -936,8 +1020,8 @@
       "visibleInPreview": false,
       "size": [
         1.25,
-        0.8265,
-        0.5506
+        0.8116,
+        0.5732
       ],
       "longestAxis": 1.25,
       "note": "Prop that exists inside base_1.bbmodel, measured in rest pose. Most are hidden placeholders and are NOT a validated size standard; use recommendedLength instead."
@@ -947,8 +1031,8 @@
       "visibleInPreview": false,
       "size": [
         1.7724,
-        0.484,
-        0.4355
+        0.4615,
+        0.4615
       ],
       "longestAxis": 1.7724,
       "note": "Prop that exists inside base_1.bbmodel, measured in rest pose. Most are hidden placeholders and are NOT a validated size standard; use recommendedLength instead."
@@ -958,8 +1042,8 @@
       "visibleInPreview": false,
       "size": [
         1.3208,
-        0.4482,
-        0.2366
+        0.4478,
+        0.2689
       ],
       "longestAxis": 1.3208,
       "note": "Prop that exists inside base_1.bbmodel, measured in rest pose. Most are hidden placeholders and are NOT a validated size standard; use recommendedLength instead."

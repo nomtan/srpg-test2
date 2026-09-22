@@ -18,7 +18,11 @@ export const STYLE_LINES: string[] = [
   "blocky",
   "voxel-inspired",
   "simple geometry",
-  `SRPG character scale: roughly 2.5-3 heads tall (this base measures ${BASE_CHARACTER.headsTall} heads)`,
+  // The measured base is the authority: quoting a fixed "2.5-3 heads" band alongside it goes stale
+  // the moment the artist edits base_1.bbmodel, and a prompt that contradicts its own numbers is
+  // worse than no guidance.
+  `SRPG character proportion: this base measures ${BASE_CHARACTER.headsTall} heads tall — match that, ` +
+    "not realistic human proportions (~7.5 heads)",
   "readable from an isometric camera",
   "strong silhouette",
   "minimal tiny details",
@@ -132,7 +136,12 @@ export function attachmentBlock(ctx: PromptContext): string {
       `position ${JSON.stringify(ctx.socketInfo.position)}, rotation ${JSON.stringify(ctx.socketInfo.rotation)}, scale ${JSON.stringify(ctx.socketInfo.scale)}`,
     );
     lines.push(`Socket rest-pose world position: ${JSON.stringify(ctx.socketInfo.worldPosition)} m`);
-    lines.push(`Socket calibration status: ${ctx.socketInfo.status} — treat the position as an anchor, not a validated grip pose.`);
+    lines.push(
+      ctx.socketInfo.status === "calibrated_to_region_centre"
+        ? `Socket calibration: centred on the measured \`${ctx.socketInfo.region}\` region, so the asset's ` +
+          "attachment point and the fit region above share one anchor."
+        : `Socket calibration status: ${ctx.socketInfo.status} — treat the position as an anchor, not a validated grip pose.`,
+    );
   }
   return bullet(lines);
 }

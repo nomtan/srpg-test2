@@ -7,8 +7,9 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { AnimationController } from "@/viewer/animation/AnimationController";
 import type { CharacterSocket } from "@/domain/constants";
 import type { GlbStats } from "@/domain/asset-validation";
-import { applyGripAlignment, type GripAlignment } from "@/viewer/equipment/gripAlignment";
-import { socketNodeName } from "./base-parts";
+import { applyGripAlignment, applySocketOffset, type GripAlignment } from "@/viewer/equipment/gripAlignment";
+import { baseSocket } from "@/domain/base-measurements";
+import { basePartNameOf, socketNodeName } from "./base-parts";
 import { inspectGlb } from "./inspect";
 
 const BASE_MODEL_URL = "/generated-assets/base_body/model.glb";
@@ -143,7 +144,10 @@ export function CreatorPreview(props: CreatorPreviewProps) {
       const hidden = new Set(p.hideParts);
       state.baseRoot.traverse((object) => {
         const mesh = object as THREE.Mesh;
-        if (mesh.isMesh && object.name) object.visible = !hidden.has(object.name);
+        if (!mesh.isMesh) return;
+        // Resolve by element UUID; GLTFLoader renames duplicate node names (ashisaki_1, dou_1).
+        const part = basePartNameOf(object);
+        object.visible = !(part && hidden.has(part));
       });
     }
     if (state.referenceHair) state.referenceHair.visible = p.referenceHair === "shown";
@@ -274,8 +278,11 @@ export function CreatorPreview(props: CreatorPreviewProps) {
           const socketNode = parentName
             ? state.baseRoot.getObjectByName(parentName)
             : null;
-          // Align while detached: the anchor is measured in the asset's own local space.
-          if (p.gripAlignment) applyGripAlignment(state.assetRoot, p.gripAlignment);
+          // Align while detached: the anchor is measured in the asset's own local space, and the
+          // asset lands on the socket's calibrated attachment point inside the parent node.
+          const socketOffset = baseSocket(p.socket)?.position ?? [0, 0, 0];
+          if (p.gripAlignment) applyGripAlignment(state.assetRoot, p.gripAlignment, socketOffset);
+          else applySocketOffset(state.assetRoot, socketOffset);
           (socketNode ?? state.baseRoot).add(state.assetRoot);
           if (!socketNode) {
             setStatus(`Socket 親ノード (${parentName ?? p.socket}) が見つかりません。ルートに取り付けました。`);

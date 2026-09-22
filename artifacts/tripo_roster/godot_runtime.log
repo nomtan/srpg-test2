@@ -1,0 +1,406 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: All nine requested Tripo characters are placed
+PASS: Player uses the requested knight2 model
+PASS: adventure: Japanese label is intact
+PASS: adventure: placed at terrain height
+PASS: adventure: NPC collision is enabled
+PASS: adventure: Toon import hook ran
+PASS: adventure: 26-bone skeleton
+PASS: adventure: head attachment socket
+PASS: adventure: skinned Body
+PASS: adventure: shared skeleton for Body
+PASS: adventure: shader on Body
+PASS: adventure: original Base Color on Body
+PASS: adventure: skinned Head_Shell
+PASS: adventure: shared skeleton for Head_Shell
+PASS: adventure: shader on Head_Shell
+PASS: adventure: original Base Color on Head_Shell
+PASS: adventure: skinned Face_Default
+PASS: adventure: shared skeleton for Face_Default
+PASS: adventure: shader on Face_Default
+PASS: adventure: original Base Color on Face_Default
+PASS: adventure: skinned Body_Outline
+PASS: adventure: shared skeleton for Body_Outline
+PASS: adventure: shader on Body_Outline
+PASS: adventure: skinned Head_Shell_Outline
+PASS: adventure: shared skeleton for Head_Shell_Outline
+PASS: adventure: shader on Head_Shell_Outline
+PASS: adventure: skinned Face_Outline
+PASS: adventure: shared skeleton for Face_Outline
+PASS: adventure: shader on Face_Outline
+PASS: adventure: automatically plays idle
+PASS: adventure: animation idle
+PASS: adventure: loop and duration idle
+PASS: adventure: in-place animated skeleton idle
+PASS: adventure: animation walk
+PASS: adventure: loop and duration walk
+PASS: adventure: in-place animated skeleton walk
+PASS: adventure: animation run
+PASS: adventure: loop and duration run
+PASS: adventure: in-place animated skeleton run
+PASS: adventure: texture replacement API
+PASS: adventure: face texture edit leaves clothing unchanged
+PASS: adventure: restores original face texture
+PASS: adventure: standalone face GLB replacement
+PASS: adventure: replaced face follows live skeleton
+PASS: adventure: reset restores original mesh and bind skin
+PASS: black_mage: Japanese label is intact
+PASS: black_mage: placed at terrain height
+PASS: black_mage: NPC collision is enabled
+PASS: black_mage: Toon import hook ran
+PASS: black_mage: 26-bone skeleton
+PASS: black_mage: head attachment socket
+PASS: black_mage: skinned Body
+PASS: black_mage: shared skeleton for Body
+PASS: black_mage: shader on Body
+PASS: black_mage: original Base Color on Body
+PASS: black_mage: skinned Head_Shell
+PASS: black_mage: shared skeleton for Head_Shell
+PASS: black_mage: shader on Head_Shell
+PASS: black_mage: original Base Color on Head_Shell
+PASS: black_mage: skinned Face_Default
+PASS: black_mage: shared skeleton for Face_Default
+PASS: black_mage: shader on Face_Default
+PASS: black_mage: original Base Color on Face_Default
+PASS: black_mage: skinned Body_Outline
+PASS: black_mage: shared skeleton for Body_Outline
+PASS: black_mage: shader on Body_Outline
+PASS: black_mage: skinned Head_Shell_Outline
+PASS: black_mage: shared skeleton for Head_Shell_Outline
+PASS: black_mage: shader on Head_Shell_Outline
+PASS: black_mage: skinned Face_Outline
+PASS: black_mage: shared skeleton for Face_Outline
+PASS: black_mage: shader on Face_Outline
+PASS: black_mage: automatically plays idle
+PASS: black_mage: animation idle
+PASS: black_mage: loop and duration idle
+PASS: black_mage: in-place animated skeleton idle
+PASS: black_mage: animation walk
+PASS: black_mage: loop and duration walk
+PASS: black_mage: in-place animated skeleton walk
+PASS: black_mage: animation run
+PASS: black_mage: loop and duration run
+PASS: black_mage: in-place animated skeleton run
+PASS: black_mage: texture replacement API
+PASS: black_mage: face texture edit leaves clothing unchanged
+PASS: black_mage: restores original face texture
+PASS: black_mage: standalone face GLB replacement
+PASS: black_mage: replaced face follows live skeleton
+PASS: black_mage: reset restores original mesh and bind skin
+PASS: butler: Japanese label is intact
+PASS: butler: placed at terrain height
+PASS: butler: NPC collision is enabled
+PASS: butler: Toon import hook ran
+PASS: butler: 26-bone skeleton
+PASS: butler: head attachment socket
+PASS: butler: skinned Body
+PASS: butler: shared skeleton for Body
+PASS: butler: shader on Body
+PASS: butler: original Base Color on Body
+PASS: butler: skinned Head_Shell
+PASS: butler: shared skeleton for Head_Shell
+PASS: butler: shader on Head_Shell
+PASS: butler: original Base Color on Head_Shell
+PASS: butler: skinned Face_Default
+PASS: butler: shared skeleton for Face_Default
+PASS: butler: shader on Face_Default
+PASS: butler: original Base Color on Face_Default
+PASS: butler: skinned Body_Outline
+PASS: butler: shared skeleton for Body_Outline
+PASS: butler: shader on Body_Outline
+PASS: butler: skinned Head_Shell_Outline
+PASS: butler: shared skeleton for Head_Shell_Outline
+PASS: butler: shader on Head_Shell_Outline
+PASS: butler: skinned Face_Outline
+PASS: butler: shared skeleton for Face_Outline
+PASS: butler: shader on Face_Outline
+PASS: butler: automatically plays idle
+PASS: butler: animation idle
+PASS: butler: loop and duration idle
+PASS: butler: in-place animated skeleton idle
+PASS: butler: animation walk
+PASS: butler: loop and duration walk
+PASS: butler: in-place animated skeleton walk
+PASS: butler: animation run
+PASS: butler: loop and duration run
+PASS: butler: in-place animated skeleton run
+PASS: butler: texture replacement API
+PASS: butler: face texture edit leaves clothing unchanged
+PASS: butler: restores original face texture
+PASS: butler: standalone face GLB replacement
+PASS: butler: replaced face follows live skeleton
+PASS: butler: reset restores original mesh and bind skin
+PASS: chief_butler: Japanese label is intact
+PASS: chief_butler: placed at terrain height
+PASS: chief_butler: NPC collision is enabled
+PASS: chief_butler: Toon import hook ran
+PASS: chief_butler: 26-bone skeleton
+PASS: chief_butler: head attachment socket
+PASS: chief_butler: skinned Body
+PASS: chief_butler: shared skeleton for Body
+PASS: chief_butler: shader on Body
+PASS: chief_butler: original Base Color on Body
+PASS: chief_butler: skinned Head_Shell
+PASS: chief_butler: shared skeleton for Head_Shell
+PASS: chief_butler: shader on Head_Shell
+PASS: chief_butler: original Base Color on Head_Shell
+PASS: chief_butler: skinned Face_Default
+PASS: chief_butler: shared skeleton for Face_Default
+PASS: chief_butler: shader on Face_Default
+PASS: chief_butler: original Base Color on Face_Default
+PASS: chief_butler: skinned Body_Outline
+PASS: chief_butler: shared skeleton for Body_Outline
+PASS: chief_butler: shader on Body_Outline
+PASS: chief_butler: skinned Head_Shell_Outline
+PASS: chief_butler: shared skeleton for Head_Shell_Outline
+PASS: chief_butler: shader on Head_Shell_Outline
+PASS: chief_butler: skinned Face_Outline
+PASS: chief_butler: shared skeleton for Face_Outline
+PASS: chief_butler: shader on Face_Outline
+PASS: chief_butler: automatically plays idle
+PASS: chief_butler: animation idle
+PASS: chief_butler: loop and duration idle
+PASS: chief_butler: in-place animated skeleton idle
+PASS: chief_butler: animation walk
+PASS: chief_butler: loop and duration walk
+PASS: chief_butler: in-place animated skeleton walk
+PASS: chief_butler: animation run
+PASS: chief_butler: loop and duration run
+PASS: chief_butler: in-place animated skeleton run
+PASS: chief_butler: texture replacement API
+PASS: chief_butler: face texture edit leaves clothing unchanged
+PASS: chief_butler: restores original face texture
+PASS: chief_butler: standalone face GLB replacement
+PASS: chief_butler: replaced face follows live skeleton
+PASS: chief_butler: reset restores original mesh and bind skin
+PASS: hero: Japanese label is intact
+PASS: hero: placed at terrain height
+PASS: hero: NPC collision is enabled
+PASS: hero: Toon import hook ran
+PASS: hero: 26-bone skeleton
+PASS: hero: head attachment socket
+PASS: hero: skinned Body
+PASS: hero: shared skeleton for Body
+PASS: hero: shader on Body
+PASS: hero: original Base Color on Body
+PASS: hero: skinned Head_Shell
+PASS: hero: shared skeleton for Head_Shell
+PASS: hero: shader on Head_Shell
+PASS: hero: original Base Color on Head_Shell
+PASS: hero: skinned Face_Default
+PASS: hero: shared skeleton for Face_Default
+PASS: hero: shader on Face_Default
+PASS: hero: original Base Color on Face_Default
+PASS: hero: skinned Body_Outline
+PASS: hero: shared skeleton for Body_Outline
+PASS: hero: shader on Body_Outline
+PASS: hero: skinned Head_Shell_Outline
+PASS: hero: shared skeleton for Head_Shell_Outline
+PASS: hero: shader on Head_Shell_Outline
+PASS: hero: skinned Face_Outline
+PASS: hero: shared skeleton for Face_Outline
+PASS: hero: shader on Face_Outline
+PASS: hero: automatically plays idle
+PASS: hero: animation idle
+PASS: hero: loop and duration idle
+PASS: hero: in-place animated skeleton idle
+PASS: hero: animation walk
+PASS: hero: loop and duration walk
+PASS: hero: in-place animated skeleton walk
+PASS: hero: animation run
+PASS: hero: loop and duration run
+PASS: hero: in-place animated skeleton run
+PASS: hero: texture replacement API
+PASS: hero: face texture edit leaves clothing unchanged
+PASS: hero: restores original face texture
+PASS: hero: standalone face GLB replacement
+PASS: hero: replaced face follows live skeleton
+PASS: hero: reset restores original mesh and bind skin
+PASS: knight: Japanese label is intact
+PASS: knight: placed at terrain height
+PASS: knight: NPC collision is enabled
+PASS: knight: Toon import hook ran
+PASS: knight: 26-bone skeleton
+PASS: knight: head attachment socket
+PASS: knight: skinned Body
+PASS: knight: shared skeleton for Body
+PASS: knight: shader on Body
+PASS: knight: original Base Color on Body
+PASS: knight: skinned Head_Shell
+PASS: knight: shared skeleton for Head_Shell
+PASS: knight: shader on Head_Shell
+PASS: knight: original Base Color on Head_Shell
+PASS: knight: skinned Face_Default
+PASS: knight: shared skeleton for Face_Default
+PASS: knight: shader on Face_Default
+PASS: knight: original Base Color on Face_Default
+PASS: knight: skinned Body_Outline
+PASS: knight: shared skeleton for Body_Outline
+PASS: knight: shader on Body_Outline
+PASS: knight: skinned Head_Shell_Outline
+PASS: knight: shared skeleton for Head_Shell_Outline
+PASS: knight: shader on Head_Shell_Outline
+PASS: knight: skinned Face_Outline
+PASS: knight: shared skeleton for Face_Outline
+PASS: knight: shader on Face_Outline
+PASS: knight: automatically plays idle
+PASS: knight: animation idle
+PASS: knight: loop and duration idle
+PASS: knight: in-place animated skeleton idle
+PASS: knight: animation walk
+PASS: knight: loop and duration walk
+PASS: knight: in-place animated skeleton walk
+PASS: knight: animation run
+PASS: knight: loop and duration run
+PASS: knight: in-place animated skeleton run
+PASS: knight: texture replacement API
+PASS: knight: face texture edit leaves clothing unchanged
+PASS: knight: restores original face texture
+PASS: knight: standalone face GLB replacement
+PASS: knight: replaced face follows live skeleton
+PASS: knight: reset restores original mesh and bind skin
+PASS: scholar: Japanese label is intact
+PASS: scholar: placed at terrain height
+PASS: scholar: NPC collision is enabled
+PASS: scholar: Toon import hook ran
+PASS: scholar: 26-bone skeleton
+PASS: scholar: head attachment socket
+PASS: scholar: skinned Body
+PASS: scholar: shared skeleton for Body
+PASS: scholar: shader on Body
+PASS: scholar: original Base Color on Body
+PASS: scholar: skinned Head_Shell
+PASS: scholar: shared skeleton for Head_Shell
+PASS: scholar: shader on Head_Shell
+PASS: scholar: original Base Color on Head_Shell
+PASS: scholar: skinned Face_Default
+PASS: scholar: shared skeleton for Face_Default
+PASS: scholar: shader on Face_Default
+PASS: scholar: original Base Color on Face_Default
+PASS: scholar: skinned Body_Outline
+PASS: scholar: shared skeleton for Body_Outline
+PASS: scholar: shader on Body_Outline
+PASS: scholar: skinned Head_Shell_Outline
+PASS: scholar: shared skeleton for Head_Shell_Outline
+PASS: scholar: shader on Head_Shell_Outline
+PASS: scholar: skinned Face_Outline
+PASS: scholar: shared skeleton for Face_Outline
+PASS: scholar: shader on Face_Outline
+PASS: scholar: automatically plays idle
+PASS: scholar: animation idle
+PASS: scholar: loop and duration idle
+PASS: scholar: in-place animated skeleton idle
+PASS: scholar: animation walk
+PASS: scholar: loop and duration walk
+PASS: scholar: in-place animated skeleton walk
+PASS: scholar: animation run
+PASS: scholar: loop and duration run
+PASS: scholar: in-place animated skeleton run
+PASS: scholar: texture replacement API
+PASS: scholar: face texture edit leaves clothing unchanged
+PASS: scholar: restores original face texture
+PASS: scholar: standalone face GLB replacement
+PASS: scholar: replaced face follows live skeleton
+PASS: scholar: reset restores original mesh and bind skin
+PASS: warrior: Japanese label is intact
+PASS: warrior: placed at terrain height
+PASS: warrior: NPC collision is enabled
+PASS: warrior: Toon import hook ran
+PASS: warrior: 26-bone skeleton
+PASS: warrior: head attachment socket
+PASS: warrior: skinned Body
+PASS: warrior: shared skeleton for Body
+PASS: warrior: shader on Body
+PASS: warrior: original Base Color on Body
+PASS: warrior: skinned Head_Shell
+PASS: warrior: shared skeleton for Head_Shell
+PASS: warrior: shader on Head_Shell
+PASS: warrior: original Base Color on Head_Shell
+PASS: warrior: skinned Face_Default
+PASS: warrior: shared skeleton for Face_Default
+PASS: warrior: shader on Face_Default
+PASS: warrior: original Base Color on Face_Default
+PASS: warrior: skinned Body_Outline
+PASS: warrior: shared skeleton for Body_Outline
+PASS: warrior: shader on Body_Outline
+PASS: warrior: skinned Head_Shell_Outline
+PASS: warrior: shared skeleton for Head_Shell_Outline
+PASS: warrior: shader on Head_Shell_Outline
+PASS: warrior: skinned Face_Outline
+PASS: warrior: shared skeleton for Face_Outline
+PASS: warrior: shader on Face_Outline
+PASS: warrior: automatically plays idle
+PASS: warrior: animation idle
+PASS: warrior: loop and duration idle
+PASS: warrior: in-place animated skeleton idle
+PASS: warrior: animation walk
+PASS: warrior: loop and duration walk
+PASS: warrior: in-place animated skeleton walk
+PASS: warrior: animation run
+PASS: warrior: loop and duration run
+PASS: warrior: in-place animated skeleton run
+PASS: warrior: texture replacement API
+PASS: warrior: face texture edit leaves clothing unchanged
+PASS: warrior: restores original face texture
+PASS: warrior: standalone face GLB replacement
+PASS: warrior: replaced face follows live skeleton
+PASS: warrior: reset restores original mesh and bind skin
+PASS: white_mage: Japanese label is intact
+PASS: white_mage: placed at terrain height
+PASS: white_mage: NPC collision is enabled
+PASS: white_mage: Toon import hook ran
+PASS: white_mage: 26-bone skeleton
+PASS: white_mage: head attachment socket
+PASS: white_mage: skinned Body
+PASS: white_mage: shared skeleton for Body
+PASS: white_mage: shader on Body
+PASS: white_mage: original Base Color on Body
+PASS: white_mage: skinned Head_Shell
+PASS: white_mage: shared skeleton for Head_Shell
+PASS: white_mage: shader on Head_Shell
+PASS: white_mage: original Base Color on Head_Shell
+PASS: white_mage: skinned Face_Default
+PASS: white_mage: shared skeleton for Face_Default
+PASS: white_mage: shader on Face_Default
+PASS: white_mage: original Base Color on Face_Default
+PASS: white_mage: skinned Body_Outline
+PASS: white_mage: shared skeleton for Body_Outline
+PASS: white_mage: shader on Body_Outline
+PASS: white_mage: skinned Head_Shell_Outline
+PASS: white_mage: shared skeleton for Head_Shell_Outline
+PASS: white_mage: shader on Head_Shell_Outline
+PASS: white_mage: skinned Face_Outline
+PASS: white_mage: shared skeleton for Face_Outline
+PASS: white_mage: shader on Face_Outline
+PASS: white_mage: automatically plays idle
+PASS: white_mage: animation idle
+PASS: white_mage: loop and duration idle
+PASS: white_mage: in-place animated skeleton idle
+PASS: white_mage: animation walk
+PASS: white_mage: loop and duration walk
+PASS: white_mage: in-place animated skeleton walk
+PASS: white_mage: animation run
+PASS: white_mage: loop and duration run
+PASS: white_mage: in-place animated skeleton run
+PASS: white_mage: texture replacement API
+PASS: white_mage: face texture edit leaves clothing unchanged
+PASS: white_mage: restores original face texture
+PASS: white_mage: standalone face GLB replacement
+PASS: white_mage: replaced face follows live skeleton
+PASS: white_mage: reset restores original mesh and bind skin
+PASS: Nine distinct source models
+PASS: adventure: reachable from the player spawn
+PASS: black_mage: reachable from the player spawn
+PASS: butler: reachable from the player spawn
+PASS: chief_butler: reachable from the player spawn
+PASS: hero: reachable from the player spawn
+PASS: knight: reachable from the player spawn
+PASS: scholar: reachable from the player spawn
+PASS: warrior: reachable from the player spawn
+PASS: white_mage: reachable from the player spawn
+TRIPO_ROSTER_VALIDATION: PASSED

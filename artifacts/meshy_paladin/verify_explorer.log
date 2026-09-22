@@ -1,0 +1,20 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+PASS: 3D is default; original sprite remains available
+PASS: Source walk and run clips imported
+PASS: Original clip durations preserved
+PASS: Walking selects walk
+PASS: Normal walking keeps native cadence
+PASS: Walk to run preserves stride phase
+PASS: Sprint cadence stays at a moderate 1.25x
+PASS: Partial-speed running slows the cadence without restarting
+PASS: Running selects original run pose
+PASS: Run to walk preserves stride phase
+PASS: Stopping resets run-only head rotation
+PASS: Stopping resets playback speed
+PASS: 3D model faces world movement direction
+PASS: 2D switch preserves gameplay position
+PASS: Returning to 3D restores current locomotion
+PASS: Can start in original 2D mode

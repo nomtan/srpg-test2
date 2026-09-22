@@ -1,0 +1,108 @@
+{
+  "geometry_before": {
+    "positions": "5b8417a56db35e5fa21c7dd3e9d53ba544fe92b590ee18e0acaed6e44ec7e5de",
+    "topology": "dcf3e0ee49389e650c2d6b5657de51c3fe87fae217af23ad074b73a4cb2b9a36",
+    "uv": "d1a3d5c61e55710b5b5157bef3fa24651d3e45307da0610ec4224eb7eb8fb818"
+  },
+  "geometry_after": {
+    "positions": "5b8417a56db35e5fa21c7dd3e9d53ba544fe92b590ee18e0acaed6e44ec7e5de",
+    "topology": "dcf3e0ee49389e650c2d6b5657de51c3fe87fae217af23ad074b73a4cb2b9a36",
+    "uv": "d1a3d5c61e55710b5b5157bef3fa24651d3e45307da0610ec4224eb7eb8fb818"
+  },
+  "bones": 26,
+  "unweighted_vertices": 0,
+  "max_influences": 4,
+  "parts": {
+    "Body": {
+      "vertices": 21292,
+      "polygons": 26643
+    },
+    "Head_Shell": {
+      "vertices": 10548,
+      "polygons": 13568
+    },
+    "Face_Default": {
+      "vertices": 881,
+      "polygons": 1113
+    }
+  },
+  "clips": {
+    "idle": {
+      "seconds": 2.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -6.848348110821689e-09,
+        -6.848348110821689e-09
+      ]
+    },
+    "walk": {
+      "seconds": 1.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -6.287478981903405e-09,
+        7.3948291934300414e-09
+      ]
+    },
+    "run": {
+      "seconds": 0.6666666666666666,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -4.209141479805112e-09,
+        7.25065163464933e-09
+      ]
+    }
+  },
+  "source": "assets/characters/tripo_white_mage/white_mage.glb",
+  "source_sha256": "9caf95065f483ba3a0bead4ef3c5650ea1ae5928f2fe6c1a4a4d20c326cc1dfc",
+  "base_color_sha256": "ada0e10a99ee138220b251a31e943887a107b3bedd4465ca0cd22841fe7f0cc9",
+  "packed_images_sha256": {
+    "tripo_image_1d7837bd-5a26-433b-a0d7-1bbd6cec6756_0_0": "ada0e10a99ee138220b251a31e943887a107b3bedd4465ca0cd22841fe7f0cc9"
+  },
+  "bands": [
+    0.68,
+    0.84,
+    1.0
+  ],
+  "normal_map": false,
+  "normal_angle_degrees": 32,
+  "outline_width": 0.0018,
+  "original_rig_preserved": false,
+  "export": {
+    "sha256": "6298a870d409b71b3692209d410565da0eb9f332e76f29d4d4b6753a0c1c589e",
+    "nodes": [
+      "head",
+      "neck",
+      "hand.L",
+      "forearm.L",
+      "upper_arm.L",
+      "clavicle.L",
+      "cape_tip.L",
+      "cape.L",
+      "hand.R",
+      "forearm.R",
+      "upper_arm.R",
+      "clavicle.R",
+      "cape_tip.R",
+      "cape.R",
+      "chest",
+      "spine",
+      "foot.L",
+      "shin.L",
+      "thigh.L",
+      "foot.R",
+      "shin.R",
+      "thigh.R",
+      "tabard_tip",
+      "tabard",
+      "pelvis",
+      "root",
+      "Body",
+      "Body_Outline",
+      "Face_Default",
+      "Face_Outline",
+      "Head_Shell",
+      "Head_Shell_Outline",
+      "Character_Rig"
+    ]
+  }
+}

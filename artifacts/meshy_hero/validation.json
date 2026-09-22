@@ -1,0 +1,36 @@
+{
+  "bones": 26,
+  "vertices": 20969,
+  "unweighted_vertices": 0,
+  "max_influences": 4,
+  "weight_sum_range": [
+    0.9999999552965164,
+    1.0000000447034836
+  ],
+  "clips": {
+    "idle": {
+      "duration": 2.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -1.7881393432617188e-07,
+        5.960464477539063e-08
+      ]
+    },
+    "walk": {
+      "duration": 1.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -1.7881393432617188e-07,
+        2.980232238769531e-07
+      ]
+    },
+    "run": {
+      "duration": 0.6666666666666666,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -1.7881393432617188e-07,
+        0.025623619556427002
+      ]
+    }
+  }
+}

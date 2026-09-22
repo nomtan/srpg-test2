@@ -24,6 +24,12 @@ export interface GripAlignment {
 
 export type GripSlot = "main_hand" | "off_hand";
 
+/** Place an asset that attaches at its own origin (hair, armor, ...) on the calibrated socket. */
+export function applySocketOffset(root: THREE.Object3D, socketOffset: readonly number[] = [0, 0, 0]): void {
+  root.position.set(socketOffset[0] ?? 0, socketOffset[1] ?? 0, socketOffset[2] ?? 0);
+  root.updateMatrixWorld(true);
+}
+
 /** Null for types that attach rigidly at their origin (hair, armor, …). */
 export function gripAlignmentFor(
   type: AssetType,
@@ -47,10 +53,17 @@ export interface GripAlignmentResult {
 }
 
 /**
- * Orients and offsets `root` so its attachment point coincides with the socket origin.
+ * Orients and offsets `root` so its attachment point coincides with the socket.
  * Call while `root` is still detached: the anchor is measured in the asset's own local space.
+ *
+ * `socketOffset` is the socket's calibrated position inside the parent node (metres). It is added
+ * on top, so the asset lands on the attachment point rather than on the parent's rotation pivot.
  */
-export function applyGripAlignment(root: THREE.Object3D, alignment: GripAlignment): GripAlignmentResult {
+export function applyGripAlignment(
+  root: THREE.Object3D,
+  alignment: GripAlignment,
+  socketOffset: readonly number[] = [0, 0, 0],
+): GripAlignmentResult {
   root.position.set(0, 0, 0);
   root.rotation.set(0, 0, 0);
   root.updateMatrixWorld(true);
@@ -76,8 +89,11 @@ export function applyGripAlignment(root: THREE.Object3D, alignment: GripAlignmen
     THREE.MathUtils.degToRad(alignment.rotationDeg[2]),
     "ZYX",
   );
-  // The anchor is in the asset's local frame; rotate it into the socket frame before cancelling it.
-  root.position.copy(anchor.clone().applyQuaternion(root.quaternion).negate());
+  // The anchor is in the asset's local frame; rotate it into the socket frame before cancelling it,
+  // then shift the whole asset to the socket's calibrated position inside the parent node.
+  root.position
+    .copy(anchor.clone().applyQuaternion(root.quaternion).negate())
+    .add(new THREE.Vector3(socketOffset[0] ?? 0, socketOffset[1] ?? 0, socketOffset[2] ?? 0));
   root.updateMatrixWorld(true);
 
   return { placedBy, anchor: [anchor.x, anchor.y, anchor.z] };

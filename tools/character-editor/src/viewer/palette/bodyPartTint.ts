@@ -5,9 +5,10 @@
 // their own cloned material instead; everything else keeps the shared one and follows the global
 // `skin` palette slot.
 //
-// Part names come from the base model, where `ashikubi` and `ashisaki` each appear twice (left and
-// right). Keying by name therefore colours both sides at once — the same limitation `hideParts`
-// has, and the reason the Builder marks those rows "左右同時".
+// Parts are resolved through `resolvePart`, not by node name: GLTFLoader uniquifies duplicate node
+// names, so the base model's two `ashisaki` / `ashikubi` meshes load as `ashisaki` + `ashisaki_1`,
+// and the torso mesh collides with the group of the same name and loads as `dou_1`. The caller
+// passes a resolver that reads the Blockbench element UUID out of `userData`.
 import * as THREE from "three";
 
 export interface BodyTintResult {
@@ -21,6 +22,7 @@ export function tintBodyParts(
   root: THREE.Object3D,
   skin: string,
   partColors: Record<string, string> = {},
+  resolvePart: (object: THREE.Object3D) => string | null = (o) => o.name || null,
 ): BodyTintResult {
   const cloneCache = new Map<string, THREE.Material>();
   const applied: string[] = [];
@@ -32,8 +34,9 @@ export function tintBodyParts(
     // A textured material carries its own colours; tinting it would only darken the texture.
     if (!base || base.map) return;
 
-    const override = mesh.name ? partColors[mesh.name] : undefined;
-    if (override && !applied.includes(mesh.name)) applied.push(mesh.name);
+    const part = resolvePart(mesh);
+    const override = part ? partColors[part] : undefined;
+    if (override && part && !applied.includes(part)) applied.push(part);
 
     const hex = override ?? skin;
     if (hex === skin) {

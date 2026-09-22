@@ -166,22 +166,69 @@ for (const [key, uuids] of Object.entries(REGION_SOURCES)) {
   if (result) regions[key] = result;
 }
 
-// ---- sockets: Phase 2 parent-local definition + measured rest-pose world position ----
+// ---- sockets: calibrated to the body region each one serves --------------------------
+//
+// Phase 2 anchored every socket at its parent group's PIVOT and flagged it
+// `pivot_only_uncalibrated`. A pivot is a rotation origin, not an attachment point: socket_chest
+// sat 0.53 m away from the torso, socket_back 0.50 m, the head sockets 0.25 m. An asset authored
+// with "origin = attachment point" (which is what the Model Prompt asks for) therefore landed in
+// the wrong place.
+//
+// Calibration rule: a socket sits at the CENTRE of the body region it serves — the same region the
+// prompt quotes as the fit region, so the asset and the socket agree on one anchor. The offset is
+// stored in the parent node's local frame, because that node rotates with the rig at runtime.
+const SOCKET_REGION = {
+  socket_head: "head",
+  socket_hair: "head",
+  socket_headgear: "head",
+  socket_chest: "torso",
+  socket_back: "torso",
+  socket_waist: "pelvis",
+  socket_shoulder_left: "shoulder_left",
+  socket_shoulder_right: "shoulder_right",
+  socket_arm_left: "forearm_left",
+  socket_arm_right: "forearm_right",
+  socket_hand_left: "hand_left",
+  socket_hand_right: "hand_right",
+  socket_foot_left: "ankle_left",
+  socket_foot_right: "ankle_right",
+};
+
+/** world (metres) -> the parent node's local frame (metres). Rotation only; nothing is scaled. */
+function toParentLocal(frame, worldMetres) {
+  const parent = frame.t.map((v) => v * SCALE);
+  const d = worldMetres.map((v, i) => v - parent[i]);
+  // R is orthonormal, so the inverse is the transpose.
+  return [
+    frame.r[0] * d[0] + frame.r[3] * d[1] + frame.r[6] * d[2],
+    frame.r[1] * d[0] + frame.r[4] * d[1] + frame.r[7] * d[2],
+    frame.r[2] * d[0] + frame.r[5] * d[1] + frame.r[8] * d[2],
+  ].map(round);
+}
+
 const sockets = {};
 for (const socket of analysis.sockets) {
   const frame = frames.get(socket.parentUuid);
   if (!frame) continue;
+  const pivotWorld = frame.t.map((v) => round(v * SCALE));
+  const regionName = SOCKET_REGION[socket.id];
+  const region = regionName ? regions[regionName] : null;
+  const worldPosition = region ? region.center : pivotWorld;
   sockets[socket.id] = {
     parent: socket.parent,
     parentUuid: socket.parentUuid,
-    // Phase 2 mapping values, unchanged: local anchor at the existing group pivot.
-    position: socket.position,
+    // Offset from the parent node, in ITS local frame. Attach an asset here, not at the pivot.
+    position: region ? toParentLocal(frame, worldPosition) : [0, 0, 0],
     rotation: socket.rotation,
     scale: [1, 1, 1],
     space: socket.space,
-    status: socket.status,
-    // Derived rest-pose world position in metres (Phase 5 normalization; no new scale rule).
-    worldPosition: frame.t.map((v) => round(v * SCALE)),
+    status: region ? "calibrated_to_region_centre" : socket.status,
+    /** The body region this socket is calibrated against. */
+    region: regionName ?? null,
+    /** Rest-pose world position of the attachment point, in metres. */
+    worldPosition,
+    /** Where Phase 2 put it: the parent group's rotation pivot. Kept for traceability. */
+    pivotWorldPosition: pivotWorld,
   };
 }
 

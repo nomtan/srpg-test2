@@ -1,0 +1,29 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Hero remains beside the knight
+PASS: Feet remain at terrain height
+PASS: NPC collision remains enabled
+PASS: Controllable hero is unchanged
+PASS: Hero faces the same direction as the knight
+PASS: Unknown clips fail safely
+PASS: All 26 bones imported
+PASS: Body and fine outline are both skinned
+PASS: Outline follows the same rig as the character
+PASS: Godot restores the three-band Toon shader
+PASS: Toon uses the original Base Color
+PASS: Outline uses its own unshaded material
+PASS: Stationary NPC automatically plays idle
+PASS: Animation imported: idle
+PASS: Duration and loop: idle
+PASS: Clip deforms the imported skeleton: idle
+PASS: Animation stays in place: idle
+PASS: Animation imported: walk
+PASS: Duration and loop: walk
+PASS: Clip deforms the imported skeleton: walk
+PASS: Animation stays in place: walk
+PASS: Animation imported: run
+PASS: Duration and loop: run
+PASS: Clip deforms the imported skeleton: run
+PASS: Animation stays in place: run

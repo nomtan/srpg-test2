@@ -1,0 +1,44 @@
+{
+  "bones": 30,
+  "parts": {
+    "AdventurerBody": {
+      "vertices": 12081,
+      "unweighted": 0,
+      "max_influences": 4
+    },
+    "Face": {
+      "vertices": 1178,
+      "unweighted": 0,
+      "max_influences": 2
+    },
+    "Hair_Tousled": {
+      "vertices": 5023,
+      "unweighted": 0,
+      "max_influences": 1
+    },
+    "Hair_Swept": {
+      "vertices": 5023,
+      "unweighted": 0,
+      "max_influences": 1
+    }
+  },
+  "clips": {
+    "idle": {
+      "duration": 3.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        9.313192883553256e-09,
+        9.313192883553256e-09
+      ]
+    },
+    "rig_check": {
+      "duration": 4.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        9.313192883553256e-09,
+        0.0010876638116315007
+      ]
+    }
+  },
+  "source_preserved": true
+}

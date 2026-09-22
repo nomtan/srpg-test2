@@ -1,0 +1,108 @@
+{
+  "geometry_before": {
+    "positions": "d3cebbe404da0dfd6c191012bb8931b269e207466ae4bda6cbfac75cca60807b",
+    "topology": "52aabadd42dbd15ffbc1d2700809e5baea26f1093b307e9753aee43f8b43fc2b",
+    "uv": "6759aa269225f566b947f53aca4ee0d37ed241266fa2fc49e42cdf37664c5bfb"
+  },
+  "geometry_after": {
+    "positions": "d3cebbe404da0dfd6c191012bb8931b269e207466ae4bda6cbfac75cca60807b",
+    "topology": "52aabadd42dbd15ffbc1d2700809e5baea26f1093b307e9753aee43f8b43fc2b",
+    "uv": "6759aa269225f566b947f53aca4ee0d37ed241266fa2fc49e42cdf37664c5bfb"
+  },
+  "bones": 26,
+  "unweighted_vertices": 0,
+  "max_influences": 4,
+  "parts": {
+    "Body": {
+      "vertices": 21750,
+      "polygons": 25805
+    },
+    "Head_Shell": {
+      "vertices": 13011,
+      "polygons": 16959
+    },
+    "Face_Default": {
+      "vertices": 412,
+      "polygons": 522
+    }
+  },
+  "clips": {
+    "idle": {
+      "seconds": 2.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        3.571375417621425e-09,
+        3.571375417621425e-09
+      ]
+    },
+    "walk": {
+      "seconds": 1.0,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -7.237581201025023e-09,
+        7.1492962661068304e-09
+      ]
+    },
+    "run": {
+      "seconds": 0.6666666666666666,
+      "loop_seam": 0.0,
+      "floor_range": [
+        -7.290509529411793e-09,
+        7.098300613961328e-09
+      ]
+    }
+  },
+  "source": "assets/characters/tripo_black_mage/black_mage.glb",
+  "source_sha256": "d5d1d39fe9f2b1a30342fbe3c2402a26a2ec1fcc33da9a6af16148394aadb906",
+  "base_color_sha256": "7ebb4ca3a2b82ca71b636e9f6f85e4e5620d7cf410bffd2fc9d01504a069a085",
+  "packed_images_sha256": {
+    "tripo_image_8221a912-9148-4e4d-8fab-1bd26d9e8824_0_0": "7ebb4ca3a2b82ca71b636e9f6f85e4e5620d7cf410bffd2fc9d01504a069a085"
+  },
+  "bands": [
+    0.68,
+    0.84,
+    1.0
+  ],
+  "normal_map": false,
+  "normal_angle_degrees": 32,
+  "outline_width": 0.0018,
+  "original_rig_preserved": false,
+  "export": {
+    "sha256": "7a63137028afeda35acfd9ed036c98df0fc0a62e161e210418628cceaf6a2381",
+    "nodes": [
+      "head",
+      "neck",
+      "hand.L",
+      "forearm.L",
+      "upper_arm.L",
+      "clavicle.L",
+      "cape_tip.L",
+      "cape.L",
+      "hand.R",
+      "forearm.R",
+      "upper_arm.R",
+      "clavicle.R",
+      "cape_tip.R",
+      "cape.R",
+      "chest",
+      "spine",
+      "foot.L",
+      "shin.L",
+      "thigh.L",
+      "foot.R",
+      "shin.R",
+      "thigh.R",
+      "tabard_tip",
+      "tabard",
+      "pelvis",
+      "root",
+      "Body",
+      "Body_Outline",
+      "Face_Default",
+      "Face_Outline",
+      "Head_Shell",
+      "Head_Shell_Outline",
+      "Character_Rig"
+    ]
+  }
+}

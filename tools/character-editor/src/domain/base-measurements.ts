@@ -20,14 +20,22 @@ export interface MeasuredBox {
 export interface MeasuredSocket {
   parent: string;
   parentUuid: string;
-  /** Phase 2 socket mapping value: anchored at the existing group pivot, uncalibrated. */
+  /**
+   * Offset from the parent node, in the parent's local frame (metres). This is the attachment
+   * point: Phase 2 left it at [0,0,0] (the group's rotation pivot), which is up to 0.53 m away
+   * from the body part the socket serves. `build:measurements` now calibrates it.
+   */
   position: number[];
   rotation: number[];
   scale: number[];
   space: string;
   status: string;
-  /** Rest-pose world position in metres, derived with the Phase 5 normalization. */
+  /** Rest-pose world position of the attachment point, in metres. */
   worldPosition: number[];
+  /** The measured body region the socket is calibrated against. */
+  region?: string | null;
+  /** Where Phase 2 anchored it — the parent group's rotation pivot. Traceability only. */
+  pivotWorldPosition?: number[];
 }
 
 export type BaseRegion = keyof typeof measurements.regions;
