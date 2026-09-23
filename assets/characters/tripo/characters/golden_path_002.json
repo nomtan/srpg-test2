@@ -13,11 +13,25 @@
     "beard_style": "none"
   },
   "fit": {
-    "face_position": [0.0, 0.0, 0.0],
-    "face_rotation_degrees": [0.0, 0.0, 0.0],
-    "face_scale": [1.0, 1.0, 1.0]
+    "face_position": [
+      0.0019,
+      -0.0589,
+      0.89
+    ],
+    "face_rotation_degrees": [
+      0,
+      0,
+      0
+    ],
+    "face_scale": [
+      0.6,
+      0.6,
+      0.6
+    ]
   },
   "output": {
     "glb": "assets/characters/generated/golden_path_002/character.glb"
-  }
+  },
+  "fit_coordinate_system": "Blender Z-up meters; source world transform then scale and translation, baked into mesh",
+  "hair_mode": "integrated_in_head"
 }
