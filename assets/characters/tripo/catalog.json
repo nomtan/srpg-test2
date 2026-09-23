@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "source_policy": "immutable",
+  "face": [
+    {"id": "001", "source": "assets/characters/tripo/face/001/model.glb", "size_bytes": 991772},
+    {"id": "002", "source": "assets/characters/tripo/face/002/model.glb", "size_bytes": 1438368},
+    {"id": "003", "source": "assets/characters/tripo/face/003/model.glb", "size_bytes": 1404852},
+    {"id": "004", "source": "assets/characters/tripo/face/004/model.glb", "size_bytes": 1375552},
+    {"id": "005", "source": "assets/characters/tripo/face/005/model.glb", "size_bytes": 1423876},
+    {"id": "006", "source": "assets/characters/tripo/face/006/model.glb", "size_bytes": 1458660},
+    {"id": "007", "source": "assets/characters/tripo/face/007/model.glb", "size_bytes": 1217224},
+    {"id": "008", "source": "assets/characters/tripo/face/008/model.glb", "size_bytes": 1220432},
+    {"id": "009", "source": "assets/characters/tripo/face/009/model.glb", "size_bytes": 1290476},
+    {"id": "010", "source": "assets/characters/tripo/face/010/model.glb", "size_bytes": 1419832}
+  ],
+  "body": [
+    {"id": "001", "source": "assets/characters/tripo/body/001/model.glb", "size_bytes": 2161032},
+    {"id": "002", "source": "assets/characters/tripo/body/002/model.glb", "size_bytes": 2185416},
+    {"id": "003", "source": "assets/characters/tripo/body/003/model.glb", "size_bytes": 2067580},
+    {"id": "004", "source": "assets/characters/tripo/body/004/model.glb", "size_bytes": 2269220},
+    {"id": "005", "source": "assets/characters/tripo/body/005/model.glb", "size_bytes": 2240956},
+    {"id": "006", "source": "assets/characters/tripo/body/006/model.glb", "size_bytes": 2157728},
+    {"id": "007", "source": "assets/characters/tripo/body/007/model.glb", "size_bytes": 2215628},
+    {"id": "008", "source": "assets/characters/tripo/body/008/model.glb", "size_bytes": 2204728},
+    {"id": "009", "source": "assets/characters/tripo/body/009/model.glb", "size_bytes": 2419972},
+    {"id": "010", "source": "assets/characters/tripo/body/010/model.glb", "size_bytes": 2185560}
+  ]
+}
