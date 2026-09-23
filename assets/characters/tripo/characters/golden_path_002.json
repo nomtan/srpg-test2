@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "character_id": "golden_path_002",
+  "display_name": "Golden Path 002",
+  "face_id": "002",
+  "body_id": "001",
+  "rig_profile": "humanoid_v1",
+  "animation_profile": "onehand_sword",
+  "face": {
+    "eye_style": "male_01",
+    "expression": "normal",
+    "mouth_style": "default",
+    "beard_style": "none"
+  },
+  "fit": {
+    "face_position": [0.0, 0.0, 0.0],
+    "face_rotation_degrees": [0.0, 0.0, 0.0],
+    "face_scale": [1.0, 1.0, 1.0]
+  },
+  "output": {
+    "glb": "assets/characters/generated/golden_path_002/character.glb"
+  }
+}
