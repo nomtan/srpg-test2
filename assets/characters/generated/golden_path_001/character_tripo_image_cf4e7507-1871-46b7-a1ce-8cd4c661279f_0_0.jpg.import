@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://csnh1bm80tpja"
-path="res://.godot/imported/character_tripo_image_cf4e7507-1871-46b7-a1ce-8cd4c661279f_0_0.jpg-ae037ca53fbdbc1fd42fb2258c6afb45.ctex"
+path.s3tc="res://.godot/imported/character_tripo_image_cf4e7507-1871-46b7-a1ce-8cd4c661279f_0_0.jpg-ae037ca53fbdbc1fd42fb2258c6afb45.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "77c12a6121d15299cccc09cb53c1cd96"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/generated/golden_path_001/character_tripo_image_cf4e7507-1871-46b7-a1ce-8cd4c661279f_0_0.jpg"
-dest_files=["res://.godot/imported/character_tripo_image_cf4e7507-1871-46b7-a1ce-8cd4c661279f_0_0.jpg-ae037ca53fbdbc1fd42fb2258c6afb45.ctex"]
+dest_files=["res://.godot/imported/character_tripo_image_cf4e7507-1871-46b7-a1ce-8cd4c661279f_0_0.jpg-ae037ca53fbdbc1fd42fb2258c6afb45.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/generated/golden_path_001/character.glb" id="1"]
+[ext_resource type="Script" path="res://scripts/character/golden_path_roster_character.gd" id="2"]
+
+[node name="GoldenPath001" type="Node3D"]
+script = ExtResource("2")
+character_id = "golden_path_001"
+display_name = "Golden Path 001"
+
+[node name="Model" parent="." instance=ExtResource("1")]
+scale = Vector3(1.575, 1.575, 1.575)
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 1.9, 0)
+billboard = 1
+text = "Golden Path 001"
+font_size = 24
+pixel_size = 0.010
+no_depth_test = false

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/knight_player.tscn" id="2"]
@@ -11,8 +11,10 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/scholar.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/warrior.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/white_mage.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/golden_path_001.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/golden_path_002.tscn" id="16"]
 
 [node name="JRPGWorldSample" type="Node3D"]
 script = ExtResource("1")
 player_model = ExtResource("2")
-character_roster = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11")])
+character_roster = Array[PackedScene]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("15"), ExtResource("16")])

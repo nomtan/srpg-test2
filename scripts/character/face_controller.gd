@@ -3,6 +3,14 @@ extends Node
 
 const EXPRESSIONS := ["normal", "closed", "surprised", "squint"]
 const TEXTURE_ROOT := "res://assets/characters/_shared/face/face_%s/%s.png"
+const FEATURE_ATLAS := "res://assets/characters/_shared/face/chibi_facial_features.png"
+const VARIANT_ATLAS := "res://assets/characters/_shared/face/chibi_facial_features_variants.png"
+const ATLAS_OFFSETS := {
+	"normal": Vector2(0.0, 0.0),
+	"closed": Vector2(0.5, 0.0),
+	"surprised": Vector2(0.0, 0.5),
+	"squint": Vector2(0.5, 0.5),
+}
 
 var face_id := ""
 var current_expression := "normal"
@@ -20,6 +28,10 @@ func bind_character(character: Node, requested_face_id: String, initial_expressi
 	expression_uv_offset = uv_offset
 	head_materials.clear()
 	texture_cache.clear()
+	var model_scale_y := 1.0
+	if character is Node3D:
+		model_scale_y = (character as Node3D).global_transform.basis.get_scale().y
+	var face_rect := Vector4(-0.23, 0.96 - 0.2 / maxf(model_scale_y, 0.001), 0.46, 0.32)
 	var heads := character.find_children("Head", "MeshInstance3D", true, false)
 	for head_node in heads:
 		var head := head_node as MeshInstance3D
@@ -33,6 +45,12 @@ func bind_character(character: Node, requested_face_id: String, initial_expressi
 			head.set_surface_override_material(surface, material)
 			material.set_shader_parameter("expression_uv_scale", expression_uv_scale)
 			material.set_shader_parameter("expression_uv_offset", expression_uv_offset)
+			if face_id == "001" or face_id == "002":
+				material.set_shader_parameter("expression_projected", true)
+				material.set_shader_parameter("expression_face_rect", face_rect)
+				if face_id == "002":
+					# Face 002 includes the fringe in Head; keep the artwork on the face surface.
+					material.set_shader_parameter("expression_surface_depth", Vector2(0.18, 0.32))
 			head_materials.append(material)
 	if head_materials.is_empty():
 		push_warning("FaceController: no Head ShaderMaterial found")
@@ -76,11 +94,18 @@ func _apply_expression(expression: String) -> void:
 		material.set_shader_parameter("expression_enabled", texture != null)
 		if texture != null:
 			material.set_shader_parameter("expression_texture", texture)
+			if face_id == "001" or face_id == "002":
+				material.set_shader_parameter("expression_atlas_offset", ATLAS_OFFSETS[expression])
 
 
 func _get_texture(expression: String) -> Texture2D:
 	if texture_cache.has(expression):
 		return texture_cache[expression] as Texture2D
+	if face_id == "001" or face_id == "002":
+		var atlas_path := FEATURE_ATLAS if expression == "normal" else VARIANT_ATLAS
+		var atlas := load(atlas_path) as Texture2D if ResourceLoader.exists(atlas_path) else null
+		texture_cache[expression] = atlas
+		return atlas
 	var path := TEXTURE_ROOT % [face_id, expression]
 	var texture := load(path) as Texture2D if ResourceLoader.exists(path) else null
 	texture_cache[expression] = texture

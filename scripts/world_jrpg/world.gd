@@ -577,6 +577,9 @@ func _spawn_tripo_roster() -> void:
 		# Three rows on the clear starting plateau, with room to walk between them.
 		var x := 24.5 + float(index % 3) * 3.6
 		var z := 57.0 - floorf(float(index) / 3.0) * 3.6
+		if actor.character_id.begins_with("golden_path_"):
+			x = 28.0 if actor.character_id == "golden_path_001" else 35.0
+			z = 63.0
 		actor.position = Vector3(x, _surface(x, z) + 0.05, z)
 		actor.rotation.y = -0.65
 		npcs.append({"actor": actor, "data": {
