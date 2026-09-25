@@ -1,6 +1,9 @@
 class_name BattleUnit
 extends Node3D
 
+const FACE_CONTROLLER_SCRIPT = preload("res://scripts/character/face_controller.gd")
+var face_controller: FaceController
+
 enum AttackType { MELEE, RANGED }
 enum FacingDirection { NORTH, EAST, SOUTH, WEST }
 enum EnemyType { AGGRESSIVE, DEFENSIVE, SNIPER, GUARD, BOSS }
@@ -243,6 +246,24 @@ func setup_visual(
 			0.0, model_y_offset * CHARACTER_VISUAL_SCALE, 0.0
 		)
 		add_child(model_instance)
+		if model_path.begins_with("res://assets/characters/generated/golden_path_"):
+			var face_id := model_path.trim_prefix("res://assets/characters/generated/golden_path_").get_slice("/", 0)
+			var manifest_path := "res://assets/characters/tripo/characters/golden_path_%s.json" % face_id
+			var expression := "normal"
+			var uv_scale := Vector2.ONE
+			var uv_offset := Vector2.ZERO
+			if FileAccess.file_exists(manifest_path):
+				var manifest = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+				if manifest is Dictionary:
+					expression = str(manifest.get("face", {}).get("expression", "normal"))
+					var surface: Dictionary = manifest.get("face_surface", {})
+					var scale_values: Array = surface.get("expression_uv_scale", [1.0, 1.0])
+					var offset_values: Array = surface.get("expression_uv_offset", [0.0, 0.0])
+					uv_scale = Vector2(scale_values[0], scale_values[1])
+					uv_offset = Vector2(offset_values[0], offset_values[1])
+			face_controller = FACE_CONTROLLER_SCRIPT.new()
+			add_child(face_controller)
+			face_controller.bind_character(model_instance, face_id, expression, uv_scale, uv_offset)
 		if use_flat_shading:
 			_apply_flat_shading(model_instance, tunic_color, accent_color)
 		var players := model_instance.find_children("*", "AnimationPlayer", true, false)
