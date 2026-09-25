@@ -12,6 +12,8 @@ uniform vec4 expression_face_rect = vec4(-0.23, 0.96, 0.46, 0.32);
 uniform vec2 expression_atlas_offset = vec2(0.0, 0.0);
 uniform vec2 expression_surface_depth = vec2(-1.0, 1.0);
 uniform float expression_feature_scale = 1.0;
+// CUSTOM0/CUSTOM1 hold bind-pose position/normal so projected features follow skinning.
+uniform bool expression_rest_custom = false;
 uniform float shadow_band = 0.68;
 uniform float middle_band = 0.84;
 
@@ -21,8 +23,9 @@ varying vec3 expression_rest_position;
 varying vec3 expression_rest_normal;
 
 void vertex() {
-	expression_rest_position = VERTEX;
-	expression_rest_normal = NORMAL;
+	// VERTEX is already skinned here; use the baked bind pose when available.
+	expression_rest_position = expression_rest_custom ? CUSTOM0.xyz : VERTEX;
+	expression_rest_normal = expression_rest_custom ? CUSTOM1.xyz : NORMAL;
 }
 
 void fragment() {

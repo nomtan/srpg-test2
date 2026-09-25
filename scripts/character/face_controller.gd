@@ -12,6 +12,8 @@ const ATLAS_OFFSETS := {
 	"squint": Vector2(0.5, 0.5),
 }
 
+const REST_ATTRIBUTES_META := &"face_rest_attributes"
+
 var face_id := ""
 var current_expression := "normal"
 var head_materials: Array[ShaderMaterial] = []
@@ -37,6 +39,11 @@ func bind_character(character: Node, requested_face_id: String, initial_expressi
 		var head := head_node as MeshInstance3D
 		if head.mesh == null:
 			continue
+		if face_id == "002":
+			# Project from the bind pose so features sway with the skinned head.
+			var rest_mesh := _with_rest_attributes(head.mesh)
+			if rest_mesh != null:
+				head.mesh = rest_mesh
 		for surface in head.mesh.get_surface_count():
 			var source := head.get_active_material(surface) as ShaderMaterial
 			if source == null:
@@ -51,6 +58,9 @@ func bind_character(character: Node, requested_face_id: String, initial_expressi
 				if face_id == "002":
 					# Face 002 includes the fringe in Head; keep the artwork on the face surface.
 					material.set_shader_parameter("expression_surface_depth", Vector2(0.18, 0.32))
+					# Face 002 artwork reads small; enlarge it around the face center.
+					material.set_shader_parameter("expression_feature_scale", 1.1)
+					material.set_shader_parameter("expression_rest_custom", head.mesh.has_meta(REST_ATTRIBUTES_META))
 			head_materials.append(material)
 	if head_materials.is_empty():
 		push_warning("FaceController: no Head ShaderMaterial found")
@@ -110,3 +120,39 @@ func _get_texture(expression: String) -> Texture2D:
 	var texture := load(path) as Texture2D if ResourceLoader.exists(path) else null
 	texture_cache[expression] = texture
 	return texture
+
+
+func _with_rest_attributes(mesh: Mesh) -> ArrayMesh:
+	# Copy the mesh with bind-pose position/normal in CUSTOM0/CUSTOM1.
+	if mesh.has_meta(REST_ATTRIBUTES_META):
+		return mesh as ArrayMesh
+	var source := mesh as ArrayMesh
+	if source == null:
+		return null
+	var result := ArrayMesh.new()
+	result.blend_shape_mode = source.blend_shape_mode
+	for index in source.get_blend_shape_count():
+		result.add_blend_shape(source.get_blend_shape_name(index))
+	var custom_format := (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT) 		| (Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM1_SHIFT)
+	for surface in source.get_surface_count():
+		var arrays := source.surface_get_arrays(surface)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var rest_position := PackedFloat32Array()
+		var rest_normal := PackedFloat32Array()
+		rest_position.resize(vertices.size() * 4)
+		rest_normal.resize(vertices.size() * 4)
+		for vertex in vertices.size():
+			var normal := normals[vertex] if vertex < normals.size() else Vector3.BACK
+			for axis in 3:
+				rest_position[vertex * 4 + axis] = vertices[vertex][axis]
+				rest_normal[vertex * 4 + axis] = normal[axis]
+		arrays[Mesh.ARRAY_CUSTOM0] = rest_position
+		arrays[Mesh.ARRAY_CUSTOM1] = rest_normal
+		var flags := custom_format | (source.surface_get_format(surface) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS)
+		result.add_surface_from_arrays(source.surface_get_primitive_type(surface), arrays,
+			source.surface_get_blend_shape_arrays(surface), {}, flags)
+		result.surface_set_material(surface, source.surface_get_material(surface))
+		result.surface_set_name(surface, source.surface_get_name(surface))
+	result.set_meta(REST_ATTRIBUTES_META, true)
+	return result
