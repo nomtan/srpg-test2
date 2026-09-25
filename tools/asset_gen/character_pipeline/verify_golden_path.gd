@@ -41,8 +41,10 @@ func run() -> void:
 			var mesh := actor.find_child(part, true, false) as MeshInstance3D
 			check(mesh != null and mesh.skin != null and mesh.get_node(mesh.skeleton) == sk, id + " " + part + " bound to shared skeleton")
 			if mesh != null:
-				var material := mesh.get_active_material(0) as StandardMaterial3D
-				check(material != null and material.albedo_texture != null, id + " " + part + " original texture imported")
+				for surface in mesh.mesh.get_surface_count():
+					var material := mesh.get_active_material(surface) as ShaderMaterial
+					check(material != null and material.shader == preload("res://assets/characters/_shared/materials/character_toon.gdshader"), id + " " + part + " shared toon shader surface " + str(surface))
+					check(material != null and material.get_shader_parameter("base_color_texture") != null, id + " " + part + " original texture retained surface " + str(surface))
 		var player := actor.animation_player
 		check(player != null and player.current_animation == "idle", id + " BattleUnit automatically plays idle")
 		if player == null:
