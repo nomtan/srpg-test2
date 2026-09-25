@@ -1,0 +1,25 @@
+{
+  "source_unchanged": {
+    "assets/characters/tripo/body/001/model.glb": true,
+    "assets/characters/tripo/face/001/model.glb": true,
+    "assets/characters/tripo/face/002/model.glb": true
+  },
+  "body_buffers_identical": true,
+  "animation_buffers_identical": true,
+  "clips": [
+    "attack",
+    "hit",
+    "idle",
+    "walk"
+  ],
+  "001": {
+    "skins": 1,
+    "joints": 65,
+    "embedded_images": true
+  },
+  "002": {
+    "skins": 1,
+    "joints": 65,
+    "embedded_images": true
+  }
+}

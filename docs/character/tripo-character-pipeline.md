@@ -315,3 +315,26 @@ Godot import後:
 6. 共通Animation Setを整備
 7. `tools/asset_gen` にCharacter管理UIを追加
 8. 別ツールとしてCharacter/Skill master data管理画面を整備
+
+## 11. Golden Pathで確認した規格（2026-09-26）
+
+実施結果と検証の範囲は [Golden Path実施記録](golden-path-report.md) を参照。
+
+- `humanoid_v1` はBody 001の65ボーンとrest poseを維持する。Blender側では
+  `mixamorig:Head` のみ `head` に変更する。Godot import時には他の名前の
+  `:` が `_` へ変換されるため、runtimeでは `mixamorig_Hips` 等になる。
+- `Character` とArmatureのtransformはidentity、単位はmeter、BlenderはZ-up。
+  Body 001の接地面はほぼZ=0（浮動小数点誤差約1.4e-7 m）。
+- `fit` はインポート直後のFace world座標に一様scale、その後translationを適用する。
+  GLB出力前にmeshへ焼き込み、Face objectのtransformをidentityにする。
+- Face全頂点を `head` へweight 1でbindし、Bodyと同じskinを使用する。
+- Face 001にはHairがない。Face 002は髪と頭が連続した単一mesh・単一materialのため、
+  `Head` 内に保持し、`hair_mode: integrated_in_head` で明示する。
+  このような素材は、独立したHair nodeを必須にせず破壊的分割を避ける。
+- Body materialは `Body`、Face materialは `Head_001` / `Head_002`。
+  元のUVと512×512テクスチャを保持する。顔表現はHead表面に合成する前提とする。
+- クリップは `idle`（2秒）、`walk`（1秒）、`attack`（1秒）、`hit`（0.8秒）。
+  今回は互換性確認用の簡易動作。idle/walkのloopは
+  `tools/asset_gen/character_pipeline/golden_path_import.gd` でimport時に設定する。
+- `.blend`作業ファイルは `artifacts/golden_path/{001,002}/` に置く。
+  同ディレクトリの `.gdignore` によりGodotから直接importせず、runtimeではGLBのみ使う。

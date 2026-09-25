@@ -73,7 +73,7 @@ func run() -> void:
 				player.play(clip, 0)
 				previous_player.play(clip, 0)
 				for fraction in [0.0, .25, .5, .75, 1.0]:
-					var time := player.get_animation(clip).length * fraction
+					var time: float = player.get_animation(clip).length * fraction
 					player.seek(time, true); player.advance(0)
 					previous_player.seek(time, true); previous_player.advance(0)
 					var matches := true
