@@ -13,6 +13,7 @@ const ATLAS_OFFSETS := {
 }
 
 const REST_ATTRIBUTES_META := &"face_rest_attributes"
+const FACE_002_RAISE_METERS := 0.05
 
 var face_id := ""
 var current_expression := "normal"
@@ -58,9 +59,13 @@ func bind_character(character: Node, requested_face_id: String, initial_expressi
 				if face_id == "002":
 					# Face 002 includes the fringe in Head; keep the artwork on the face surface.
 					material.set_shader_parameter("expression_surface_depth", Vector2(0.18, 0.32))
-					# Face 002 artwork reads small; enlarge it around the face center.
-					material.set_shader_parameter("expression_feature_scale", 1.1)
+					# Face 002 artwork scale around the face center.
+					material.set_shader_parameter("expression_feature_scale", 0.95)
 					material.set_shader_parameter("expression_rest_custom", head.mesh.has_meta(REST_ATTRIBUTES_META))
+					# Raise the artwork by FACE_002_RAISE_METERS in world space (rect is in Head mesh space).
+					var head_scale_y := maxf(head.global_transform.basis.get_scale().y, 0.001)
+					var raised_rect := face_rect + Vector4(0.0, FACE_002_RAISE_METERS / head_scale_y, 0.0, 0.0)
+					material.set_shader_parameter("expression_face_rect", raised_rect)
 			head_materials.append(material)
 	if head_materials.is_empty():
 		push_warning("FaceController: no Head ShaderMaterial found")

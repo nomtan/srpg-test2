@@ -1,0 +1,15 @@
+Server thread started
+BlenderMCP server started on localhost:9876
+BlenderMCP addon registered
+01:37.906  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\sources.png'
+02:55.156  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\001_idle_front.png'
+03:20.531  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_idle_front.png'
+03:20.828  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_walk_front.png'
+03:23.063  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+03:23.344  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_walk_front.png'
+05:50.094  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\001_attack_side.png'
+05:50.375  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\001_hit_side.png'
+05:50.641  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_attack_side.png'
+05:50.906  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_hit_side.png'
+05:51.172  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_attack_side.png'
+05:51.438  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_hit_side.png'

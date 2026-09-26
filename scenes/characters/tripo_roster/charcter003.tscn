@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/generated/charcter003/character.glb" id="1"]
+[ext_resource type="Script" path="res://scripts/character/tripo_roster_character.gd" id="2"]
+
+[node name="Character003" type="Node3D"]
+script = ExtResource("2")
+character_id = "charcter003"
+display_name = "Character 003"
+
+[node name="Model" parent="." instance=ExtResource("1")]
+scale = Vector3(1.35, 1.35, 1.35)
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.2, 0)
+billboard = 1
+text = "Character 003"
+font_size = 24
+pixel_size = 0.010
+no_depth_test = false

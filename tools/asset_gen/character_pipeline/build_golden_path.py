@@ -85,6 +85,12 @@ def build_body():
     scene.collection.objects.link(character)
     rig.parent = character
     character['rig_profile'] = 'humanoid_v1'
+    create_animations(rig)
+
+
+def create_animations(rig):
+    """Shared in-place compatibility clips for the inspected 65-bone Tripo rig."""
+    scene = bpy.context.scene
     rig.animation_data_create()
     # A small in-place motion set for compatibility, not production combat art.
     for clip, frames in [('idle', 60), ('walk', 30), ('attack', 30), ('hit', 24)]:

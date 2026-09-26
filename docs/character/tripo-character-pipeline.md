@@ -318,6 +318,11 @@ Godot import後:
 
 ## 11. Golden Pathで確認した規格（2026-09-26）
 
+以下は初回Golden Path素材の記録。差し替え後の001/002/003は
+[3体の作成記録](character-001-003-report.md) を参照。
+現行運用ではTripo auto rigをBody 001だけに付け、Body 002/003にはBlenderで
+001の共通Skeletonとウェイトを転送する。各Faceは同番号のBodyへ組み合わせる。
+
 実施結果と検証の範囲は [Golden Path実施記録](golden-path-report.md) を参照。
 
 - `humanoid_v1` はBody 001の65ボーンとrest poseを維持する。Blender側では

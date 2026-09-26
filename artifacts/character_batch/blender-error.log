@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "C:\Users\nomur\AppData\Roaming\Blender Foundation\Blender\5.1\scripts\addons\addon.py", line 501, in execute_code
+    exec(code, namespace)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "<string>", line 4, in <module>
+NameError: name 'gp' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\nomur\AppData\Roaming\Blender Foundation\Blender\5.1\scripts\addons\addon.py", line 329, in _execute_command_internal
+    result = handler(**params)
+  File "C:\Users\nomur\AppData\Roaming\Blender Foundation\Blender\5.1\scripts\addons\addon.py", line 506, in execute_code
+    raise Exception(f"Code execution error: {str(e)}")
+Exception: Code execution error: name 'gp' is not defined

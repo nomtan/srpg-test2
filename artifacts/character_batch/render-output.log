@@ -1,0 +1,258 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.55 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4050 Laptop GPU
+
+PASS: 001 PackedScene imported
+PASS: 001 standalone instantiate
+PASS: 001 exactly one Skeleton3D
+PASS: 001 65 bones and head
+PASS: 001 Body bound to shared skeleton
+PASS: 001 Body shared toon shader surface 0
+PASS: 001 Body original texture retained surface 0
+PASS: 001 Head bound to shared skeleton
+PASS: 001 Head shared toon shader surface 0
+PASS: 001 Head original texture retained surface 0
+PASS: 001 BattleUnit automatically plays idle
+PASS: 001 clip idle
+PASS: 001 loop policy idle
+PASS: 001 head animates idle
+PASS: 001 no root motion idle
+PASS: 001 clip walk
+PASS: 001 loop policy walk
+PASS: 001 head animates walk
+PASS: 001 no root motion walk
+PASS: 001 clip attack
+PASS: 001 loop policy attack
+PASS: 001 head animates attack
+PASS: 001 no root motion attack
+PASS: 001 clip hit
+PASS: 001 loop policy hit
+PASS: 001 head animates hit
+PASS: 001 no root motion hit
+PASS: 002 PackedScene imported
+PASS: 002 standalone instantiate
+PASS: 002 exactly one Skeleton3D
+PASS: 002 65 bones and head
+PASS: 002 Body bound to shared skeleton
+PASS: 002 Body shared toon shader surface 0
+PASS: 002 Body original texture retained surface 0
+PASS: 002 Head bound to shared skeleton
+PASS: 002 Head shared toon shader surface 0
+PASS: 002 Head original texture retained surface 0
+PASS: 002 BattleUnit automatically plays idle
+PASS: 002 clip idle
+PASS: 002 loop policy idle
+PASS: 002 head animates idle
+PASS: 002 no root motion idle
+PASS: 002 clip walk
+PASS: 002 loop policy walk
+PASS: 002 head animates walk
+PASS: 002 no root motion walk
+PASS: 002 clip attack
+PASS: 002 loop policy attack
+PASS: 002 head animates attack
+PASS: 002 no root motion attack
+PASS: 002 clip hit
+PASS: 002 loop policy hit
+PASS: 002 head animates hit
+PASS: 002 no root motion hit
+PASS: shared rest mixamorig_Hips
+PASS: shared rest mixamorig_LeftUpLeg
+PASS: shared rest mixamorig_LeftLeg
+PASS: shared rest mixamorig_LeftFoot
+PASS: shared rest mixamorig_LeftToeBase
+PASS: shared rest mixamorig_LeftToe_End
+PASS: shared rest mixamorig_RightUpLeg
+PASS: shared rest mixamorig_RightLeg
+PASS: shared rest mixamorig_RightFoot
+PASS: shared rest mixamorig_RightToeBase
+PASS: shared rest mixamorig_RightToe_End
+PASS: shared rest mixamorig_Spine
+PASS: shared rest mixamorig_Spine1
+PASS: shared rest mixamorig_Spine2
+PASS: shared rest mixamorig_LeftShoulder
+PASS: shared rest mixamorig_LeftArm
+PASS: shared rest mixamorig_LeftForeArm
+PASS: shared rest mixamorig_LeftHand
+PASS: shared rest mixamorig_LeftHandIndex1
+PASS: shared rest mixamorig_LeftHandIndex2
+PASS: shared rest mixamorig_LeftHandIndex3
+PASS: shared rest mixamorig_LeftHandIndex4
+PASS: shared rest mixamorig_LeftHandMiddle1
+PASS: shared rest mixamorig_LeftHandMiddle2
+PASS: shared rest mixamorig_LeftHandMiddle3
+PASS: shared rest mixamorig_LeftHandMiddle4
+PASS: shared rest mixamorig_LeftHandPinky1
+PASS: shared rest mixamorig_LeftHandPinky2
+PASS: shared rest mixamorig_LeftHandPinky3
+PASS: shared rest mixamorig_LeftHandPinky4
+PASS: shared rest mixamorig_LeftHandRing1
+PASS: shared rest mixamorig_LeftHandRing2
+PASS: shared rest mixamorig_LeftHandRing3
+PASS: shared rest mixamorig_LeftHandRing4
+PASS: shared rest mixamorig_LeftHandThumb1
+PASS: shared rest mixamorig_LeftHandThumb2
+PASS: shared rest mixamorig_LeftHandThumb3
+PASS: shared rest mixamorig_LeftHandThumb4
+PASS: shared rest mixamorig_Neck
+PASS: shared rest head
+PASS: shared rest mixamorig_HeadTop_End
+PASS: shared rest mixamorig_RightShoulder
+PASS: shared rest mixamorig_RightArm
+PASS: shared rest mixamorig_RightForeArm
+PASS: shared rest mixamorig_RightHand
+PASS: shared rest mixamorig_RightHandIndex1
+PASS: shared rest mixamorig_RightHandIndex2
+PASS: shared rest mixamorig_RightHandIndex3
+PASS: shared rest mixamorig_RightHandIndex4
+PASS: shared rest mixamorig_RightHandMiddle1
+PASS: shared rest mixamorig_RightHandMiddle2
+PASS: shared rest mixamorig_RightHandMiddle3
+PASS: shared rest mixamorig_RightHandMiddle4
+PASS: shared rest mixamorig_RightHandPinky1
+PASS: shared rest mixamorig_RightHandPinky2
+PASS: shared rest mixamorig_RightHandPinky3
+PASS: shared rest mixamorig_RightHandPinky4
+PASS: shared rest mixamorig_RightHandRing1
+PASS: shared rest mixamorig_RightHandRing2
+PASS: shared rest mixamorig_RightHandRing3
+PASS: shared rest mixamorig_RightHandRing4
+PASS: shared rest mixamorig_RightHandThumb1
+PASS: shared rest mixamorig_RightHandThumb2
+PASS: shared rest mixamorig_RightHandThumb3
+PASS: shared rest mixamorig_RightHandThumb4
+PASS: Shared animation reused: idle 0.00
+PASS: Shared animation reused: idle 0.25
+PASS: Shared animation reused: idle 0.50
+PASS: Shared animation reused: idle 0.75
+PASS: Shared animation reused: idle 1.00
+PASS: Shared animation reused: walk 0.00
+PASS: Shared animation reused: walk 0.25
+PASS: Shared animation reused: walk 0.50
+PASS: Shared animation reused: walk 0.75
+PASS: Shared animation reused: walk 1.00
+PASS: Shared animation reused: attack 0.00
+PASS: Shared animation reused: attack 0.25
+PASS: Shared animation reused: attack 0.50
+PASS: Shared animation reused: attack 0.75
+PASS: Shared animation reused: attack 1.00
+PASS: Shared animation reused: hit 0.00
+PASS: Shared animation reused: hit 0.25
+PASS: Shared animation reused: hit 0.50
+PASS: Shared animation reused: hit 0.75
+PASS: Shared animation reused: hit 1.00
+PASS: 003 PackedScene imported
+PASS: 003 standalone instantiate
+PASS: 003 exactly one Skeleton3D
+PASS: 003 65 bones and head
+PASS: 003 Body bound to shared skeleton
+PASS: 003 Body shared toon shader surface 0
+PASS: 003 Body original texture retained surface 0
+PASS: 003 Head bound to shared skeleton
+PASS: 003 Head shared toon shader surface 0
+PASS: 003 Head original texture retained surface 0
+PASS: 003 BattleUnit automatically plays idle
+PASS: 003 clip idle
+PASS: 003 loop policy idle
+PASS: 003 head animates idle
+PASS: 003 no root motion idle
+PASS: 003 clip walk
+PASS: 003 loop policy walk
+PASS: 003 head animates walk
+PASS: 003 no root motion walk
+PASS: 003 clip attack
+PASS: 003 loop policy attack
+PASS: 003 head animates attack
+PASS: 003 no root motion attack
+PASS: 003 clip hit
+PASS: 003 loop policy hit
+PASS: 003 head animates hit
+PASS: 003 no root motion hit
+PASS: shared rest mixamorig_Hips
+PASS: shared rest mixamorig_LeftUpLeg
+PASS: shared rest mixamorig_LeftLeg
+PASS: shared rest mixamorig_LeftFoot
+PASS: shared rest mixamorig_LeftToeBase
+PASS: shared rest mixamorig_LeftToe_End
+PASS: shared rest mixamorig_RightUpLeg
+PASS: shared rest mixamorig_RightLeg
+PASS: shared rest mixamorig_RightFoot
+PASS: shared rest mixamorig_RightToeBase
+PASS: shared rest mixamorig_RightToe_End
+PASS: shared rest mixamorig_Spine
+PASS: shared rest mixamorig_Spine1
+PASS: shared rest mixamorig_Spine2
+PASS: shared rest mixamorig_LeftShoulder
+PASS: shared rest mixamorig_LeftArm
+PASS: shared rest mixamorig_LeftForeArm
+PASS: shared rest mixamorig_LeftHand
+PASS: shared rest mixamorig_LeftHandIndex1
+PASS: shared rest mixamorig_LeftHandIndex2
+PASS: shared rest mixamorig_LeftHandIndex3
+PASS: shared rest mixamorig_LeftHandIndex4
+PASS: shared rest mixamorig_LeftHandMiddle1
+PASS: shared rest mixamorig_LeftHandMiddle2
+PASS: shared rest mixamorig_LeftHandMiddle3
+PASS: shared rest mixamorig_LeftHandMiddle4
+PASS: shared rest mixamorig_LeftHandPinky1
+PASS: shared rest mixamorig_LeftHandPinky2
+PASS: shared rest mixamorig_LeftHandPinky3
+PASS: shared rest mixamorig_LeftHandPinky4
+PASS: shared rest mixamorig_LeftHandRing1
+PASS: shared rest mixamorig_LeftHandRing2
+PASS: shared rest mixamorig_LeftHandRing3
+PASS: shared rest mixamorig_LeftHandRing4
+PASS: shared rest mixamorig_LeftHandThumb1
+PASS: shared rest mixamorig_LeftHandThumb2
+PASS: shared rest mixamorig_LeftHandThumb3
+PASS: shared rest mixamorig_LeftHandThumb4
+PASS: shared rest mixamorig_Neck
+PASS: shared rest head
+PASS: shared rest mixamorig_HeadTop_End
+PASS: shared rest mixamorig_RightShoulder
+PASS: shared rest mixamorig_RightArm
+PASS: shared rest mixamorig_RightForeArm
+PASS: shared rest mixamorig_RightHand
+PASS: shared rest mixamorig_RightHandIndex1
+PASS: shared rest mixamorig_RightHandIndex2
+PASS: shared rest mixamorig_RightHandIndex3
+PASS: shared rest mixamorig_RightHandIndex4
+PASS: shared rest mixamorig_RightHandMiddle1
+PASS: shared rest mixamorig_RightHandMiddle2
+PASS: shared rest mixamorig_RightHandMiddle3
+PASS: shared rest mixamorig_RightHandMiddle4
+PASS: shared rest mixamorig_RightHandPinky1
+PASS: shared rest mixamorig_RightHandPinky2
+PASS: shared rest mixamorig_RightHandPinky3
+PASS: shared rest mixamorig_RightHandPinky4
+PASS: shared rest mixamorig_RightHandRing1
+PASS: shared rest mixamorig_RightHandRing2
+PASS: shared rest mixamorig_RightHandRing3
+PASS: shared rest mixamorig_RightHandRing4
+PASS: shared rest mixamorig_RightHandThumb1
+PASS: shared rest mixamorig_RightHandThumb2
+PASS: shared rest mixamorig_RightHandThumb3
+PASS: shared rest mixamorig_RightHandThumb4
+PASS: Shared animation reused: idle 0.00
+PASS: Shared animation reused: idle 0.25
+PASS: Shared animation reused: idle 0.50
+PASS: Shared animation reused: idle 0.75
+PASS: Shared animation reused: idle 1.00
+PASS: Shared animation reused: walk 0.00
+PASS: Shared animation reused: walk 0.25
+PASS: Shared animation reused: walk 0.50
+PASS: Shared animation reused: walk 0.75
+PASS: Shared animation reused: walk 1.00
+PASS: Shared animation reused: attack 0.00
+PASS: Shared animation reused: attack 0.25
+PASS: Shared animation reused: attack 0.50
+PASS: Shared animation reused: attack 0.75
+PASS: Shared animation reused: attack 1.00
+PASS: Shared animation reused: hit 0.00
+PASS: Shared animation reused: hit 0.25
+PASS: Shared animation reused: hit 0.50
+PASS: Shared animation reused: hit 0.75
+PASS: Shared animation reused: hit 1.00
+PASS: charcter001 placed on battle grid
+PASS: charcter002 placed on battle grid
+PASS: charcter003 placed on battle grid
+CHARACTER_BATCH_VALIDATION: PASSED
