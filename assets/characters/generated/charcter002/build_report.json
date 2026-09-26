@@ -5,7 +5,7 @@
     "assets/characters/tripo/body/003/model.glb": "05d30a5a46ee7f5748bf370f4ab6cdb0c8f5b48002be40d9738ea706427cb7a1",
     "assets/characters/tripo/face/001/model.glb": "1a5b32d5cf6686ef55867c510ebd9075970bfda482cadbf034755bcbb8996410",
     "assets/characters/tripo/face/002/model.glb": "5d8804fed19a4381c0f245d373b8f4558504d1c51432147ca98c6d6558504104",
-    "assets/characters/tripo/face/003/model.glb": "dbd81ff4816eff8cda2f94f1cc8323ba29869eeef33cc80cb1062456d8525929"
+    "assets/characters/tripo/face/003/model.glb": "8064663ad5b380e778c8f26edb619b9519b47a455b624fd07185de8193737667"
   },
   "inspection": {
     "rig_source": [
@@ -953,7 +953,7 @@
         ]
       },
       {
-        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc",
+        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc.004",
         "type": "MESH",
         "parent": "Armature",
         "matrix": [
@@ -997,11 +997,11 @@
           ]
         ],
         "materials": [
-          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.001"
+          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.005"
         ],
         "images": [
           {
-            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.003",
+            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.008",
             "size": [
               512,
               512
@@ -1127,7 +1127,7 @@
         ],
         "images": [
           {
-            "name": "tripo_image_e53c7c04-0943-4392-b60f-a9078ca3f28f_0_0.001",
+            "name": "tripo_image_e53c7c04-0943-4392-b60f-a9078ca3f28f_0_0.002",
             "size": [
               512,
               512
@@ -1187,7 +1187,7 @@
         ],
         "images": [
           {
-            "name": "tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0.001",
+            "name": "tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0.002",
             "size": [
               512,
               512
@@ -1218,9 +1218,9 @@
       0
     ],
     "face_scale": [
-      0.62,
-      0.62,
-      0.62
+      0.536,
+      0.536,
+      0.536
     ]
   },
   "bounds": {
@@ -1238,14 +1238,14 @@
     ],
     "Head": [
       [
-        -0.29864704608917236,
-        -0.34388765692710876,
+        -0.2581852078437805,
+        -0.3047480285167694,
         0.8899999856948853
       ],
       [
-        0.29948508739471436,
-        0.23117360472679138,
-        1.4919973611831665
+        0.2589097023010254,
+        0.1924017071723938,
+        1.4104363918304443
       ]
     ]
   },

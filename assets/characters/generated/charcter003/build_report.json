@@ -5,7 +5,7 @@
     "assets/characters/tripo/body/003/model.glb": "05d30a5a46ee7f5748bf370f4ab6cdb0c8f5b48002be40d9738ea706427cb7a1",
     "assets/characters/tripo/face/001/model.glb": "1a5b32d5cf6686ef55867c510ebd9075970bfda482cadbf034755bcbb8996410",
     "assets/characters/tripo/face/002/model.glb": "5d8804fed19a4381c0f245d373b8f4558504d1c51432147ca98c6d6558504104",
-    "assets/characters/tripo/face/003/model.glb": "dbd81ff4816eff8cda2f94f1cc8323ba29869eeef33cc80cb1062456d8525929"
+    "assets/characters/tripo/face/003/model.glb": "143991792963967f2885dc550e1363a911c39d15cb4f977f4cee3749a95bdd6c"
   },
   "inspection": {
     "rig_source": [
@@ -953,7 +953,7 @@
         ]
       },
       {
-        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc.001",
+        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc.007",
         "type": "MESH",
         "parent": "Armature",
         "matrix": [
@@ -997,11 +997,11 @@
           ]
         ],
         "materials": [
-          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.002"
+          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.008"
         ],
         "images": [
           {
-            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.004",
+            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.011",
             "size": [
               512,
               512
@@ -1127,7 +1127,7 @@
         ],
         "images": [
           {
-            "name": "tripo_image_0c98d8db-cb94-41af-849c-bbdb4cb87054_0_0.001",
+            "name": "tripo_image_0c98d8db-cb94-41af-849c-bbdb4cb87054_0_0.006",
             "size": [
               512,
               512
@@ -1139,7 +1139,7 @@
     ],
     "face_source": [
       {
-        "name": "tripo_node_cccf7ed9-869a-42d5-9455-a7773d29db77",
+        "name": "tripo_node_6d95839e-a73c-4ad3-9434-e50354ea6cda",
         "type": "MESH",
         "parent": null,
         "matrix": [
@@ -1147,13 +1147,13 @@
             1.0,
             0.0,
             0.0,
-            0.0037256628274917603
+            0.0011997073888778687
           ],
           [
             0.0,
             1.0,
             0.0,
-            0.0008656531572341919
+            -0.0011383593082427979
           ],
           [
             0.0,
@@ -1168,26 +1168,33 @@
             1.0
           ]
         ],
-        "vertices": 7747,
-        "polygons": 6745,
+        "vertices": 7023,
+        "polygons": 5698,
         "bounds": [
           [
-            -0.4061228632926941,
-            -0.41811132431030273,
+            -0.4090980291366577,
+            -0.4209557771682739,
             0.0
           ],
           [
-            0.4135741591453552,
-            0.41984260082244873,
-            0.9657273292541504
+            0.41149747371673584,
+            0.41867905855178833,
+            0.9729101657867432
           ]
         ],
         "materials": [
-          "tripo_mat_cccf7ed9-869a-42d5-9455-a7773d29db77.001"
+          "tripo_mat_6d95839e-a73c-4ad3-9434-e50354ea6cda"
         ],
         "images": [
           {
-            "name": "tripo_image_cccf7ed9-869a-42d5-9455-a7773d29db77_0_0.001",
+            "name": "tripo_image_6d95839e-a73c-4ad3-9434-e50354ea6cda_0_0.001",
+            "size": [
+              512,
+              512
+            ]
+          },
+          {
+            "name": "tripo_image_6d95839e-a73c-4ad3-9434-e50354ea6cda_0_1.001",
             "size": [
               512,
               512
@@ -1218,9 +1225,9 @@
       0
     ],
     "face_scale": [
-      0.64,
-      0.64,
-      0.64
+      0.63,
+      0.63,
+      0.63
     ]
   },
   "bounds": {
@@ -1238,14 +1245,14 @@
     ],
     "Head": [
       [
-        -0.2599186301231384,
-        -0.32259124517440796,
+        -0.25773176550865173,
+        -0.32020214200019836,
         0.7900000214576721
       ],
       [
-        0.2646874785423279,
-        0.21369928121566772,
-        1.4080655574798584
+        0.2592433989048004,
+        0.20876780152320862,
+        1.4029333591461182
       ]
     ]
   },

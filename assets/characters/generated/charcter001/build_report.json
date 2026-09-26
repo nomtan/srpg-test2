@@ -5,7 +5,7 @@
     "assets/characters/tripo/body/003/model.glb": "05d30a5a46ee7f5748bf370f4ab6cdb0c8f5b48002be40d9738ea706427cb7a1",
     "assets/characters/tripo/face/001/model.glb": "1a5b32d5cf6686ef55867c510ebd9075970bfda482cadbf034755bcbb8996410",
     "assets/characters/tripo/face/002/model.glb": "5d8804fed19a4381c0f245d373b8f4558504d1c51432147ca98c6d6558504104",
-    "assets/characters/tripo/face/003/model.glb": "dbd81ff4816eff8cda2f94f1cc8323ba29869eeef33cc80cb1062456d8525929"
+    "assets/characters/tripo/face/003/model.glb": "8064663ad5b380e778c8f26edb619b9519b47a455b624fd07185de8193737667"
   },
   "inspection": {
     "rig_source": [
@@ -953,7 +953,7 @@
         ]
       },
       {
-        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc",
+        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc.004",
         "type": "MESH",
         "parent": "Armature",
         "matrix": [
@@ -997,11 +997,11 @@
           ]
         ],
         "materials": [
-          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.001"
+          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.005"
         ],
         "images": [
           {
-            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.002",
+            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.007",
             "size": [
               512,
               512
@@ -1127,7 +1127,7 @@
         ],
         "images": [
           {
-            "name": "tripo_image_3dc35a28-c2b7-4d6b-be29-ca7b95a7ba30_0_0.002",
+            "name": "tripo_image_3dc35a28-c2b7-4d6b-be29-ca7b95a7ba30_0_0.003",
             "size": [
               512,
               512
@@ -1155,9 +1155,9 @@
       0
     ],
     "face_scale": [
-      0.62,
-      0.62,
-      0.62
+      0.5395,
+      0.5395,
+      0.5395
     ]
   },
   "bounds": {
@@ -1175,14 +1175,14 @@
     ],
     "Head": [
       [
-        -0.2958914041519165,
-        -0.3562910854816437,
+        -0.2574732303619385,
+        -0.3171718120574951,
         0.8899999856948853
       ],
       [
-        0.29827743768692017,
-        0.23489515483379364,
-        1.4710761308670044
+        0.25954949855804443,
+        0.19725553691387177,
+        1.3956298828125
       ]
     ]
   },
