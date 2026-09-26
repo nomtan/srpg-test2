@@ -1,6 +1,6 @@
 extends "res://scripts/world_jrpg/pixel_actor.gd"
 ## Keep one gameplay actor when switching visuals, including during battle.
-const MODEL = preload("res://assets/world_jrpg/explorer_base_1.glb")
+const MODEL = preload("res://scenes/characters/tripo_roster/charcter001.tscn")
 const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
 const WALK_CYCLE_SPEED := 4.5
 const RUN_CYCLE_SPEED := 12.8 # Full sprint uses 1.25x, avoiding frantic torso bob at 2x.

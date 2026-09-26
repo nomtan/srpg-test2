@@ -33,8 +33,8 @@ func run() -> void:
 	var origin: Vector3 = actor.position
 	var npc_ids: Array[int] = []
 	for npc: Dictionary in world.npcs: npc_ids.append(npc.actor.get_instance_id())
-	check(world.player_roster_index == 5, "Initial knight is matched to the placed roster")
-	var ids := ["adventure", "black_mage", "butler", "chief_butler", "hero", "knight", "scholar", "warrior", "white_mage", "golden_path_001", "golden_path_002", "charcter001", "charcter002", "charcter003"]
+	check(world.player_roster_index == 0, "Initial Character 001 is matched to the placed roster")
+	var ids := ["charcter001", "charcter002", "charcter003"]
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
 		actor.running = clip == "run"
@@ -59,7 +59,7 @@ func run() -> void:
 			if "--capture" in OS.get_cmdline_user_args() and clip == "idle" and actor.model.character_id.begins_with("charcter"):
 				await RenderingServer.frame_post_draw
 				root.get_texture().get_image().save_png("res://artifacts/character_batch/sample_" + actor.model.character_id + ".png")
-		check(world.player_roster_index == 5, "Full roster wraps back to the knight")
+		check(world.player_roster_index == 0, "Full roster wraps back to Character 001")
 	var before: int = world.player_roster_index
 	var release := switch_event(false, JOY_BUTTON_B) as InputEventJoypadButton
 	release.pressed = false
@@ -82,14 +82,14 @@ func run() -> void:
 	check(world.player_roster_index == before and world.battle.stage == "menu", "Right face button cancels battle selection without switching character")
 	world._input(switch_event())
 	check(world.battle.hero == battle_hero and battle_hero == actor and actor.position == battle_position, "Battle keeps the same gameplay hero when the model changes")
-	check(actor.model.character_id == "scholar", "Switching also works in battle")
+	check(actor.model.character_id == "charcter002", "Switching also works in battle")
 	world._finish_battle(false)
 	await process_frame # Let the queued battle UI leave the real input pipeline.
 	world._input(switch_event(true))
-	check(world.mode == "dialog" and actor.model.character_id == "warrior" and world.dialog_index == 0, "Switching also works in dialogue without advancing it")
+	check(world.mode == "dialog" and actor.model.character_id == "charcter003" and world.dialog_index == 0, "Switching also works in dialogue without advancing it")
 	Input.parse_input_event(switch_event(false, JOY_BUTTON_B))
 	Input.flush_buffered_events()
-	check(world.mode == "explore" and actor.model.character_id == "warrior", "Right face button closes dialogue without switching character")
+	check(world.mode == "explore" and actor.model.character_id == "charcter003", "Right face button closes dialogue without switching character")
 	world.queue_free()
 	await process_frame
 	print("TRIPO_SWITCHING: ", "FAILED" if failed else "PASSED")

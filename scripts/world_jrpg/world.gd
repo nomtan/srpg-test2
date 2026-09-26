@@ -20,9 +20,6 @@ var distance := 23.0
 var hud: CanvasLayer
 const Actor = preload("res://scripts/world_jrpg/pixel_actor.gd")
 const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
-const AdventurerNPC = preload("res://scenes/characters/adventurer_npc.tscn")
-const TripoKnightNPC = preload("res://scenes/characters/tripo_knight_npc.tscn")
-const TripoHeroNPC = preload("res://scenes/characters/tripo_hero_npc.tscn")
 const WALK_SPEED := 4.5
 const RUN_SPEED := 16.0
 @export var use_3d_player := true
@@ -382,42 +379,19 @@ func _build_details(parent: Node3D) -> void:
 
 func _spawn_characters() -> void:
 	story = JSON.parse_string(FileAccess.get_file_as_string(story_path))
+	if character_roster.is_empty():
+		character_roster = [
+			preload("res://scenes/characters/tripo_roster/charcter001.tscn"),
+			preload("res://scenes/characters/tripo_roster/charcter002.tscn"),
+			preload("res://scenes/characters/tripo_roster/charcter003.tscn"),
+		]
 	player = Explorer.new()
 	if player_model: player.model_scene = player_model
 	player.use_3d = use_3d_player
 	player.name = "Explorer"
 	add_child(player)
 	player.position = Vector3(32, 14.05, 60)
-	if character_roster.is_empty():
-		# Separate stationary job-body preview, on the clear starting plateau.
-		var adventurer := AdventurerNPC.instantiate() as Node3D
-		add_child(adventurer)
-		adventurer.position = Vector3(30.5, _surface(30.5, 57.5) + 0.05, 57.5)
-		adventurer.rotation.y = -0.65
-		npcs.append({"actor": adventurer, "data": {
-			"id": "adventurer", "name": "冒険者", "job_id": "adventurer",
-			"lines": ["やあ、旅の仲間だね。ここから一緒に世界を見渡してみよう。"]
-		}})
-		var knight := TripoKnightNPC.instantiate() as Node3D
-		add_child(knight)
-		knight.position = adventurer.position + Vector3(-2.4, 0, -1.8)
-		knight.position.y = _surface(knight.position.x, knight.position.z) + 0.05
-		knight.rotation.y = adventurer.rotation.y
-		npcs.append({"actor": knight, "data": {
-			"id": "tripo_knight", "name": "騎士",
-			"lines": ["この辺りの見張りは任せてくれ。"]
-		}})
-		var hero := TripoHeroNPC.instantiate() as Node3D
-		add_child(hero)
-		hero.position = knight.position + Vector3(-2.4, 0, -1.8)
-		hero.position.y = _surface(hero.position.x, hero.position.z) + 0.05
-		hero.rotation.y = knight.rotation.y
-		npcs.append({"actor": hero, "data": {
-			"id": "tripo_hero", "name": "勇者",
-			"lines": ["準備はできているよ。一緒に冒険へ出かけよう。"]
-		}})
-	else:
-		_spawn_tripo_roster()
+	_spawn_tripo_roster()
 	for data: Dictionary in story.npcs:
 		var actor := Actor.new()
 		actor.palette_name = data.palette
@@ -577,9 +551,6 @@ func _spawn_tripo_roster() -> void:
 		# Three rows on the clear starting plateau, with room to walk between them.
 		var x := 24.5 + float(index % 3) * 3.6
 		var z := 57.0 - floorf(float(index) / 3.0) * 3.6
-		if actor.character_id.begins_with("golden_path_"):
-			x = 28.0 if actor.character_id == "golden_path_001" else 35.0
-			z = 63.0
 		actor.position = Vector3(x, _surface(x, z) + 0.05, z)
 		actor.rotation.y = -0.65
 		npcs.append({"actor": actor, "data": {

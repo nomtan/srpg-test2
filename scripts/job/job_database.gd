@@ -6,7 +6,7 @@ var jobs: Dictionary = {}
 func _ready() -> void:
 	# Basic jobs
 	_add("adventurer", "冒険者", JobData.JobRank.BASIC, {})
-	jobs["adventurer"].body_scene_path = "res://assets/characters/meshy_adventure/adventurer_body.glb"
+	jobs["adventurer"].body_scene_path = "res://assets/characters/generated/charcter001/character.glb"
 	_add("fighter", "格闘士", JobData.JobRank.BASIC, {"str": 4, "dex": 2, "vit": 3, "mnd": 0, "int": 0, "agi": 2})
 	_add("swordsman", "剣術士", JobData.JobRank.BASIC, {"str": 3, "dex": 2, "vit": 2, "mnd": 2, "int": 0, "agi": 2}, {}, [{"job_level": 1, "skill_id": "power_slash"}, {"job_level": 2, "skill_id": "guard_stance"}, {"job_level": 3, "skill_id": "earth_break"}])
 	_add("lancer", "槍術士", JobData.JobRank.BASIC, {"str": 3, "dex": 2, "vit": 2, "mnd": -1, "int": 0, "agi": 4})

@@ -45,7 +45,7 @@ runtimeのroot/armature transformはidentity、接地面はほぼ0。
 既存Golden Pathの `idle` (2秒) / `walk` (1秒) / `attack` (1秒) / `hit` (0.8秒)
 を共用。idle/walkはimport hookでloop。いずれも互換性確認用の簡易動作。
 
-`samples/JRPGWorldSample.tscn` の既存11枠の後ろへ3体を追加。
+`samples/JRPGWorldSample.tscn` のplayerと切り替え候補はこの3体のみ。
 Vキー、左スティック押込み、探索中のBボタンで切り替えられる。
 run未収録のため走行時は既存のwalkフォールバックを使用。
 
@@ -55,7 +55,7 @@ run未収録のため走行時は既存のwalkフォールバックを使用。
 - `verify_characters.gd`: PASSED。単体instantiate、BattleUnit表示、単一Skeleton、
   Body/Headのskin、トゥーン材質と元テクスチャ、65 bonesと同一rest poseを確認。
   4クリップのhead変化、root motionなし、同じAnimation resourceを他2体で再生する検証も成功。
-- `verify_tripo_switching.gd`: PASSED。全14枠をidle/walk/runで循環、位置・向き・歩行位相・HUD保持。
+- `verify_tripo_switching.gd`: PASSED。全3枠をidle/walk/runで循環、位置・向き・歩行位相・HUD保持。
   会話/戦闘中の切り替えも確認。
 - Blenderで正面idle/walkと斜めattack/hitを描画確認。
 - Godotで戦闘グリッドと実際のJRPGWorldSampleを描画確認。

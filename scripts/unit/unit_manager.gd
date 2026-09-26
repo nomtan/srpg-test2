@@ -2,7 +2,7 @@ class_name UnitManager
 extends Node3D
 
 const ENABLE_DEBUG_NEARBY_ENEMY := true
-const VEIN_CHARACTER_MODEL := "res://assets/characters/py/base_body.glb"
+const VEIN_CHARACTER_MODEL := "res://assets/characters/generated/charcter001/character.glb"
 const VEIN_CHARACTER_SCALE := 1.02
 const VEIN_CHARACTER_Y_OFFSET := -0.045
 const VEIN_CHARACTER_FACING_OFFSET := -90.0

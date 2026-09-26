@@ -47,4 +47,9 @@ Codex + Blender MCPへ最初に実行させるGolden Path指示書:
 .codex/character_pipeline.md
 ```
 
-最初は `body/001 + face/001`、次に `body/001 + face/002` を処理し、Face交換時にも共通Skeleton/animationを維持できることを確認する。
+現在のサンプルは `body/001 + face/001`、`body/002 + face/002`、
+`body/003 + face/003` の3体を使用する。Blender MCPから
+`build_characters.py` の `build('001')`、`build('002')`、`build('003')` を実行する。
+Godot側の検証は `verify_characters.gd` と
+`scripts/world_jrpg/verify_tripo_switching.gd` を使用する。
+以前のGolden Path出力や旧ロスター用のモデル資源は整理済み。

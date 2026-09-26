@@ -13,7 +13,7 @@ extends Node3D
 
 const BATTLE_ENVIRONMENT: Environment = preload("res://assets/environment/battle_atmosphere.tres")
 const VISUAL_THEME: MapVisualTheme = preload("res://assets/terrain/theme_default.tres")
-const CHARACTER_MODEL := "res://assets/characters/py/base_body.glb"
+const CHARACTER_MODEL := "res://assets/characters/generated/charcter001/character.glb"
 const CHARACTER_FACE_TEXTURE := "res://assets/characters/textures/anime_face_vain.png"
 
 # Painted prop placement is intentionally disabled in this validation scene.
