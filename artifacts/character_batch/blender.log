@@ -13,3 +13,280 @@ BlenderMCP addon registered
 05:50.906  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_hit_side.png'
 05:51.172  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_attack_side.png'
 05:51.438  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_hit_side.png'
+06:03:12.016  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:03:12.297  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_walk_front.png'
+06:03:12.547  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_attack_side.png'
+06:09:18.781  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:09:19.266  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:09:19.609  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:10:00.938  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:10:01.297  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_walk_front.png'
+06:10:01.656  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_attack_side.png'
+Connected to client: ('127.0.0.1', 65045)
+Client handler started
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 65048)
+Client handler started
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 65049)
+Client handler started
+Executing handler for get_telemetry_consent
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 3 objects
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 65054)
+Client handler started
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 65055)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 64016)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 8 objects
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 64033)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Error in handler: Code execution error: name 'gp' is not defined
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 64034)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 64042)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 52553)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 62579)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 51320)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 6 objects
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 64676)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 58250)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Connected to client: ('127.0.0.1', 59289)
+Client handler started
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 59290)
+Client handler started
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 59291)
+Client handler started
+Executing handler for get_telemetry_consent
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 6 objects
+Handler execution complete
+Error receiving data: [WinError 10054] 既存の接続はリモート ホストに強制的に切断されました。
+Client handler stopped
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 59303)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 59313)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 6 objects
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 56729)
+Client handler started
+Executing handler for get_telemetry_consent
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 6 objects
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 56730)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 51818)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_telemetry_consent
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 59211)
+Client handler started
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for execute_code
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 6 objects
+Handler execution complete
+Executing handler for get_viewport_screenshot
+Handler execution complete
+Client disconnected
+Client handler stopped
+Connected to client: ('127.0.0.1', 59614)
+Client handler started
+Executing handler for get_telemetry_consent
+Handler execution complete
+Executing handler for get_scene_info
+Getting scene info...
+Scene info collected: 6 objects
+Handler execution complete
+Client disconnected06:14:09.469  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\001_idle_front.png'
+06:14:09.750  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\001_walk_front.png'
+06:14:10.078  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\001_attack_side.png'
+06:14:10.438  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_idle_front.png'
+06:14:10.797  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_walk_front.png'
+06:14:11.094  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\002_attack_side.png'
+06:14:11.391  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:14:11.750  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_walk_front.png'
+06:14:12.109  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_attack_side.png'
+06:17:09.672  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_idle_front.png'
+06:17:10.125  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_walk_front.png'
+06:17:10.672  render           | Saved: 'C:\Users\nomur\Desktop\git\srpg-test2.worktrees\main\artifacts\character_batch\003_attack_side.png'
