@@ -21,6 +21,8 @@ var evasion_bonus: int = 0
 var defense_bonus: int = 0
 var blocks_line_of_sight: bool = false
 var blocks_movement: bool = false
+# Exact rendered surface when the map uses finer steps than gameplay height; < 0 uses height.
+var visual_height: float = -1.0
 
 
 func _init(
@@ -65,6 +67,10 @@ func set_surface(
 	blocks_line_of_sight = false
 	blocks_movement = false
 	_apply_terrain_effects()
+
+
+func get_surface_y() -> float:
+	return visual_height if visual_height >= 0.0 else float(height)
 
 
 func set_visual_layers(cell_base_terrain: String, cell_surface_cover := "none") -> void:

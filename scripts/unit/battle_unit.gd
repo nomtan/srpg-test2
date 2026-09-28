@@ -114,6 +114,8 @@ var weapon_attachment: BoneAttachment3D
 var weapon_instance: Node3D
 var face_attachment: BoneAttachment3D
 var face_instance: MeshInstance3D
+var pixel_actor: Node3D
+var sword_combat: RefCounted
 var attack_animation_name: StringName
 var model_facing_offset_degrees := 0.0
 var animation_profile := "onehand_sword"
@@ -147,6 +149,7 @@ const RUN_ANIMATION_NAMES: Array[StringName] = [
 	&"walk",
 ]
 const ATTACK_ANIMATION_NAMES: Array[StringName] = [
+	&"sword/slash",
 	&"animation_onehand_sword_attack",
 	&"animation.onehand_sword_attack",
 	&"onehand_sword_attack",
@@ -171,6 +174,11 @@ const BOW_ATTACK_ANIMATION_NAMES: Array[StringName] = [
 const CHARACTER_FLAT_SHADER := preload("res://shaders/flat/flat_character.gdshader")
 const CHARACTER_FACE_SHADER := preload("res://shaders/flat/flat_character_face.gdshader")
 const UNIT_STATUS_BAR_SCRIPT := preload("res://scripts/ui/unit_status_bar_3d.gd")
+const PIXEL_ACTOR_SCRIPT := preload("res://scripts/world_jrpg/pixel_actor.gd")
+const SWORD_COMBAT_SCRIPT := preload("res://scripts/world_jrpg/sword_combat.gd")
+# Pixel actor atlas row for each FacingDirection, matching the sample skirmish.
+const PIXEL_ACTOR_FACING_ROWS := [3, 1, 0, 2]
+const PIXEL_ACTOR_STATUS_BAR_Y := 2.6
 const CHARACTER_VISUAL_SCALE := 0.85
 
 # T5 (docs/dev/phase/phase17-step1.md): flat shading has no realtime shadow,
@@ -211,7 +219,8 @@ func setup_visual(
 	sprite_back_texture_path: String = "",
 	sprite_attack_base_path: String = "",
 	character_rig_scene_path: String = "",
-	character_rig_character: String = "male"
+	character_rig_character: String = "male",
+	pixel_actor_palette: String = ""
 ) -> void:
 	model_facing_offset_degrees = facing_offset_degrees
 	animation_profile = requested_animation_profile
@@ -223,7 +232,12 @@ func setup_visual(
 	body_material.albedo_color = base_color
 	body_material.metallic = 0.15
 
-	if not character_rig_scene_path.is_empty():
+	if not pixel_actor_palette.is_empty():
+		pixel_actor = PIXEL_ACTOR_SCRIPT.new()
+		pixel_actor.name = "PixelActor"
+		pixel_actor.palette_name = pixel_actor_palette
+		add_child(pixel_actor)
+	elif not character_rig_scene_path.is_empty():
 		_create_character_rig_visual(character_rig_scene_path, character_rig_character)
 	elif not sprite_texture_path.is_empty():
 		_create_sprite_visual(
@@ -243,6 +257,10 @@ func setup_visual(
 			0.0, model_y_offset * CHARACTER_VISUAL_SCALE, 0.0
 		)
 		add_child(model_instance)
+		# Roster scenes carry their own name plate; battle units use status bars instead.
+		var name_label := model_instance.get_node_or_null("NameLabel") as Node3D
+		if name_label:
+			name_label.hide()
 		if use_flat_shading:
 			_apply_flat_shading(model_instance, tunic_color, accent_color)
 		var players := model_instance.find_children("*", "AnimationPlayer", true, false)
@@ -262,9 +280,11 @@ func setup_visual(
 	status_bars = UNIT_STATUS_BAR_SCRIPT.new()
 	status_bars.configure(team)
 	status_bars.position.y = (
-		1.72
+		PIXEL_ACTOR_STATUS_BAR_Y
+		if pixel_actor
+		else 1.72
 		if sprite_instance or character_rig_sprite
-		else (2.05 * CHARACTER_VISUAL_SCALE if model_instance else 1.45 * CHARACTER_VISUAL_SCALE)
+		else (_model_top_y() if model_instance else 1.45 * CHARACTER_VISUAL_SCALE)
 	)
 	add_child(status_bars)
 	_create_active_marker()
@@ -273,6 +293,30 @@ func setup_visual(
 	update_facing_visual()
 	refresh_status_bars()
 	play_idle_animation()
+
+
+func _ready() -> void:
+	_install_sword_clips()
+
+
+func _model_top_y() -> float:
+	var name_label := model_instance.get_node_or_null("NameLabel") as Node3D
+	if name_label:
+		return name_label.position.y * model_instance.scale.y
+	return 2.05 * CHARACTER_VISUAL_SCALE
+
+
+## Tripo roster rigs have no attack clip; add the sample's sword and slash clips.
+## Installed once the model is in the tree so its skeleton pose is resolved.
+func _install_sword_clips() -> void:
+	if not model_instance or not animation_player or animation_profile != "onehand_sword":
+		return
+	if animation_player.has_animation_library("sword"):
+		return
+	var equipment := SWORD_COMBAT_SCRIPT.new()
+	if equipment.install(model_instance, animation_player):
+		sword_combat = equipment
+		play_idle_animation()
 
 
 func _create_character_rig_visual(scene_path: String, character: String) -> void:
@@ -567,6 +611,9 @@ func attach_face_texture(texture_path: String, bone_name: String = "ganmen") -> 
 
 
 func play_walk_animation() -> void:
+	if pixel_actor:
+		pixel_actor.walking = true
+		return
 	if character_rig:
 		character_rig.play(&"walk")
 		return
@@ -580,6 +627,9 @@ func stop_walk_animation() -> void:
 func play_idle_animation() -> void:
 	attack_animation_name = &""
 	character_rig_attack_playing = false
+	if pixel_actor:
+		pixel_actor.walking = false
+		return
 	if character_rig:
 		character_rig.play(&"idle")
 		return
@@ -659,7 +709,8 @@ func equip_weapon_visual(
 		weapon_attachment.queue_free()
 		weapon_attachment = null
 		weapon_instance = null
-	if not model_instance or model_path.is_empty():
+	# Roster rigs already hold the sample's sword from _install_sword_clips().
+	if not model_instance or model_path.is_empty() or sword_combat:
 		return
 
 	var skeletons := model_instance.find_children("*", "Skeleton3D", true, false)
@@ -732,6 +783,8 @@ func set_facing(direction: FacingDirection) -> void:
 
 
 func update_facing_visual() -> void:
+	if pixel_actor:
+		pixel_actor.facing = PIXEL_ACTOR_FACING_ROWS[int(facing)]
 	if model_instance:
 		model_instance.rotation_degrees.y = FACING_MODEL_ANGLES[int(facing)] + model_facing_offset_degrees
 	if directional_sprite_enabled:

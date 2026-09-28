@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://pdv4asxcjgtt" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" uid="uid://dm0fwdoylqkci" path="res://scripts/grid/grid_system.gd" id="2_grid"]
-[ext_resource type="Script" uid="uid://cicbesavr3ix4" path="res://scripts/map/voxel_map.gd" id="3_map"]
+[ext_resource type="Script" path="res://scripts/world_jrpg/world_map.gd" id="3_map"]
 [ext_resource type="Script" uid="uid://cwy72x755kikx" path="res://scripts/unit/unit_manager.gd" id="4_units"]
 [ext_resource type="Script" uid="uid://84rxle7bochs" path="res://scripts/battle/battle_cursor.gd" id="5_cursor"]
 [ext_resource type="Script" uid="uid://cylcve4x34wqj" path="res://scripts/battle/pathfinding.gd" id="6_path"]
@@ -47,7 +47,6 @@
 [ext_resource type="Script" uid="uid://b8tw8s0twi8cn" path="res://scripts/equipment/equipment_database.gd" id="51_equipment_db"]
 [ext_resource type="Script" uid="uid://e83kku1i0luf" path="res://scripts/equipment/equipment_system.gd" id="52_equipment_system"]
 [ext_resource type="Script" uid="uid://c0sromj1giwni" path="res://scripts/equipment/weapon_power_calculator.gd" id="53_weapon_power"]
-[ext_resource type="Resource" path="res://assets/terrain/theme_default.tres" id="54_map_theme"]
 [ext_resource type="Environment" path="res://assets/environment/battle_atmosphere.tres" id="55_env"]
 [ext_resource type="Script" uid="uid://yvxymq3l0ec" path="res://scripts/ui/direction_compass.gd" id="56_compass"]
 [ext_resource type="Shader" uid="uid://uve7lcsxv70h" path="res://shaders/post/map_illustration.gdshader" id="57_illustration"]
@@ -93,9 +92,8 @@ script = ExtResource("53_weapon_power")
 [node name="GridSystem" type="Node" parent="." unique_id=887076458]
 script = ExtResource("2_grid")
 
-[node name="VoxelMap" type="Node3D" parent="." unique_id=444337633]
+[node name="WorldMap" type="Node3D" parent="." unique_id=444337633]
 script = ExtResource("3_map")
-visual_theme = ExtResource("54_map_theme")
 
 [node name="UnitManager" type="Node3D" parent="." unique_id=655193240]
 script = ExtResource("4_units")

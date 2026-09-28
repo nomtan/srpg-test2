@@ -27,6 +27,8 @@ var _dragging := false
 
 func setup(source_grid: GridSystem, source_camera: Camera3D, cam_controller: CameraController = null) -> void:
 	grid = source_grid
+	# Maps may edit heights after generation; pick against the final surfaces.
+	grid.refresh_surface_levels()
 	camera = source_camera
 	camera_controller = cam_controller
 	cursor_mesh = _create_highlight(Color(1.0, 0.85, 0.15, 0.75))
@@ -221,15 +223,15 @@ func _update_from_mouse(screen_position: Vector2) -> void:
 	var ray_origin := camera.project_ray_origin(screen_position)
 	var ray_direction := camera.project_ray_normal(screen_position)
 	# 高い面から順に交差させ、その高さを実際の表面に持つ最初のマスを採用する。
-	for surface_height in range(GridSystem.MAX_HEIGHT, GridSystem.MIN_HEIGHT - 1, -1):
-		var plane := Plane(Vector3.UP, float(surface_height))
+	for surface_height: float in grid.surface_levels:
+		var plane := Plane(Vector3.UP, surface_height)
 		var hit = plane.intersects_ray(ray_origin, ray_direction)
 		if hit == null:
 			continue
 		var candidate := grid.world_to_grid(hit)
 		if not grid.is_in_bounds(candidate):
 			continue
-		if grid.get_cell(candidate).height != surface_height:
+		if not is_equal_approx(snappedf(grid.get_cell(candidate).get_surface_y(), 0.01), surface_height):
 			continue
 		if candidate != grid_position:
 			grid_position = candidate

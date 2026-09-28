@@ -13,6 +13,8 @@ const CELL_SIZE := 1.0
 @export_range(0.01, 0.1, 0.005) var terrain_height_frequency := 0.035
 
 var cells: Dictionary = {}
+# Distinct rendered surface heights, highest first, for picking the ground under a ray.
+var surface_levels: Array[float] = []
 
 
 func generate_grid() -> void:
@@ -233,6 +235,15 @@ func generate_grid() -> void:
 			cells[Vector2i(real_x, real_z)] = cell
 
 
+func refresh_surface_levels() -> void:
+	var levels: Dictionary = {}
+	for cell: GridCell in cells.values():
+		levels[snappedf(cell.get_surface_y(), 0.01)] = true
+	surface_levels.assign(levels.keys())
+	surface_levels.sort()
+	surface_levels.reverse()
+
+
 func _is_visual_stone_floor_path(x: int, z: int) -> bool:
 	var horizontal_avenue := z in [8, 9, 10, 11] and x >= 4 and x <= 35
 	var vertical_avenue := x in [18, 19, 20, 21] and z >= 2 and z <= 34
@@ -326,7 +337,7 @@ func flatten_patch_by_cell_count(center: Vector2i, target_cells: int, height: in
 
 func grid_to_world(position: Vector2i, extra_height: float = 0.0) -> Vector3:
 	var cell := get_cell(position)
-	var surface_height := float(cell.height) if cell else 0.0
+	var surface_height: float = cell.get_surface_y() if cell else 0.0
 	return Vector3(
 		(float(position.x) + 0.5) * CELL_SIZE,
 		surface_height + extra_height,

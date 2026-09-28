@@ -1,82 +1,7 @@
 extends Node3D
 
-const PLAYER_START_WEST_LOG_COLUMN := 2
-const PLAYER_START_NORTH_LOG_ROW := 2
-const JUNGLE_LOG_COLUMN_POSITION := Vector2i(
-	PLAYER_START_WEST_LOG_COLUMN,
-	PLAYER_START_NORTH_LOG_ROW
-)
-const OAK_LOG_COLUMN_POSITION := Vector2i(
-	PLAYER_START_WEST_LOG_COLUMN,
-	PLAYER_START_NORTH_LOG_ROW + 3
-)
-const ACACIA_LOG_COLUMN_POSITION := Vector2i(
-	PLAYER_START_WEST_LOG_COLUMN,
-	PLAYER_START_NORTH_LOG_ROW + 6
-)
-const STONE_FLOOR_COVER_POSITIONS: Array[Vector2i] = [
-	Vector2i(63, 15),
-	Vector2i(64, 15),
-	Vector2i(65, 15),
-	Vector2i(63, 16),
-	Vector2i(64, 16),
-	Vector2i(63, 17),
-	Vector2i(63, 21),
-	Vector2i(63, 22),
-	Vector2i(63, 23),
-	Vector2i(63, 24),
-	Vector2i(64, 23),
-	Vector2i(65, 23),
-	Vector2i(65, 24),
-	Vector2i(66, 24),
-	Vector2i(69, 24),
-	Vector2i(71, 24),
-	Vector2i(75, 24),
-	Vector2i(76, 23),
-	Vector2i(76, 22),
-	Vector2i(76, 24),
-	Vector2i(81, 24),
-	Vector2i(82, 24),
-	Vector2i(82, 23),
-	Vector2i(82, 22),
-]
-const DARK_GRASS_COVER_POSITIONS: Array[Vector2i] = [
-	Vector2i(72, 30),
-	Vector2i(72, 31),
-	Vector2i(72, 32),
-	Vector2i(73, 30),
-	Vector2i(74, 30),
-	Vector2i(75, 30),
-	Vector2i(76, 30),
-	Vector2i(77, 30),
-	Vector2i(78, 30),
-	Vector2i(79, 30),
-	Vector2i(73, 31),
-	Vector2i(73, 32),
-	Vector2i(73, 33),
-	Vector2i(73, 34),
-	Vector2i(73, 35),
-	Vector2i(74, 35),
-	Vector2i(75, 35),
-	Vector2i(76, 35),
-	Vector2i(77, 35),
-	Vector2i(78, 35),
-	Vector2i(79, 35),
-	Vector2i(80, 35),
-]
-const MASONRY_SHOWCASE: Array[Dictionary] = [
-	{"kind": "stone_brick", "position": Vector2i(12, 2)},
-	{"kind": "infested_cracked_stone_bricks", "position": Vector2i(12, 5)},
-	{"kind": "chiseled_stone_brick", "position": Vector2i(12, 8)},
-	{"kind": "stone_brick_stairs", "position": Vector2i(12, 11)},
-	{"kind": "bricks", "position": Vector2i(15, 2)},
-	{"kind": "brick_stairs", "position": Vector2i(15, 5)},
-	{"kind": "cobblestone", "position": Vector2i(15, 8)},
-	{"kind": "cobblestone_stairs", "position": Vector2i(15, 11)},
-]
-
 @onready var grid: GridSystem = $GridSystem
-@onready var voxel_map: VoxelMap = $VoxelMap
+@onready var world_map: Node3D = $WorldMap
 @onready var unit_manager: UnitManager = $UnitManager
 @onready var cursor: BattleCursor = $BattleCursor
 @onready var pathfinding: BattlePathfinding = $Pathfinding
@@ -139,14 +64,7 @@ var battle_result := ""
 
 func _ready() -> void:
 	grid.generate_grid()
-	grid.flatten_centered_rectangle(Vector2i(73, 20), 20, 10, 3)
-	_apply_stone_floor_covers()
-	_apply_dark_grass_covers()
-	_add_jungle_log_column_near_player_start()
-	_add_oak_log_column_near_player_start()
-	_add_acacia_log_column_near_player_start()
-	_apply_masonry_showcase_to_grid()
-	voxel_map.build_from_grid(grid)
+	world_map.apply_to_grid(grid)
 	unit_manager.setup(grid)
 	unit_progress.setup(job_database)
 	save_manager.setup(player_profile, unit_progress, stage_progress)
@@ -179,6 +97,11 @@ func _ready() -> void:
 	mission_ui.setup(stage_data.stage_name)
 	unit_info.setup(equipment_database)
 	cursor.setup(grid, camera_controller.setup(), camera_controller)
+	# The world map is far larger than the battlefield; open on the party, not the map corner.
+	var main_unit := unit_manager.get_unit_by_id(stage_data.main_character_id)
+	if main_unit:
+		cursor.set_grid_position(Vector2i(main_unit.grid_x, main_unit.grid_z))
+		camera_controller.focus_on_unit(main_unit)
 	direction_compass.setup(camera_controller)
 	camera_controller.display_state_changed.connect(_on_camera_display_state_changed)
 	cursor.confirm_pressed.connect(_on_confirm)
@@ -209,51 +132,6 @@ func _ready() -> void:
 	cursor.input_enabled = false
 	_update_unit_info(cursor.grid_position)
 
-
-func _apply_stone_floor_covers() -> void:
-	for grid_position: Vector2i in STONE_FLOOR_COVER_POSITIONS:
-		var cell := grid.get_cell(grid_position)
-		if cell:
-			cell.set_visual_layers("dirt", "stone_floor")
-
-
-func _apply_dark_grass_covers() -> void:
-	for grid_position: Vector2i in DARK_GRASS_COVER_POSITIONS:
-		var cell := grid.get_cell(grid_position)
-		if cell:
-			cell.height = 3
-			cell.set_visual_layers("dirt", "grass_dark")
-
-
-func _add_jungle_log_column_near_player_start() -> void:
-	var decoration := MapDecorationData.new()
-	decoration.kind = "jungle_log_column"
-	decoration.grid_position = JUNGLE_LOG_COLUMN_POSITION
-	voxel_map.decorations.append(decoration)
-
-
-func _add_oak_log_column_near_player_start() -> void:
-	var decoration := MapDecorationData.new()
-	decoration.kind = "oak_log_column"
-	decoration.grid_position = OAK_LOG_COLUMN_POSITION
-	voxel_map.decorations.append(decoration)
-
-
-func _add_acacia_log_column_near_player_start() -> void:
-	var decoration := MapDecorationData.new()
-	decoration.kind = "acacia_log_column"
-	decoration.grid_position = ACACIA_LOG_COLUMN_POSITION
-	voxel_map.decorations.append(decoration)
-
-
-func _apply_masonry_showcase_to_grid() -> void:
-	for entry: Dictionary in MASONRY_SHOWCASE:
-		var grid_position: Vector2i = entry.position
-		var cell: GridCell = grid.get_cell(grid_position)
-		if cell:
-			var approach_cell: GridCell = grid.get_cell(grid_position + Vector2i.LEFT)
-			var surface_height := approach_cell.height + 1 if approach_cell else cell.height + 1
-			cell.set_surface(entry.kind, surface_height)
 
 func _on_pre_battle_started() -> void:
 	unit_progress.update_progress_from_units(unit_manager.get_player_units())

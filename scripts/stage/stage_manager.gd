@@ -11,7 +11,7 @@ var triggers: TriggerManager
 var events: EventManager
 var objects: Dictionary = {}
 var finished := false
-const DOOR_POSITION := Vector2i(24, 24)
+const DOOR_POSITION := Vector2i(86, 80)
 
 
 func setup(stage_data: StageData, source_grid: GridSystem, unit_manager: UnitManager, trigger_manager: TriggerManager, event_manager: EventManager) -> void:
@@ -20,11 +20,11 @@ func setup(stage_data: StageData, source_grid: GridSystem, unit_manager: UnitMan
 	units = unit_manager
 	triggers = trigger_manager
 	events = event_manager
-	_spawn_object("chest_1", StageObject.ObjectType.CHEST, Vector2i(33, 30))
-	_spawn_object("lever_1", StageObject.ObjectType.LEVER, Vector2i(9, 9))
+	_spawn_object("chest_1", StageObject.ObjectType.CHEST, Vector2i(84, 89))
+	_spawn_object("lever_1", StageObject.ObjectType.LEVER, Vector2i(58, 84))
 	_spawn_object("door_1", StageObject.ObjectType.DOOR, DOOR_POSITION)
 	_set_door_blocked(true)
-	_spawn_obstacle("tree_1", Vector2i(60, 15))
+	_spawn_obstacle("tree_1", Vector2i(68, 84))
 	stage_message.emit("Mission Start: %s" % data.stage_name)
 
 
@@ -71,7 +71,7 @@ func _set_door_blocked(blocked: bool) -> void:
 
 func on_turn_started(turn_count: int) -> void:
 	if triggers.should_fire("reinforcement", turn_count >= data.reinforcement_turn):
-		units.spawn_reinforcement("bandit_c", "Bandit C", Vector2i(21, 42), BattleUnit.EnemyType.GUARD)
+		units.spawn_reinforcement("bandit_c", "Bandit C", Vector2i(88, 80), BattleUnit.EnemyType.GUARD)
 		events.fire_event("Reinforcement")
 		stage_message.emit("Reinforcement!")
 
