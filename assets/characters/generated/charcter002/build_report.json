@@ -5,7 +5,7 @@
     "assets/characters/tripo/body/003/model.glb": "05d30a5a46ee7f5748bf370f4ab6cdb0c8f5b48002be40d9738ea706427cb7a1",
     "assets/characters/tripo/face/001/model.glb": "1a5b32d5cf6686ef55867c510ebd9075970bfda482cadbf034755bcbb8996410",
     "assets/characters/tripo/face/002/model.glb": "5d8804fed19a4381c0f245d373b8f4558504d1c51432147ca98c6d6558504104",
-    "assets/characters/tripo/face/003/model.glb": "8064663ad5b380e778c8f26edb619b9519b47a455b624fd07185de8193737667"
+    "assets/characters/tripo/face/003/model.glb": "143991792963967f2885dc550e1363a911c39d15cb4f977f4cee3749a95bdd6c"
   },
   "inspection": {
     "rig_source": [
@@ -953,7 +953,7 @@
         ]
       },
       {
-        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc.004",
+        "name": "tripo_node_46ac8921-a161-44c9-ac27-1f3b523318fc",
         "type": "MESH",
         "parent": "Armature",
         "matrix": [
@@ -997,11 +997,11 @@
           ]
         ],
         "materials": [
-          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc.005"
+          "tripo_mat_46ac8921-a161-44c9-ac27-1f3b523318fc"
         ],
         "images": [
           {
-            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0.008",
+            "name": "tripo_image_46ac8921-a161-44c9-ac27-1f3b523318fc_0_0",
             "size": [
               512,
               512
@@ -1123,11 +1123,11 @@
           ]
         ],
         "materials": [
-          "tripo_mat_e53c7c04-0943-4392-b60f-a9078ca3f28f.001"
+          "tripo_mat_e53c7c04-0943-4392-b60f-a9078ca3f28f"
         ],
         "images": [
           {
-            "name": "tripo_image_e53c7c04-0943-4392-b60f-a9078ca3f28f_0_0.002",
+            "name": "tripo_image_e53c7c04-0943-4392-b60f-a9078ca3f28f_0_0",
             "size": [
               512,
               512
@@ -1183,11 +1183,11 @@
           ]
         ],
         "materials": [
-          "tripo_mat_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6.001"
+          "tripo_mat_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6"
         ],
         "images": [
           {
-            "name": "tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0.002",
+            "name": "tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0",
             "size": [
               512,
               512
@@ -1202,9 +1202,83 @@
   "body_scale": 0.9849131477393507,
   "weight_transfer": {
     "method": "nearest_triangle_barycentric_top4",
-    "max_distance": 0.20762565732002258,
-    "mean_distance": 0.024112371344971607,
+    "max_distance": 0.12430161237716675,
+    "mean_distance": 0.021690365243085846,
     "unweighted_vertices": 0
+  },
+  "arm_alignment": {
+    "left": {
+      "upper_arm": {
+        "pivot": [
+          0.1607091873884201,
+          -0.07528543472290039,
+          0.8003553748130798
+        ],
+        "angle_degrees": 40.056119085687094,
+        "slope_before": [
+          -0.7369927643210002,
+          -0.37997837695157116
+        ],
+        "slope_target": [
+          0.022463277477982945,
+          -0.030482399446435486
+        ],
+        "moved_vertices": 638
+      },
+      "forearm": {
+        "pivot": [
+          0.2665881812572479,
+          -0.0726732611656189,
+          0.7938507795333862
+        ],
+        "angle_degrees": 18.686045191699225,
+        "slope_before": [
+          -0.0071758462415309025,
+          0.1930900034473751
+        ],
+        "slope_target": [
+          -0.04339200479760212,
+          -0.13432499522292327
+        ],
+        "moved_vertices": 402
+      }
+    },
+    "right": {
+      "upper_arm": {
+        "pivot": [
+          -0.15692758560180664,
+          -0.07126695662736893,
+          0.8029892444610596
+        ],
+        "angle_degrees": 26.466993279083166,
+        "slope_before": [
+          0.7256121044413195,
+          0.4257148958977319
+        ],
+        "slope_target": [
+          0.5809773535504545,
+          -0.13848399138965087
+        ],
+        "moved_vertices": 808
+      },
+      "forearm": {
+        "pivot": [
+          -0.2628065347671509,
+          -0.1323315054178238,
+          0.811670184135437
+        ],
+        "angle_degrees": 32.23914858062051,
+        "slope_before": [
+          0.16200333975930944,
+          -0.42028392023087013
+        ],
+        "slope_target": [
+          0.4731821167925908,
+          0.10820331688131873
+        ],
+        "moved_vertices": 505
+      }
+    }
   },
   "fit": {
     "face_position": [
@@ -1226,12 +1300,12 @@
   "bounds": {
     "Body": [
       [
-        -0.47771593928337097,
-        -0.3200652599334717,
+        -0.4814603328704834,
+        -0.28838130831718445,
         0.0
       ],
       [
-        0.47771593928337097,
+        0.548478364944458,
         0.31643664836883545,
         0.9626538157463074
       ]

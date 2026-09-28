@@ -12,6 +12,7 @@ var animation_player: AnimationPlayer
 var use_3d := true
 var sword_combat: RefCounted
 var attacking := false
+var guarding := false
 
 func _ready() -> void:
 	super._ready()
@@ -20,6 +21,7 @@ func _ready() -> void:
 func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	if scene == null: return
 	attacking = false
+	guarding = false
 	sword_combat = null
 	var phase := -1.0
 	if animation_player and animation_player.current_animation in ["walk", "run"]:
@@ -52,7 +54,9 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 		animation_player.seek(phase * animation_player.current_animation_length, true)
 
 func set_3d_enabled(enabled: bool) -> void:
-	if not enabled: cancel_attack()
+	if not enabled:
+		cancel_attack()
+		guarding = false
 	use_3d = enabled
 	if not model: return
 	model.visible = enabled
@@ -68,7 +72,7 @@ func _process(delta: float) -> void:
 
 func _update_model() -> void:
 	if not model or not animation_player: return
-	if attacking: return
+	if attacking or guarding: return
 	# The source character faces +X; turn its visual without rotating gameplay axes.
 	if not world_facing.is_zero_approx():
 		model.rotation.y = -atan2(world_facing.z, world_facing.x)
@@ -91,7 +95,7 @@ func _update_model() -> void:
 			animation_player.seek(phase * animation_player.get_animation(clip).length, true)
 
 func attack(overhead := false) -> bool:
-	if attacking or not use_3d or sword_combat == null: return false
+	if attacking or guarding or not use_3d or sword_combat == null: return false
 	_update_model()
 	attacking = true
 	walking = false
@@ -99,6 +103,19 @@ func attack(overhead := false) -> bool:
 	animation_player.speed_scale = 1.0
 	animation_player.play(SwordCombat.OVERHEAD if overhead else SwordCombat.SLASH, 0.07)
 	return true
+
+## Raise the shield while held; the guard clip ends on the held pose until released.
+func set_guard(enabled: bool) -> void:
+	if enabled == guarding: return
+	if enabled and (attacking or not use_3d or sword_combat == null or not sword_combat.has_shield): return
+	guarding = enabled
+	if not enabled:
+		_update_model()
+		return
+	walking = false
+	running = false
+	animation_player.speed_scale = 1.0
+	animation_player.play(SwordCombat.GUARD, 0.06)
 
 func cancel_attack() -> void:
 	if not attacking: return

@@ -1,13 +1,23 @@
 extends RefCounted
-## Sword equipment and authored full-body clips for the Tripo rigs (Rigify or Mixamo names).
-## The imported character and sword resources are never modified.
-const SWORD = preload("res://assets/weapons/onehand_sword/001/001.glb")
+## Hand equipment and authored full-body clips for the Tripo rigs (Rigify or Mixamo names).
+## The imported character and equipment resources are never modified.
+const SWORD = preload("res://assets/weapons/onehand_sword/001/model.glb")
+const SHIELD = preload("res://assets/weapons/shield/001/model.glb")
+const STAFF = preload("res://assets/weapons/staff/001/model.glb")
 const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
-# The source stands tip-down along +Y: tip at y=0, guard near y=0.75, pommel near y=0.98.
-const GRIP := Vector3(0.0, 0.855, 0.0)
+const GUARD := "sword/guard"
+# The sword stands tip-down along +Y; its handle is just above the guard.
+const GRIP := Vector3(0.0, 0.9, 0.0)
 const SWORD_SCALE := 0.6
+const STAFF_SCALE := 1.1
+const STAFF_GRIP := Vector3(0, 0.22, 0)
+const SHIELD_SCALE := 0.62 * 1.3 * 1.2 * 0.78
+const SHIELD_GRIP := Vector3(0.0, 0.56, 0.0)
+const SHIELD_WRIST_CLEARANCE := 0.08
+# Idle shield face: out to the left side and turned a little forward, standing nearly upright.
+const SHIELD_FACE := Vector3(1.0, 0.0, 0.55)
 const READY_BLADE := Vector3(-0.55, 0.24, 1.0)
 # Rig-neutral roles mapped to each supported skeleton's bone names.
 const RIGS := [
@@ -79,6 +89,13 @@ const OVERHEAD_KEYS := [
 		"arm": [Vector3(-.55,-.6,.3), Vector3(-.1,-.6,.55)], "blade": Vector3(.12,-.1,1), "off": OVERHEAD_OFF},
 	{"t": 0.63},
 ]
+# Guard: left side forward, knees bent, shield raised square in front of the chest, sword held back low.
+const GUARD_KEYS := [
+	{"t": 0.0},
+	{"t": 0.12, "yaw": -22.0, "pitch": 8.0, "hip_yaw": -12.0, "hip": Vector3(0,-.1,-.02), "step": Vector3(0,0,-.1), "back": Vector3(0,0,.12),
+		"arm": [Vector3(-.55,-.75,-.25), Vector3(-.35,-.3,.9)], "blade": Vector3(-.35,.45,1),
+		"off": [Vector3(.45,-.6,.65), Vector3(-.6,.2,.8)], "shield": Vector3(.15,.05,1)},
+]
 # Blade trail window and impact moment (seconds) for each clip, used by the slash effect.
 const FX := {SLASH: {"trail": Vector2(0.06, 0.26), "impact": 0.13}, OVERHEAD: {"trail": Vector2(0.10, 0.23), "impact": 0.18}}
 
@@ -90,6 +107,9 @@ var legs: Dictionary
 var leg_length := 1.0
 var _idle: Dictionary = {}
 var _idle_global: Dictionary = {}
+var has_shield := false
+# Skeleton-space shield orientation in the idle pose; the guard pose rotates the hand from it.
+var _shield_rest := Basis.IDENTITY
 
 func install(model: Node3D, player: AnimationPlayer) -> bool:
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
@@ -114,15 +134,22 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		_idle_global[bone] = skeleton.get_bone_global_pose(index)
 	if not legs.is_empty():
 		leg_length = maxf((_idle_global[legs.hips] as Transform3D).origin.y - (_idle_global[legs["foot.R"]] as Transform3D).origin.y, 0.01)
-	_attach_sword()
+	if model.get("character_id") == "charcter003":
+		_attach_staff()
+	else:
+		_attach_sword()
+		_attach_shield()
+		has_shield = true
 	var fx := SlashFx.new()
 	fx.name = "SwordSlashFx"
 	fx.setup(grip, player, FX)
 	model.add_child(fx)
 	var library := AnimationLibrary.new()
 	var path := player.get_node(player.root_node).get_path_to(skeleton)
-	library.add_animation("slash", _make_attack(path, false))
-	library.add_animation("overhead", _make_attack(path, true))
+	library.add_animation("slash", _make_clip(path, "横薙ぎ", SLASH_KEYS))
+	library.add_animation("overhead", _make_clip(path, "上段斬り", OVERHEAD_KEYS))
+	if has_shield:
+		library.add_animation("guard", _make_clip(path, "防御", GUARD_KEYS))
 	player.add_animation_library("sword", library)
 	return true
 
@@ -145,10 +172,47 @@ func _attach_sword() -> void:
 	sword.position = -(sword.basis * GRIP)
 	grip.add_child(sword)
 
-func _make_attack(path: NodePath, overhead: bool) -> Animation:
+func _attach_staff() -> void:
+	socket = BoneAttachment3D.new()
+	socket.name = "StaffHandSocket"
+	socket.bone_name = rig["hand.R"]
+	skeleton.add_child(socket)
+	grip = Node3D.new()
+	grip.name = "StaffGrip"
+	grip.position = Vector3(0, rig["palm"], 0)
+	var hand: Transform3D = _idle_global[rig["hand.R"]]
+	grip.basis = hand.basis.inverse()
+	socket.add_child(grip)
+	var staff := STAFF.instantiate() as Node3D
+	staff.name = "EquippedStaff"
+	staff.scale = Vector3.ONE * STAFF_SCALE
+	staff.position = -STAFF_GRIP * STAFF_SCALE
+	grip.add_child(staff)
+
+func _attach_shield() -> void:
+	var shield_socket := BoneAttachment3D.new()
+	shield_socket.name = "ShieldLeftWristSocket"
+	shield_socket.bone_name = rig["hand.L"]
+	skeleton.add_child(shield_socket)
+	var shield_grip := Node3D.new()
+	shield_grip.name = "ShieldGrip"
+	var forearm: Transform3D = _idle_global[rig["forearm.L"]]
+	var hand: Transform3D = _idle_global[rig["hand.L"]]
+	# The hand bone starts at the wrist. Keep the shield mostly upright, leaning only slightly with the hanging forearm.
+	var up := (Vector3.UP * 2.0 + (forearm.origin - hand.origin).normalized()).normalized()
+	var face := (SHIELD_FACE - up * up.dot(SHIELD_FACE)).normalized()
+	_shield_rest = Basis(up.cross(face), up, face)
+	shield_grip.basis = hand.basis.inverse() * _shield_rest
+	shield_socket.add_child(shield_grip)
+	var shield := SHIELD.instantiate() as Node3D
+	shield.name = "EquippedShield"
+	shield.scale = Vector3.ONE * SHIELD_SCALE
+	shield.position = Vector3(0, 0, SHIELD_WRIST_CLEARANCE) - SHIELD_GRIP * SHIELD_SCALE
+	shield_grip.add_child(shield)
+
+func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 	var animation := Animation.new()
-	animation.resource_name = "上段斬り" if overhead else "横薙ぎ"
-	var keys: Array = OVERHEAD_KEYS if overhead else SLASH_KEYS
+	animation.resource_name = title
 	animation.length = keys[-1].t
 	animation.loop_mode = Animation.LOOP_NONE
 	var tracks: Dictionary = {}
@@ -193,6 +257,14 @@ func _pose(key: Dictionary) -> Dictionary:
 	_aim_arm(pose, "R", key.arm[0], key.arm[1])
 	var off: Array = key.get("off", [Vector3(.65,-.55,.25), Vector3(-.2,.3,.8)])
 	_aim_arm(pose, "L", off[0], off[1])
+	if key.has("shield"):
+		# Turn the off hand so the attached shield faces the given direction, upright.
+		var shield_face: Vector3 = (key.shield as Vector3).normalized()
+		var shield_up := (Vector3.UP - shield_face * shield_face.y).normalized()
+		var off_hand := _global(pose, skeleton.find_bone(rig["hand.L"]))
+		var idle_off_hand: Transform3D = _idle_global[rig["hand.L"]]
+		off_hand.basis = Basis(shield_up.cross(shield_face), shield_up, shield_face) * _shield_rest.inverse() * idle_off_hand.basis
+		_set_global(pose, rig["hand.L"], off_hand)
 	var hand: Transform3D = _global(pose, skeleton.find_bone(rig["hand.R"]))
 	var idle_hand: Transform3D = _idle_global[rig["hand.R"]]
 	hand.basis = Basis(Quaternion(READY_BLADE.normalized(), (key.blade as Vector3).normalized())) * idle_hand.basis

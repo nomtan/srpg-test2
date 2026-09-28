@@ -22,6 +22,12 @@ manifestは `assets/characters/tripo/characters/charcter00{1,2,3}.json`。
   `mixamorig:Head` のみ `head` へ変更。他のボーンはGodotで `:` が `_` になる。
 - Body 002/003は高さを001へ一様スケールで合わせ、001の最近傍三角形から
   重心座標補間でウェイト転送。上位4影響を正規化し、未ウェイト頂点は0。
+- 2026-09-29: Body 002はTポーズの腕が001より前方へ振れていた（左腕約35°）。
+  manifestの `body_fit.arm_alignment: match_rig_source` により、ウェイト転送前に
+  作業シーン内のコピーだけを001リグの肩・肘を支点に上腕/前腕ごと回転し、001の腕中心線へ
+  合わせる（`build_characters.align_arms`、回転角は `build_report.json` の `arm_alignment`）。
+  転送最大距離は0.208m→0.124m。Body 001の右前腕はリグごと前方へ曲がっているため、
+  002もその側は001と同じ向きになる。
 - 最終出力は各1 scene / 1 skin / Body + Head。Face全頂点は `head` weight 1。
 - 原本6ファイルは作業前後のSHA-256一致を確認。値・元構造・転送距離は各出力先の
   `build_report.json` に記録。

@@ -40,10 +40,12 @@ var cleared := false
 var dialog_lines: Array = []
 var dialog_index := 0
 var dialog_callback: Callable
+var guard_after_release := false
 var dialog_panel: PanelContainer
 var dialog_text: Label
 var location_text: Label
 var prompt_text: Label
+var position_text: Label
 var encounter_marker: Node3D
 var encounter_position := Vector3.ZERO
 var battle: Node3D
@@ -518,7 +520,7 @@ func _setup_hud() -> void:
 	location_text = Label.new()
 	info.add_child(location_text)
 	var help := Label.new()
-	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
+	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
 	if not character_roster.is_empty():
 		help.text = help.text.replace("2D・3D切替", "操作キャラ切替")
 	help.add_theme_font_size_override("font_size", 16)
@@ -529,6 +531,15 @@ func _setup_hud() -> void:
 	prompt_text = Label.new()
 	prompt_text.modulate = Color("edcf94")
 	info.add_child(prompt_text)
+	var position_panel := _panel(Vector2.ZERO)
+	position_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	# Sits under FieldWeather's top-right panel, matching its width.
+	position_panel.offset_left = -224
+	position_panel.offset_right = -20
+	position_panel.offset_top = 286
+	position_text = Label.new()
+	position_text.add_theme_font_size_override("font_size", 18)
+	position_panel.add_child(position_text)
 	dialog_panel = _panel(Vector2.ZERO)
 	dialog_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	dialog_panel.offset_left = 48
@@ -600,6 +611,12 @@ func _can_walk(p: Vector3, from: Vector3) -> bool:
 
 func _process(delta: float) -> void:
 	if player == null: return
+	var p := player.position
+	position_text.text = "X %7.1f\nY %7.1f\nZ %7.1f" % [p.x, p.y, p.z]
+	# A also talks and closes dialogue, so a press that ended a dialogue must be released before it guards.
+	var pad_guard := GamepadInput.held(JOY_BUTTON_A)
+	if not pad_guard: guard_after_release = false
+	player.set_guard(mode == "explore" and (Input.is_physical_key_pressed(KEY_G) or (pad_guard and not guard_after_release)))
 	if mode != "explore": return
 	player.walking = false
 	player.running = false
@@ -612,7 +629,7 @@ func _process(delta: float) -> void:
 		pitch = clampf(pitch + look.y * delta * 1.5, 0.2, 1.35)
 		distance = clampf(distance * exp(-GamepadInput.zoom() * delta), 9.0, SIZE * 1.8)
 		_update_camera()
-	if motion.length_squared() > 0 and not player.attacking:
+	if motion.length_squared() > 0 and not player.attacking and not player.guarding:
 		if overview:
 			distance = 27
 			_focus_player()
@@ -682,6 +699,7 @@ func _show_dialog(speaker: String, lines: Array, after: Callable = Callable()) -
 
 func _close_dialog() -> void:
 	dialog_panel.hide()
+	guard_after_release = true
 	mode = "explore"
 	var after := dialog_callback
 	dialog_callback = Callable()

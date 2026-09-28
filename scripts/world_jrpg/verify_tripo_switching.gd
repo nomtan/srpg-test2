@@ -34,6 +34,11 @@ func run() -> void:
 	var npc_ids: Array[int] = []
 	for npc: Dictionary in world.npcs: npc_ids.append(npc.actor.get_instance_id())
 	check(world.player_roster_index == 0, "Initial Character 001 is matched to the placed roster")
+	actor.set_guard(true)
+	check(actor.guarding and actor.animation_player.current_animation == "sword/guard", "Holding guard raises the shield")
+	check(not actor.attack(), "Cannot attack while guarding")
+	actor.set_guard(false)
+	check(not actor.guarding and actor.animation_player.current_animation == "idle", "Releasing guard returns to idle")
 	var ids := ["charcter001", "charcter002", "charcter003"]
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
@@ -87,6 +92,10 @@ func run() -> void:
 	await process_frame # Let the queued battle UI leave the real input pipeline.
 	world._input(switch_event(true))
 	check(world.mode == "dialog" and actor.model.character_id == "charcter003" and world.dialog_index == 0, "Switching also works in dialogue without advancing it")
+	check(actor.model.find_child("EquippedStaff", true, false) != null, "Character 003 equips the staff")
+	check(actor.model.find_child("EquippedSword", true, false) == null and actor.model.find_child("EquippedShield", true, false) == null, "Character 003 has no sword or shield")
+	var roster_003: Node3D = world.npcs[2].actor
+	check(roster_003.find_child("EquippedStaff", true, false) != null and roster_003.find_child("EquippedShield", true, false) == null, "Placed Character 003 also uses staff without shield")
 	Input.parse_input_event(switch_event(false, JOY_BUTTON_B))
 	Input.flush_buffered_events()
 	check(world.mode == "explore" and actor.model.character_id == "charcter003", "Right face button closes dialogue without switching character")
