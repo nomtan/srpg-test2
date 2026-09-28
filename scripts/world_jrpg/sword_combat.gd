@@ -1,16 +1,26 @@
 extends RefCounted
-## Player-only equipment and authored full-body clips for the shared Tripo rig.
+## Sword equipment and authored full-body clips for the Tripo rigs (Rigify or Mixamo names).
 ## The imported character and sword resources are never modified.
-const SWORD = preload("res://assets/weapons/sword/test_sword/swordl.glb")
+const SWORD = preload("res://assets/weapons/onehand_sword/001/001.glb")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
-const GRIP := Vector3(0.0, 0.687, -0.253)
-const SOURCE_BLADE := Vector3(0.0, -0.70, 0.715)
+# The source stands tip-down along +Y: tip at y=0, guard near y=0.75, pommel near y=0.98.
+const GRIP := Vector3(0.0, 0.855, 0.0)
+const SWORD_SCALE := 0.6
 const READY_BLADE := Vector3(-0.55, 0.24, 1.0)
+# Rig-neutral roles mapped to each supported skeleton's bone names.
+const RIGS := [
+	{"spine": "spine", "head": "head", "upper_arm.R": "upper_arm.R", "forearm.R": "forearm.R", "hand.R": "hand.R",
+		"upper_arm.L": "upper_arm.L", "forearm.L": "forearm.L", "hand.L": "hand.L", "palm": 0.02},
+	{"spine": "mixamorig_Spine", "head": "head", "upper_arm.R": "mixamorig_RightArm", "forearm.R": "mixamorig_RightForeArm",
+		"hand.R": "mixamorig_RightHand", "upper_arm.L": "mixamorig_LeftArm", "forearm.L": "mixamorig_LeftForeArm",
+		"hand.L": "mixamorig_LeftHand", "palm": 0.04},
+]
 
 var skeleton: Skeleton3D
 var socket: BoneAttachment3D
 var grip: Node3D
+var rig: Dictionary
 var _idle: Dictionary = {}
 var _idle_global: Dictionary = {}
 
@@ -18,8 +28,12 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null or player == null or not player.has_animation("idle"):
 		return false
-	for bone in ["spine", "chest", "head", "upper_arm.R", "forearm.R", "hand.R", "upper_arm.L", "forearm.L", "hand.L"]:
-		if skeleton.find_bone(bone) < 0: return false
+	rig = {}
+	for candidate: Dictionary in RIGS:
+		if candidate.keys().all(func(role: String) -> bool: return role == "palm" or skeleton.find_bone(candidate[role]) >= 0):
+			rig = candidate
+			break
+	if rig.is_empty(): return false
 	player.play("idle", 0)
 	player.advance(0)
 	for index in skeleton.get_bone_count():
@@ -37,19 +51,19 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 func _attach_sword() -> void:
 	socket = BoneAttachment3D.new()
 	socket.name = "SwordHandSocket"
-	socket.bone_name = "hand.R"
+	socket.bone_name = rig["hand.R"]
 	skeleton.add_child(socket)
 	grip = Node3D.new()
 	grip.name = "SwordGrip"
-	# The hand bone begins at the wrist; the palm center is 0.02 units along it.
-	grip.position = Vector3(0, 0.02, 0)
-	var hand: Transform3D = _idle_global["hand.R"]
+	# The hand bone begins at the wrist; move the grip to the palm center along it.
+	grip.position = Vector3(0, rig["palm"], 0)
+	var hand: Transform3D = _idle_global[rig["hand.R"]]
 	grip.basis = hand.basis.inverse() * Basis(Quaternion(Vector3.UP, READY_BLADE.normalized()))
 	socket.add_child(grip)
 	var sword := SWORD.instantiate() as Node3D
 	sword.name = "EquippedSword"
-	# Normalize the diagonal source blade to +Y and put its handle at the origin.
-	sword.basis = Basis(Quaternion(SOURCE_BLADE.normalized(), Vector3.UP)).scaled(Vector3.ONE * 0.52)
+	# Flip the tip-down source blade to +Y about X (keeps the guard along X) and put its handle at the origin.
+	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * SWORD_SCALE)
 	sword.position = -(sword.basis * GRIP)
 	grip.add_child(sword)
 
@@ -100,24 +114,25 @@ func _make_attack(path: NodePath, overhead: bool) -> Animation:
 func _pose(key: Array) -> Dictionary:
 	var pose := _idle.duplicate()
 	if key[3] == null: return pose
-	var spine: Transform3D = pose["spine"]
+	# Twist in character space so the result does not depend on each rig's local bone axes.
+	var spine := _global(pose, skeleton.find_bone(rig["spine"]))
 	spine.basis = Basis.from_euler(Vector3(deg_to_rad(key[2]), deg_to_rad(key[1]), 0)) * spine.basis
-	pose["spine"] = spine
+	_set_global(pose, rig["spine"], spine)
 	# Counter-rotate the head so the eyes stay on the target while the body turns.
-	var head: Transform3D = pose["head"]
+	var head := _global(pose, skeleton.find_bone(rig["head"]))
 	head.basis = Basis(Vector3.UP, deg_to_rad(-key[1] * .7)) * head.basis
-	pose["head"] = head
+	_set_global(pose, rig["head"], head)
 	_aim_arm(pose, "R", key[3], key[4])
 	_aim_arm(pose, "L", Vector3(.65,-.55,.25), Vector3(-.2,.3,.8))
-	var hand: Transform3D = _global(pose, skeleton.find_bone("hand.R"))
-	var idle_hand: Transform3D = _idle_global["hand.R"]
+	var hand: Transform3D = _global(pose, skeleton.find_bone(rig["hand.R"]))
+	var idle_hand: Transform3D = _idle_global[rig["hand.R"]]
 	hand.basis = Basis(Quaternion(READY_BLADE.normalized(), (key[5] as Vector3).normalized())) * idle_hand.basis
-	_set_global(pose, "hand.R", hand)
+	_set_global(pose, rig["hand.R"], hand)
 	return pose
 
 func _aim_arm(pose: Dictionary, side: String, upper: Vector3, fore: Vector3) -> void:
 	for spec in [["upper_arm." + side, upper], ["forearm." + side, fore], ["hand." + side, fore]]:
-		var bone: String = spec[0]
+		var bone: String = rig[spec[0]]
 		var transform := _global(pose, skeleton.find_bone(bone))
 		var reference: Transform3D = _idle_global[bone]
 		transform.basis = Basis(Quaternion(reference.basis.y.normalized(), (spec[1] as Vector3).normalized())) * reference.basis

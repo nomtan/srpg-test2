@@ -20,6 +20,7 @@ var distance := 23.0
 var hud: CanvasLayer
 const Actor = preload("res://scripts/world_jrpg/pixel_actor.gd")
 const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
+const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
 const WALK_SPEED := 4.5
 const RUN_SPEED := 16.0
 @export var use_3d_player := true
@@ -553,10 +554,34 @@ func _spawn_tripo_roster() -> void:
 		var z := 57.0 - floorf(float(index) / 3.0) * 3.6
 		actor.position = Vector3(x, _surface(x, z) + 0.05, z)
 		actor.rotation.y = -0.65
+		_equip_roster_sword(actor, index)
 		npcs.append({"actor": actor, "data": {
 			"id": "tripo_" + actor.character_id, "name": actor.display_name,
 			"lines": Array(actor.dialogue)
 		}})
+
+func _equip_roster_sword(actor: Node3D, index: int) -> void:
+	var animation_player: AnimationPlayer = actor.animation_player
+	var equipment := SwordCombat.new()
+	if not equipment.install(actor, animation_player): return
+	actor.set_meta("sword_combat", equipment)
+	for clip in ["idle", "walk", "run"]:
+		if animation_player.has_animation(clip):
+			animation_player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
+	animation_player.animation_finished.connect(func(clip: StringName) -> void:
+		if clip in [SwordCombat.SLASH, SwordCombat.OVERHEAD]: animation_player.play("idle", 0.2))
+	# Staggered practice swings so the roster does not move in unison.
+	var timer := Timer.new()
+	timer.name = "SwordPracticeTimer"
+	timer.wait_time = 2.2 + float(index) * 0.7
+	timer.autostart = true
+	actor.add_child(timer)
+	var swings := [index % 2 == 1]
+	timer.timeout.connect(func() -> void:
+		timer.wait_time = randf_range(2.4, 4.2)
+		if mode != "explore" or animation_player.current_animation != "idle": return
+		animation_player.play(SwordCombat.OVERHEAD if swings[0] else SwordCombat.SLASH, 0.07)
+		swings[0] = not swings[0])
 
 func _focus_player() -> void:
 	overview = false
