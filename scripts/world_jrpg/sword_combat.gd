@@ -2,6 +2,7 @@ extends RefCounted
 ## Sword equipment and authored full-body clips for the Tripo rigs (Rigify or Mixamo names).
 ## The imported character and sword resources are never modified.
 const SWORD = preload("res://assets/weapons/onehand_sword/001/001.glb")
+const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
 # The source stands tip-down along +Y: tip at y=0, guard near y=0.75, pommel near y=0.98.
@@ -16,11 +17,75 @@ const RIGS := [
 		"hand.R": "mixamorig_RightHand", "upper_arm.L": "mixamorig_LeftArm", "forearm.L": "mixamorig_LeftForeArm",
 		"hand.L": "mixamorig_LeftHand", "palm": 0.04},
 ]
+# Optional lower body; without it the clips still play as upper-body swings.
+const LEGS := [
+	{"hips": "spine", "thigh.R": "thigh.R", "shin.R": "shin.R", "foot.R": "foot.R",
+		"thigh.L": "thigh.L", "shin.L": "shin.L", "foot.L": "foot.L"},
+	{"hips": "mixamorig_Hips", "thigh.R": "mixamorig_RightUpLeg", "shin.R": "mixamorig_RightLeg", "foot.R": "mixamorig_RightFoot",
+		"thigh.L": "mixamorig_LeftUpLeg", "shin.L": "mixamorig_LeftLeg", "foot.L": "mixamorig_LeftFoot"},
+]
+# Character space: +Z forward, -X is the sword (right) side. Angles in degrees, offsets in leg lengths.
+# yaw/pitch: torso twist and lean. hip_yaw/hip: pelvis turn and shift. step/back: right/left foot plant.
+# arm/off: right/left upper-arm and forearm directions. blade: sword direction. Keys without blade are idle.
+const SLASH_KEYS := [
+	{"t": 0.0},
+	{"t": 0.13, "yaw": -38.0, "pitch": -5.0, "hip_yaw": -22.0, "hip": Vector3(.02,-.12,-.04), "back": Vector3(0,0,-.06),
+		"arm": [Vector3(-.85,.45,-.25), Vector3(-.4,.8,-.45)], "blade": Vector3(-.6,.7,-.7),
+		"off": [Vector3(.35,-.35,.9), Vector3(.1,.1,1)]},
+	{"t": 0.22, "yaw": -50.0, "pitch": -3.0, "hip_yaw": -28.0, "hip": Vector3(.03,-.16,-.05), "back": Vector3(0,0,-.08),
+		"arm": [Vector3(-.8,.55,-.35), Vector3(-.3,.85,-.6)], "blade": Vector3(-.45,.75,-.85),
+		"off": [Vector3(.3,-.3,1), Vector3(.05,.15,1)]},
+	{"t": 0.28, "yaw": -18.0, "pitch": 5.0, "hip_yaw": -8.0, "hip": Vector3(-.02,-.2,.12), "step": Vector3(-.08,0,.32), "back": Vector3(0,0,-.16),
+		"arm": [Vector3(-.75,.25,.6), Vector3(-.4,.25,1)], "blade": Vector3(-.8,.4,.6),
+		"off": [Vector3(.6,-.4,.4), Vector3(.3,-.2,.7)]},
+	{"t": 0.33, "yaw": 30.0, "pitch": 12.0, "hip_yaw": 12.0, "hip": Vector3(-.03,-.26,.24), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.22),
+		"arm": [Vector3(-.1,-.15,1), Vector3(.6,-.1,.8)], "blade": Vector3(.9,-.25,.5),
+		"off": [Vector3(.9,-.35,-.3), Vector3(.5,-.4,-.6)]},
+	{"t": 0.38, "yaw": 55.0, "pitch": 14.0, "hip_yaw": 20.0, "hip": Vector3(-.03,-.28,.26), "step": Vector3(-.1,0,.55), "back": Vector3(0,0,-.22),
+		"arm": [Vector3(.35,-.3,.85), Vector3(1,-.25,.05)], "blade": Vector3(.75,-.5,-.45),
+		"off": [Vector3(.8,-.45,-.45), Vector3(.35,-.6,-.7)]},
+	{"t": 0.50, "yaw": 48.0, "pitch": 11.0, "hip_yaw": 18.0, "hip": Vector3(-.03,-.26,.25), "step": Vector3(-.1,0,.55), "back": Vector3(0,0,-.22),
+		"arm": [Vector3(.2,-.5,.75), Vector3(.8,-.45,.2)], "blade": Vector3(.6,-.6,-.3),
+		"off": [Vector3(.8,-.5,-.35), Vector3(.35,-.65,-.6)]},
+	{"t": 0.62, "yaw": 22.0, "pitch": 5.0, "hip_yaw": 8.0, "hip": Vector3(-.02,-.12,.12), "step": Vector3(-.05,0,.27), "back": Vector3(0,0,-.11),
+		"arm": [Vector3(-.25,-.6,.65), Vector3(.3,-.4,.8)], "blade": Vector3(.35,.05,1)},
+	{"t": 0.80},
+]
+const OVERHEAD_KEYS := [
+	{"t": 0.0},
+	{"t": 0.12, "yaw": -12.0, "pitch": 8.0, "hip_yaw": -6.0, "hip": Vector3(0,-.14,-.02),
+		"arm": [Vector3(-.5,-.3,.5), Vector3(-.1,-.2,.9)], "blade": Vector3(-.3,-.2,1)},
+	{"t": 0.30, "yaw": -14.0, "pitch": -16.0, "hip_yaw": -8.0, "hip": Vector3(0,.02,-.04), "back": Vector3(0,0,-.04),
+		"arm": [Vector3(-.3,.95,-.05), Vector3(.1,.8,-.55)], "blade": Vector3(0,.15,-1),
+		"off": [Vector3(.3,.95,.05), Vector3(-.15,.8,-.45)]},
+	{"t": 0.40, "yaw": -10.0, "pitch": -22.0, "hip_yaw": -6.0, "hip": Vector3(0,.05,-.02), "back": Vector3(0,.04,-.06), "step": Vector3(0,.06,.04),
+		"arm": [Vector3(-.3,.95,-.15), Vector3(.12,.7,-.7)], "blade": Vector3(0,-.25,-1),
+		"off": [Vector3(.3,.95,-.1), Vector3(-.15,.7,-.65)]},
+	{"t": 0.43, "yaw": -6.0, "pitch": -8.0, "hip_yaw": -3.0, "hip": Vector3(-.01,-.02,.06), "step": Vector3(-.02,.04,.18), "back": Vector3(0,0,-.08),
+		"arm": [Vector3(-.3,.95,.2), Vector3(.12,.85,.3)], "blade": Vector3(0,.95,-.3),
+		"off": [Vector3(.3,.95,.2), Vector3(-.15,.85,.3)]},
+	{"t": 0.46, "yaw": -2.0, "pitch": 4.0, "hip_yaw": 0.0, "hip": Vector3(-.02,-.08,.14), "step": Vector3(-.04,.02,.32), "back": Vector3(0,0,-.12),
+		"arm": [Vector3(-.3,.55,.8), Vector3(.12,.45,1)], "blade": Vector3(0,1,.35),
+		"off": [Vector3(.3,.5,.8), Vector3(-.15,.45,1)]},
+	{"t": 0.51, "yaw": 6.0, "pitch": 24.0, "hip_yaw": 4.0, "hip": Vector3(-.03,-.26,.24), "step": Vector3(-.06,0,.46), "back": Vector3(0,0,-.2),
+		"arm": [Vector3(-.25,-.35,1), Vector3(.1,-.45,1)], "blade": Vector3(0,-.9,.55),
+		"off": [Vector3(.25,-.35,1), Vector3(-.12,-.45,1)]},
+	{"t": 0.64, "yaw": 8.0, "pitch": 22.0, "hip_yaw": 5.0, "hip": Vector3(-.03,-.25,.23), "step": Vector3(-.06,0,.46), "back": Vector3(0,0,-.2),
+		"arm": [Vector3(-.25,-.4,1), Vector3(.1,-.5,1)], "blade": Vector3(.05,-.95,.5),
+		"off": [Vector3(.25,-.4,1), Vector3(-.12,-.5,1)]},
+	{"t": 0.78, "yaw": 5.0, "pitch": 8.0, "hip_yaw": 3.0, "hip": Vector3(-.02,-.11,.11), "step": Vector3(-.03,0,.22), "back": Vector3(0,0,-.1),
+		"arm": [Vector3(-.55,-.6,.3), Vector3(-.1,-.6,.55)], "blade": Vector3(.12,-.1,1)},
+	{"t": 0.96},
+]
+# Blade trail window and impact moment (seconds) for each clip, used by the slash effect.
+const FX := {SLASH: {"trail": Vector2(0.26, 0.46), "impact": 0.34}, OVERHEAD: {"trail": Vector2(0.41, 0.56), "impact": 0.51}}
 
 var skeleton: Skeleton3D
 var socket: BoneAttachment3D
 var grip: Node3D
 var rig: Dictionary
+var legs: Dictionary
+var leg_length := 1.0
 var _idle: Dictionary = {}
 var _idle_global: Dictionary = {}
 
@@ -34,13 +99,24 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			rig = candidate
 			break
 	if rig.is_empty(): return false
+	legs = {}
+	for candidate: Dictionary in LEGS:
+		if candidate.values().all(func(bone: String) -> bool: return skeleton.find_bone(bone) >= 0):
+			legs = candidate
+			break
 	player.play("idle", 0)
 	player.advance(0)
 	for index in skeleton.get_bone_count():
 		var bone := skeleton.get_bone_name(index)
 		_idle[bone] = skeleton.get_bone_pose(index)
 		_idle_global[bone] = skeleton.get_bone_global_pose(index)
+	if not legs.is_empty():
+		leg_length = maxf((_idle_global[legs.hips] as Transform3D).origin.y - (_idle_global[legs["foot.R"]] as Transform3D).origin.y, 0.01)
 	_attach_sword()
+	var fx := SlashFx.new()
+	fx.name = "SwordSlashFx"
+	fx.setup(grip, player, FX)
+	model.add_child(fx)
 	var library := AnimationLibrary.new()
 	var path := player.get_node(player.root_node).get_path_to(skeleton)
 	library.add_animation("slash", _make_attack(path, false))
@@ -70,31 +146,9 @@ func _attach_sword() -> void:
 func _make_attack(path: NodePath, overhead: bool) -> Animation:
 	var animation := Animation.new()
 	animation.resource_name = "上段斬り" if overhead else "横薙ぎ"
-	animation.length = 0.88 if overhead else 0.64
+	var keys: Array = OVERHEAD_KEYS if overhead else SLASH_KEYS
+	animation.length = keys[-1].t
 	animation.loop_mode = Animation.LOOP_NONE
-	# Time, torso yaw/pitch, upper-arm direction, forearm direction, blade direction.
-	# Arms are aimed in character space (+Z forward); lengths come from each rig.
-	var keys: Array
-	if overhead:
-		keys = [
-			[0.0, 0.0, 0.0, null, null, null],
-			[0.20, -12.0, -7.0, Vector3(-.45,.8,.25), Vector3(.10,.8,-.45), Vector3(0,.25,-1)],
-			[0.32, -8.0, -5.0, Vector3(-.35,.9,.30), Vector3(.12,.85,.10), Vector3(0,.95,-.30)],
-			[0.44, 8.0, 13.0, Vector3(-.30,-.25,1), Vector3(.18,-.25,1), Vector3(0,-.70,1)],
-			[0.56, 14.0, 10.0, Vector3(-.35,-.45,.9), Vector3(.15,-.25,.95), Vector3(.15,-.50,1)],
-			[0.70, 7.0, 4.0, Vector3(-.60,-.65,.25), Vector3(-.10,-.65,.55), Vector3(.12,-.05,1)],
-			[0.88, 0.0, 0.0, null, null, null],
-		]
-	else:
-		keys = [
-			[0.0, 0.0, 0.0, null, null, null],
-			[0.14, -32.0, -3.0, Vector3(-.9,.10,.15), Vector3(-.6,.25,.6), Vector3(-1,.15,-.35)],
-			[0.21, -22.0, 0.0, Vector3(-.75,.05,.6), Vector3(-.35,.10,1), Vector3(-1,.05,.5)],
-			[0.30, 24.0, 5.0, Vector3(-.25,-.15,1), Vector3(.7,.10,.8), Vector3(.75,0,1)],
-			[0.39, 35.0, 4.0, Vector3(.20,-.2,1), Vector3(.9,.05,.25), Vector3(1,-.15,.15)],
-			[0.49, 17.0, 2.0, Vector3(-.25,-.65,.7), Vector3(.3,-.45,.75), Vector3(.55,.1,.85)],
-			[0.64, 0.0, 0.0, null, null, null],
-		]
 	var tracks: Dictionary = {}
 	for index in skeleton.get_bone_count():
 		var bone := skeleton.get_bone_name(index)
@@ -103,32 +157,70 @@ func _make_attack(path: NodePath, overhead: bool) -> Animation:
 		var position_track := animation.add_track(Animation.TYPE_POSITION_3D)
 		animation.track_set_path(position_track, NodePath(str(path) + ":" + bone))
 		tracks[bone] = [rotation_track, position_track]
-	for key: Array in keys:
+	for key: Dictionary in keys:
 		var pose := _pose(key)
 		for bone: String in tracks:
 			var transform: Transform3D = pose[bone]
-			animation.rotation_track_insert_key(tracks[bone][0], key[0], transform.basis.get_rotation_quaternion())
-			animation.position_track_insert_key(tracks[bone][1], key[0], transform.origin)
+			animation.rotation_track_insert_key(tracks[bone][0], key.t, transform.basis.get_rotation_quaternion())
+			animation.position_track_insert_key(tracks[bone][1], key.t, transform.origin)
 	return animation
 
-func _pose(key: Array) -> Dictionary:
+func _pose(key: Dictionary) -> Dictionary:
 	var pose := _idle.duplicate()
-	if key[3] == null: return pose
+	if not key.has("blade"): return pose
+	var hip_yaw: float = key.get("hip_yaw", 0.0)
+	if not legs.is_empty():
+		# Drop and shift the pelvis (in leg lengths), then keep the feet planted with leg IK.
+		var hips: Transform3D = _idle_global[legs.hips]
+		hips.origin += (key.get("hip", Vector3.ZERO) as Vector3) * leg_length
+		hips.basis = Basis(Vector3.UP, deg_to_rad(hip_yaw)) * hips.basis
+		_set_global(pose, legs.hips, hips)
+		for side in ["R", "L"]:
+			var step: Vector3 = key.get("step" if side == "R" else "back", Vector3.ZERO)
+			_plant_leg(pose, side, (_idle_global[legs["foot." + side]] as Transform3D).origin + step * leg_length)
+	else:
+		hip_yaw = 0.0
 	# Twist in character space so the result does not depend on each rig's local bone axes.
 	var spine := _global(pose, skeleton.find_bone(rig["spine"]))
-	spine.basis = Basis.from_euler(Vector3(deg_to_rad(key[2]), deg_to_rad(key[1]), 0)) * spine.basis
+	spine.basis = Basis.from_euler(Vector3(deg_to_rad(key.pitch), deg_to_rad(key.yaw), 0)) * spine.basis
 	_set_global(pose, rig["spine"], spine)
 	# Counter-rotate the head so the eyes stay on the target while the body turns.
 	var head := _global(pose, skeleton.find_bone(rig["head"]))
-	head.basis = Basis(Vector3.UP, deg_to_rad(-key[1] * .7)) * head.basis
+	head.basis = Basis(Vector3.UP, deg_to_rad(-(key.yaw + hip_yaw) * .7)) * head.basis
 	_set_global(pose, rig["head"], head)
-	_aim_arm(pose, "R", key[3], key[4])
-	_aim_arm(pose, "L", Vector3(.65,-.55,.25), Vector3(-.2,.3,.8))
+	_aim_arm(pose, "R", key.arm[0], key.arm[1])
+	var off: Array = key.get("off", [Vector3(.65,-.55,.25), Vector3(-.2,.3,.8)])
+	_aim_arm(pose, "L", off[0], off[1])
 	var hand: Transform3D = _global(pose, skeleton.find_bone(rig["hand.R"]))
 	var idle_hand: Transform3D = _idle_global[rig["hand.R"]]
-	hand.basis = Basis(Quaternion(READY_BLADE.normalized(), (key[5] as Vector3).normalized())) * idle_hand.basis
+	hand.basis = Basis(Quaternion(READY_BLADE.normalized(), (key.blade as Vector3).normalized())) * idle_hand.basis
 	_set_global(pose, rig["hand.R"], hand)
 	return pose
+
+## Two-bone IK with the knee bending toward character forward.
+func _plant_leg(pose: Dictionary, side: String, target: Vector3) -> void:
+	var names: Array = [legs["thigh." + side], legs["shin." + side], legs["foot." + side]]
+	var rest: Array = names.map(func(bone: String) -> Transform3D: return _idle_global[bone])
+	var thigh := _global(pose, skeleton.find_bone(names[0]))
+	var a: float = (rest[1].origin - rest[0].origin).length()
+	var b: float = (rest[2].origin - rest[1].origin).length()
+	var reach := target - thigh.origin
+	var d := clampf(reach.length(), absf(a - b) + 0.001, (a + b) * 0.999)
+	var direction := reach.normalized()
+	var pole := (Vector3.BACK - direction * direction.z).normalized()
+	var bend := clampf((a * a + d * d - b * b) / (2.0 * a * d), -1.0, 1.0)
+	var knee := thigh.origin + (direction * bend + pole * sqrt(1.0 - bend * bend)) * a
+	var foot := thigh.origin + direction * d
+	for index in 2:
+		var joint := _global(pose, skeleton.find_bone(names[index]))
+		var from: Vector3 = (rest[index + 1].origin - rest[index].origin).normalized()
+		var to := (knee - joint.origin) if index == 0 else (foot - joint.origin)
+		joint.basis = Basis(Quaternion(from, to.normalized())) * rest[index].basis
+		_set_global(pose, names[index], joint)
+	# Feet stay flat on the ground regardless of how the legs bend.
+	var planted := _global(pose, skeleton.find_bone(names[2]))
+	planted.basis = rest[2].basis
+	_set_global(pose, names[2], planted)
 
 func _aim_arm(pose: Dictionary, side: String, upper: Vector3, fore: Vector3) -> void:
 	for spec in [["upper_arm." + side, upper], ["forearm." + side, fore], ["hand." + side, fore]]:
