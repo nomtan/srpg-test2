@@ -1,6 +1,6 @@
-"""Build the matched 001/002/003 set through live Blender MCP.
+"""Build the matched Tripo roster characters through Blender.
 
-Call build('001'), build('002'), build('003'). Each call creates a new scene,
+Call build('001') through build('004'). Each call creates a new scene,
 preserving existing work. Only body/001 supplies a rig. Sources are immutable.
 """
 import hashlib
@@ -16,7 +16,7 @@ from mathutils.geometry import barycentric_transform
 from build_golden_path import create_animations, enum, inspect, write_json
 
 ROOT = Path(__file__).resolve().parents[3]
-IDS = ('001', '002', '003')
+IDS = ('001', '002', '003', '004')
 
 
 def source(kind, idx):

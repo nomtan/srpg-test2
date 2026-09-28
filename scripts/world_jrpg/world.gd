@@ -387,6 +387,7 @@ func _spawn_characters() -> void:
 			preload("res://scenes/characters/tripo_roster/charcter001.tscn"),
 			preload("res://scenes/characters/tripo_roster/charcter002.tscn"),
 			preload("res://scenes/characters/tripo_roster/charcter003.tscn"),
+			preload("res://scenes/characters/tripo_roster/charcter004.tscn"),
 		]
 	player = Explorer.new()
 	if player_model: player.model_scene = player_model
@@ -560,7 +561,7 @@ func _spawn_tripo_roster() -> void:
 		if initial_visual and actor.get_node("Model").scene_file_path == initial_visual.scene_file_path:
 			player_roster_index = index
 			character_text.text = "操作キャラ：" + actor.display_name
-		# Three rows on the clear starting plateau, with room to walk between them.
+		# Rows on the clear starting plateau, with room to walk between them.
 		var x := 24.5 + float(index % 3) * 3.6
 		var z := 57.0 - floorf(float(index) / 3.0) * 3.6
 		actor.position = Vector3(x, _surface(x, z) + 0.05, z)

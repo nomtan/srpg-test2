@@ -1,11 +1,12 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter001.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter002.tscn" id="18"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter003.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter004.tscn" id="20"]
 
 [node name="JRPGWorldSample" type="Node3D"]
 script = ExtResource("1")
 player_model = ExtResource("17")
-character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19")])
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20")])

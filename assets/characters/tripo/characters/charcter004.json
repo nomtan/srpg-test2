@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "character_id": "charcter004",
+  "display_name": "Character 004",
+  "face_id": "004",
+  "body_id": "004",
+  "rig_source_body_id": "001",
+  "rig_profile": "humanoid_v1",
+  "animation_profile": "common",
+  "hair_mode": "integrated_in_head",
+  "fit": {
+    "face_position": [0, -0.055, 0.89],
+    "face_rotation_degrees": [0, 0, 0],
+    "face_scale": [0.54, 0.54, 0.54]
+  },
+  "fit_coordinate_system": "Blender Z-up meters; source world transform then scale and translation, baked into mesh",
+  "output": {
+    "glb": "assets/characters/generated/charcter004/character.glb"
+  }
+}

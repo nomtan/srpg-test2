@@ -39,7 +39,7 @@ func run() -> void:
 	check(not actor.attack(), "Cannot attack while guarding")
 	actor.set_guard(false)
 	check(not actor.guarding and actor.animation_player.current_animation == "idle", "Releasing guard returns to idle")
-	var ids := ["charcter001", "charcter002", "charcter003"]
+	var ids := ["charcter001", "charcter002", "charcter003", "charcter004"]
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
 		actor.running = clip == "run"
@@ -52,6 +52,8 @@ func run() -> void:
 			Input.parse_input_event(switch_event(step % 3 == 1, JOY_BUTTON_B if step % 3 == 0 else JOY_BUTTON_LEFT_STICK))
 			Input.flush_buffered_events()
 			check(world.player_roster_index == next and actor.model.character_id == ids[next], clip + ": switches in roster order to " + ids[next])
+			if ids[next] == "charcter004":
+				check(actor.model.find_child("EquippedSword", true, false) != null and actor.model.find_child("EquippedShield", true, false) != null, "Character 004 equips the one-handed sword and shield")
 			check(world.player == actor and actor.position == origin, "Actor identity and position stay unchanged")
 			var expected_clip: String = "walk" if clip == "run" and not actor.animation_player.has_animation("run") else clip
 			check(actor.animation_player.current_animation == expected_clip, "Current movement animation is preserved")
@@ -96,6 +98,8 @@ func run() -> void:
 	check(actor.model.find_child("EquippedSword", true, false) == null and actor.model.find_child("EquippedShield", true, false) == null, "Character 003 has no sword or shield")
 	var roster_003: Node3D = world.npcs[2].actor
 	check(roster_003.find_child("EquippedStaff", true, false) != null and roster_003.find_child("EquippedShield", true, false) == null, "Placed Character 003 also uses staff without shield")
+	var roster_004: Node3D = world.npcs[3].actor
+	check(roster_004.find_child("EquippedSword", true, false) != null and roster_004.find_child("EquippedShield", true, false) != null, "Placed Character 004 uses the sword and shield")
 	Input.parse_input_event(switch_event(false, JOY_BUTTON_B))
 	Input.flush_buffered_events()
 	check(world.mode == "explore" and actor.model.character_id == "charcter003", "Right face button closes dialogue without switching character")

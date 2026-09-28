@@ -17,7 +17,7 @@ func run() -> void:
 	root.add_child(world)
 	var previous_skeleton: Skeleton3D
 	var previous_player: AnimationPlayer
-	for id in ["001", "002", "003"]:
+	for id in ["001", "002", "003", "004"]:
 		var path := "res://assets/characters/generated/charcter%s/character.glb" % id
 		var packed := load(path) as PackedScene
 		check(packed != null, id + " PackedScene imported")
