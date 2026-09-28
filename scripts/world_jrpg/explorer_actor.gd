@@ -101,7 +101,8 @@ func attack(overhead := false) -> bool:
 	walking = false
 	running = false
 	animation_player.speed_scale = 1.0
-	animation_player.play(sword_combat.overhead_clip if overhead else sword_combat.slash_clip, 0.07)
+	# Dual wielders alternate right and left hands on the horizontal slash.
+	animation_player.play(sword_combat.overhead_clip if overhead else sword_combat.next_slash_clip(), 0.07)
 	return true
 
 ## Guard (shield or greatsword) while held; the guard clip ends on the held pose until released.
@@ -123,6 +124,6 @@ func cancel_attack() -> void:
 	_update_model()
 
 func _on_animation_finished(clip: StringName) -> void:
-	if sword_combat and clip in [sword_combat.slash_clip, sword_combat.overhead_clip]:
+	if sword_combat and sword_combat.is_attack_clip(clip):
 		attacking = false
 		_update_model()

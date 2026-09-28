@@ -101,6 +101,19 @@ Character 001 は片手剣＋盾の代わりに `assets/weapons/gread_sword/001/
 
 検証：`godot --headless --path . --script scripts/world_jrpg/verify_greatsword.gd`（各キーの到達、全クリップで左手が柄から離れないこと）。描画確認は `--headless` を外し末尾に `-- --capture` を付けると `artifacts/greatsword/` に保存します。
 
+#### 短剣の二刀流（Character 002）
+
+Character 002 は `assets/weapons/short_sword/001/model.glb` を左右の手に1本ずつ装備します（`LOADOUTS` の `dual_daggers`）。元GLBは変更しません。大きさ・柄の位置は `sword_combat.gd` の `DG_SCALE` / `DG_GRIP` で調整します。
+
+- **X / □ / J**：横薙ぎ。押すたびに右手（`dagger/slash`）と左手（`dagger/slash_l`）が交互に斬ります。右手は片手剣の横薙ぎと同じキー、左手はそれを左右反転したもの（体の捻り・踏み込む足も反転）です。
+- **Y / △ / K**：二刀振り下ろし（`dagger/overhead`、0.65秒）。両手の短剣を同時に頭の後ろへ振りかぶり、踏み込みながら前方へ同時に振り下ろします。キーは右手分だけを書き、左手は `_both()` で鏡像を生成します。
+- **A / G 長押し**：十字防御（`dagger/guard`）。腰を落とし、両手の短剣を顔の前でX字に交差させて保持します。
+
+Tripoの自動リグは前腕の長さが左右で異なる（右0.157・左0.103）ため、反転した左手の位置は右手と最大約7cmずれます（刃の向きは完全に一致）。十字防御は刃の中ほどで交わるよう左右別々のキーにしています。
+斬撃エフェクトは両手に付き、二刀振り下ろしのヒットストップは右手側だけで掛けます。SRPG戦闘の `BattleUnit` では `dagger/overhead` を攻撃モーションに使います。
+
+検証：`godot --headless --path . --script scripts/world_jrpg/verify_dual_daggers.gd`（装備、左右交互、左斬りが右斬りの鏡像であること、二刀同時の振り下ろし、防御で刃が交差すること）。描画確認は `--headless` を外し末尾に `-- --capture` を付けると `artifacts/dual_daggers/` に保存します。
+
 #### 以前のMeshy hero2モデルの編集
 
 編集用のリグと3アクションは `assets/characters/meshy_hero2/hero2.blend` に保存。未加工のバックアップは `artifacts/meshy_hero2/hero2_before_rig.blend`。`idle` は2秒、全クリップはその場で動くループで、終端に先頭と一致するキーを持つ。GLBは高さ約2.2、正面+Xに変換している。GodotはGLBを使用し、編集用blendの直接インポートはスキップする。hero2の膝の鎧は上腿側へウェイトを寄せ、走行で地面へ折れ込むのを防いでいる。

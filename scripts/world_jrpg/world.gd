@@ -581,7 +581,7 @@ func _equip_roster_sword(actor: Node3D, index: int) -> void:
 		if animation_player.has_animation(clip):
 			animation_player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	animation_player.animation_finished.connect(func(clip: StringName) -> void:
-		if clip in [equipment.slash_clip, equipment.overhead_clip]: animation_player.play("idle", 0.2))
+		if equipment.is_attack_clip(clip): animation_player.play("idle", 0.2))
 	# Staggered practice swings so the roster does not move in unison.
 	var timer := Timer.new()
 	timer.name = "SwordPracticeTimer"
@@ -592,7 +592,7 @@ func _equip_roster_sword(actor: Node3D, index: int) -> void:
 	timer.timeout.connect(func() -> void:
 		timer.wait_time = randf_range(2.4, 4.2)
 		if mode != "explore" or animation_player.current_animation != "idle": return
-		animation_player.play(equipment.overhead_clip if swings[0] else equipment.slash_clip, 0.07)
+		animation_player.play(equipment.overhead_clip if swings[0] else equipment.next_slash_clip(), 0.07)
 		swings[0] = not swings[0])
 
 func _focus_player() -> void:

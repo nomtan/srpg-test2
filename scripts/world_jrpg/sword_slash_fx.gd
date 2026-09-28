@@ -118,11 +118,11 @@ func _process(delta: float) -> void:
 		if time >= window.x and time <= window.y:
 			_samples.append({"inner": blade.global_transform * inner, "outer": blade.global_transform * outer, "age": 0.0})
 		if _last_time >= 0.0 and _last_time < timing.impact and time >= timing.impact:
-			_impact()
+			_impact(timing.get("hit_stop", true))
 	_last_time = time
 	_rebuild()
 
-func _impact() -> void:
+func _impact(hit_stop := true) -> void:
 	var tip := blade.global_transform * outer
 	var reach := (blade.global_transform * outer - blade.global_transform * inner).length()
 	var ground := get_parent() as Node3D
@@ -142,6 +142,7 @@ func _impact() -> void:
 	var tween := create_tween()
 	tween.tween_method(func(value: float) -> void: material.set_shader_parameter("progress", value), 0.0, 1.0, 0.16)
 	tween.tween_callback(_flash.hide)
+	if not hit_stop: return
 	# Brief hit-stop sells the weight of the contact frame.
 	var clip := player.current_animation
 	var speed := player.speed_scale

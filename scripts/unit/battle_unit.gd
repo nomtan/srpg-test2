@@ -150,6 +150,7 @@ const RUN_ANIMATION_NAMES: Array[StringName] = [
 ]
 const ATTACK_ANIMATION_NAMES: Array[StringName] = [
 	&"greatsword/sweep",
+	&"dagger/overhead",
 	&"sword/slash",
 	&"animation_onehand_sword_attack",
 	&"animation.onehand_sword_attack",
@@ -312,7 +313,7 @@ func _model_top_y() -> float:
 func _install_sword_clips() -> void:
 	if not model_instance or not animation_player or animation_profile != "onehand_sword":
 		return
-	if animation_player.has_animation_library("sword") or animation_player.has_animation_library("greatsword"):
+	if ["sword", "greatsword", "dagger"].any(func(library: String) -> bool: return animation_player.has_animation_library(library)):
 		return
 	var equipment := SWORD_COMBAT_SCRIPT.new()
 	if equipment.install(model_instance, animation_player):

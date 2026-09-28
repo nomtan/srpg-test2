@@ -5,6 +5,7 @@ const SWORD = preload("res://assets/weapons/onehand_sword/001/model.glb")
 const SHIELD = preload("res://assets/weapons/shield/001/model.glb")
 const STAFF = preload("res://assets/weapons/staff/001/model.glb")
 const GREATSWORD = preload("res://assets/weapons/gread_sword/001/model.glb")
+const DAGGER = preload("res://assets/weapons/short_sword/001/model.glb")
 const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
 const SLASH := "sword/slash"
@@ -13,8 +14,12 @@ const GUARD := "sword/guard"
 const GS_SWEEP := "greatsword/sweep"
 const GS_SMASH := "greatsword/smash"
 const GS_GUARD := "greatsword/guard"
+const DG_SLASH := "dagger/slash"
+const DG_SLASH_L := "dagger/slash_l"
+const DG_OVERHEAD := "dagger/overhead"
+const DG_GUARD := "dagger/guard"
 # Equipment per character; anyone not listed carries the one-handed sword and shield.
-const LOADOUTS := {"charcter001": "greatsword", "charcter003": "staff"}
+const LOADOUTS := {"charcter001": "greatsword", "charcter002": "dual_daggers", "charcter003": "staff"}
 # The sword stands tip-down along +Y; its handle is just above the guard.
 const GRIP := Vector3(0.0, 0.9, 0.0)
 const SWORD_SCALE := 0.6
@@ -158,6 +163,43 @@ const GS_GUARD_KEYS := [
 ]
 const GS_FX := {GS_SWEEP: {"trail": Vector2(0.24, 0.44), "impact": 0.34}, GS_SMASH: {"trail": Vector2(0.31, 0.45), "impact": 0.39}}
 
+# Dual daggers, one in each hand. The source stands tip-down along +Y like the one-handed sword.
+const DG_SCALE := 0.42
+const DG_GRIP := Vector3(0.0, 0.84, 0.0)
+const DG_FX_INNER := Vector3(0, 0.06, 0)
+const DG_FX_OUTER := Vector3(0, 0.5, 0)
+# The right-hand slash reuses SLASH_KEYS; the left-hand slash is its mirror image (see _mirror_keys).
+# Double downward cut: both daggers raised behind the head together, then driven down in front at once.
+# Keys give the right arm and blade; _both() mirrors them onto the left arm.
+const DG_OVERHEAD_KEYS := [
+	{"t": 0.0},
+	{"t": 0.03, "pitch": 8.0, "hip": Vector3(0,-.14,-.02),
+		"arm": [Vector3(-.6,-.3,.5), Vector3(-.25,-.2,.9)], "blade": Vector3(-.35,-.2,1)},
+	{"t": 0.09, "pitch": -16.0, "hip": Vector3(0,.02,-.04), "back": Vector3(0,0,-.04),
+		"arm": [Vector3(-.45,.9,-.05), Vector3(-.1,.8,-.55)], "blade": Vector3(-.15,.15,-1)},
+	{"t": 0.13, "pitch": -22.0, "hip": Vector3(0,.05,-.02), "back": Vector3(0,.04,-.06), "step": Vector3(0,.06,.04),
+		"arm": [Vector3(-.45,.9,-.15), Vector3(-.1,.7,-.7)], "blade": Vector3(-.1,-.25,-1)},
+	{"t": 0.15, "pitch": -8.0, "hip": Vector3(-.01,-.02,.06), "step": Vector3(-.02,.04,.18), "back": Vector3(0,0,-.08),
+		"arm": [Vector3(-.45,.9,.2), Vector3(-.1,.85,.3)], "blade": Vector3(-.1,.95,-.3)},
+	{"t": 0.17, "pitch": 4.0, "hip": Vector3(-.02,-.08,.14), "step": Vector3(-.04,.02,.32), "back": Vector3(0,0,-.12),
+		"arm": [Vector3(-.45,.55,.75), Vector3(-.1,.45,1)], "blade": Vector3(-.1,1,.35)},
+	{"t": 0.20, "pitch": 24.0, "hip": Vector3(-.03,-.26,.24), "step": Vector3(-.06,0,.46), "back": Vector3(0,0,-.2),
+		"arm": [Vector3(-.35,-.35,1), Vector3(-.05,-.45,1)], "blade": Vector3(-.1,-.9,.55)},
+	{"t": 0.33, "pitch": 22.0, "hip": Vector3(-.03,-.25,.23), "step": Vector3(-.06,0,.46), "back": Vector3(0,0,-.2),
+		"arm": [Vector3(-.35,-.4,1), Vector3(-.05,-.5,1)], "blade": Vector3(-.05,-.95,.5)},
+	{"t": 0.47, "pitch": 8.0, "hip": Vector3(-.02,-.11,.11), "step": Vector3(-.03,0,.22), "back": Vector3(0,0,-.1),
+		"arm": [Vector3(-.6,-.6,.3), Vector3(-.25,-.6,.55)], "blade": Vector3(-.2,-.1,1)},
+	{"t": 0.65},
+]
+# Guard: crouch with both forearms raised in front of the chest, the daggers crossed in an X before the face.
+# Not a mirror pair: the rig's left forearm is shorter, so the left blade leans further forward to meet the right one mid-blade.
+const DG_GUARD_KEYS := [
+	{"t": 0.0},
+	{"t": 0.12, "pitch": 6.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.06), "back": Vector3(0,0,-.1),
+		"arm": [Vector3(-.3,-.45,.85), Vector3(.3,.7,.85)], "blade": Vector3(.9,.75,.1),
+		"off": [Vector3(.3,-.45,.8), Vector3(-.3,.7,.8)], "blade_l": Vector3(-.9,.75,.3)},
+]
+
 var skeleton: Skeleton3D
 var socket: BoneAttachment3D
 var grip: Node3D
@@ -172,6 +214,11 @@ var two_handed := false
 var slash_clip := SLASH
 var overhead_clip := OVERHEAD
 var guard_clip := ""
+# Second one-handed slash for the other hand; attacks alternate between the two when set.
+var alt_slash_clip := ""
+var _alt_next := false
+# Left-hand weapon grip for dual wielding.
+var off_grip: Node3D
 # Skeleton-space shield orientation in the idle pose; the guard pose rotates the hand from it.
 var _shield_rest := Basis.IDENTITY
 # Right arm length to the palm; greatsword grip offsets are measured in it.
@@ -224,6 +271,27 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			skeleton.add_child(holder)
 			model.add_child(fx)
 			return true
+		"dual_daggers":
+			_attach_daggers()
+			fx.setup(grip, player, {DG_SLASH: FX[SLASH], DG_OVERHEAD: FX[OVERHEAD]}, DG_FX_INNER, DG_FX_OUTER)
+			model.add_child(fx)
+			# Both blades land together in the double cut; only one effect applies the hit-stop.
+			var off_fx := SlashFx.new()
+			off_fx.name = "OffHandSlashFx"
+			var off_overhead: Dictionary = FX[OVERHEAD].duplicate()
+			off_overhead["hit_stop"] = false
+			off_fx.setup(off_grip, player, {DG_SLASH_L: FX[SLASH], DG_OVERHEAD: off_overhead}, DG_FX_INNER, DG_FX_OUTER)
+			model.add_child(off_fx)
+			library.add_animation("slash", _make_clip(path, "短剣・右横薙ぎ", SLASH_KEYS))
+			library.add_animation("slash_l", _make_clip(path, "短剣・左横薙ぎ", _mirror_keys(SLASH_KEYS)))
+			library.add_animation("overhead", _make_clip(path, "短剣・二刀振り下ろし", _both(DG_OVERHEAD_KEYS)))
+			library.add_animation("guard", _make_clip(path, "短剣・十字防御", DG_GUARD_KEYS))
+			player.add_animation_library("dagger", library)
+			slash_clip = DG_SLASH
+			alt_slash_clip = DG_SLASH_L
+			overhead_clip = DG_OVERHEAD
+			guard_clip = DG_GUARD
+			return true
 		"staff":
 			_attach_staff()
 		_:
@@ -258,6 +326,76 @@ func _attach_sword() -> void:
 	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * SWORD_SCALE)
 	sword.position = -(sword.basis * GRIP)
 	grip.add_child(sword)
+
+## Next horizontal slash; alternates right and left hands when the loadout has two.
+func next_slash_clip() -> String:
+	if alt_slash_clip.is_empty(): return slash_clip
+	_alt_next = not _alt_next
+	return slash_clip if _alt_next else alt_slash_clip
+
+func is_attack_clip(clip: String) -> bool:
+	return not clip.is_empty() and clip in [slash_clip, alt_slash_clip, overhead_clip]
+
+func _attach_daggers() -> void:
+	for side in ["R", "L"]:
+		var hand_socket := BoneAttachment3D.new()
+		hand_socket.name = "DaggerHandSocket" + side
+		hand_socket.bone_name = rig["hand." + side]
+		skeleton.add_child(hand_socket)
+		var hand_grip := Node3D.new()
+		hand_grip.name = "DaggerGrip" + side
+		hand_grip.position = Vector3(0, rig["palm"], 0)
+		var hand: Transform3D = _idle_global[rig["hand." + side]]
+		hand_grip.basis = hand.basis.inverse() * Basis(Quaternion(Vector3.UP, _ready_blade(side)))
+		hand_socket.add_child(hand_grip)
+		var dagger := DAGGER.instantiate() as Node3D
+		dagger.name = "EquippedDagger" + side
+		# Same flip as the one-handed sword: tip up along +Y, handle at the grip.
+		dagger.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * DG_SCALE)
+		dagger.position = -(dagger.basis * DG_GRIP)
+		hand_grip.add_child(dagger)
+		if side == "R":
+			socket = hand_socket
+			grip = hand_grip
+		else:
+			off_grip = hand_grip
+
+## Idle blade direction per hand; the left hand mirrors the right across the character's X axis.
+func _ready_blade(side: String) -> Vector3:
+	return (READY_BLADE * (Vector3(-1, 1, 1) if side == "L" else Vector3.ONE)).normalized()
+
+## Mirror one-handed keys onto the other side: the left arm swings as the right did, and the body turns the other way.
+func _mirror_keys(keys: Array) -> Array:
+	var flip := Vector3(-1, 1, 1)
+	var result: Array = []
+	for key: Dictionary in keys:
+		var mirrored := {"t": key.t}
+		if key.has("blade"):
+			var off: Array = key.get("off", [Vector3(.65,-.55,.25), Vector3(-.2,.3,.8)])
+			mirrored["arm"] = [off[0] * flip, off[1] * flip]
+			mirrored["off"] = [key.arm[0] * flip, key.arm[1] * flip]
+			mirrored["blade_l"] = key.blade * flip
+			mirrored["pitch"] = key.get("pitch", 0.0)
+			mirrored["yaw"] = -key.get("yaw", 0.0)
+			mirrored["hip_yaw"] = -key.get("hip_yaw", 0.0)
+			mirrored["hip"] = key.get("hip", Vector3.ZERO) * flip
+			# Feet swap too: the left foot lunges and the right one braces.
+			mirrored["step"] = key.get("back", Vector3.ZERO) * flip
+			mirrored["back"] = key.get("step", Vector3.ZERO) * flip
+		result.append(mirrored)
+	return result
+
+## Same motion in both arms at once: the left arm and blade mirror the right.
+func _both(keys: Array) -> Array:
+	var flip := Vector3(-1, 1, 1)
+	var result: Array = []
+	for key: Dictionary in keys:
+		var both := key.duplicate()
+		if key.has("blade"):
+			both["off"] = [key.arm[0] * flip, key.arm[1] * flip]
+			both["blade_l"] = key.blade * flip
+		result.append(both)
+	return result
 
 func _attach_staff() -> void:
 	socket = BoneAttachment3D.new()
@@ -351,7 +489,7 @@ func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 
 func _pose(key: Dictionary) -> Dictionary:
 	var pose := _idle.duplicate()
-	if not key.has("blade"): return pose
+	if not key.has("blade") and not key.has("blade_l"): return pose
 	var hip_yaw: float = key.get("hip_yaw", 0.0)
 	if not legs.is_empty():
 		# Drop and shift the pelvis (in leg lengths), then keep the feet planted with leg IK.
@@ -387,10 +525,14 @@ func _pose(key: Dictionary) -> Dictionary:
 		var idle_off_hand: Transform3D = _idle_global[rig["hand.L"]]
 		off_hand.basis = Basis(shield_up.cross(shield_face), shield_up, shield_face) * _shield_rest.inverse() * idle_off_hand.basis
 		_set_global(pose, rig["hand.L"], off_hand)
-	var hand: Transform3D = _global(pose, skeleton.find_bone(rig["hand.R"]))
-	var idle_hand: Transform3D = _idle_global[rig["hand.R"]]
-	hand.basis = Basis(Quaternion(READY_BLADE.normalized(), (key.blade as Vector3).normalized())) * idle_hand.basis
-	_set_global(pose, rig["hand.R"], hand)
+	# Turn each hand so its weapon points along the keyed blade direction.
+	for spec in [["R", "blade"], ["L", "blade_l"]]:
+		if not key.has(spec[1]): continue
+		var bone: String = rig["hand." + spec[0]]
+		var hand := _global(pose, skeleton.find_bone(bone))
+		var idle_hand: Transform3D = _idle_global[bone]
+		hand.basis = Basis(Quaternion(_ready_blade(spec[0]), (key[spec[1]] as Vector3).normalized())) * idle_hand.basis
+		_set_global(pose, bone, hand)
 	return pose
 
 ## Two-bone IK with the knee bending toward character forward.

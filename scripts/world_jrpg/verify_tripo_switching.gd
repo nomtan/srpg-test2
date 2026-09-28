@@ -53,6 +53,8 @@ func run() -> void:
 			Input.parse_input_event(switch_event(step % 3 == 1, JOY_BUTTON_B if step % 3 == 0 else JOY_BUTTON_LEFT_STICK))
 			Input.flush_buffered_events()
 			check(world.player_roster_index == next and actor.model.character_id == ids[next], clip + ": switches in roster order to " + ids[next])
+			if ids[next] == "charcter002":
+				check(actor.model.find_child("EquippedDaggerR", true, false) != null and actor.model.find_child("EquippedDaggerL", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 002 equips a dagger in each hand")
 			if ids[next] == "charcter004":
 				check(actor.model.find_child("EquippedSword", true, false) != null and actor.model.find_child("EquippedShield", true, false) != null, "Character 004 equips the one-handed sword and shield")
 			check(world.player == actor and actor.position == origin, "Actor identity and position stay unchanged")
