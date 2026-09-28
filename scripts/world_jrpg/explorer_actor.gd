@@ -101,13 +101,13 @@ func attack(overhead := false) -> bool:
 	walking = false
 	running = false
 	animation_player.speed_scale = 1.0
-	animation_player.play(SwordCombat.OVERHEAD if overhead else SwordCombat.SLASH, 0.07)
+	animation_player.play(sword_combat.overhead_clip if overhead else sword_combat.slash_clip, 0.07)
 	return true
 
-## Raise the shield while held; the guard clip ends on the held pose until released.
+## Guard (shield or greatsword) while held; the guard clip ends on the held pose until released.
 func set_guard(enabled: bool) -> void:
 	if enabled == guarding: return
-	if enabled and (attacking or not use_3d or sword_combat == null or not sword_combat.has_shield): return
+	if enabled and (attacking or not use_3d or sword_combat == null or sword_combat.guard_clip.is_empty()): return
 	guarding = enabled
 	if not enabled:
 		_update_model()
@@ -115,7 +115,7 @@ func set_guard(enabled: bool) -> void:
 	walking = false
 	running = false
 	animation_player.speed_scale = 1.0
-	animation_player.play(SwordCombat.GUARD, 0.06)
+	animation_player.play(sword_combat.guard_clip, 0.06)
 
 func cancel_attack() -> void:
 	if not attacking: return
@@ -123,6 +123,6 @@ func cancel_attack() -> void:
 	_update_model()
 
 func _on_animation_finished(clip: StringName) -> void:
-	if clip in [SwordCombat.SLASH, SwordCombat.OVERHEAD]:
+	if sword_combat and clip in [sword_combat.slash_clip, sword_combat.overhead_clip]:
 		attacking = false
 		_update_model()

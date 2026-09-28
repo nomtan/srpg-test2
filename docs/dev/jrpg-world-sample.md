@@ -87,6 +87,20 @@ Blender編集ファイル、セルルック設定、顔の交換方法は [Tripo
 
 攻撃は各キャラのボーン長に合わせた独立の `AnimationLibrary` として生成します。振り方・タイミングの編集は `sword_combat.gd` のキーフレームで行えます。検証：`godot --headless --path . --script scripts/world_jrpg/verify_sword_combat.gd`。描画確認：同コマンドの `--headless` を外し、末尾に `-- --capture` を付けると `artifacts/sword_attacks/` に画像を保存します。
 
+#### 両手剣（Character 001）
+
+Character 001 は片手剣＋盾の代わりに `assets/weapons/gread_sword/001/model.glb` を両手で装備します。装備の割り当ては `sword_combat.gd` の `LOADOUTS`（001: 大剣、003: 杖、その他: 片手剣＋盾）。元GLBは変更しません。
+
+- **X / □ / J**：横薙ぎ（`greatsword/sweep`、0.80秒）。右後方へ大きく溜め、正面を横切って左へ振り抜きます。
+- **Y / △ / K**：振り下ろし（`greatsword/smash`、0.85秒）。頭の横（八相）へ担ぎ上げ、踏み込みながら前方の地面へ叩きつけます。頭が大きく頭上には構えられないため、横へ担ぎます。
+- **A / G 長押し**：ガード（`greatsword/guard`）。左肩を引いて腰を落とし、刀身を正面に斜めに立てて保持します。
+
+キーは片手剣と同じ体の項目（`yaw` / `hip` / `step` など）に加え、`grip`（右手の柄位置。両肩の中点からの腕の長さ単位のオフセット）と `blade`（剣の向き）で指定し、両腕を2ボーンIKで解きます。ちびキャラは腕が短いため、左手が届く範囲に `grip` を置く必要があります（届かないと検証が失敗します）。
+
+`greatsword_grip.gd`（`SkeletonModifier3D`）が毎フレーム、アニメーション適用後に左手を右手の下の柄へIKで合わせます。GLBの `idle` / `walk` / `hit` 再生中は両腕を構え姿勢へ上書きし、大剣クリップ開始時にフェードアウトします（大剣クリップは構え姿勢で始まり構え姿勢で終わります）。SRPG戦闘の `BattleUnit` では `greatsword/sweep` を攻撃モーションとして使用します。
+
+検証：`godot --headless --path . --script scripts/world_jrpg/verify_greatsword.gd`（各キーの到達、全クリップで左手が柄から離れないこと）。描画確認は `--headless` を外し末尾に `-- --capture` を付けると `artifacts/greatsword/` に保存します。
+
 #### 以前のMeshy hero2モデルの編集
 
 編集用のリグと3アクションは `assets/characters/meshy_hero2/hero2.blend` に保存。未加工のバックアップは `artifacts/meshy_hero2/hero2_before_rig.blend`。`idle` は2秒、全クリップはその場で動くループで、終端に先頭と一致するキーを持つ。GLBは高さ約2.2、正面+Xに変換している。GodotはGLBを使用し、編集用blendの直接インポートはスキップする。hero2の膝の鎧は上腿側へウェイトを寄せ、走行で地面へ折れ込むのを防いでいる。

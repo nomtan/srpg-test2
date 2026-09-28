@@ -17,16 +17,20 @@ const HIT_STOP := 0.06
 var blade: Node3D
 var player: AnimationPlayer
 var timings: Dictionary
+var inner := INNER
+var outer := OUTER
 var _samples: Array = []
 var _last_time := -1.0
 var _slash: MeshInstance3D
 var _dust: CPUParticles3D
 var _flash: MeshInstance3D
 
-func setup(sword_grip: Node3D, animation_player: AnimationPlayer, clip_timings: Dictionary) -> void:
+func setup(sword_grip: Node3D, animation_player: AnimationPlayer, clip_timings: Dictionary, edge_inner := INNER, edge_outer := OUTER) -> void:
 	blade = sword_grip
 	player = animation_player
 	timings = clip_timings
+	inner = edge_inner
+	outer = edge_outer
 
 func _ready() -> void:
 	top_level = true
@@ -112,15 +116,15 @@ func _process(delta: float) -> void:
 	if not timing.is_empty() and is_visible_in_tree():
 		var window: Vector2 = timing.trail
 		if time >= window.x and time <= window.y:
-			_samples.append({"inner": blade.global_transform * INNER, "outer": blade.global_transform * OUTER, "age": 0.0})
+			_samples.append({"inner": blade.global_transform * inner, "outer": blade.global_transform * outer, "age": 0.0})
 		if _last_time >= 0.0 and _last_time < timing.impact and time >= timing.impact:
 			_impact()
 	_last_time = time
 	_rebuild()
 
 func _impact() -> void:
-	var tip := blade.global_transform * OUTER
-	var reach := (blade.global_transform * OUTER - blade.global_transform * INNER).length()
+	var tip := blade.global_transform * outer
+	var reach := (blade.global_transform * outer - blade.global_transform * inner).length()
 	var ground := get_parent() as Node3D
 	var floor_y: float = ground.global_position.y if ground else tip.y
 	_dust.global_position = Vector3(tip.x, floor_y + reach * 0.05, tip.z)

@@ -4,10 +4,17 @@ extends RefCounted
 const SWORD = preload("res://assets/weapons/onehand_sword/001/model.glb")
 const SHIELD = preload("res://assets/weapons/shield/001/model.glb")
 const STAFF = preload("res://assets/weapons/staff/001/model.glb")
+const GREATSWORD = preload("res://assets/weapons/gread_sword/001/model.glb")
 const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
+const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
 const GUARD := "sword/guard"
+const GS_SWEEP := "greatsword/sweep"
+const GS_SMASH := "greatsword/smash"
+const GS_GUARD := "greatsword/guard"
+# Equipment per character; anyone not listed carries the one-handed sword and shield.
+const LOADOUTS := {"charcter001": "greatsword", "charcter003": "staff"}
 # The sword stands tip-down along +Y; its handle is just above the guard.
 const GRIP := Vector3(0.0, 0.9, 0.0)
 const SWORD_SCALE := 0.6
@@ -99,6 +106,58 @@ const GUARD_KEYS := [
 # Blade trail window and impact moment (seconds) for each clip, used by the slash effect.
 const FX := {SLASH: {"trail": Vector2(0.06, 0.26), "impact": 0.13}, OVERHEAD: {"trail": Vector2(0.10, 0.23), "impact": 0.18}}
 
+# Greatsword, held in both hands. The source stands tip-down along +Y with the handle between the guard and pommel.
+const GS_SCALE := 1.0
+const GS_GRIP := Vector3(0.0, 0.825, 0.0) # Right hand, just below the guard.
+const GS_HAND_SPACING := 0.065 # Left hand sits this far toward the pommel.
+const GS_FX_INNER := Vector3(0, 0.2, 0)
+const GS_FX_OUTER := Vector3(0, 1.05, 0)
+# Elbow bend directions for the two-handed arm IK (character space).
+const GS_POLES := {"R": Vector3(-.7,-1,-.3), "L": Vector3(.7,-1,-.3)}
+# Greatsword keys use the shared body keys, plus "grip": the right hand's handle point, offset from the
+# shoulder midpoint in arm lengths (character space), and "blade": the sword direction. Both hands follow by IK.
+# Ready stance: hands in front of the belly, tip raised forward. Clips start and end here.
+const GS_READY := {"grip": Vector3(0,-.48,.52), "blade": Vector3(-.25,.45,.85)}
+# Horizontal sweep: wind back to the right, swing across the front and follow through to the left.
+const GS_SWEEP_KEYS := [
+	{"t": 0.0, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	{"t": 0.18, "yaw": -42.0, "pitch": -4.0, "hip_yaw": -20.0, "hip": Vector3(.02,-.14,-.04), "back": Vector3(0,0,-.06),
+		"grip": Vector3(-.4,-.5,.12), "blade": Vector3(-.75,.3,-.6)},
+	{"t": 0.25, "yaw": -48.0, "pitch": -2.0, "hip_yaw": -24.0, "hip": Vector3(.03,-.17,-.05), "back": Vector3(0,0,-.08),
+		"grip": Vector3(-.42,-.52,.08), "blade": Vector3(-.65,.25,-.72)},
+	{"t": 0.30, "yaw": -12.0, "pitch": 6.0, "hip_yaw": -5.0, "hip": Vector3(-.02,-.2,.12), "step": Vector3(-.08,0,.3), "back": Vector3(0,0,-.16),
+		"grip": Vector3(-.12,-.5,.6), "blade": Vector3(-.85,.05,.55)},
+	{"t": 0.34, "yaw": 25.0, "pitch": 12.0, "hip_yaw": 12.0, "hip": Vector3(-.03,-.26,.22), "step": Vector3(-.1,0,.5), "back": Vector3(0,0,-.22),
+		"grip": Vector3(.16,-.38,.48), "blade": Vector3(.45,-.05,.9)},
+	{"t": 0.39, "yaw": 50.0, "pitch": 14.0, "hip_yaw": 20.0, "hip": Vector3(-.03,-.28,.24), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.22),
+		"grip": Vector3(.35,-.44,.08), "blade": Vector3(.85,-.1,-.5)},
+	{"t": 0.54, "yaw": 45.0, "pitch": 11.0, "hip_yaw": 18.0, "hip": Vector3(-.03,-.26,.23), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.22),
+		"grip": Vector3(.32,-.49,.1), "blade": Vector3(.8,-.25,-.45)},
+	{"t": 0.80, "grip": GS_READY.grip, "blade": GS_READY.blade},
+]
+# Heavy downward cut: raise the blade beside the head (the big head leaves no room overhead), then drive it down with a lunge.
+const GS_SMASH_KEYS := [
+	{"t": 0.0, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	{"t": 0.22, "yaw": -20.0, "pitch": -12.0, "hip_yaw": -10.0, "hip": Vector3(0,-.04,-.03), "back": Vector3(0,0,-.04),
+		"grip": Vector3(-.35,.05,.25), "blade": Vector3(-.5,.75,-.45)},
+	{"t": 0.30, "yaw": -22.0, "pitch": -15.0, "hip_yaw": -11.0, "hip": Vector3(0,-.02,-.04), "back": Vector3(0,.03,-.06), "step": Vector3(0,.05,.04),
+		"grip": Vector3(-.35,.1,.2), "blade": Vector3(-.45,.7,-.55)},
+	{"t": 0.35, "yaw": -8.0, "pitch": 2.0, "hip_yaw": -4.0, "hip": Vector3(-.02,-.1,.14), "step": Vector3(-.04,.02,.3), "back": Vector3(0,0,-.12),
+		"grip": Vector3(-.1,-.05,.75), "blade": Vector3(-.1,.6,.8)},
+	{"t": 0.39, "yaw": 4.0, "pitch": 24.0, "hip_yaw": 3.0, "hip": Vector3(-.03,-.28,.24), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
+		"grip": Vector3(.01,-.43,.58), "blade": Vector3(-.05,-.6,.8)},
+	{"t": 0.56, "yaw": 5.0, "pitch": 22.0, "hip_yaw": 4.0, "hip": Vector3(-.03,-.26,.23), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
+		"grip": Vector3(.01,-.46,.56), "blade": Vector3(-.03,-.65,.76)},
+	{"t": 0.85, "grip": GS_READY.grip, "blade": GS_READY.blade},
+]
+# Guard: turn the left shoulder back, crouch and hold the blade across the front, tip up to the right.
+const GS_GUARD_KEYS := [
+	{"t": 0.0, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	{"t": 0.14, "yaw": 15.0, "pitch": 6.0, "hip_yaw": 8.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.06), "back": Vector3(0,0,-.1),
+		"grip": Vector3(.21,-.24,.54), "blade": Vector3(-.6,.75,.2)},
+]
+const GS_FX := {GS_SWEEP: {"trail": Vector2(0.24, 0.44), "impact": 0.34}, GS_SMASH: {"trail": Vector2(0.31, 0.45), "impact": 0.39}}
+
 var skeleton: Skeleton3D
 var socket: BoneAttachment3D
 var grip: Node3D
@@ -108,8 +167,17 @@ var leg_length := 1.0
 var _idle: Dictionary = {}
 var _idle_global: Dictionary = {}
 var has_shield := false
+var two_handed := false
+# Clips for the equipped weapon; the guard clip is empty when the loadout cannot guard.
+var slash_clip := SLASH
+var overhead_clip := OVERHEAD
+var guard_clip := ""
 # Skeleton-space shield orientation in the idle pose; the guard pose rotates the hand from it.
 var _shield_rest := Basis.IDENTITY
+# Right arm length to the palm; greatsword grip offsets are measured in it.
+var arm_reach := 1.0
+# Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
+var _hand_frame: Dictionary = {}
 
 func install(model: Node3D, player: AnimationPlayer) -> bool:
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
@@ -134,18 +202,37 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		_idle_global[bone] = skeleton.get_bone_global_pose(index)
 	if not legs.is_empty():
 		leg_length = maxf((_idle_global[legs.hips] as Transform3D).origin.y - (_idle_global[legs["foot.R"]] as Transform3D).origin.y, 0.01)
-	if model.get("character_id") == "charcter003":
-		_attach_staff()
-	else:
-		_attach_sword()
-		_attach_shield()
-		has_shield = true
+	var path := player.get_node(player.root_node).get_path_to(skeleton)
 	var fx := SlashFx.new()
 	fx.name = "SwordSlashFx"
+	var library := AnimationLibrary.new()
+	match LOADOUTS.get(model.get("character_id"), "sword_shield"):
+		"greatsword":
+			_attach_greatsword()
+			fx.setup(grip, player, GS_FX, GS_FX_INNER, GS_FX_OUTER)
+			library.add_animation("sweep", _make_clip(path, "大剣・横薙ぎ", GS_SWEEP_KEYS))
+			library.add_animation("smash", _make_clip(path, "大剣・振り下ろし", GS_SMASH_KEYS))
+			library.add_animation("guard", _make_clip(path, "大剣・防御", GS_GUARD_KEYS))
+			player.add_animation_library("greatsword", library)
+			slash_clip = GS_SWEEP
+			overhead_clip = GS_SMASH
+			guard_clip = GS_GUARD
+			# Keeps both hands on the handle during every clip and holds the ready stance outside the greatsword clips.
+			var holder: SkeletonModifier3D = TwoHandGrip.new()
+			holder.name = "GreatswordTwoHandGrip"
+			holder.setup(self, player, "greatsword/")
+			skeleton.add_child(holder)
+			model.add_child(fx)
+			return true
+		"staff":
+			_attach_staff()
+		_:
+			_attach_sword()
+			_attach_shield()
+			has_shield = true
+			guard_clip = GUARD
 	fx.setup(grip, player, FX)
 	model.add_child(fx)
-	var library := AnimationLibrary.new()
-	var path := player.get_node(player.root_node).get_path_to(skeleton)
 	library.add_animation("slash", _make_clip(path, "横薙ぎ", SLASH_KEYS))
 	library.add_animation("overhead", _make_clip(path, "上段斬り", OVERHEAD_KEYS))
 	if has_shield:
@@ -188,6 +275,37 @@ func _attach_staff() -> void:
 	staff.scale = Vector3.ONE * STAFF_SCALE
 	staff.position = -STAFF_GRIP * STAFF_SCALE
 	grip.add_child(staff)
+
+func _attach_greatsword() -> void:
+	two_handed = true
+	var upper: Transform3D = _idle_global[rig["upper_arm.R"]]
+	var forearm: Transform3D = _idle_global[rig["forearm.R"]]
+	var wrist: Transform3D = _idle_global[rig["hand.R"]]
+	arm_reach = (forearm.origin - upper.origin).length() + (wrist.origin - forearm.origin).length() + rig["palm"]
+	# Each hand holds the handle across its palm: fingers perpendicular to the blade, thumb toward the tip.
+	# The thumb side comes from the idle hand (mirrored for the left), so each rig keeps its natural roll.
+	for side in ["R", "L"]:
+		var hand: Basis = (_idle_global[rig["hand." + side]] as Transform3D).basis.orthonormalized()
+		var thumb := READY_BLADE * (Vector3(-1, 1, 1) if side == "L" else Vector3.ONE)
+		thumb = (thumb - hand.y * hand.y.dot(thumb)).normalized()
+		var local_thumb := hand.inverse() * thumb
+		_hand_frame[side] = Basis(Vector3.UP, local_thumb, Vector3.UP.cross(local_thumb)).inverse()
+	socket = BoneAttachment3D.new()
+	socket.name = "GreatswordHandSocket"
+	socket.bone_name = rig["hand.R"]
+	skeleton.add_child(socket)
+	grip = Node3D.new()
+	grip.name = "GreatswordGrip"
+	grip.position = Vector3(0, rig["palm"], 0)
+	# Blade along the thumb axis, edges along the fingers.
+	grip.basis = (_hand_frame["R"] as Basis).inverse()
+	socket.add_child(grip)
+	var sword := GREATSWORD.instantiate() as Node3D
+	sword.name = "EquippedGreatsword"
+	# Same flip as the one-handed sword: tip up along +Y, handle at the grip.
+	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * GS_SCALE)
+	sword.position = -(sword.basis * GS_GRIP)
+	grip.add_child(sword)
 
 func _attach_shield() -> void:
 	var shield_socket := BoneAttachment3D.new()
@@ -247,13 +365,17 @@ func _pose(key: Dictionary) -> Dictionary:
 	else:
 		hip_yaw = 0.0
 	# Twist in character space so the result does not depend on each rig's local bone axes.
+	var yaw: float = key.get("yaw", 0.0)
 	var spine := _global(pose, skeleton.find_bone(rig["spine"]))
-	spine.basis = Basis.from_euler(Vector3(deg_to_rad(key.pitch), deg_to_rad(key.yaw), 0)) * spine.basis
+	spine.basis = Basis.from_euler(Vector3(deg_to_rad(key.get("pitch", 0.0)), deg_to_rad(yaw), 0)) * spine.basis
 	_set_global(pose, rig["spine"], spine)
 	# Counter-rotate the head so the eyes stay on the target while the body turns.
 	var head := _global(pose, skeleton.find_bone(rig["head"]))
-	head.basis = Basis(Vector3.UP, deg_to_rad(-(key.yaw + hip_yaw) * .7)) * head.basis
+	head.basis = Basis(Vector3.UP, deg_to_rad(-(yaw + hip_yaw) * .7)) * head.basis
 	_set_global(pose, rig["head"], head)
+	if key.has("grip"):
+		_grip_arms(pose, key.grip, key.blade)
+		return pose
 	_aim_arm(pose, "R", key.arm[0], key.arm[1])
 	var off: Array = key.get("off", [Vector3(.65,-.55,.25), Vector3(-.2,.3,.8)])
 	_aim_arm(pose, "L", off[0], off[1])
@@ -295,6 +417,65 @@ func _plant_leg(pose: Dictionary, side: String, target: Vector3) -> void:
 	var planted := _global(pose, skeleton.find_bone(names[2]))
 	planted.basis = rest[2].basis
 	_set_global(pose, names[2], planted)
+
+## Live two-handed hold, run by the skeleton modifier after the animation each frame.
+## ready_weight blends the arms into the ready stance; the left hand always follows the right hand's handle.
+func apply_grip(target: Skeleton3D, ready_weight: float) -> void:
+	var pose: Dictionary = {}
+	for index in target.get_bone_count():
+		pose[target.get_bone_name(index)] = target.get_bone_pose(index)
+	var arms: Array = ["upper_arm.R", "forearm.R", "hand.R", "upper_arm.L", "forearm.L", "hand.L"].map(func(role: String) -> String: return rig[role])
+	if ready_weight > 0.0:
+		var animated: Array = arms.map(func(bone: String) -> Transform3D: return pose[bone])
+		_grip_arms(pose, GS_READY.grip, GS_READY.blade)
+		for index in arms.size():
+			pose[arms[index]] = (animated[index] as Transform3D).interpolate_with(pose[arms[index]], ready_weight)
+	var hand := _global(pose, skeleton.find_bone(rig["hand.R"]))
+	var blade := (hand.basis * (_hand_frame["R"] as Basis).inverse().y).normalized()
+	_hold(pose, "L", hand * Vector3(0, rig["palm"], 0) - blade * GS_HAND_SPACING * GS_SCALE, blade)
+	for bone: String in arms:
+		target.set_bone_pose(target.find_bone(bone), pose[bone])
+
+## Both hands on the handle: the right at the grip point (offset from the shoulders in arm lengths), the left below it.
+func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3) -> void:
+	var shoulders := (_global(pose, skeleton.find_bone(rig["upper_arm.R"])).origin + _global(pose, skeleton.find_bone(rig["upper_arm.L"])).origin) * 0.5
+	var point := shoulders + offset * arm_reach
+	blade = blade.normalized()
+	_hold(pose, "R", point, blade)
+	_hold(pose, "L", point - blade * GS_HAND_SPACING * GS_SCALE, blade)
+
+## Put the palm center of one hand on a handle point, fingers wrapping across the blade axis.
+func _hold(pose: Dictionary, side: String, point: Vector3, blade: Vector3) -> void:
+	var shoulder := _global(pose, skeleton.find_bone(rig["upper_arm." + side])).origin
+	# The fingers continue the arm's line toward the handle, turned square to the blade.
+	var fingers := point - shoulder
+	fingers = (fingers - blade * blade.dot(fingers)).normalized()
+	var hand_basis := Basis(fingers, blade, fingers.cross(blade)) * (_hand_frame[side] as Basis)
+	_reach(pose, side, point - fingers * rig["palm"])
+	var hand := _global(pose, skeleton.find_bone(rig["hand." + side]))
+	hand.basis = hand_basis
+	_set_global(pose, rig["hand." + side], hand)
+
+## Two-bone arm IK to a wrist position, the elbow bending toward the side's pole.
+func _reach(pose: Dictionary, side: String, wrist: Vector3) -> void:
+	var names: Array = [rig["upper_arm." + side], rig["forearm." + side], rig["hand." + side]]
+	var rest: Array = names.map(func(bone: String) -> Transform3D: return _idle_global[bone])
+	var upper := _global(pose, skeleton.find_bone(names[0]))
+	var a: float = (rest[1].origin - rest[0].origin).length()
+	var b: float = (rest[2].origin - rest[1].origin).length()
+	var reach := wrist - upper.origin
+	var d := clampf(reach.length(), absf(a - b) + 0.001, (a + b) * 0.999)
+	var direction := reach.normalized()
+	var hint: Vector3 = GS_POLES[side]
+	var pole := (hint - direction * direction.dot(hint)).normalized()
+	var bend := clampf((a * a + d * d - b * b) / (2.0 * a * d), -1.0, 1.0)
+	var elbow := upper.origin + (direction * bend + pole * sqrt(1.0 - bend * bend)) * a
+	var joints := [elbow, upper.origin + direction * d]
+	for index in 2:
+		var joint := _global(pose, skeleton.find_bone(names[index]))
+		var from: Vector3 = (rest[index + 1].origin - rest[index].origin).normalized()
+		joint.basis = Basis(Quaternion(from, (joints[index] - joint.origin).normalized())) * rest[index].basis
+		_set_global(pose, names[index], joint)
 
 func _aim_arm(pose: Dictionary, side: String, upper: Vector3, fore: Vector3) -> void:
 	for spec in [["upper_arm." + side, upper], ["forearm." + side, fore], ["hand." + side, fore]]:
