@@ -8,6 +8,7 @@ const GREATSWORD = preload("res://assets/weapons/gread_sword/001/model.glb")
 const DAGGER = preload("res://assets/weapons/short_sword/001/model.glb")
 const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
+const CHARACTER_TOON = preload("res://assets/characters/_shared/materials/character_toon.gdshader")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
 const GUARD := "sword/guard"
@@ -225,6 +226,8 @@ var _shield_rest := Basis.IDENTITY
 var arm_reach := 1.0
 # Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
 var _hand_frame: Dictionary = {}
+# One toon material per weapon texture, shared by every character carrying it.
+static var _toon_materials: Dictionary = {}
 
 func install(model: Node3D, player: AnimationPlayer) -> bool:
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
@@ -321,6 +324,7 @@ func _attach_sword() -> void:
 	grip.basis = hand.basis.inverse() * Basis(Quaternion(Vector3.UP, READY_BLADE.normalized()))
 	socket.add_child(grip)
 	var sword := SWORD.instantiate() as Node3D
+	_apply_character_toon(sword)
 	sword.name = "EquippedSword"
 	# Flip the tip-down source blade to +Y about X (keeps the guard along X) and put its handle at the origin.
 	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * SWORD_SCALE)
@@ -349,6 +353,7 @@ func _attach_daggers() -> void:
 		hand_grip.basis = hand.basis.inverse() * Basis(Quaternion(Vector3.UP, _ready_blade(side)))
 		hand_socket.add_child(hand_grip)
 		var dagger := DAGGER.instantiate() as Node3D
+		_apply_character_toon(dagger)
 		dagger.name = "EquippedDagger" + side
 		# Same flip as the one-handed sword: tip up along +Y, handle at the grip.
 		dagger.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * DG_SCALE)
@@ -409,6 +414,7 @@ func _attach_staff() -> void:
 	grip.basis = hand.basis.inverse()
 	socket.add_child(grip)
 	var staff := STAFF.instantiate() as Node3D
+	_apply_character_toon(staff)
 	staff.name = "EquippedStaff"
 	staff.scale = Vector3.ONE * STAFF_SCALE
 	staff.position = -STAFF_GRIP * STAFF_SCALE
@@ -439,6 +445,7 @@ func _attach_greatsword() -> void:
 	grip.basis = (_hand_frame["R"] as Basis).inverse()
 	socket.add_child(grip)
 	var sword := GREATSWORD.instantiate() as Node3D
+	_apply_character_toon(sword)
 	sword.name = "EquippedGreatsword"
 	# Same flip as the one-handed sword: tip up along +Y, handle at the grip.
 	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * GS_SCALE)
@@ -461,10 +468,27 @@ func _attach_shield() -> void:
 	shield_grip.basis = hand.basis.inverse() * _shield_rest
 	shield_socket.add_child(shield_grip)
 	var shield := SHIELD.instantiate() as Node3D
+	_apply_character_toon(shield)
 	shield.name = "EquippedShield"
 	shield.scale = Vector3.ONE * SHIELD_SCALE
 	shield.position = Vector3(0, 0, SHIELD_WRIST_CLEARANCE) - SHIELD_GRIP * SHIELD_SCALE
 	shield_grip.add_child(shield)
+
+## Weapons use the characters' toon shading so they keep the same brightness at night instead of going black.
+## Only instance-level overrides are set; the imported weapon resources are left untouched.
+func _apply_character_toon(root: Node3D) -> void:
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var mesh := node as MeshInstance3D
+		if mesh.mesh == null: continue
+		for surface in mesh.mesh.get_surface_count():
+			var source := mesh.get_active_material(surface) as BaseMaterial3D
+			if source == null or source.albedo_texture == null: continue
+			if not _toon_materials.has(source.albedo_texture):
+				var toon := ShaderMaterial.new()
+				toon.shader = CHARACTER_TOON
+				toon.set_shader_parameter("base_color_texture", source.albedo_texture)
+				_toon_materials[source.albedo_texture] = toon
+			mesh.set_surface_override_material(surface, _toon_materials[source.albedo_texture])
 
 func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 	var animation := Animation.new()
