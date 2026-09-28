@@ -1,5 +1,5 @@
 extends Node3D
-## Cel-look sword swing effect: a flat-banded, outlined crescent swept by the blade,
+## Sword swing effect: a gradient crescent with a same-colour glow swept by the blade,
 ## and shards, a star flash and hit-stop at impact.
 ## Built in world space each frame from the blade's sampled edge.
 const SHADER = preload("res://scripts/world_jrpg/sword_slash_fx.gdshader")
@@ -7,6 +7,8 @@ const FLASH_SHADER = preload("res://scripts/world_jrpg/sword_slash_flash.gdshade
 const OUTLINE := Color(0.12, 0.14, 0.38)
 const LIFETIME := 0.26
 const SUBDIVISIONS := 4
+# Extra ribbon width on each side (fraction of the blade edge) for the glow halo; matches glow_width.
+const GLOW := 0.25
 # Ribbon edge along the blade in grip space; the effect reaches well past the tip.
 const INNER := Vector3(0, 0.15, 0)
 const OUTER := Vector3(0, 0.78, 0)
@@ -28,8 +30,13 @@ func setup(sword_grip: Node3D, animation_player: AnimationPlayer, clip_timings: 
 
 func _ready() -> void:
 	top_level = true
-	_slash = _ribbon({"highlight_color": Color(0.97, 1.0, 1.0), "base_color": Color(0.38, 0.82, 1.0),
-		"shade_color": Color(0.36, 0.42, 0.95), "tail_color": Color(0.62, 0.44, 1.0), "outline_color": OUTLINE})
+	_slash = _ribbon({
+		"highlight_color": Color(1.0, 1.0, 1.0),
+		"base_color": Color(1.0, 1.0, 1.0),
+		"shade_color": Color(1.0, 1.0, 1.0),
+		"tail_color": Color(1.0, 1.0, 1.0),
+		"glow_width": GLOW
+	})
 	_dust = CPUParticles3D.new()
 	_dust.emitting = false
 	_dust.one_shot = true
@@ -150,10 +157,11 @@ func _strip(mesh: ImmediateMesh, points: Array, lifetime: float, edge: Callable)
 	for point: Dictionary in points:
 		var pair: Array = edge.call(point)
 		var age: float = clampf(point.age / lifetime, 0.0, 1.0)
-		mesh.surface_set_uv(Vector2(age, 0.0))
-		mesh.surface_add_vertex(pair[0])
-		mesh.surface_set_uv(Vector2(age, 1.0))
-		mesh.surface_add_vertex(pair[1])
+		var span: Vector3 = pair[1] - pair[0]
+		mesh.surface_set_uv(Vector2(age, -GLOW))
+		mesh.surface_add_vertex(pair[0] - span * GLOW)
+		mesh.surface_set_uv(Vector2(age, 1.0 + GLOW))
+		mesh.surface_add_vertex(pair[1] + span * GLOW)
 	mesh.surface_end()
 
 # Catmull-Rom between frame samples keeps the arc round during very fast swings.
