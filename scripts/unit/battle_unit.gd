@@ -254,6 +254,8 @@ func setup_visual(
 	elif not model_path.is_empty():
 		var packed: PackedScene = load(model_path)
 		model_instance = packed.instantiate()
+		if model_instance.has_method("prepare_visual"):
+			model_instance.prepare_visual()
 		model_instance.scale = Vector3.ONE * model_scale * CHARACTER_VISUAL_SCALE
 		model_instance.position = Vector3(
 			0.0, model_y_offset * CHARACTER_VISUAL_SCALE, 0.0

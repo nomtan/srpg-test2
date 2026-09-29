@@ -1,5 +1,7 @@
 # Tripo Character Pipeline v1
 
+> 2026-09-29更新: この文書の統合 `character.glb` 出力手順は既存Golden Pathの記録です。現在の4体の実行時表示は、独立Body/Face GLBとGodotの `CharacterAssembler` に移行しました。構造・再生成・検証は [Body / Face 分離ランタイム移行](modular-body-face-report.md) を参照してください。
+
 ## 目的
 
 Tripoで生成した `Face` と `Body` を素材として管理し、Codex + Blender MCPで最終調整した1体のキャラクターGLBをGodotで利用するための標準フローを定義する。

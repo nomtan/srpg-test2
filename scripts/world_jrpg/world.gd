@@ -25,6 +25,7 @@ const WALK_SPEED := 4.5
 const RUN_SPEED := 16.0
 @export var use_3d_player := true
 @export var player_model: PackedScene
+@export var player_spawn_position := Vector3(32, 14.05, 60)
 @export var character_roster: Array[PackedScene] = []
 var player_roster_index := -1
 var character_text: Label
@@ -394,7 +395,7 @@ func _spawn_characters() -> void:
 	player.use_3d = use_3d_player
 	player.name = "Explorer"
 	add_child(player)
-	player.position = Vector3(32, 14.05, 60)
+	player.position = player_spawn_position
 	_spawn_tripo_roster()
 	for data: Dictionary in story.npcs:
 		var actor := Actor.new()
@@ -554,11 +555,11 @@ func _setup_hud() -> void:
 	dialog_panel.hide()
 
 func _spawn_tripo_roster() -> void:
-	var initial_visual := player.model.get_node_or_null("Model") as Node3D
+	var initial_character_id: String = player.model.character_id if player.model else ""
 	for index in character_roster.size():
 		var actor := character_roster[index].instantiate() as Node3D
 		add_child(actor)
-		if initial_visual and actor.get_node("Model").scene_file_path == initial_visual.scene_file_path:
+		if actor.character_id == initial_character_id:
 			player_roster_index = index
 			character_text.text = "操作キャラ：" + actor.display_name
 		# Rows on the clear starting plateau, with room to walk between them.
