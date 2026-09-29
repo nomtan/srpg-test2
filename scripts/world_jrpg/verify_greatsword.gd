@@ -45,13 +45,15 @@ func run() -> void:
 		root.add_child(light)
 	# Keyed reach: the right palm must arrive where each key asks for it.
 	for spec in [[SwordCombat.GS_SWEEP, SwordCombat.GS_SWEEP_KEYS], [SwordCombat.GS_SMASH, SwordCombat.GS_SMASH_KEYS], [SwordCombat.GS_GUARD, SwordCombat.GS_GUARD_KEYS]]:
-		for key: Dictionary in spec[1]:
+		for raw: Dictionary in spec[1]:
+			var key := SwordCombat.gs_key(raw)
 			var pose: Dictionary = combat._pose(key)
 			var shoulders: Vector3 = (combat._global(pose, skeleton.find_bone(combat.rig["upper_arm.R"])).origin + combat._global(pose, skeleton.find_bone(combat.rig["upper_arm.L"])).origin) * 0.5
 			var wanted: Vector3 = shoulders + (key.grip as Vector3) * combat.arm_reach
 			var hand: Transform3D = combat._global(pose, skeleton.find_bone(combat.rig["hand.R"]))
 			var error := (hand * Vector3(0, palm, 0)).distance_to(wanted)
 			check(error < REACH_TOLERANCE, "%s t=%.2f right hand reaches its key (%.4f)" % [spec[0], key.t, error])
+			if key.get("one_hand", false): continue
 			var handle := wanted - (key.blade as Vector3).normalized() * SwordCombat.GS_HAND_SPACING * SwordCombat.GS_SCALE
 			var off_hand: Transform3D = combat._global(pose, left)
 			error = (off_hand * Vector3(0, palm, 0)).distance_to(handle)
@@ -60,15 +62,22 @@ func run() -> void:
 	# The modified pose is only readable while the modifier reports it has finished.
 	var holder := skeleton.get_node("GreatswordTwoHandGrip") as SkeletonModifier3D
 	var right := skeleton.find_bone(combat.rig["hand.R"])
-	var gap := [0.0]
+	# Per frame: left-hand gap to the handle while gripping two-handed, and right-hand miss from the shouldered stance while carrying.
+	var gap := [0.0, 0.0]
 	holder.modification_processed.connect(func() -> void:
 		var handle := skeleton.get_bone_global_pose(right) * grip.transform * Vector3(0, -SwordCombat.GS_HAND_SPACING * SwordCombat.GS_SCALE, 0)
-		gap[0] = (skeleton.get_bone_global_pose(left) * Vector3(0, palm, 0)).distance_to(handle))
+		gap[0] = (skeleton.get_bone_global_pose(left) * Vector3(0, palm, 0)).distance_to(handle) if holder.two_hand_weight >= 1.0 else 0.0
+		var shoulders := (skeleton.get_bone_global_pose(skeleton.find_bone(combat.rig["upper_arm.R"])).origin + skeleton.get_bone_global_pose(skeleton.find_bone(combat.rig["upper_arm.L"])).origin) * 0.5
+		var carried := shoulders + (SwordCombat.GS_READY.grip as Vector3) * combat.arm_reach
+		gap[1] = (skeleton.get_bone_global_pose(right) * Vector3(0, palm, 0)).distance_to(carried) if holder.ready_weight >= 1.0 else 0.0)
+	# Frozen so each sample stays at its seek time (slow capture frames would otherwise run clips to the end).
+	player.speed_scale = 0.0
 	for clip in ["idle", "walk", "hit", SwordCombat.GS_SWEEP, SwordCombat.GS_SMASH, SwordCombat.GS_GUARD]:
 		player.play(clip, 0)
 		var length := player.get_animation(clip).length
 		var worst := 0.0
 		var worst_time := 0.0
+		var worst_carry := 0.0
 		for step in 25:
 			var time := length * step / 24.0
 			player.seek(time, true)
@@ -77,9 +86,16 @@ func run() -> void:
 			if gap[0] > worst:
 				worst = gap[0]
 				worst_time = time
+			worst_carry = maxf(worst_carry, gap[1])
 			if capture and step % 2 == 0:
 				await _capture(model, camera, "%s_%02d" % [clip.replace("/", "_"), step])
-		check(worst < HOLD_TOLERANCE, "%s keeps the left hand on the handle (worst %.4f at %.2fs)" % [clip, worst, worst_time])
+		check(worst < HOLD_TOLERANCE, "%s keeps the left hand on the handle while gripping (worst %.4f at %.2fs)" % [clip, worst, worst_time])
+		check(worst_carry < REACH_TOLERANCE, "%s keeps the sword on the shoulder while carrying (worst %.4f)" % [clip, worst_carry])
+		if clip in ["idle", "walk"]:
+			var crouched: bool = holder.idle_weight > 0.99
+			check(crouched == (clip == "idle"), "%s %s the half crouch" % [clip, "holds" if clip == "idle" else "keeps its own legs, without"])
+	for spec in [[SwordCombat.GS_SWEEP, 0.0, 0.0], [SwordCombat.GS_SWEEP, 0.34, 1.0], [SwordCombat.GS_SMASH, 0.39, 1.0], [SwordCombat.GS_SMASH, 0.85, 0.0], [SwordCombat.GS_GUARD, 0.14, 1.0]]:
+		check(is_equal_approx(combat.two_hand_weight(spec[0], spec[1]), spec[2]), "%s t=%.2f grips with %s" % [spec[0], spec[1], "both hands" if spec[2] > 0 else "the right hand only"])
 	model.queue_free()
 	await process_frame
 	print("GREATSWORD: ", "FAILED" if failed else "PASSED")

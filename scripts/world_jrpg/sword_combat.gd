@@ -121,12 +121,20 @@ const GS_FX_OUTER := Vector3(0, 1.05, 0)
 # Elbow bend directions for the two-handed arm IK (character space).
 const GS_POLES := {"R": Vector3(-.7,-1,-.3), "L": Vector3(.7,-1,-.3)}
 # Greatsword keys use the shared body keys, plus "grip": the right hand's handle point, offset from the
-# shoulder midpoint in arm lengths (character space), and "blade": the sword direction. Both hands follow by IK.
-# Ready stance: hands in front of the belly, tip raised forward. Clips start and end here.
-const GS_READY := {"grip": Vector3(0,-.48,.52), "blade": Vector3(-.25,.45,.85)}
+# shoulder midpoint in arm lengths (character space), and "blade": the sword direction. Both hands follow by IK,
+# except in "one_hand" keys, where only the right hand holds the sword and the left arm hangs free.
+# "elbow" overrides the right elbow's bend direction; "ready" keys take the ready stance.
+# Ready stance: half-turned with the sword shoulder back, the right hand raised beside the head with the elbow out,
+# and the blade laid on the shoulder, slanting inward behind the head. Clips start and end here.
+# "off_bend": degrees the free left forearm swings forward at the elbow.
+# Standing (idle) only, not over the walk cycle: "hip" drops into a half crouch, "hip_yaw" turns the pelvis and legs
+# to the right with "feet_turn" pivoting the feet along, and "stance" sets each foot that far further out (leg lengths).
+# "yaw" counter-turns the upper body, so its total turn (yaw + hip_yaw) is the same standing or walking.
+const GS_READY := {"yaw": 5.0, "hip_yaw": -30.0, "feet_turn": -30.0, "stance": .08, "hip": Vector3(0,-.12,0),
+	"grip": Vector3(-.8,.26,.26), "blade": Vector3(.55,.25,-.8), "elbow": Vector3(-1,-.3,.1), "off_bend": 30.0, "one_hand": true}
 # Horizontal sweep: wind back to the right, swing across the front and follow through to the left.
 const GS_SWEEP_KEYS := [
-	{"t": 0.0, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	{"t": 0.0, "ready": true},
 	{"t": 0.18, "yaw": -42.0, "pitch": -4.0, "hip_yaw": -20.0, "hip": Vector3(.02,-.14,-.04), "back": Vector3(0,0,-.06),
 		"grip": Vector3(-.4,-.5,.12), "blade": Vector3(-.75,.3,-.6)},
 	{"t": 0.25, "yaw": -48.0, "pitch": -2.0, "hip_yaw": -24.0, "hip": Vector3(.03,-.17,-.05), "back": Vector3(0,0,-.08),
@@ -139,30 +147,41 @@ const GS_SWEEP_KEYS := [
 		"grip": Vector3(.35,-.44,.08), "blade": Vector3(.85,-.1,-.5)},
 	{"t": 0.54, "yaw": 45.0, "pitch": 11.0, "hip_yaw": 18.0, "hip": Vector3(-.03,-.26,.23), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.22),
 		"grip": Vector3(.32,-.49,.1), "blade": Vector3(.8,-.25,-.45)},
-	{"t": 0.80, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	# Let go with the left hand and bring the blade up in front and back onto the shoulder.
+	{"t": 0.68, "pitch": 6.0, "hip": Vector3(-.01,-.1,.1), "step": Vector3(-.05,0,.24), "back": Vector3(0,0,-.1),
+		"grip": Vector3(-.2,-.32,.45), "blade": Vector3(-.2,.8,.55), "one_hand": true},
+	{"t": 0.80, "ready": true},
 ]
-# Heavy downward cut: raise the blade beside the head (the big head leaves no room overhead), then drive it down with a lunge.
+# Heavy downward cut: from the shoulder, heave the blade up beside the head and cock it far back behind the shoulders
+# (the big head leaves no room overhead), then whip it over and drive it down with a lunge.
 const GS_SMASH_KEYS := [
-	{"t": 0.0, "grip": GS_READY.grip, "blade": GS_READY.blade},
-	{"t": 0.22, "yaw": -20.0, "pitch": -12.0, "hip_yaw": -10.0, "hip": Vector3(0,-.04,-.03), "back": Vector3(0,0,-.04),
-		"grip": Vector3(-.35,.05,.25), "blade": Vector3(-.5,.75,-.45)},
-	{"t": 0.30, "yaw": -22.0, "pitch": -15.0, "hip_yaw": -11.0, "hip": Vector3(0,-.02,-.04), "back": Vector3(0,.03,-.06), "step": Vector3(0,.05,.04),
-		"grip": Vector3(-.35,.1,.2), "blade": Vector3(-.45,.7,-.55)},
+	{"t": 0.0, "ready": true},
+	# Dip under the weight with the blade still shouldered; the left hand joins on the heave up.
+	{"t": 0.10, "yaw": 0.0, "pitch": 6.0, "hip_yaw": -30.0, "feet_turn": GS_READY.feet_turn, "stance": GS_READY.stance, "hip": Vector3(0,-.16,-.02),
+		"grip": Vector3(-.64,.18,.32), "blade": Vector3(.42,.3,-.86), "elbow": GS_READY.elbow, "off_bend": GS_READY.off_bend, "one_hand": true},
+	{"t": 0.22, "yaw": -26.0, "pitch": -16.0, "hip_yaw": -13.0, "hip": Vector3(0,-.02,-.04), "back": Vector3(0,.02,-.05),
+		"grip": Vector3(-.33,.12,.18), "blade": Vector3(-.3,.2,-.93)},
+	{"t": 0.30, "yaw": -28.0, "pitch": -19.0, "hip_yaw": -14.0, "hip": Vector3(0,0,-.05), "back": Vector3(0,.04,-.07), "step": Vector3(0,.06,.04),
+		"grip": Vector3(-.33,.16,.14), "blade": Vector3(-.25,-.25,-.93)},
 	{"t": 0.35, "yaw": -8.0, "pitch": 2.0, "hip_yaw": -4.0, "hip": Vector3(-.02,-.1,.14), "step": Vector3(-.04,.02,.3), "back": Vector3(0,0,-.12),
 		"grip": Vector3(-.1,-.05,.75), "blade": Vector3(-.1,.6,.8)},
 	{"t": 0.39, "yaw": 4.0, "pitch": 24.0, "hip_yaw": 3.0, "hip": Vector3(-.03,-.28,.24), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
 		"grip": Vector3(.01,-.43,.58), "blade": Vector3(-.05,-.6,.8)},
 	{"t": 0.56, "yaw": 5.0, "pitch": 22.0, "hip_yaw": 4.0, "hip": Vector3(-.03,-.26,.23), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
 		"grip": Vector3(.01,-.46,.56), "blade": Vector3(-.03,-.65,.76)},
-	{"t": 0.85, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	# Let go with the left hand and lift the blade up in front and back onto the shoulder.
+	{"t": 0.72, "pitch": 6.0, "hip": Vector3(-.01,-.1,.1), "step": Vector3(-.03,0,.24), "back": Vector3(0,0,-.1),
+		"grip": Vector3(-.2,-.32,.45), "blade": Vector3(-.2,.8,.55), "one_hand": true},
+	{"t": 0.85, "ready": true},
 ]
 # Guard: turn the left shoulder back, crouch and hold the blade across the front, tip up to the right.
 const GS_GUARD_KEYS := [
-	{"t": 0.0, "grip": GS_READY.grip, "blade": GS_READY.blade},
+	{"t": 0.0, "ready": true},
 	{"t": 0.14, "yaw": 15.0, "pitch": 6.0, "hip_yaw": 8.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.06), "back": Vector3(0,0,-.1),
 		"grip": Vector3(.21,-.24,.54), "blade": Vector3(-.6,.75,.2)},
 ]
 const GS_FX := {GS_SWEEP: {"trail": Vector2(0.24, 0.44), "impact": 0.34}, GS_SMASH: {"trail": Vector2(0.31, 0.45), "impact": 0.39}}
+const GS_CLIPS := {GS_SWEEP: GS_SWEEP_KEYS, GS_SMASH: GS_SMASH_KEYS, GS_GUARD: GS_GUARD_KEYS}
 
 # Dual daggers, one in each hand. The source stands tip-down along +Y like the one-handed sword.
 const DG_SCALE := 0.42
@@ -512,6 +531,7 @@ func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 	return animation
 
 func _pose(key: Dictionary) -> Dictionary:
+	key = gs_key(key)
 	var pose := _idle.duplicate()
 	if not key.has("blade") and not key.has("blade_l"): return pose
 	var hip_yaw: float = key.get("hip_yaw", 0.0)
@@ -521,9 +541,13 @@ func _pose(key: Dictionary) -> Dictionary:
 		hips.origin += (key.get("hip", Vector3.ZERO) as Vector3) * leg_length
 		hips.basis = Basis(Vector3.UP, deg_to_rad(hip_yaw)) * hips.basis
 		_set_global(pose, legs.hips, hips)
-		for side in ["R", "L"]:
+		var turn := deg_to_rad(key.get("feet_turn", 0.0))
+		var feet := _stance_feet([(_idle_global[legs["foot.R"]] as Transform3D).origin, (_idle_global[legs["foot.L"]] as Transform3D).origin],
+			(_idle_global[legs.hips] as Transform3D).origin, turn, key.get("stance", 0.0))
+		for index in 2:
+			var side: String = ["R", "L"][index]
 			var step: Vector3 = key.get("step" if side == "R" else "back", Vector3.ZERO)
-			_plant_leg(pose, side, (_idle_global[legs["foot." + side]] as Transform3D).origin + step * leg_length)
+			_plant_leg(pose, side, feet[index] + step * leg_length, turn)
 	else:
 		hip_yaw = 0.0
 	# Twist in character space so the result does not depend on each rig's local bone axes.
@@ -536,7 +560,8 @@ func _pose(key: Dictionary) -> Dictionary:
 	head.basis = Basis(Vector3.UP, deg_to_rad(-(yaw + hip_yaw) * .7)) * head.basis
 	_set_global(pose, rig["head"], head)
 	if key.has("grip"):
-		_grip_arms(pose, key.grip, key.blade)
+		_grip_arms(pose, key.grip, key.blade, not key.get("one_hand", false), key.get("elbow", Vector3.ZERO))
+		_bend_off_arm(pose, key.get("off_bend", 0.0))
 		return pose
 	_aim_arm(pose, "R", key.arm[0], key.arm[1])
 	var off: Array = key.get("off", [Vector3(.65,-.55,.25), Vector3(-.2,.3,.8)])
@@ -559,8 +584,19 @@ func _pose(key: Dictionary) -> Dictionary:
 		_set_global(pose, bone, hand)
 	return pose
 
-## Two-bone IK with the knee bending toward character forward.
-func _plant_leg(pose: Dictionary, side: String, target: Vector3) -> void:
+## Feet [R, L] set "stance" leg lengths further apart, then pivoted by turn (radians) about the pelvis.
+func _stance_feet(feet: Array, pivot: Vector3, turn: float, stance: float) -> Array:
+	var spin := Basis(Vector3.UP, turn)
+	var result: Array = []
+	for index in 2:
+		var foot: Vector3 = feet[index] + Vector3(-stance if index == 0 else stance, 0, 0) * leg_length
+		var offset := foot - pivot
+		offset.y = 0.0
+		result.append(foot - offset + spin * offset)
+	return result
+
+## Two-bone IK with the knee bending toward character forward, turned by turn (radians) along with the foot.
+func _plant_leg(pose: Dictionary, side: String, target: Vector3, turn := 0.0) -> void:
 	var names: Array = [legs["thigh." + side], legs["shin." + side], legs["foot." + side]]
 	var rest: Array = names.map(func(bone: String) -> Transform3D: return _idle_global[bone])
 	var thigh := _global(pose, skeleton.find_bone(names[0]))
@@ -569,7 +605,8 @@ func _plant_leg(pose: Dictionary, side: String, target: Vector3) -> void:
 	var reach := target - thigh.origin
 	var d := clampf(reach.length(), absf(a - b) + 0.001, (a + b) * 0.999)
 	var direction := reach.normalized()
-	var pole := (Vector3.BACK - direction * direction.z).normalized()
+	var forward := Basis(Vector3.UP, turn) * Vector3.BACK
+	var pole := (forward - direction * direction.dot(forward)).normalized()
 	var bend := clampf((a * a + d * d - b * b) / (2.0 * a * d), -1.0, 1.0)
 	var knee := thigh.origin + (direction * bend + pole * sqrt(1.0 - bend * bend)) * a
 	var foot := thigh.origin + direction * d
@@ -581,49 +618,103 @@ func _plant_leg(pose: Dictionary, side: String, target: Vector3) -> void:
 		_set_global(pose, names[index], joint)
 	# Feet stay flat on the ground regardless of how the legs bend.
 	var planted := _global(pose, skeleton.find_bone(names[2]))
-	planted.basis = rest[2].basis
+	planted.basis = Basis(Vector3.UP, turn) * rest[2].basis
 	_set_global(pose, names[2], planted)
 
-## Live two-handed hold, run by the skeleton modifier after the animation each frame.
-## ready_weight blends the arms into the ready stance; the left hand always follows the right hand's handle.
-func apply_grip(target: Skeleton3D, ready_weight: float) -> void:
+## A greatsword key with the ready stance filled in when it is marked "ready".
+static func gs_key(key: Dictionary) -> Dictionary:
+	return GS_READY.merged(key) if key.get("ready", false) else key
+
+## How firmly the left hand holds the handle at this point of a greatsword clip:
+## 0 in "one_hand" keys, 1 in two-handed keys, blended linearly between them.
+func two_hand_weight(clip: String, time: float) -> float:
+	var keys: Array = (GS_CLIPS.get(clip, []) as Array).map(gs_key)
+	if keys.is_empty(): return 0.0
+	var previous: Dictionary = keys[0]
+	for key: Dictionary in keys:
+		var weight := 0.0 if key.get("one_hand", false) else 1.0
+		if key.t >= time:
+			if key.t <= previous.t: return weight
+			return lerpf(0.0 if previous.get("one_hand", false) else 1.0, weight, inverse_lerp(previous.t, key.t, time))
+		previous = key
+	return 0.0 if previous.get("one_hand", false) else 1.0
+
+## Live greatsword hold, run by the skeleton modifier after the animation each frame.
+## ready_weight blends the torso turn and the right arm into the shouldered ready stance;
+## crouch blends in the stance's half crouch; two_hand blends the left hand onto the handle.
+func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0) -> void:
 	var pose: Dictionary = {}
 	for index in target.get_bone_count():
 		pose[target.get_bone_name(index)] = target.get_bone_pose(index)
-	var arms: Array = ["upper_arm.R", "forearm.R", "hand.R", "upper_arm.L", "forearm.L", "hand.L"].map(func(role: String) -> String: return rig[role])
+	var right: Array = ["upper_arm.R", "forearm.R", "hand.R"].map(func(role: String) -> String: return rig[role])
+	var left: Array = ["upper_arm.L", "forearm.L", "hand.L"].map(func(role: String) -> String: return rig[role])
+	var torso: Array = [rig["spine"], rig["head"]]
+	if crouch > 0.0 and not legs.is_empty():
+		# Lower and turn the pelvis, and set the animated feet wider and turned along with it by leg IK.
+		var hips := _global(pose, skeleton.find_bone(legs.hips))
+		var turn := deg_to_rad(GS_READY.feet_turn) * crouch
+		var feet := _stance_feet(["R", "L"].map(func(side: String) -> Vector3: return _global(pose, skeleton.find_bone(legs["foot." + side])).origin),
+			hips.origin, turn, GS_READY.stance * crouch)
+		hips.origin += (GS_READY.hip as Vector3) * leg_length * crouch
+		hips.basis = Basis(Vector3.UP, deg_to_rad(GS_READY.hip_yaw) * crouch) * hips.basis
+		_set_global(pose, legs.hips, hips)
+		_plant_leg(pose, "R", feet[0], turn)
+		_plant_leg(pose, "L", feet[1], turn)
+		torso += [legs.hips, legs["thigh.R"], legs["shin.R"], legs["foot.R"], legs["thigh.L"], legs["shin.L"], legs["foot.L"]]
 	if ready_weight > 0.0:
-		var animated: Array = arms.map(func(bone: String) -> Transform3D: return pose[bone])
-		_grip_arms(pose, GS_READY.grip, GS_READY.blade)
-		for index in arms.size():
-			pose[arms[index]] = (animated[index] as Transform3D).interpolate_with(pose[arms[index]], ready_weight)
-	var hand := _global(pose, skeleton.find_bone(rig["hand.R"]))
-	var blade := (hand.basis * (_hand_frame["R"] as Basis).inverse().y).normalized()
-	_hold(pose, "L", hand * Vector3(0, rig["palm"], 0) - blade * GS_HAND_SPACING * GS_SCALE, blade)
-	for bone: String in arms:
+		# Half-turn the torso as _pose does, the head counter-turned to keep facing forward. Without the crouch the
+		# pelvis stays square, so the spine takes the pelvis turn as well.
+		var crouch_turn := deg_to_rad(GS_READY.hip_yaw) * (0.0 if legs.is_empty() else crouch)
+		var yaw := deg_to_rad(GS_READY.yaw + GS_READY.hip_yaw) * ready_weight - crouch_turn
+		for spec in [[rig["spine"], yaw], [rig["head"], -(yaw + crouch_turn) * .7]]:
+			var bone := _global(pose, skeleton.find_bone(spec[0]))
+			bone.basis = Basis(Vector3.UP, spec[1]) * bone.basis
+			_set_global(pose, spec[0], bone)
+		_bend_off_arm(pose, GS_READY.off_bend * ready_weight)
+		var animated: Array = right.map(func(bone: String) -> Transform3D: return pose[bone])
+		_grip_arms(pose, GS_READY.grip, GS_READY.blade, false, GS_READY.elbow)
+		for index in right.size():
+			pose[right[index]] = (animated[index] as Transform3D).interpolate_with(pose[right[index]], ready_weight)
+	if two_hand > 0.0:
+		var animated: Array = left.map(func(bone: String) -> Transform3D: return pose[bone])
+		var hand := _global(pose, skeleton.find_bone(rig["hand.R"]))
+		var blade := (hand.basis * (_hand_frame["R"] as Basis).inverse().y).normalized()
+		_hold(pose, "L", hand * Vector3(0, rig["palm"], 0) - blade * GS_HAND_SPACING * GS_SCALE, blade)
+		for index in left.size():
+			pose[left[index]] = (animated[index] as Transform3D).interpolate_with(pose[left[index]], two_hand)
+	for bone: String in torso + right + left:
 		target.set_bone_pose(target.find_bone(bone), pose[bone])
 
-## Both hands on the handle: the right at the grip point (offset from the shoulders in arm lengths), the left below it.
-func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3) -> void:
+## Swing the left forearm forward at the elbow (about the character's side axis), keeping whatever the upper arm does.
+func _bend_off_arm(pose: Dictionary, degrees: float) -> void:
+	if is_zero_approx(degrees): return
+	var forearm := _global(pose, skeleton.find_bone(rig["forearm.L"]))
+	forearm.basis = Basis(Vector3.RIGHT, deg_to_rad(-degrees)) * forearm.basis
+	_set_global(pose, rig["forearm.L"], forearm)
+
+## The right hand at the grip point (offset from the shoulders in arm lengths); with both, the left hand just below it.
+func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3, both := true, elbow := Vector3.ZERO) -> void:
 	var shoulders := (_global(pose, skeleton.find_bone(rig["upper_arm.R"])).origin + _global(pose, skeleton.find_bone(rig["upper_arm.L"])).origin) * 0.5
 	var point := shoulders + offset * arm_reach
 	blade = blade.normalized()
-	_hold(pose, "R", point, blade)
-	_hold(pose, "L", point - blade * GS_HAND_SPACING * GS_SCALE, blade)
+	_hold(pose, "R", point, blade, elbow)
+	if both:
+		_hold(pose, "L", point - blade * GS_HAND_SPACING * GS_SCALE, blade)
 
 ## Put the palm center of one hand on a handle point, fingers wrapping across the blade axis.
-func _hold(pose: Dictionary, side: String, point: Vector3, blade: Vector3) -> void:
+func _hold(pose: Dictionary, side: String, point: Vector3, blade: Vector3, elbow := Vector3.ZERO) -> void:
 	var shoulder := _global(pose, skeleton.find_bone(rig["upper_arm." + side])).origin
 	# The fingers continue the arm's line toward the handle, turned square to the blade.
 	var fingers := point - shoulder
 	fingers = (fingers - blade * blade.dot(fingers)).normalized()
 	var hand_basis := Basis(fingers, blade, fingers.cross(blade)) * (_hand_frame[side] as Basis)
-	_reach(pose, side, point - fingers * rig["palm"])
+	_reach(pose, side, point - fingers * rig["palm"], elbow)
 	var hand := _global(pose, skeleton.find_bone(rig["hand." + side]))
 	hand.basis = hand_basis
 	_set_global(pose, rig["hand." + side], hand)
 
-## Two-bone arm IK to a wrist position, the elbow bending toward the side's pole.
-func _reach(pose: Dictionary, side: String, wrist: Vector3) -> void:
+## Two-bone arm IK to a wrist position, the elbow bending toward the given direction or else the side's pole.
+func _reach(pose: Dictionary, side: String, wrist: Vector3, bend_toward := Vector3.ZERO) -> void:
 	var names: Array = [rig["upper_arm." + side], rig["forearm." + side], rig["hand." + side]]
 	var rest: Array = names.map(func(bone: String) -> Transform3D: return _idle_global[bone])
 	var upper := _global(pose, skeleton.find_bone(names[0]))
@@ -632,7 +723,7 @@ func _reach(pose: Dictionary, side: String, wrist: Vector3) -> void:
 	var reach := wrist - upper.origin
 	var d := clampf(reach.length(), absf(a - b) + 0.001, (a + b) * 0.999)
 	var direction := reach.normalized()
-	var hint: Vector3 = GS_POLES[side]
+	var hint: Vector3 = GS_POLES[side] if bend_toward == Vector3.ZERO else bend_toward
 	var pole := (hint - direction * direction.dot(hint)).normalized()
 	var bend := clampf((a * a + d * d - b * b) / (2.0 * a * d), -1.0, 1.0)
 	var elbow := upper.origin + (direction * bend + pole * sqrt(1.0 - bend * bend)) * a
