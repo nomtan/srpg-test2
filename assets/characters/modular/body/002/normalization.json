@@ -1,0 +1,5 @@
+{
+  "rig_profile": "humanoid_v1",
+  "rig_source_body_id": "001",
+  "arm_alignment": "match_rig_source"
+}

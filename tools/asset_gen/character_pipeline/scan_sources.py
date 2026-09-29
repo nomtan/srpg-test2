@@ -21,13 +21,13 @@ TRIPO_ROOT = REPO_ROOT / "assets" / "characters" / "tripo"
 DEFAULT_CATALOG = TRIPO_ROOT / "catalog.json"
 
 
-def scan_kind(kind: str) -> tuple[list[dict[str, Any]], list[str]]:
+def scan_kind(kind: str, required: bool = True) -> tuple[list[dict[str, Any]], list[str]]:
     root = TRIPO_ROOT / kind
     errors: list[str] = []
     items: list[dict[str, Any]] = []
 
     if not root.is_dir():
-        return items, [f"missing source directory: {root.relative_to(REPO_ROOT)}"]
+        return items, [f"missing source directory: {root.relative_to(REPO_ROOT)}"] if required else []
 
     for directory in sorted((p for p in root.iterdir() if p.is_dir()), key=lambda p: p.name):
         if not directory.name.isdigit():
@@ -48,7 +48,7 @@ def scan_kind(kind: str) -> tuple[list[dict[str, Any]], list[str]]:
             }
         )
 
-    if not items:
+    if not items and required:
         errors.append(f"no valid {kind} sources found under {root.relative_to(REPO_ROOT)}")
 
     return items, errors
@@ -57,13 +57,15 @@ def scan_kind(kind: str) -> tuple[list[dict[str, Any]], list[str]]:
 def build_catalog() -> tuple[dict[str, Any], list[str]]:
     faces, face_errors = scan_kind("face")
     bodies, body_errors = scan_kind("body")
+    hair, hair_errors = scan_kind("hair", required=False)
     catalog = {
         "schema_version": 1,
         "source_policy": "immutable",
         "face": faces,
         "body": bodies,
+        "hair": hair,
     }
-    return catalog, face_errors + body_errors
+    return catalog, face_errors + body_errors + hair_errors
 
 
 def main() -> int:
@@ -87,6 +89,7 @@ def main() -> int:
 
     print(f"faces: {len(catalog['face'])}")
     print(f"bodies: {len(catalog['body'])}")
+    print(f"hair: {len(catalog['hair'])}")
 
     if errors:
         for error in errors:

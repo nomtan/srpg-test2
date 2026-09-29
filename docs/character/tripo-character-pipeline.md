@@ -1,347 +1,59 @@
-# Tripo Character Pipeline v1
+# Tripo モジュラーキャラクターパイプライン
 
-> 2026-09-29更新: この文書の統合 `character.glb` 出力手順は既存Golden Pathの記録です。現在の4体の実行時表示は、独立Body/Face GLBとGodotの `CharacterAssembler` に移行しました。構造・再生成・検証は [Body / Face 分離ランタイム移行](modular-body-face-report.md) を参照してください。
-
-## 目的
-
-Tripoで生成した `Face` と `Body` を素材として管理し、Codex + Blender MCPで最終調整した1体のキャラクターGLBをGodotで利用するための標準フローを定義する。
-
-この仕様では、ゲーム中の3Dキャラクターは戦闘中の引き絵を主用途とする。会話シーンの細かな感情表現は別途2D立ち絵で行うため、3D側のフェイシャル表現は軽量なテクスチャ切り替えを前提とする。
-
-## 1. Source of Truth
-
-Tripoから出力したGLBは加工せず、原本として以下へ置く。
+Phase 2（2026-09-30）。新規キャラクターの正式な出力は、独立した Body / Face / Hair の `model.glb` である。統合 `character.glb` は新規制作の入力・中間出力にしない。既存の `charcter001`〜`charcter004` の統合GLBと旧スクリプトは回帰比較のためだけに保持する。
 
 ```text
-assets/characters/tripo/
-├─ face/
-│  ├─ 001/model.glb
-│  ├─ 002/model.glb
-│  └─ ...
-├─ body/
-│  ├─ 001/model.glb
-│  ├─ 002/model.glb
-│  └─ ...
-└─ characters/
-   ├─ _template.json
-   └─ <character_id>.json
+Tripo Body ── Blender正規化・検証 ── modular/body/NNN/model.glb ──┐
+Tripo Face ── Blender正規化・検証 ── modular/face/NNN/model.glb ──┼─ CharacterDefinition ─ CharacterAssembler ─ Godot
+Tripo Hair ── Blender正規化・検証 ── modular/hair/NNN/model.glb ──┘
 ```
 
-`face/*/model.glb` と `body/*/model.glb` は **immutable source** とし、Blenderで直接上書きしない。
+## 原本と配置
 
-素材の存在確認:
+- `assets/characters/tripo/body/<3桁ID>/model.glb`、`face/<3桁ID>/model.glb`、将来の `hair/<3桁ID>/model.glb` は immutable source。加工済みGLBを原本へ書き戻さない。
+- 正式出力は `assets/characters/modular/{body,face,hair}/<3桁ID>/model.glb`。
+- 各パーツの `normalization.json` はそのパーツ固有のBlender正規化設定。BodyとFaceの**組み合わせ**固有の補正値を記録しない。
+- `assets/characters/modular/definitions/charcterNNN.tres` は既存IDを維持する。新しいIDの内部表記には `character` を用いられるが、既存IDの一括リネームはしない。
+- 旧 `assets/characters/generated/charcterNNN/character.glb` は回帰比較のみ。`export_modular_parts.py` と旧キャラクターmanifestは移行履歴であり、新規パーツの制作手順に含めない。
 
-```bash
+## 共通座標とリグ
+
+Blenderはメートル・Z-up、GodotはY-up。出力時のroot、Armature、mesh objectは位置0、回転0、scale1にする。適合のための平行移動・一様scaleはBlenderでメッシュ頂点へ焼き込む。軸変換はglTF exporterに任せる。
+
+Bodyは `humanoid_v1` の65ボーンを持つ唯一のSkeletonを含む。`head` とroot/hipsを必須にし、全ボーンの名前・親子関係・rest translation/rotation/scaleをBody 001と一致させる。特に `head` のrest位置、向き、scaleが全Bodyで同一であることを検証する。Bodyには `idle` / `walk` / `attack` / `hit` の4クリップとAnimationPlayerを持たせる。Body 001のTripo rigを基準として、rigがないBodyにはBlenderでウェイトを転送する。規格差があればBlenderで修正してから出力し、GodotにBody ID別の補正を追加しない。
+
+FaceとHairはそれぞれ独立GLBの静的メッシュで、Skeleton、skin、AnimationPlayer、animationを含めない。両者の頂点座標は共通 `humanoid_v1` Skeletonの**rest空間**に正規化する。Godotでは `head` の `BoneAttachment3D` に `FaceSocket` を置き、Faceと `HairSocket` に同一の `get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。HairSocketの子にHairを置く。Body/Face/Hair ID別、または組み合わせ別のランタイム補正は使わない。
+
+既存Face 001〜004には髪が一体化している。これらの `hair_id` は空文字にして従来の見た目を維持する。新規のFace/Hairは別々に正規化する。実運用のHairを用意する際は原本を `tripo/hair` へ登録し、パーツ固有の `normalization.json` で共通rest空間へ焼き込む。
+
+## 独立エクスポート
+
+各パーツの正規化設定を出力先と同じIDディレクトリの `normalization.json` に用意する。Face/Hairには正の `scale` とBlender Z-upメートルの `position: [x,y,z]`、Bodyには `rig_profile: humanoid_v1` と必要なら `arm_alignment: match_rig_source` を記す。`body/001`〜`004`、`face/001`〜`004` には既存4体の検証済み設定がある。
+
+Blender 5.1で、原本と同じIDを指定して**パーツごとに別プロセス**で実行する。まず `artifacts/modular_direct` のような作業領域へ出力する。
+
+```powershell
 python tools/asset_gen/character_pipeline/scan_sources.py
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b --factory-startup --python tools/asset_gen/character_pipeline/build_modular_parts.py -- --kind body --id 005 --output-root artifacts/modular_direct
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b --factory-startup --python tools/asset_gen/character_pipeline/build_modular_parts.py -- --kind face --id 005 --output-root artifacts/modular_direct
+python tools/asset_gen/character_pipeline/validate_modular_parts.py --root artifacts/modular_direct
 ```
 
-カタログを書き出す場合:
+Hair原本があれば `--kind hair` も同様に実行する。Blenderの出力ログに `DIRECT_MODULAR_EXPORT` があることを確認する。Blenderはスクリプト例外でも終了コード0を返す場合があるので、終了コードだけでは判定しない。検証後に `model.glb` を正式ディレクトリへ配置し、Godotでimport・実行時テスト・目視確認を行う。検証失敗をGodotのtransform補正で隠さない。
 
-```bash
-python tools/asset_gen/character_pipeline/scan_sources.py --write-catalog
+`validate_modular_parts.py` はGLBのメッシュ、skin数、65ボーンの名前・親子・全rest変換、4クリップ、Face/Hairのskin・animation不在とmesh objectのidentity transformを確認する。エクスポータもBlenderシーン内のtransform、メッシュ、rig、clipを出力前に検査する。
+
+## Godot組み立てと性能
+
+`CharacterDefinition` は `body_id`、`face_id`、任意の `hair_id` を持つ。`hair_id == ""` は正常なBody+Face構成。`CharacterAssembler.assemble()` はspawn時の一度だけPackedSceneを読み込み、Body Skeletonへsocketを作成してFace/Hairを装着し、共有toon材質を割り当てる。`_process()` でのパーツ探索、load、instantiate、transform計算、材質生成は行わない。個体固有のFace texture差し替えだけ材質を `duplicate()` する。
+
+将来のHeadgear、武器、offhand、capeなどは同じSkeleton上の新しいbone socketまたはFaceSocketの子として追加する。Body/Face組み合わせごとの分岐は増やさない。
+
+## 検証
+
+```powershell
+python tools/asset_gen/character_pipeline/validate_modular_parts.py
+& 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --headless --path . --script tools/asset_gen/character_pipeline/verify_modular_parts.gd
 ```
 
-## 2. Face source specification
-
-Tripoで用意するFaceは次の範囲に限定する。
-
-- 頭部
-- 髪型（前髪を含む）
-
-原則としてTripo側では以下を作り込まない。
-
-- 目
-- 眉
-- 口の表情差分
-- 髭
-
-1つのGLBでよいが、Blender調整後は可能な限り次のように論理的に分離する。
-
-```text
-FaceRoot
-├─ Head
-└─ Hair
-```
-
-前髪が目を隠すキャラクターに対応するため、目・眉をカメラ側の板ポリゴンとして置く方式は標準にしない。顔表現はHead表面のマテリアル/テクスチャ側で扱い、通常のDepth判定でHairが自然に手前へ来る構造とする。
-
-## 3. Face expression specification
-
-3D戦闘モデルでは複雑な表情リグやBlendShapeを必須にしない。
-
-初期仕様:
-
-- eye style
-  - male_01
-  - male_02
-  - male_03
-  - female_01
-  - female_02
-  - female_03
-- expression
-  - normal
-  - closed / blink
-  - surprised
-  - squint
-- mouth
-  - default 1種
-- beard
-  - none
-  - テクスチャで表現できる口髭・無精髭・顎髭
-  - シルエットを変える長い髭のみ、将来Mesh attachmentを許可
-
-瞬きはBody Animationに焼き込まず、Godot側のFace Controllerで独立して切り替える。
-
-## 4. Body source specification
-
-Bodyはキャラクターの首から下の造形を担当する。
-
-Tripo出力に不要な頭部や顔要素が残っている場合は、source GLBは変更せず、Blenderのworking scene内で除去する。
-
-最終キャラクターではBody側を基準に標準リグへ統一する。
-
-標準リグID:
-
-```text
-humanoid_v1
-```
-
-重要な方針:
-
-- runtime characterは原則1 Skeleton
-- FaceはBody側Skeletonの `head` boneへ追従させる
-- Face用に独立したAnimationPlayer/Skeletonを残さない
-- 武器や将来の髭などはBoneAttachment相当のSocketで扱える構成にする
-
-## 5. Character manifest
-
-キャラクターごとの組み合わせはJSONで管理する。
-
-例:
-
-```json
-{
-  "schema_version": 1,
-  "character_id": "vain",
-  "display_name": "Vain",
-  "face_id": "001",
-  "body_id": "001",
-  "rig_profile": "humanoid_v1",
-  "animation_profile": "onehand_sword",
-  "face": {
-    "eye_style": "male_01",
-    "expression": "normal",
-    "mouth_style": "default",
-    "beard_style": "none"
-  },
-  "fit": {
-    "face_position": [0.0, 0.0, 0.0],
-    "face_rotation_degrees": [0.0, 0.0, 0.0],
-    "face_scale": [1.0, 1.0, 1.0]
-  },
-  "output": {
-    "glb": "assets/characters/generated/vain/character.glb"
-  }
-}
-```
-
-`fit` はFaceとBodyの組み合わせ固有の補正値として保持する。Tripo素材そのものをキャラクターごとに破壊的編集しない。
-
-## 6. Blender MCP processing flow
-
-Codex + Blender MCPはキャラクターmanifestを読み、次の順序で処理する。
-
-### Step 1: clean scene
-
-既存オブジェクトを消し、作業用Sceneを初期化する。
-
-### Step 2: import Body source
-
-```text
-assets/characters/tripo/body/<body_id>/model.glb
-```
-
-を読み込む。
-
-### Step 3: normalize Body
-
-- Blender Unit Scale = 1.0
-- meter基準
-- 原点を足元中央へ合わせる
-- root scaleを可能な限り `(1, 1, 1)` に適用
-- 不要なcamera/lightを削除
-- 不要な頭部があればworking sceneで削除
-- GodotへのglTF exportを前提とした向きへ統一
-
-### Step 4: standardize rig
-
-Bodyを `humanoid_v1` に合わせる。
-
-最低限必要なbone名は、実モデルを1体処理して確定し、その後この文書へ追記する。既存ゲームコードでは `head` bone名を利用しているため、少なくとも `head` は固定名とする。
-
-### Step 5: import Face source
-
-```text
-assets/characters/tripo/face/<face_id>/model.glb
-```
-
-を読み込む。
-
-- Head/Hairを識別する
-- Face側に独立Skeletonがある場合は最終出力には残さない
-- Bodyの `head` boneへ追従できるよう調整する
-- manifestの `fit` を適用する
-- 首の境界、髪のめり込み、頭身を確認する
-
-### Step 6: material normalization
-
-- Tripoのテクスチャを保持する
-- 不要な自動Smooth/Material置換でセルルックを崩さない
-- HeadとHairを識別可能なMesh/Material名に整理する
-- Head側には後から目・眉・口・髭テクスチャを合成できるMaterial slotを確保する
-
-推奨名:
-
-```text
-Body
-Head
-Hair
-```
-
-### Step 7: animation
-
-最終的に共通アニメーションを `humanoid_v1` へ適用できるようにする。
-
-初期Golden Pathで扱うclip:
-
-```text
-idle
-walk
-attack
-hit
-```
-
-追加候補:
-
-```text
-cast
-reaction
-victory
-ko
-```
-
-Animation profile例:
-
-```text
-common
-onehand_sword
-bow
-staff
-```
-
-### Step 8: export
-
-出力先:
-
-```text
-assets/characters/generated/<character_id>/character.glb
-```
-
-source GLBへ上書きしてはいけない。
-
-## 7. Godot output contract
-
-Godotへ渡すGLBは、概念上次を満たす。
-
-```text
-Character
-├─ Skeleton3D
-│  ├─ Body
-│  ├─ Head
-│  ├─ Hair
-│  ├─ WeaponSocket
-│  └─ optional BeardSocket
-└─ AnimationPlayer
-```
-
-Godotの既存 `BattleUnit.setup_visual()` はPackedScene/GLBを読み込んで `AnimationPlayer` を探索できるため、Golden Pathではこの仕組みに合わせて1体を表示する。既存の `TripoRosterCharacter` にはFace差し替えの実装があるため、今後は新パイプラインのHead/Hair構造へ統合する。
-
-## 8. Golden Path
-
-最初から全10 Face × 全10 Bodyを処理しない。
-
-まず以下を完成条件とする。
-
-1. `body/001/model.glb` をBody sourceとして使用
-2. `face/001/model.glb` をFace sourceとして使用
-3. `face/002/model.glb` も同じBodyへ装着
-4. 2体とも同じ `humanoid_v1` を使用
-5. `idle / walk / attack / hit` を共通再生
-6. Godotの戦闘マップ上へ配置
-7. 前髪が目より手前に描画される構造を確認
-8. Faceだけ交換してもBody animationが壊れないことを確認
-
-ここまで通った時点で `Ashen Vow Character 3D Spec v1` として寸法・bone名・material名を固定する。
-
-## 9. Validation checklist
-
-Blender export前:
-
-- [ ] source GLBを直接変更していない
-- [ ] Body/Faceの組み合わせがmanifestと一致
-- [ ] root transformが異常なscale/rotationを持っていない
-- [ ] 足元原点が安定している
-- [ ] Skeletonが1つに統一されている
-- [ ] `head` boneが存在する
-- [ ] Head/Hairを識別できる
-- [ ] 首の隙間・めり込みが目立たない
-- [ ] texture/materialがTripo原本から不必要に劣化していない
-- [ ] animation名がprofile規約に合っている
-
-Godot import後:
-
-- [ ] character.glbを単体instantiateできる
-- [ ] idleがループする
-- [ ] walk/attack/hitが再生できる
-- [ ] Face/Bodyの位置関係が崩れない
-- [ ] 前髪が顔表現を正しく遮蔽する
-- [ ] 既存SRPGカメラ距離でシルエットが読みやすい
-
-## 10. 次の実装順
-
-1. Golden PathのBody 001 + Face 001をBlender MCPで処理
-2. 標準Skeleton/bone名を確定
-3. Face 002へ交換して互換性確認
-4. Godot側のCharacter visual definitionをJSON/Resource化
-5. Face Controller（blink/expression texture）を実装
-6. 共通Animation Setを整備
-7. `tools/asset_gen` にCharacter管理UIを追加
-8. 別ツールとしてCharacter/Skill master data管理画面を整備
-
-## 11. Golden Pathで確認した規格（2026-09-26）
-
-以下は初回Golden Path素材の記録。差し替え後の001/002/003は
-[3体の作成記録](character-001-003-report.md) を参照。
-現行運用ではTripo auto rigをBody 001だけに付け、Body 002/003にはBlenderで
-001の共通Skeletonとウェイトを転送する。各Faceは同番号のBodyへ組み合わせる。
-
-実施結果と検証の範囲は [Golden Path実施記録](golden-path-report.md) を参照。
-
-- `humanoid_v1` はBody 001の65ボーンとrest poseを維持する。Blender側では
-  `mixamorig:Head` のみ `head` に変更する。Godot import時には他の名前の
-  `:` が `_` へ変換されるため、runtimeでは `mixamorig_Hips` 等になる。
-- `Character` とArmatureのtransformはidentity、単位はmeter、BlenderはZ-up。
-  Body 001の接地面はほぼZ=0（浮動小数点誤差約1.4e-7 m）。
-- `fit` はインポート直後のFace world座標に一様scale、その後translationを適用する。
-  GLB出力前にmeshへ焼き込み、Face objectのtransformをidentityにする。
-- Face全頂点を `head` へweight 1でbindし、Bodyと同じskinを使用する。
-- Face 001にはHairがない。Face 002は髪と頭が連続した単一mesh・単一materialのため、
-  `Head` 内に保持し、`hair_mode: integrated_in_head` で明示する。
-  このような素材は、独立したHair nodeを必須にせず破壊的分割を避ける。
-- Body materialは `Body`、Face materialは `Head_001` / `Head_002`。
-  元のUVと512×512テクスチャを保持する。顔表現はHead表面に合成する前提とする。
-- クリップは `idle`（2秒）、`walk`（1秒）、`attack`（1秒）、`hit`（0.8秒）。
-  今回は互換性確認用の簡易動作。idle/walkのloopは
-  `tools/asset_gen/character_pipeline/golden_path_import.gd` でimport時に設定する。
-- `.blend`作業ファイルは `artifacts/golden_path/{001,002}/` に置く。
-  同ディレクトリの `.gdignore` によりGodotから直接importせず、runtimeではGLBのみ使う。
+Godotテストは既存4 Body × 4 Face、Hairテスト部品2種と複数Body/Face、単一Skeleton、4クリップでのhead追従、ロスター/戦闘経路、60体と共有Mesh/Materialを確認する。`hair/901` と `hair/902` は装着・交換テスト専用の簡易メッシュで、製品用の髪型ではない。目視検査では実ゲームカメラで首の継ぎ目、頭部の位置・向き、4クリップ、texture、toon shader、outline、影を確認する。

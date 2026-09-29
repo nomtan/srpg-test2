@@ -3,5 +3,8 @@ extends Resource
 ## The visual parts selected for one character. More part IDs can be added here.
 
 @export var id: String = ""
+
+@export_group("Appearance")
 @export var body_id: String = ""
 @export var face_id: String = ""
+@export var hair_id: String = ""

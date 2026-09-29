@@ -1,5 +1,24 @@
 # Body / Face 分離ランタイム移行
 
+## Phase 2（2026-09-30）
+
+新規制作の正式フローを独立Body/Face/Hair原本からの直接出力へ変更した。工程図、座標・リグ規格、手順は [Tripo モジュラーキャラクターパイプライン](tripo-character-pipeline.md) にまとめた。この文書の以下の統合GLB経由の再生成手順は **Phase 1の履歴** であり、新規キャラクターには使わない。
+
+```text
+Tripo Body / Face / Hair
+  → Blenderで各パーツを共通humanoid_v1 rest座標へ正規化
+  → 各model.glbを検証
+  → CharacterDefinition(body_id, face_id, hair_id)
+  → CharacterAssembler → Godot
+```
+
+- `build_modular_parts.py` で4 Bodyと4 Faceを原本から直接 `artifacts/modular_direct` へ試験出力した。統合 `character.glb` は参照していない。`validate_modular_parts.py` で全4 Bodyの65ボーンrest規格と4クリップ、全4 Faceの静的規格が通った。既存のゲーム用GLBは見た目の回帰を避けるため維持した。
+- 既存Body/Face各4つにパーツ固有の `normalization.json` を追加した。既存Face 001〜004は髪一体型のため `hair_id=""` のまま動作する。
+- `CharacterDefinition` に `hair_id` を追加した。`CharacterAssembler` は共通rest逆変換を持つHairSocketへ任意の静的Hairを一度だけ装着し、HairにSkeleton/AnimationPlayerがあれば拒否する。ID別のランタイム補正はない。
+- `hair/901`、`hair/902` は交換テスト専用の簡易静的GLB。実運用のTripo Hair素材はまだ存在しない。Hair原本が追加されれば同じ正規化・検証を適用する。
+- Godotの `verify_modular_parts.gd` で16 Body/Face交換、8 Body/Face/Hair交換、4クリップ追従、既存4体のロスター/戦闘経路、Hairなし60体とHairあり60体の単一Skeleton、Body/Face/Hair Meshとtoon材質の共有が通った。旧統合GLBとの頭部中心比較も通った。
+- Godot本体で `capture_modular_parts.gd` を実行し、001×001、001×002、002×001、003×004、004×003をidle/walk/attackで撮影した。`capture_main_camera.gd` では `Main.tscn` の実際の `CameraController`、環境、地形で同じ5組を撮影した。画像は `artifacts/modular_*_godot.png` と `artifacts/modular_main_*.png`。目視範囲では頭部の浮き・埋まり・90度回転、texture、toon、輪郭、影の破綻はなかった。Main画面は地形小物が中央の一部を隠すため、専用撮影画像も併用した。
+
 2026-09-29。既存の `charcter001`〜`charcter004` を、GodotでBodyとFaceを組み立てる方式へ移行した。既存IDの `charcter` 表記はセーブ・シーン参照との互換性のため維持した。
 
 ## アセットと座標規格

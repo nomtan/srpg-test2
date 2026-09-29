@@ -13,25 +13,50 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 		return null
 	var body_path := _part_path("body", definition.body_id)
 	var face_path := _part_path("face", definition.face_id)
+	var hair_path := _part_path("hair", definition.hair_id) if not definition.hair_id.is_empty() else ""
 	if body_path.is_empty() or face_path.is_empty():
 		push_error("Invalid character part IDs for %s" % definition.id)
 		return null
+	if not definition.hair_id.is_empty() and hair_path.is_empty():
+		push_error("Invalid Hair ID for %s" % definition.id)
+		return null
 	var body_scene := load(body_path) as PackedScene
 	var face_scene := load(face_path) as PackedScene
-	if body_scene == null or face_scene == null:
-		push_error("Missing Body or Face GLB for %s" % definition.id)
+	var hair_scene: PackedScene = load(hair_path) as PackedScene if not hair_path.is_empty() else null
+	if body_scene == null or face_scene == null or (not hair_path.is_empty() and hair_scene == null):
+		push_error("Missing character part GLB for %s" % definition.id)
 		return null
 	var body := body_scene.instantiate() as Node3D
 	var face := face_scene.instantiate() as Node3D
-	if body == null or face == null:
-		push_error("Invalid Body or Face scene for %s" % definition.id)
+	var hair: Node3D = hair_scene.instantiate() as Node3D if hair_scene != null else null
+	if body == null or face == null or (hair_scene != null and hair == null):
+		if body: body.free()
+		if face: face.free()
+		push_error("Invalid character part scene for %s" % definition.id)
 		return null
-	var skeleton := body.find_child("Skeleton3D", true, false) as Skeleton3D
-	if skeleton == null or skeleton.find_bone("head") < 0:
+	if not _is_static_part(face) or (hair != null and not _is_static_part(hair)):
 		body.free()
 		face.free()
-		push_error("Body %s requires a head bone" % definition.body_id)
+		if hair: hair.free()
+		push_error("Face and Hair must contain no Skeleton3D or AnimationPlayer: %s" % definition.id)
 		return null
+	var skeletons := body.find_children("*", "Skeleton3D", true, false)
+	var players := body.find_children("*", "AnimationPlayer", true, false)
+	var skeleton: Skeleton3D = skeletons[0] as Skeleton3D if skeletons.size() == 1 else null
+	var player: AnimationPlayer = players[0] as AnimationPlayer if players.size() == 1 else null
+	if skeleton == null or skeleton.find_bone("head") < 0 or player == null:
+		body.free()
+		face.free()
+		if hair: hair.free()
+		push_error("Body %s requires one Skeleton3D with head and one AnimationPlayer" % definition.body_id)
+		return null
+	for required_clip in ["idle", "walk", "attack", "hit"]:
+		if not player.has_animation(required_clip):
+			body.free()
+			face.free()
+			if hair: hair.free()
+			push_error("Body %s is missing %s" % [definition.body_id, required_clip])
+			return null
 	var character := Node3D.new()
 	character.name = "Character"
 	body.name = "Body"
@@ -44,25 +69,34 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	socket.add_child(face)
 	# Face mesh coordinates are in the Body skeleton's rest space. Cancel the
 	# imported head rest transform once, then let the socket supply each pose.
-	face.transform = skeleton.get_bone_global_rest(skeleton.find_bone("head")).affine_inverse()
+	var rest_inverse := skeleton.get_bone_global_rest(skeleton.find_bone("head")).affine_inverse()
+	face.transform = rest_inverse
 	var hair_socket := Node3D.new()
 	hair_socket.name = "HairSocket"
 	socket.add_child(hair_socket)
+	hair_socket.transform = rest_inverse
+	if hair:
+		hair.name = "Hair"
+		hair_socket.add_child(hair)
 	_apply_toon(body)
 	_apply_toon(face)
-	var player := body.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	if player:
-		for clip in ["idle", "walk"]:
-			if player.has_animation(clip):
-				player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
+	if hair:
+		_apply_toon(hair)
+	for clip in ["idle", "walk"]:
+		if player.has_animation(clip):
+			player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	return character
+
+
+static func _is_static_part(part: Node3D) -> bool:
+	return not (part is Skeleton3D) and part.find_children("*", "Skeleton3D", true, false).is_empty() and part.find_children("*", "AnimationPlayer", true, false).is_empty()
 
 
 static func _part_path(kind: String, id: String) -> String:
 	if not id.begins_with(kind):
 		return ""
 	var number := id.trim_prefix(kind)
-	if not number.is_valid_int() or int(number) <= 0:
+	if number.length() != 3 or not number.is_valid_int() or int(number) <= 0:
 		return ""
 	return "%s/%s/%03d/model.glb" % [PART_ROOT, kind, int(number)]
 
