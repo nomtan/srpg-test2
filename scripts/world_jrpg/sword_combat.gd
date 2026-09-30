@@ -188,6 +188,12 @@ const DG_SCALE := 0.42
 const DG_GRIP := Vector3(0.0, 0.84, 0.0)
 const DG_FX_INNER := Vector3(0, 0.06, 0)
 const DG_FX_OUTER := Vector3(0, 0.5, 0)
+# Ready stance: the greatsword's, with the right hand carried a little lower and its tip pointing forward,
+# and the left arm held as in the crossed guard, swung about 15 degrees lower at the shoulder
+# ("off"/"blade_l" as in the dagger keys, replacing "off_bend").
+const DG_READY := {"yaw": 5.0, "hip_yaw": -30.0, "feet_turn": -30.0, "stance": .08, "hip": Vector3(0,-.12,0),
+	"grip": Vector3(-.8,0,.26), "blade": Vector3(0,.3,1), "elbow": Vector3(-1,-.3,.1), "one_hand": true,
+	"off": [Vector3(.3,-.64,.66), Vector3(-.3,.47,.95)], "blade_l": Vector3(-.9,.65,.48)}
 # The right-hand slash reuses SLASH_KEYS; the left-hand slash is its mirror image (see _mirror_keys).
 # Double downward cut: both daggers raised behind the head together, then driven down in front at once.
 # Keys give the right arm and blade; _both() mirrors them onto the left arm.
@@ -241,10 +247,12 @@ var _alt_next := false
 var off_grip: Node3D
 # Skeleton-space shield orientation in the idle pose; the guard pose rotates the hand from it.
 var _shield_rest := Basis.IDENTITY
-# Right arm length to the palm; greatsword grip offsets are measured in it.
+# Right arm length to the palm; ready-stance and greatsword grip offsets are measured in it.
 var arm_reach := 1.0
 # Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
 var _hand_frame: Dictionary = {}
+# Ready stance held outside the weapon's clips by the grip modifier.
+var ready_stance: Dictionary = GS_READY
 # One toon material per weapon texture, shared by every character carrying it.
 static var _toon_materials: Dictionary = {}
 
@@ -269,6 +277,10 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		var bone := skeleton.get_bone_name(index)
 		_idle[bone] = skeleton.get_bone_pose(index)
 		_idle_global[bone] = skeleton.get_bone_global_pose(index)
+	var upper: Transform3D = _idle_global[rig["upper_arm.R"]]
+	var forearm: Transform3D = _idle_global[rig["forearm.R"]]
+	var wrist: Transform3D = _idle_global[rig["hand.R"]]
+	arm_reach = (forearm.origin - upper.origin).length() + (wrist.origin - forearm.origin).length() + rig["palm"]
 	if not legs.is_empty():
 		leg_length = maxf((_idle_global[legs.hips] as Transform3D).origin.y - (_idle_global[legs["foot.R"]] as Transform3D).origin.y, 0.01)
 	var path := player.get_node(player.root_node).get_path_to(skeleton)
@@ -313,6 +325,12 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			alt_slash_clip = DG_SLASH_L
 			overhead_clip = DG_OVERHEAD
 			guard_clip = DG_GUARD
+			# Holds the greatsword-style ready stance outside the dagger clips.
+			ready_stance = DG_READY
+			var holder: SkeletonModifier3D = TwoHandGrip.new()
+			holder.name = "DaggerReadyGrip"
+			holder.setup(self, player, "dagger/")
+			skeleton.add_child(holder)
 			return true
 		"staff":
 			_attach_staff()
@@ -371,6 +389,10 @@ func _attach_daggers() -> void:
 		var hand: Transform3D = _idle_global[rig["hand." + side]]
 		hand_grip.basis = hand.basis.inverse() * Basis(Quaternion(Vector3.UP, _ready_blade(side)))
 		hand_socket.add_child(hand_grip)
+		# Hand frame for the ready stance's hold: the blade exactly as gripped, fingers as close to the bone axis as allows.
+		var local_blade := (hand.basis.orthonormalized().inverse() * _ready_blade(side)).normalized()
+		var local_fingers := (Vector3.UP - local_blade * local_blade.dot(Vector3.UP)).normalized()
+		_hand_frame[side] = Basis(local_fingers, local_blade, local_fingers.cross(local_blade)).inverse()
 		var dagger := DAGGER.instantiate() as Node3D
 		_apply_character_toon(dagger)
 		dagger.name = "EquippedDagger" + side
@@ -441,10 +463,6 @@ func _attach_staff() -> void:
 
 func _attach_greatsword() -> void:
 	two_handed = true
-	var upper: Transform3D = _idle_global[rig["upper_arm.R"]]
-	var forearm: Transform3D = _idle_global[rig["forearm.R"]]
-	var wrist: Transform3D = _idle_global[rig["hand.R"]]
-	arm_reach = (forearm.origin - upper.origin).length() + (wrist.origin - forearm.origin).length() + rig["palm"]
 	# Each hand holds the handle across its palm: fingers perpendicular to the blade, thumb toward the tip.
 	# The thumb side comes from the idle hand (mirrored for the left), so each rig keeps its natural roll.
 	for side in ["R", "L"]:
@@ -576,13 +594,17 @@ func _pose(key: Dictionary) -> Dictionary:
 		_set_global(pose, rig["hand.L"], off_hand)
 	# Turn each hand so its weapon points along the keyed blade direction.
 	for spec in [["R", "blade"], ["L", "blade_l"]]:
-		if not key.has(spec[1]): continue
-		var bone: String = rig["hand." + spec[0]]
-		var hand := _global(pose, skeleton.find_bone(bone))
-		var idle_hand: Transform3D = _idle_global[bone]
-		hand.basis = Basis(Quaternion(_ready_blade(spec[0]), (key[spec[1]] as Vector3).normalized())) * idle_hand.basis
-		_set_global(pose, bone, hand)
+		if key.has(spec[1]):
+			_aim_blade(pose, spec[0], key[spec[1]])
 	return pose
+
+## Turn one hand so its one-handed weapon points along the given character-space direction.
+func _aim_blade(pose: Dictionary, side: String, blade: Vector3) -> void:
+	var bone: String = rig["hand." + side]
+	var hand := _global(pose, skeleton.find_bone(bone))
+	var idle_hand: Transform3D = _idle_global[bone]
+	hand.basis = Basis(Quaternion(_ready_blade(side), blade.normalized())) * idle_hand.basis
+	_set_global(pose, bone, hand)
 
 ## Feet [R, L] set "stance" leg lengths further apart, then pivoted by turn (radians) about the pelvis.
 func _stance_feet(feet: Array, pivot: Vector3, turn: float, stance: float) -> Array:
@@ -639,8 +661,8 @@ func two_hand_weight(clip: String, time: float) -> float:
 		previous = key
 	return 0.0 if previous.get("one_hand", false) else 1.0
 
-## Live greatsword hold, run by the skeleton modifier after the animation each frame.
-## ready_weight blends the torso turn and the right arm into the shouldered ready stance;
+## Live weapon hold, run by the skeleton modifier after the animation each frame.
+## ready_weight blends the torso turn and the right arm into the loadout's ready stance;
 ## crouch blends in the stance's half crouch; two_hand blends the left hand onto the handle.
 func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0) -> void:
 	var pose: Dictionary = {}
@@ -652,11 +674,11 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 	if crouch > 0.0 and not legs.is_empty():
 		# Lower and turn the pelvis, and set the animated feet wider and turned along with it by leg IK.
 		var hips := _global(pose, skeleton.find_bone(legs.hips))
-		var turn := deg_to_rad(GS_READY.feet_turn) * crouch
+		var turn := deg_to_rad(ready_stance.feet_turn) * crouch
 		var feet := _stance_feet(["R", "L"].map(func(side: String) -> Vector3: return _global(pose, skeleton.find_bone(legs["foot." + side])).origin),
-			hips.origin, turn, GS_READY.stance * crouch)
-		hips.origin += (GS_READY.hip as Vector3) * leg_length * crouch
-		hips.basis = Basis(Vector3.UP, deg_to_rad(GS_READY.hip_yaw) * crouch) * hips.basis
+			hips.origin, turn, ready_stance.stance * crouch)
+		hips.origin += (ready_stance.hip as Vector3) * leg_length * crouch
+		hips.basis = Basis(Vector3.UP, deg_to_rad(ready_stance.hip_yaw) * crouch) * hips.basis
 		_set_global(pose, legs.hips, hips)
 		_plant_leg(pose, "R", feet[0], turn)
 		_plant_leg(pose, "L", feet[1], turn)
@@ -664,15 +686,23 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 	if ready_weight > 0.0:
 		# Half-turn the torso as _pose does, the head counter-turned to keep facing forward. Without the crouch the
 		# pelvis stays square, so the spine takes the pelvis turn as well.
-		var crouch_turn := deg_to_rad(GS_READY.hip_yaw) * (0.0 if legs.is_empty() else crouch)
-		var yaw := deg_to_rad(GS_READY.yaw + GS_READY.hip_yaw) * ready_weight - crouch_turn
+		var crouch_turn := deg_to_rad(ready_stance.hip_yaw) * (0.0 if legs.is_empty() else crouch)
+		var yaw := deg_to_rad(ready_stance.yaw + ready_stance.hip_yaw) * ready_weight - crouch_turn
 		for spec in [[rig["spine"], yaw], [rig["head"], -(yaw + crouch_turn) * .7]]:
 			var bone := _global(pose, skeleton.find_bone(spec[0]))
 			bone.basis = Basis(Vector3.UP, spec[1]) * bone.basis
 			_set_global(pose, spec[0], bone)
-		_bend_off_arm(pose, GS_READY.off_bend * ready_weight)
+		if ready_stance.has("off"):
+			# Hold the left arm and its weapon as keyed, blended from the animated arm.
+			var animated_left: Array = left.map(func(bone: String) -> Transform3D: return pose[bone])
+			_aim_arm(pose, "L", ready_stance.off[0], ready_stance.off[1])
+			_aim_blade(pose, "L", ready_stance.blade_l)
+			for index in left.size():
+				pose[left[index]] = (animated_left[index] as Transform3D).interpolate_with(pose[left[index]], ready_weight)
+		else:
+			_bend_off_arm(pose, ready_stance.off_bend * ready_weight)
 		var animated: Array = right.map(func(bone: String) -> Transform3D: return pose[bone])
-		_grip_arms(pose, GS_READY.grip, GS_READY.blade, false, GS_READY.elbow)
+		_grip_arms(pose, ready_stance.grip, ready_stance.blade, false, ready_stance.elbow)
 		for index in right.size():
 			pose[right[index]] = (animated[index] as Transform3D).interpolate_with(pose[right[index]], ready_weight)
 	if two_hand > 0.0:
