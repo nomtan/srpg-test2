@@ -24,6 +24,7 @@ from build_golden_path import create_animations
 
 ROOT = Path(__file__).resolve().parents[3]
 MODULAR = ROOT / "assets/characters/modular"
+REFERENCE_RIG = ROOT / "assets/characters/_shared/rigs/humanoid_v1.glb"
 REQUIRED_CLIPS = ("idle", "walk", "attack", "hit")
 
 
@@ -64,16 +65,19 @@ def export(path, objects, animations):
 def prepare_body(part_id, settings):
     if settings.get("rig_profile") != "humanoid_v1":
         raise ValueError("Body requires rig_profile humanoid_v1")
-    imported = import_source("body", "001")
+    if not REFERENCE_RIG.is_file():
+        raise ValueError(f"Missing humanoid_v1 reference rig: {REFERENCE_RIG}")
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=str(REFERENCE_RIG))
+    imported = set(bpy.data.objects) - before
     rig = next(obj for obj in imported if obj.type == "ARMATURE")
     donor = next(obj for obj in rig.children if obj.type == "MESH")
-    if len(rig.data.bones) != 65 or "mixamorig:Head" not in rig.data.bones:
-        raise ValueError("Reference Body 001 no longer matches humanoid_v1")
+    if len(rig.data.bones) != 65 or "head" not in rig.data.bones:
+        raise ValueError("Reference asset no longer matches humanoid_v1")
     for pose_bone in rig.pose.bones:
         pose_bone.custom_shape = None
     rig.name = "humanoid_v1"
     rig.data.name = "humanoid_v1"
-    rig.data.bones["mixamorig:Head"].name = "head"
     body = donor
     if part_id != "001":
         imported_body = import_source("body", part_id)
@@ -129,7 +133,7 @@ def prepare_static(kind, part_id, settings):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--kind", choices=("body", "face", "hair"), required=True)
+    parser.add_argument("--kind", choices=("body", "face"), required=True)
     parser.add_argument("--id", required=True)
     parser.add_argument("--output-root", type=Path, default=MODULAR)
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])

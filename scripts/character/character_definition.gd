@@ -7,4 +7,4 @@ extends Resource
 @export_group("Appearance")
 @export var body_id: String = ""
 @export var face_id: String = ""
-@export var hair_id: String = ""
+@export var expression_profile_id: String = ""

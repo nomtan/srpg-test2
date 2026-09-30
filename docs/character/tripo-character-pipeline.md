@@ -1,36 +1,34 @@
-# Tripo モジュラーキャラクターパイプライン
+# Tripo キャラクターパイプライン — Phase 3
 
-Phase 2（2026-09-30）。新規キャラクターの正式な出力は、独立した Body / Face / Hair の `model.glb` である。統合 `character.glb` は新規制作の入力・中間出力にしない。既存の `charcter001`〜`charcter004` の統合GLBと旧スクリプトは回帰比較のためだけに保持する。
+新しいキャラクターは Body と Face の2部品で構成する。Face は頭部と髪を含む1つのパーツであり、髪型を変える場合は別の Face ID を制作する。目・眉・口だけを Face の材質上で独立して切り替える。旧 `charcter001`〜`charcter004` の ID はシーン参照との互換性のため保持する。
 
 ```text
-Tripo Body ── Blender正規化・検証 ── modular/body/NNN/model.glb ──┐
-Tripo Face ── Blender正規化・検証 ── modular/face/NNN/model.glb ──┼─ CharacterDefinition ─ CharacterAssembler ─ Godot
-Tripo Hair ── Blender正規化・検証 ── modular/hair/NNN/model.glb ──┘
+Tripo Body → Blender正規化 → modular/body/NNN/model.glb ─┐
+                                                       ├→ CharacterAssembler → Character
+Tripo Face (頭部 + 髪) → Blender正規化 → modular/face/NNN/model.glb ─┘        └→ ExpressionController
+                                                                                  ├ Eyes
+                                                                                  ├ Eyebrows
+                                                                                  └ Mouth
 ```
 
-## 原本と配置
+## 原本と命名
 
-- `assets/characters/tripo/body/<3桁ID>/model.glb`、`face/<3桁ID>/model.glb`、将来の `hair/<3桁ID>/model.glb` は immutable source。加工済みGLBを原本へ書き戻さない。
-- 正式出力は `assets/characters/modular/{body,face,hair}/<3桁ID>/model.glb`。
-- 各パーツの `normalization.json` はそのパーツ固有のBlender正規化設定。BodyとFaceの**組み合わせ**固有の補正値を記録しない。
-- `assets/characters/modular/definitions/charcterNNN.tres` は既存IDを維持する。新しいIDの内部表記には `character` を用いられるが、既存IDの一括リネームはしない。
-- 旧 `assets/characters/generated/charcterNNN/character.glb` は回帰比較のみ。`export_modular_parts.py` と旧キャラクターmanifestは移行履歴であり、新規パーツの制作手順に含めない。
+- `assets/characters/tripo/{body,face}/<3桁ID>/model.glb` は原本。絶対に上書きしない。
+- 正式出力は `assets/characters/modular/{body,face}/<3桁ID>/model.glb`。各IDの `normalization.json` にその部品だけの補正を記録する。
+- `CharacterDefinition` は `body_id`、`face_id`、任意の `expression_profile_id` を持つ。表情の現在状態は保存しない。
+- ID例: `body001`、`face001`、`expression_angry`、`eyes_blink`、`eyebrows_angry`、`mouth_open`。
 
-## 共通座標とリグ
+## humanoid_v1
 
-Blenderはメートル・Z-up、GodotはY-up。出力時のroot、Armature、mesh objectは位置0、回転0、scale1にする。適合のための平行移動・一様scaleはBlenderでメッシュ頂点へ焼き込む。軸変換はglTF exporterに任せる。
+`assets/characters/_shared/rigs/humanoid_v1.glb` が正式な Reference Rig。65ボーンの名前、親子関係、全rest translation/rotation/scale、および `head`、root/hips を規格として固定する。リグ内のBody001由来メッシュは新しいBodyへのウェイト転送専用の donor であり、他のBodyの実行時メッシュには含めない。`create_reference_rig.py` はPhase 2のBody001からこの規格を固定した一回限りの移行スクリプトである。通常の新規Body出力はこの共有GLBを読み、Body001原本は読み込まない。
 
-Bodyは `humanoid_v1` の65ボーンを持つ唯一のSkeletonを含む。`head` とroot/hipsを必須にし、全ボーンの名前・親子関係・rest translation/rotation/scaleをBody 001と一致させる。特に `head` のrest位置、向き、scaleが全Bodyで同一であることを検証する。Bodyには `idle` / `walk` / `attack` / `hit` の4クリップとAnimationPlayerを持たせる。Body 001のTripo rigを基準として、rigがないBodyにはBlenderでウェイトを転送する。規格差があればBlenderで修正してから出力し、GodotにBody ID別の補正を追加しない。
+Bodyは唯一のSkeleton、`idle` / `walk` / `attack` / `hit` の4クリップを持つ。Faceは静的メッシュで、Skeleton、skin、animationを含めない。Faceの頂点は共通Skeletonのrest空間に置く。Godotでは `head` ボーンの `BoneAttachment3D` に `FaceSocket` を置き、その下にFace全体を装着する。`get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。Body/Faceの組み合わせ別のランタイム補正はない。
 
-FaceとHairはそれぞれ独立GLBの静的メッシュで、Skeleton、skin、AnimationPlayer、animationを含めない。両者の頂点座標は共通 `humanoid_v1` Skeletonの**rest空間**に正規化する。Godotでは `head` の `BoneAttachment3D` に `FaceSocket` を置き、Faceと `HairSocket` に同一の `get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。HairSocketの子にHairを置く。Body/Face/Hair ID別、または組み合わせ別のランタイム補正は使わない。
+Blenderはメートル・Z-up、GodotはY-up。出力root、Armature、mesh objectのtransformはidentityとし、正規化は頂点へ焼き込む。
 
-既存Face 001〜004には髪が一体化している。これらの `hair_id` は空文字にして従来の見た目を維持する。新規のFace/Hairは別々に正規化する。実運用のHairを用意する際は原本を `tripo/hair` へ登録し、パーツ固有の `normalization.json` で共通rest空間へ焼き込む。
+## 部品出力と検証
 
-## 独立エクスポート
-
-各パーツの正規化設定を出力先と同じIDディレクトリの `normalization.json` に用意する。Face/Hairには正の `scale` とBlender Z-upメートルの `position: [x,y,z]`、Bodyには `rig_profile: humanoid_v1` と必要なら `arm_alignment: match_rig_source` を記す。`body/001`〜`004`、`face/001`〜`004` には既存4体の検証済み設定がある。
-
-Blender 5.1で、原本と同じIDを指定して**パーツごとに別プロセス**で実行する。まず `artifacts/modular_direct` のような作業領域へ出力する。
+Blender 5.1で原本と同じIDを指定し、部品ごとに別プロセスで作業領域へ出力する。
 
 ```powershell
 python tools/asset_gen/character_pipeline/scan_sources.py
@@ -39,21 +37,30 @@ python tools/asset_gen/character_pipeline/scan_sources.py
 python tools/asset_gen/character_pipeline/validate_modular_parts.py --root artifacts/modular_direct
 ```
 
-Hair原本があれば `--kind hair` も同様に実行する。Blenderの出力ログに `DIRECT_MODULAR_EXPORT` があることを確認する。Blenderはスクリプト例外でも終了コード0を返す場合があるので、終了コードだけでは判定しない。検証後に `model.glb` を正式ディレクトリへ配置し、Godotでimport・実行時テスト・目視確認を行う。検証失敗をGodotのtransform補正で隠さない。
+`DIRECT_MODULAR_EXPORT` をBlenderログで確認する。検証後に正式ディレクトリへ配置し、Godotでインポート、実行時検証、目視確認を行う。`validate_modular_parts.py` は共有Reference RigとBodyの全65ボーンrest、4クリップ、Faceのskin/animation不在とtransformを照合する。rest成分の許容差 `2.5e-5` はBlenderのglTF再入出力による浮動小数丸めを吸収するための値である。
 
-`validate_modular_parts.py` はGLBのメッシュ、skin数、65ボーンの名前・親子・全rest変換、4クリップ、Face/Hairのskin・animation不在とmesh objectのidentity transformを確認する。エクスポータもBlenderシーン内のtransform、メッシュ、rig、clipを出力前に検査する。
+## 表情
 
-## Godot組み立てと性能
+`assets/characters/_shared/face/expression/` の透過SVG atlasはGodotにTexture2Dとして読み込む。`build_expression_atlases.py` で再生成できる。各行は256×256の顔面投影画像で、Eyes 8種、Eyebrows 6種、Mouth 7種。`ExpressionController` の配列順序とatlasの行順は同一のアセット契約である。3つのatlasとトゥーンshaderは全個体で共有し、shader parameterを持つFace材質だけを個体ごとに複製する。Meshは共有する。表情変更時にMesh、Texture、Node、Shaderを生成しない。
 
-`CharacterDefinition` は `body_id`、`face_id`、任意の `hair_id` を持つ。`hair_id == ""` は正常なBody+Face構成。`CharacterAssembler.assemble()` はspawn時の一度だけPackedSceneを読み込み、Body Skeletonへsocketを作成してFace/Hairを装着し、共有toon材質を割り当てる。`_process()` でのパーツ探索、load、instantiate、transform計算、材質生成は行わない。個体固有のFace texture差し替えだけ材質を `duplicate()` する。
+`definitions/expression_*.tres` はプリセットの3チャンネルを定義する。初期プリセットは `normal` / `angry` / `smile` / `sad` / `surprised`。`ExpressionProfile` は顔面投影範囲と正面側の深度を定義し、Definitionの `expression_profile_id` が空なら `profiles/default.tres` を使う。現行Faceは1メッシュでUV島も共通ではないため、1つのFace材質内でrest座標から投影して合成する。前髪より前に常時表示する別メッシュは生成しない。
 
-将来のHeadgear、武器、offhand、capeなどは同じSkeleton上の新しいbone socketまたはFaceSocketの子として追加する。Body/Face組み合わせごとの分岐は増やさない。
+```gdscript
+character.set_expression("angry")
+character.set_eyes("blink")
+character.set_eyebrows("confident")
+character.set_mouth("open")
+```
 
-## 検証
+ロスター表示とBattleUnitも同じAPIを中継する。表情とアニメーションは独立する。自動瞬きとリップシンクはこの段階では実装しない。
+
+現行atlasは機能検証用の簡易図柄である。Face 001〜004は単一メッシュ・単一材質で、細かな島が数百個あり、頭部と髪を安全に分割できる境界がない。肌側の深度に限定すると前髪が顔全体を遮り、表情が見えなくなる。現行profileは正面の可視表面に投影するため、一部の線が前髪上に載る。別の板ポリは使っていない。正式アートでは、Face制作時に頭部と髪を識別できるmaterialまたはmaskを用意し、shaderで髪上への合成を抑える。原本の描画やgeometryは破壊的に変更していない。
+
+## 回帰確認
 
 ```powershell
 python tools/asset_gen/character_pipeline/validate_modular_parts.py
-& 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --headless --path . --script tools/asset_gen/character_pipeline/verify_modular_parts.gd
+& 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --headless --path . --log-file artifacts/phase3_verify.log --script tools/asset_gen/character_pipeline/verify_modular_parts.gd
 ```
 
-Godotテストは既存4 Body × 4 Face、Hairテスト部品2種と複数Body/Face、単一Skeleton、4クリップでのhead追従、ロスター/戦闘経路、60体と共有Mesh/Materialを確認する。`hair/901` と `hair/902` は装着・交換テスト専用の簡易メッシュで、製品用の髪型ではない。目視検査では実ゲームカメラで首の継ぎ目、頭部の位置・向き、4クリップ、texture、toon shader、outline、影を確認する。
+Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従、ロスター/戦闘経路、60体でのMesh/Texture共有と表情材質の個体分離を確認する。`capture_expressions.gd` はFace001/002の4状態を撮影し、`capture_main_camera.gd` は実ゲームカメラで5体の表情を撮影する。結果は `artifacts/phase3_face*.png` と `artifacts/phase3_main_expressions.png`。

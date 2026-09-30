@@ -303,6 +303,22 @@ func _ready() -> void:
 	_install_sword_clips()
 
 
+func set_expression(expression: String) -> bool:
+	return model_instance.set_expression(expression) if model_instance != null and model_instance.has_method("set_expression") else false
+
+
+func set_eyes(value: String) -> bool:
+	return model_instance.set_eyes(value) if model_instance != null and model_instance.has_method("set_eyes") else false
+
+
+func set_eyebrows(value: String) -> bool:
+	return model_instance.set_eyebrows(value) if model_instance != null and model_instance.has_method("set_eyebrows") else false
+
+
+func set_mouth(value: String) -> bool:
+	return model_instance.set_mouth(value) if model_instance != null and model_instance.has_method("set_mouth") else false
+
+
 func _model_top_y() -> float:
 	var name_label := model_instance.get_node_or_null("NameLabel") as Node3D
 	if name_label:

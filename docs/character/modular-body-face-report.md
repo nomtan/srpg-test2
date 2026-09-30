@@ -1,69 +1,19 @@
-# Body / Face 分離ランタイム移行
+# Body / Face ランタイム移行と Phase 3 表情
 
-## Phase 2（2026-09-30）
+## 現行構造
 
-新規制作の正式フローを独立Body/Face/Hair原本からの直接出力へ変更した。工程図、座標・リグ規格、手順は [Tripo モジュラーキャラクターパイプライン](tripo-character-pipeline.md) にまとめた。この文書の以下の統合GLB経由の再生成手順は **Phase 1の履歴** であり、新規キャラクターには使わない。
+`CharacterDefinition(body_id, face_id, expression_profile_id)` から `CharacterAssembler` がBodyとFaceを装着する。Face 001〜004は頭部と髪を一体とした既存GLBをそのまま使う。Bodyの唯一のSkeletonにある `head` ボーンへFace全体が追従し、Bodyの4クリップは維持する。`ExpressionController` が目・眉・口のatlas行を個体のFace材質へ設定する。Body側のトゥーン材質、FaceのMesh、テクスチャ、shaderは共有し、表情parameterを持つFace材質だけ複製する。
 
-```text
-Tripo Body / Face / Hair
-  → Blenderで各パーツを共通humanoid_v1 rest座標へ正規化
-  → 各model.glbを検証
-  → CharacterDefinition(body_id, face_id, hair_id)
-  → CharacterAssembler → Godot
-```
+Phase 2の髪分離用 `hair_id`、`HairSocket`、Hairロード、テストfixture、build/validatorのHair経路はPhase 3で撤去した。新しい髪型は新しいFaceとして制作する。詳しい規格と出力手順は [Tripo キャラクターパイプライン](tripo-character-pipeline.md) を参照。
 
-- `build_modular_parts.py` で4 Bodyと4 Faceを原本から直接 `artifacts/modular_direct` へ試験出力した。統合 `character.glb` は参照していない。`validate_modular_parts.py` で全4 Bodyの65ボーンrest規格と4クリップ、全4 Faceの静的規格が通った。既存のゲーム用GLBは見た目の回帰を避けるため維持した。
-- 既存Body/Face各4つにパーツ固有の `normalization.json` を追加した。既存Face 001〜004は髪一体型のため `hair_id=""` のまま動作する。
-- `CharacterDefinition` に `hair_id` を追加した。`CharacterAssembler` は共通rest逆変換を持つHairSocketへ任意の静的Hairを一度だけ装着し、HairにSkeleton/AnimationPlayerがあれば拒否する。ID別のランタイム補正はない。
-- `hair/901`、`hair/902` は交換テスト専用の簡易静的GLB。実運用のTripo Hair素材はまだ存在しない。Hair原本が追加されれば同じ正規化・検証を適用する。
-- Godotの `verify_modular_parts.gd` で16 Body/Face交換、8 Body/Face/Hair交換、4クリップ追従、既存4体のロスター/戦闘経路、Hairなし60体とHairあり60体の単一Skeleton、Body/Face/Hair Meshとtoon材質の共有が通った。旧統合GLBとの頭部中心比較も通った。
-- Godot本体で `capture_modular_parts.gd` を実行し、001×001、001×002、002×001、003×004、004×003をidle/walk/attackで撮影した。`capture_main_camera.gd` では `Main.tscn` の実際の `CameraController`、環境、地形で同じ5組を撮影した。画像は `artifacts/modular_*_godot.png` と `artifacts/modular_main_*.png`。目視範囲では頭部の浮き・埋まり・90度回転、texture、toon、輪郭、影の破綻はなかった。Main画面は地形小物が中央の一部を隠すため、専用撮影画像も併用した。
+## Reference Rig
 
-2026-09-29。既存の `charcter001`〜`charcter004` を、GodotでBodyとFaceを組み立てる方式へ移行した。既存IDの `charcter` 表記はセーブ・シーン参照との互換性のため維持した。
-
-## アセットと座標規格
-
-- `assets/characters/modular/body/<3桁ID>/model.glb` はBodyメッシュ、65ボーンの共通リグ、`idle` / `walk` / `attack` / `hit` を含む。対応する検証済み統合GLBからHeadノードと不要なメッシュ・テクスチャ領域を除き、Bodyのバイナリデータと4クリップは保持した。
-- `assets/characters/modular/face/<3桁ID>/model.glb` は単独のFaceメッシュと元テクスチャを含む。SkeletonとAnimationPlayerは含まない。頂点は統合GLBのHeadと同じBody Skeletonのrest座標で保持する。Godot側で読み込んだ `head` ボーンのglobal rest行列の逆変換をFaceSocket直下に1回適用し、全Faceを共通処理で装着する。
-- Faceには髪が一体化している。`HairSocket` は将来の独立Hair用の空ノードである。
-- Tripoの `body/**/model.glb` と `face/**/model.glb` は変更していない。
-
-変換の再生成はBlender 5.1で次を実行する。
-
-```text
-blender -b --factory-startup --python tools/asset_gen/character_pipeline/export_modular_parts.py
-```
-
-## Godot構造
-
-`CharacterDefinition` Resourceが `id`、`body_id`、`face_id` を持つ。既存4体の `.tres` は同じ番号のBodyとFaceを指定する。`CharacterAssembler.assemble()` はIDからGLBを読み込み、BodyのSkeleton3Dに `BoneAttachment3D` の `FaceSocket` を追加し、その子にFaceを置く。装着位置のID別補正はない。アニメーションとSkeletonはBody側のみが所有する。Meshは結合しない。
-
-組み立ては生成時の1回だけ。Godotの `load()` キャッシュと共有トゥーン材質を再利用し、毎フレームの装着処理はない。追加部品は同じSkeletonのbone socketまたは `HairSocket` を利用できる。新しいBodyは `head` boneと共通の装着座標を、FaceはBody Skeletonのrest座標を満たすGLBを追加し、DefinitionにIDを指定する。
-
-初回のFace書き出しではBlender側の `head` rest行列の逆変換を頂点に焼き込んだため、Godotでのボーン軸との違いからサンプルシーンで頭部が90度回転した。現在は元の頂点座標を維持し、Godot自身が読み込んだrest行列で変換する。これはBody/Face IDに依存しない共通処理である。
-
-既存の4つのロスターシーン、探索の切り替え、戦闘の `BattleUnit.setup_visual()` とジョブの既定パスは新方式を参照する。`BattleUnit` はシーンをツリーに入れる前にもモデルを調べるため、ロスターの `prepare_visual()` をそこで1回呼ぶ。探索側の初期ロスター照合は、旧GLBの `scene_file_path` ではなく `character_id` を使う。
+Phase 2のBody001をもとに `assets/characters/_shared/rigs/humanoid_v1.glb` を固定した。65ボーンとdonorメッシュを含み、animationは含まない。`build_modular_parts.py` はこのGLBからrigとウェイト転送用donorを取得し、通常のBody出力ではBody001原本を参照しない。`validate_modular_parts.py` は共有GLBの全rest変換と各Bodyを照合する。
 
 ## 検証
 
-- `scan_sources.py`: TripoのFace/Body各10原本を確認。
-- `verify_modular_geometry.py`: 4つの同番号ペアで元のHeadとFaceの双方向頂点距離は `0 m`。各Headのポリゴン数は同一。Face GLBのJPEGは対応する統合GLB内のJPEGとバイト単位で一致した。
-- `verify_modular_parts.gd`: 4×4の全16組み合わせで単一Skeleton、単一AnimationPlayer、共通FaceSocket、4クリップ中のhead追従とFaceの向きを確認。同番号4組では、旧GLBのスキン変換後の頭部中心と新方式の頭部中心が全4クリップで `0.0001 m` 未満の差。Body側head poseも一致。ロスター4シーンとBattleUnit4体でAnimationPlayerを取得。60体同時生成では60 Skeletonを確認。
-- `verify_tripo_switching.gd`: 探索・会話・戦闘中の4体切り替え、武器、アニメーション位相、HUDを確認し `TRIPO_SWITCHING: PASSED`。
-- 旧 `verify_characters.gd`: 統合GLBの既存検証も `CHARACTER_BATCH_VALIDATION: PASSED`。
-- Blender Workbenchで同番号4組と交換した5組の静止画を描画し、頭部の浮き・埋まり・回転ずれと首元を目視確認した。画像は [`artifacts/modular_preview`](../../artifacts/modular_preview/) に保存した。
+- `validate_modular_parts.py`: Body 001〜004、Face 001〜004が規格に合致。
+- `verify_modular_parts.gd`: 16組で単一Skeleton、4クリップの追従、`normal` / `angry` / `smile`、blink、個別の眉と口、ロスター/戦闘のAPI、60体での共有Meshと個体別Face材質を確認。
+- 旧統合GLBとのhead中心比較は同番号4組・4クリップで継続。
 
-## 旧方式の整理候補
-
-旧ロスターシーンから統合GLBへの直接参照と、未使用の `set_face_variant()` / Face outline差し替え処理は削除した。`assets/characters/generated/charcter001`〜`charcter004` の統合GLBは実行時には参照しないが、現在の分離エクスポータの入力であり、旧方式との回帰比較にも用いる。Tripo原本から独立Body/Faceを直接生成する工程へ置き換えるまでは保持する。`build_characters.py` と旧manifestもその再生成記録として保持する。
-
-## 変更ファイル
-
-- `assets/characters/modular/`: Body/Face GLB各4、Definition Resource各4、Godotのimport設定と抽出テクスチャ。
-- `scripts/character/character_definition.gd`、`character_assembler.gd`、`tripo_roster_character.gd`: 定義、組み立て、ロスター表示。
-- `scenes/characters/tripo_roster/charcter001.tscn`〜`charcter004.tscn`: 統合GLB参照をDefinitionへ変更。
-- `scripts/unit/battle_unit.gd`、`scripts/world_jrpg/world.gd`、`scripts/job/job_database.gd`、`scripts/dev/flat_validation.gd`、`flat_grass_test.gd`: 戦闘・探索・検証経路を新シーンへ接続。
-- `tools/asset_gen/character_pipeline/export_modular_parts.py`、`verify_modular_geometry.py`、`verify_modular_parts.gd`、`render_modular_preview.py`: 再生成と検証。
-- `docs/character/tripo-character-pipeline.md`、本書、`artifacts/modular_preview/`: 移行記録と静止画。
-
-Godot実画面での透過・影・輪郭を含む比較は、このヘッドレス検証とBlender静止画には含まれない。元のUV・JPEGとトゥーンシェーダーを再使用しているが、最終的な戦闘カメラでの目視確認は別途必要である。
+表情用SVGは仮の図柄。`artifacts/phase3_face001_*.png`、`phase3_face002_*.png` と `phase3_main_expressions.png` で、normal / angry / smile / blink + mouth openの可視差、ゲームカメラでの装着を確認した。前髪が顔面を大きく覆うため、現行単一材質では投影線が前髪に載る箇所がある。今後の正式Face素材では頭部/髪のmaterialまたはmaskを制作時に用意する必要がある。

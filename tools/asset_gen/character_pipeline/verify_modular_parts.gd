@@ -40,6 +40,17 @@ func run() -> void:
 			check(skeletons.size() == 1 and players.size() == 1, def.id + " has one rig and player")
 			check(meshes.size() == 2 and meshes.all(func(mesh: MeshInstance3D) -> bool: return mesh.get_active_material(0) is ShaderMaterial), def.id + " keeps Body/Face meshes and toon materials")
 			check(socket != null and face != null and socket.is_ancestor_of(face), def.id + " attaches face to head")
+			var expression_controller := character.find_child("ExpressionController", true, false) as ExpressionController
+			check(expression_controller != null, def.id + " has ExpressionController")
+			if expression_controller != null:
+				var face_material := (meshes[1] as MeshInstance3D).get_active_material(0)
+				for expression in ["normal", "angry", "smile"]:
+					check(character.set_expression(expression), def.id + " accepts " + expression)
+				check(character.set_eyes("blink"), def.id + " blinks")
+				check(character.set_eyebrows("confident"), def.id + " changes eyebrows only")
+				check(character.set_mouth("open"), def.id + " opens mouth")
+				check(expression_controller.current_eyes == "blink" and expression_controller.current_eyebrows == "confident" and expression_controller.current_mouth == "open", def.id + " keeps independent part states")
+				check(character.find_children("*", "MeshInstance3D", true, false).size() == meshes.size() and (meshes[1] as MeshInstance3D).get_active_material(0) == face_material, def.id + " changes expression without allocating mesh or material")
 			if skeletons.size() == 1 and players.size() == 1 and socket and face:
 				var skeleton := skeletons[0] as Skeleton3D
 				var player := players[0] as AnimationPlayer
@@ -100,45 +111,15 @@ func run() -> void:
 		root.add_child(actor)
 		check(actor.find_child("FaceSocket", true, false) != null, "roster %d builds modular model" % index)
 		check(actor.animation_player != null and actor.animation_player.has_animation("idle"), "roster %d plays animation" % index)
+		check(actor.set_expression("smile"), "roster %d routes expressions" % index)
 		actor.free()
 		var unit := BattleUnit.new()
 		unit.configure("test_%d" % index, "Test", Vector2i.ZERO, "player")
 		unit.setup_visual("res://scenes/characters/tripo_roster/charcter%03d.tscn" % index)
 		root.add_child(unit)
 		check(unit.animation_player != null and unit.animation_player.has_animation("idle"), "battle unit %d uses modular visual" % index)
+		check(unit.set_expression("angry"), "battle unit %d routes expressions" % index)
 		unit.free()
-	# Static Hair fixtures exercise independent swapping without changing legacy faces.
-	for body_index in [1, 3]:
-		for face_index in [2, 4]:
-			for hair_index in [901, 902]:
-				var hair_def := CharacterDefinition.new()
-				hair_def.id = "hair_%d_%d_%d" % [body_index, face_index, hair_index]
-				hair_def.body_id = "body%03d" % body_index
-				hair_def.face_id = "face%03d" % face_index
-				hair_def.hair_id = "hair%03d" % hair_index
-				var styled := CharacterAssembler.assemble(hair_def)
-				check(styled != null, hair_def.id + " assembles")
-				if styled == null:
-					continue
-				root.add_child(styled)
-				var hair_rigs := styled.find_children("*", "Skeleton3D", true, false)
-				var hair_socket := styled.find_child("HairSocket", true, false) as Node3D
-				var mounted_hair := styled.find_child("Hair", true, false) as Node3D
-				var hair_face := styled.find_child("Face", true, false) as Node3D
-				check(hair_rigs.size() == 1, hair_def.id + " has one Skeleton3D")
-				check(hair_socket != null and mounted_hair != null and hair_socket.is_ancestor_of(mounted_hair), hair_def.id + " mounts Hair")
-				if hair_rigs.size() == 1 and hair_socket and mounted_hair and hair_face:
-					var rig := hair_rigs[0] as Skeleton3D
-					var inverse_rest := rig.get_bone_global_rest(rig.find_bone("head")).affine_inverse()
-					check(hair_socket.transform.is_equal_approx(inverse_rest), hair_def.id + " uses common HairSocket coordinates")
-					var animation_player := styled.find_child("AnimationPlayer", true, false) as AnimationPlayer
-					for clip in ["idle", "walk", "attack", "hit"]:
-						animation_player.play(clip)
-						animation_player.seek(animation_player.current_animation_length * 0.35, true)
-						rig.force_update_all_bone_transforms()
-						await create_timer(0.02).timeout
-						check(mounted_hair.global_transform.is_equal_approx(hair_face.global_transform), hair_def.id + " Hair follows " + clip)
-				styled.free()
 	var crowd := Node3D.new()
 	root.add_child(crowd)
 	var crowd_definition := load("res://assets/characters/modular/definitions/charcter001.tres") as CharacterDefinition
@@ -151,20 +132,15 @@ func run() -> void:
 		check((mesh_nodes[0] as MeshInstance3D).mesh == (mesh_nodes[2] as MeshInstance3D).mesh, "crowd shares imported Body mesh resource")
 		check((mesh_nodes[0] as MeshInstance3D).get_active_material(0) == (mesh_nodes[2] as MeshInstance3D).get_active_material(0), "crowd shares toon material")
 		check((mesh_nodes[1] as MeshInstance3D).mesh == (mesh_nodes[3] as MeshInstance3D).mesh, "crowd shares imported Face mesh resource")
-	crowd.free()
-	var hair_crowd := Node3D.new()
-	root.add_child(hair_crowd)
-	var hair_crowd_definition := CharacterDefinition.new()
-	hair_crowd_definition.body_id = "body001"
-	hair_crowd_definition.face_id = "face002"
-	hair_crowd_definition.hair_id = "hair901"
-	for index in 60:
-		var styled_character := CharacterAssembler.assemble(hair_crowd_definition)
-		hair_crowd.add_child(styled_character)
-	check(hair_crowd.get_child_count() == 60 and hair_crowd.find_children("*", "Skeleton3D", true, false).size() == 60, "60 characters with Hair keep one rig each")
-	var first_hair := hair_crowd.get_child(0).find_child("Hair", true, false).find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-	var second_hair := hair_crowd.get_child(1).find_child("Hair", true, false).find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-	check(first_hair.mesh == second_hair.mesh, "crowd shares imported Hair mesh resource")
-	hair_crowd.free()
+		check((mesh_nodes[1] as MeshInstance3D).get_active_material(0) != (mesh_nodes[3] as MeshInstance3D).get_active_material(0), "crowd owns independent expression material")
+		var first := crowd.get_child(0) as AssembledCharacter
+		var second := crowd.get_child(1) as AssembledCharacter
+		var third := crowd.get_child(2) as AssembledCharacter
+		first.set_expression("angry")
+		third.set_expression("smile")
+		var first_controller := first.get_node("ExpressionController") as ExpressionController
+		var second_controller := second.get_node("ExpressionController") as ExpressionController
+		var third_controller := third.get_node("ExpressionController") as ExpressionController
+		check(first_controller.current_eyes == "angry" and second_controller.current_eyes == "normal" and third_controller.current_eyes == "happy", "same Face instances keep separate expression state")
 	print("MODULAR_PARTS: ", "FAILED" if failed else "PASSED")
 	quit(1 if failed else 0)

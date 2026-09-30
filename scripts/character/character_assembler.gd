@@ -13,32 +13,25 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 		return null
 	var body_path := _part_path("body", definition.body_id)
 	var face_path := _part_path("face", definition.face_id)
-	var hair_path := _part_path("hair", definition.hair_id) if not definition.hair_id.is_empty() else ""
 	if body_path.is_empty() or face_path.is_empty():
 		push_error("Invalid character part IDs for %s" % definition.id)
 		return null
-	if not definition.hair_id.is_empty() and hair_path.is_empty():
-		push_error("Invalid Hair ID for %s" % definition.id)
-		return null
 	var body_scene := load(body_path) as PackedScene
 	var face_scene := load(face_path) as PackedScene
-	var hair_scene: PackedScene = load(hair_path) as PackedScene if not hair_path.is_empty() else null
-	if body_scene == null or face_scene == null or (not hair_path.is_empty() and hair_scene == null):
+	if body_scene == null or face_scene == null:
 		push_error("Missing character part GLB for %s" % definition.id)
 		return null
 	var body := body_scene.instantiate() as Node3D
 	var face := face_scene.instantiate() as Node3D
-	var hair: Node3D = hair_scene.instantiate() as Node3D if hair_scene != null else null
-	if body == null or face == null or (hair_scene != null and hair == null):
+	if body == null or face == null:
 		if body: body.free()
 		if face: face.free()
 		push_error("Invalid character part scene for %s" % definition.id)
 		return null
-	if not _is_static_part(face) or (hair != null and not _is_static_part(hair)):
+	if not _is_static_part(face):
 		body.free()
 		face.free()
-		if hair: hair.free()
-		push_error("Face and Hair must contain no Skeleton3D or AnimationPlayer: %s" % definition.id)
+		push_error("Face must contain no Skeleton3D or AnimationPlayer: %s" % definition.id)
 		return null
 	var skeletons := body.find_children("*", "Skeleton3D", true, false)
 	var players := body.find_children("*", "AnimationPlayer", true, false)
@@ -47,17 +40,15 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	if skeleton == null or skeleton.find_bone("head") < 0 or player == null:
 		body.free()
 		face.free()
-		if hair: hair.free()
 		push_error("Body %s requires one Skeleton3D with head and one AnimationPlayer" % definition.body_id)
 		return null
 	for required_clip in ["idle", "walk", "attack", "hit"]:
 		if not player.has_animation(required_clip):
 			body.free()
 			face.free()
-			if hair: hair.free()
 			push_error("Body %s is missing %s" % [definition.body_id, required_clip])
 			return null
-	var character := Node3D.new()
+	var character := AssembledCharacter.new()
 	character.name = "Character"
 	body.name = "Body"
 	character.add_child(body)
@@ -71,17 +62,14 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	# imported head rest transform once, then let the socket supply each pose.
 	var rest_inverse := skeleton.get_bone_global_rest(skeleton.find_bone("head")).affine_inverse()
 	face.transform = rest_inverse
-	var hair_socket := Node3D.new()
-	hair_socket.name = "HairSocket"
-	socket.add_child(hair_socket)
-	hair_socket.transform = rest_inverse
-	if hair:
-		hair.name = "Hair"
-		hair_socket.add_child(hair)
 	_apply_toon(body)
 	_apply_toon(face)
-	if hair:
-		_apply_toon(hair)
+	var expression_controller := ExpressionController.new()
+	expression_controller.name = "ExpressionController"
+	character.add_child(expression_controller)
+	if not expression_controller.bind_face(face, definition.expression_profile_id):
+		character.free()
+		return null
 	for clip in ["idle", "walk"]:
 		if player.has_animation(clip):
 			player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR

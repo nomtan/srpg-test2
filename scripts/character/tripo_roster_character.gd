@@ -48,7 +48,26 @@ func set_face_texture(texture: Texture2D) -> bool:
 	var material := face.get_active_material(0) as ShaderMaterial
 	if material == null:
 		return false
-	var replacement := material.duplicate() as ShaderMaterial
-	replacement.set_shader_parameter("base_color_texture", texture)
-	face.set_surface_override_material(0, replacement)
+	# The assembler already gives this Face an instance-owned material.
+	material.set_shader_parameter("base_color_texture", texture)
 	return true
+
+
+func set_expression(expression: String) -> bool:
+	var character := $Model.get_child(0) as AssembledCharacter if $Model.get_child_count() > 0 else null
+	return character.set_expression(expression) if character != null else false
+
+
+func set_eyes(value: String) -> bool:
+	var character := $Model.get_child(0) as AssembledCharacter if $Model.get_child_count() > 0 else null
+	return character.set_eyes(value) if character != null else false
+
+
+func set_eyebrows(value: String) -> bool:
+	var character := $Model.get_child(0) as AssembledCharacter if $Model.get_child_count() > 0 else null
+	return character.set_eyebrows(value) if character != null else false
+
+
+func set_mouth(value: String) -> bool:
+	var character := $Model.get_child(0) as AssembledCharacter if $Model.get_child_count() > 0 else null
+	return character.set_mouth(value) if character != null else false

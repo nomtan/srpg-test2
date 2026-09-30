@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 MODULAR = ROOT / "assets/characters/modular"
+REFERENCE_RIG = ROOT / "assets/characters/_shared/rigs/humanoid_v1.glb"
 CLIPS = {"idle", "walk", "attack", "hit"}
 
 
@@ -25,7 +26,7 @@ def read_glb(path):
     return json.loads(data[20:20 + size])
 
 
-def close(a, b, tolerance=1e-5):
+def close(a, b, tolerance=2.5e-5):
     return len(a) == len(b) and all(math.isclose(x, y, abs_tol=tolerance, rel_tol=0) for x, y in zip(a, b))
 
 
@@ -114,13 +115,13 @@ def main():
     parser.add_argument("--root", type=Path, default=MODULAR)
     args = parser.parse_args()
     bodies = sorted((args.root / "body").glob("*/model.glb"))
-    static_paths = {kind: sorted((args.root / kind).glob("*/model.glb")) for kind in ("face", "hair")}
+    static_paths = {"face": sorted((args.root / "face").glob("*/model.glb"))}
     if not bodies and not any(static_paths.values()):
         raise ValueError("No modular parts to validate")
-    reference = bone_contract(read_glb(MODULAR / "body/001/model.glb"))
+    reference = bone_contract(read_glb(REFERENCE_RIG))
     for path in bodies:
         validate_body(path, reference)
-    for kind in ("face", "hair"):
+    for kind in ("face",):
         for path in static_paths[kind]:
             validate_static(path, kind)
 

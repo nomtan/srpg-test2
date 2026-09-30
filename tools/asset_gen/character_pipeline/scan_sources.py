@@ -57,15 +57,13 @@ def scan_kind(kind: str, required: bool = True) -> tuple[list[dict[str, Any]], l
 def build_catalog() -> tuple[dict[str, Any], list[str]]:
     faces, face_errors = scan_kind("face")
     bodies, body_errors = scan_kind("body")
-    hair, hair_errors = scan_kind("hair", required=False)
     catalog = {
         "schema_version": 1,
         "source_policy": "immutable",
         "face": faces,
         "body": bodies,
-        "hair": hair,
     }
-    return catalog, face_errors + body_errors + hair_errors
+    return catalog, face_errors + body_errors
 
 
 def main() -> int:
@@ -89,7 +87,6 @@ def main() -> int:
 
     print(f"faces: {len(catalog['face'])}")
     print(f"bodies: {len(catalog['body'])}")
-    print(f"hair: {len(catalog['hair'])}")
 
     if errors:
         for error in errors:

@@ -3,6 +3,13 @@ render_mode ambient_light_disabled, specular_disabled;
 
 uniform sampler2D base_color_texture : source_color, filter_linear_mipmap, repeat_enable;
 uniform sampler2D expression_texture : source_color, filter_linear_mipmap, repeat_disable;
+uniform sampler2D eyes_atlas : source_color, filter_linear_mipmap, repeat_disable;
+uniform sampler2D eyebrows_atlas : source_color, filter_linear_mipmap, repeat_disable;
+uniform sampler2D mouth_atlas : source_color, filter_linear_mipmap, repeat_disable;
+uniform bool expression_parts_enabled = false;
+uniform float eyes_row = 0.0;
+uniform float eyebrows_row = 0.0;
+uniform float mouth_row = 0.0;
 uniform bool expression_enabled = false;
 uniform vec2 expression_uv_scale = vec2(1.0, 1.0);
 uniform vec2 expression_uv_offset = vec2(0.0, 0.0);
@@ -45,6 +52,23 @@ void fragment() {
 			vec2 sample_uv = expression_projected ? feature_uv * vec2(0.5, 0.5) + expression_atlas_offset : feature_uv;
 			vec4 expression = texture(expression_texture, sample_uv);
 			base.rgb = mix(base.rgb, expression.rgb, expression.a);
+		}
+	}
+	if (expression_parts_enabled) {
+		vec2 face_uv = vec2(
+			(expression_rest_position.x - expression_face_rect.x) / expression_face_rect.z,
+			1.0 - (expression_rest_position.y - expression_face_rect.y) / expression_face_rect.w
+		);
+		bool face_surface = face_uv.x >= 0.0 && face_uv.x <= 1.0 && face_uv.y >= 0.0 && face_uv.y <= 1.0;
+		face_surface = face_surface && expression_rest_normal.z > 0.15 && expression_rest_position.z >= expression_surface_depth.x && expression_rest_position.z <= expression_surface_depth.y;
+		if (face_surface) {
+			vec2 clamped_uv = clamp(face_uv, vec2(0.002), vec2(0.998));
+			vec4 eyes = texture(eyes_atlas, vec2(clamped_uv.x, (clamped_uv.y + eyes_row) / 8.0));
+			vec4 eyebrows = texture(eyebrows_atlas, vec2(clamped_uv.x, (clamped_uv.y + eyebrows_row) / 6.0));
+			vec4 mouth = texture(mouth_atlas, vec2(clamped_uv.x, (clamped_uv.y + mouth_row) / 7.0));
+			base.rgb = mix(base.rgb, eyes.rgb, eyes.a);
+			base.rgb = mix(base.rgb, eyebrows.rgb, eyebrows.a);
+			base.rgb = mix(base.rgb, mouth.rgb, mouth.a);
 		}
 	}
 	ALBEDO = base.rgb;
