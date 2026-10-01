@@ -44,6 +44,7 @@ func run() -> void:
 			check(expression_controller != null, def.id + " has ExpressionController")
 			if expression_controller != null:
 				var face_material := (meshes[1] as MeshInstance3D).get_active_material(0)
+				check(face_material.get_shader_parameter("expression_parts_enabled") == (face_index != 4), def.id + " shows facial features only on uncovered faces")
 				for expression in ["normal", "angry", "smile"]:
 					check(character.set_expression(expression), def.id + " accepts " + expression)
 				check(character.set_eyes("blink"), def.id + " blinks")

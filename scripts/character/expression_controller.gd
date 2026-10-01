@@ -16,7 +16,7 @@ var _materials: Array[ShaderMaterial] = []
 static var _atlases: Array[Texture2D] = []
 
 
-func bind_face(face: Node3D, profile_id := "") -> bool:
+func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 	_materials.clear()
 	if _atlases.is_empty():
 		for path in ATLAS_PATHS:
@@ -44,7 +44,7 @@ func bind_face(face: Node3D, profile_id := "") -> bool:
 			material.set_shader_parameter("eyes_atlas", _atlases[0])
 			material.set_shader_parameter("eyebrows_atlas", _atlases[1])
 			material.set_shader_parameter("mouth_atlas", _atlases[2])
-			material.set_shader_parameter("expression_parts_enabled", true)
+			material.set_shader_parameter("expression_parts_enabled", show_features)
 			_materials.append(material)
 	if _materials.is_empty():
 		push_error("Face has no toon material for expressions")

@@ -67,7 +67,8 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	var expression_controller := ExpressionController.new()
 	expression_controller.name = "ExpressionController"
 	character.add_child(expression_controller)
-	if not expression_controller.bind_face(face, definition.expression_profile_id):
+	# Face004 is a closed helmet, so facial features should not appear on its visor.
+	if not expression_controller.bind_face(face, definition.expression_profile_id, definition.face_id != "face004"):
 		character.free()
 		return null
 	for clip in ["idle", "walk"]:
