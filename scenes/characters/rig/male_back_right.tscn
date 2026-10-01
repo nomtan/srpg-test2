@@ -2,10 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://dkw584q4mhen8" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
 [ext_resource type="AnimationLibrary" uid="uid://bb6a5thf4655i" path="res://scenes/characters/rig/male_back_attack_animations.tres" id="2_attack"]
-[ext_resource type="Texture2D" uid="uid://d3pfr7myaxx03" path="res://assets/weapons/bow/base.png" id="3_hdkhw"]
 [ext_resource type="Texture2D" uid="uid://d2l2bp7yfbs5v" path="res://assets/characters/male/back_right/waist.png" id="3_piyfy"]
 [ext_resource type="Texture2D" uid="uid://njuqfbg4xmk3" path="res://assets/characters/male/back_right/torso.png" id="4_57y7i"]
-[ext_resource type="Texture2D" uid="uid://cpthgklx8ntx6" path="res://assets/weapons/allow/base.png" id="4_bsv0l"]
 [ext_resource type="Texture2D" uid="uid://cn1rd7nxe1gad" path="res://assets/characters/male/back_right/head.png" id="5_hdkhw"]
 [ext_resource type="Texture2D" uid="uid://da2p4qsftr7wb" path="res://assets/characters/male/back_right/arm_r_upper.png" id="6_bsv0l"]
 [ext_resource type="Texture2D" uid="uid://cefvu88pbfiqs" path="res://assets/characters/male/back_right/arm_r_lower.png" id="7_g1ugt"]
@@ -256,10 +254,10 @@ _data = {
 position = Vector2(711, 164)
 preview_direction = "back_right"
 authored_attack_library = ExtResource("2_attack")
-weapon_texture = ExtResource("3_hdkhw")
+weapon_texture = null
 editor_preview_weapon = "Bow"
 weapon_grip_position = Vector2(630, 680)
-offhand_weapon_texture = ExtResource("4_bsv0l")
+offhand_weapon_texture = null
 offhand_weapon_grip_position = Vector2(626, 202)
 sword_weapon_rotation_offset_degrees = -170.0
 sword_weapon_screen_offset = Vector2(37, -8)
@@ -329,7 +327,7 @@ scale = Vector2(0.62, 0.62)
 
 [node name="WeaponSprite" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot" index="5" unique_id=455959676]
 position = Vector2(-626, -202)
-texture = ExtResource("4_bsv0l")
+texture = null
 
 [node name="ArmLUpper" parent="Root/Waist/Torso" index="3" unique_id=1406694156]
 position = Vector2(93, -205)
@@ -368,7 +366,7 @@ visible = true
 
 [node name="WeaponSprite" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" index="5" unique_id=1428805213]
 position = Vector2(-630, -680)
-texture = ExtResource("3_hdkhw")
+texture = null
 
 [node name="ShieldPivot" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket" index="1" unique_id=1682244269]
 z_index = 50

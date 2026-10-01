@@ -3,8 +3,6 @@ extends Node
 
 const PIXEL_SWORD_TEXTURE := "res://assets/weapons/sword/base.png"
 const PIXEL_SHORT_SWORD_TEXTURE := "res://assets/weapons/short_sword/base.png"
-const PIXEL_BOW_TEXTURE := "res://assets/weapons/bow/base.png"
-const PIXEL_ARROW_TEXTURE := "res://assets/weapons/allow/base.png"
 const DEFAULT_PIXEL_WEAPON_GRIP := Vector2(626, 1000)
 const PIXEL_BOW_GRIP := Vector2(562, 620)
 const PIXEL_ARROW_GRIP := Vector2(626, 190)
@@ -55,9 +53,7 @@ func refresh_weapon_visual(unit: BattleUnit) -> void:
 			flip_pixel_weapon = true
 			pixel_weapon_profile = &"short_sword"
 		WeaponData.WeaponType.BOW:
-			pixel_texture_path = PIXEL_BOW_TEXTURE
 			pixel_weapon_grip = PIXEL_BOW_GRIP
-			pixel_offhand_texture_path = PIXEL_ARROW_TEXTURE
 			pixel_weapon_profile = &"bow"
 	unit.equip_character_rig_weapon(
 		pixel_texture_path,

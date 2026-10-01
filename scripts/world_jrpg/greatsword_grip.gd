@@ -1,6 +1,6 @@
 extends SkeletonModifier3D
-## Weapon ready stance applied after the animation every frame (greatsword and dual daggers).
-## Outside the weapon's clips (idle, walk, run, hit) the right arm holds the loadout's ready stance;
+## Weapon ready stance applied after the animation every frame (greatsword, dual daggers and bow).
+## Outside the weapon's clips (idle, walk, run, hit) the weapon arm holds the loadout's ready stance;
 ## the override fades out as those clips begin and back in once they end.
 ## Standing idle adds the stance's half crouch; the walk cycle is left as animated.
 ## The left hand is solved onto the handle below the right hand wherever the clip swings two-handed.

@@ -5,9 +5,11 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter002.tscn" id="18"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter003.tscn" id="19"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter004.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter005.tscn" id="character005"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter006.tscn" id="character006"]
 
 [node name="JRPGWorldSample" type="Node3D"]
 script = ExtResource("1")
 player_spawn_position = Vector3(300, 30, 60)
 player_model = ExtResource("17")
-character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20")])
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006")])

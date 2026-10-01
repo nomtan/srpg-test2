@@ -2,8 +2,6 @@ extends Node2D
 
 const SWORD_TEXTURE := preload("res://assets/weapons/sword/base.png")
 const SHORT_SWORD_TEXTURE := preload("res://assets/weapons/short_sword/base.png")
-const BOW_TEXTURE := preload("res://assets/weapons/bow/base.png")
-const ARROW_TEXTURE := preload("res://assets/weapons/allow/base.png")
 const SHIELD_TEXTURE := preload("res://assets/weapons/shield/base.png")
 
 @onready var male_front_rig: PixelCharacterRig = $MaleFrontRig
@@ -64,7 +62,7 @@ func _on_short_sword_pressed() -> void:
 func _on_bow_pressed() -> void:
 	shield_toggle.set_pressed_no_signal(false)
 	_equip_shield_all(false)
-	_equip_all(BOW_TEXTURE, &"bow")
+	_equip_all(null, &"bow")
 
 
 func _on_shield_toggled(enabled: bool) -> void:
@@ -89,7 +87,7 @@ func _equip_all(texture: Texture2D, weapon_name: StringName) -> void:
 	var flip_face_on_back: bool = weapon_name == &"short_sword"
 	var is_bow := weapon_name == &"bow"
 	shield_toggle.disabled = is_bow
-	var offhand_texture: Texture2D = ARROW_TEXTURE if is_bow else null
+	var offhand_texture: Texture2D = null
 	var weapon_profile: StringName = weapon_name
 	male_front_rig.equip_weapon(
 		texture,

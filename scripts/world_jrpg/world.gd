@@ -389,6 +389,8 @@ func _spawn_characters() -> void:
 			preload("res://scenes/characters/tripo_roster/charcter002.tscn"),
 			preload("res://scenes/characters/tripo_roster/charcter003.tscn"),
 			preload("res://scenes/characters/tripo_roster/charcter004.tscn"),
+			preload("res://scenes/characters/tripo_roster/charcter005.tscn"),
+			preload("res://scenes/characters/tripo_roster/charcter006.tscn"),
 		]
 	player = Explorer.new()
 	if player_model: player.model_scene = player_model

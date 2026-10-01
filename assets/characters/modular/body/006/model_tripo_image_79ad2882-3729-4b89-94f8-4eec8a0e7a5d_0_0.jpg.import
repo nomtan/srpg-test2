@@ -2,20 +2,24 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3pfr7myaxx03"
-path="res://.godot/imported/base.png-0aeab674b9772f9e1bd32ffd568dae9b.ctex"
+uid="uid://b0ue8pr085aca"
+path.s3tc="res://.godot/imported/model_tripo_image_79ad2882-3729-4b89-94f8-4eec8a0e7a5d_0_0.jpg-ecabab9399c7531ac0dc48f8013ee649.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "430bcccef5c4d187d6b541e49f5bb3b6"
 }
 
 [deps]
 
-source_file="res://assets/weapons/bow/base.png"
-dest_files=["res://.godot/imported/base.png-0aeab674b9772f9e1bd32ffd568dae9b.ctex"]
+source_file="res://assets/characters/modular/body/006/model_tripo_image_79ad2882-3729-4b89-94f8-4eec8a0e7a5d_0_0.jpg"
+dest_files=["res://.godot/imported/model_tripo_image_79ad2882-3729-4b89-94f8-4eec8a0e7a5d_0_0.jpg-ecabab9399c7531ac0dc48f8013ee649.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -23,7 +27,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -37,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

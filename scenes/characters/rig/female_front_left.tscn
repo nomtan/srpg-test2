@@ -2,9 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://dkw584q4mhen8" path="res://scenes/characters/rig/pixel_character_rig_base.tscn" id="1_rig"]
 [ext_resource type="AnimationLibrary" uid="uid://bswt5l4fjs8k6" path="res://scenes/characters/rig/female_front_attack_animations.tres" id="2_attack"]
-[ext_resource type="Texture2D" uid="uid://d3pfr7myaxx03" path="res://assets/weapons/bow/base.png" id="3_7hw7s"]
 [ext_resource type="Texture2D" uid="uid://ca6tdppv67u2t" path="res://assets/characters/female/front_left/waist.png" id="3_begj3"]
-[ext_resource type="Texture2D" uid="uid://cpthgklx8ntx6" path="res://assets/weapons/allow/base.png" id="4_ajays"]
 [ext_resource type="Texture2D" uid="uid://cideet35x37mt" path="res://assets/characters/female/front_left/torso.png" id="4_g53tu"]
 [ext_resource type="Texture2D" uid="uid://scm7uh3oux3m" path="res://assets/characters/female/front_left/head.png" id="5_7hw7s"]
 [ext_resource type="Texture2D" uid="uid://bhsrb68uuidj0" path="res://assets/characters/female/front_left/arm_r_upper.png" id="6_ajays"]
@@ -353,10 +351,10 @@ position = Vector2(709, 162)
 preview_character = "female"
 authored_attack_library = ExtResource("2_attack")
 use_scene_geometry = null
-weapon_texture = ExtResource("3_7hw7s")
+weapon_texture = null
 editor_preview_weapon = "Bow"
 weapon_grip_position = Vector2(562, 620)
-offhand_weapon_texture = ExtResource("4_ajays")
+offhand_weapon_texture = null
 offhand_weapon_grip_position = Vector2(650, 190)
 offhand_weapon_rotation_offset_degrees = 59.0
 sword_weapon_screen_offset = Vector2(-47, -4)
@@ -420,7 +418,7 @@ visible = true
 
 [node name="WeaponSprite" parent="Root/Waist/Torso/ArmRUpper/ArmRLower/HandR/WeaponSocket/WeaponPivot" index="5" unique_id=455959676]
 position = Vector2(-562, -620)
-texture = ExtResource("3_7hw7s")
+texture = null
 
 [node name="ArmLUpper" parent="Root/Waist/Torso" index="3" unique_id=1406694156]
 position = Vector2(73, -161)
@@ -452,7 +450,7 @@ rotation = -0.27925268
 
 [node name="WeaponSprite" parent="Root/Waist/Torso/ArmLUpper/ArmLLower/HandL/WeaponSocket/WeaponPivot" index="5" unique_id=1428805213]
 position = Vector2(-650, -190)
-texture = ExtResource("4_ajays")
+texture = null
 
 [node name="LegRUpper" parent="Root/Waist" index="2" unique_id=1045566017]
 position = Vector2(-49, 21)

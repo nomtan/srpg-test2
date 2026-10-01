@@ -5,8 +5,12 @@ const SWORD = preload("res://assets/weapons/onehand_sword/001/model.glb")
 const SHIELD = preload("res://assets/weapons/shield/001/model.glb")
 const STAFF = preload("res://assets/weapons/staff/001/model.glb")
 const GREATSWORD = preload("res://assets/weapons/gread_sword/001/model.glb")
+const GREATAXE = preload("res://assets/weapons/gread_sword/002/model.glb")
 const DAGGER = preload("res://assets/weapons/short_sword/001/model.glb")
+const BOW = preload("res://assets/weapons/bow/001/bow.glb")
+const ARROW = preload("res://assets/weapons/allow/001/model.glb")
 const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
+const BowShotFx = preload("res://scripts/world_jrpg/bow_shot_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
 const CHARACTER_TOON = preload("res://assets/characters/_shared/materials/character_toon.gdshader")
 const SLASH := "sword/slash"
@@ -19,12 +23,19 @@ const DG_SLASH := "dagger/slash"
 const DG_SLASH_L := "dagger/slash_l"
 const DG_OVERHEAD := "dagger/overhead"
 const DG_GUARD := "dagger/guard"
+const BW_SHOT := "bow/shot"
+const BW_ARC := "bow/arc_shot"
+const BW_GUARD := "bow/guard"
 # Equipment per character; anyone not listed carries the one-handed sword and shield.
-const LOADOUTS := {"charcter001": "greatsword", "charcter002": "dual_daggers", "charcter003": "staff"}
+const LOADOUTS := {"charcter001": "greatsword", "charcter002": "dual_daggers", "charcter003": "staff", "charcter005": "greataxe",
+	"charcter006": "bow"}
 # The sword stands tip-down along +Y; its handle is just above the guard.
 const GRIP := Vector3(0.0, 0.9, 0.0)
-const SWORD_SCALE := 0.6
-const STAFF_SCALE := 1.1
+const SWORD_SCALE := 0.9
+const STAFF_SCALE := 1.65
+# Slash ribbon for the sword and staff, sized to their 1.5x scale.
+const FX_INNER := Vector3(0, 0.22, 0)
+const FX_OUTER := Vector3(0, 1.17, 0)
 const STAFF_GRIP := Vector3(0, 0.22, 0)
 const SHIELD_SCALE := 0.62 * 1.3 * 1.2 * 0.78
 const SHIELD_GRIP := Vector3(0.0, 0.56, 0.0)
@@ -113,11 +124,18 @@ const GUARD_KEYS := [
 const FX := {SLASH: {"trail": Vector2(0.06, 0.26), "impact": 0.13}, OVERHEAD: {"trail": Vector2(0.10, 0.23), "impact": 0.18}}
 
 # Greatsword, held in both hands. The source stands tip-down along +Y with the handle between the guard and pommel.
-const GS_SCALE := 1.0
+const GS_SCALE := 1.5
 const GS_GRIP := Vector3(0.0, 0.825, 0.0) # Right hand, just below the guard.
-const GS_HAND_SPACING := 0.065 # Left hand sits this far toward the pommel.
-const GS_FX_INNER := Vector3(0, 0.2, 0)
-const GS_FX_OUTER := Vector3(0, 1.05, 0)
+const GS_HAND_SPACING := 0.065 # Left hand sits this far toward the pommel; hands keep this gap whatever the weapon scale.
+const GS_FX_INNER := Vector3(0, 0.2, 0) * GS_SCALE
+const GS_FX_OUTER := Vector3(0, 1.05, 0) * GS_SCALE
+# Two-handed axe, swung with the greatsword clips. The source stands head-up along +Y with the haft below,
+# its bit spreading along X like the greatsword's edges, so it needs no flip.
+const GA_SCALE := 2.1
+# Right hand low on the haft; the left hand (GS_HAND_SPACING below) stays clear of the pommel.
+const GA_GRIP := Vector3(0.0, 0.25, 0.0)
+const GA_FX_INNER := Vector3(0, 0.6, 0) * GA_SCALE
+const GA_FX_OUTER := Vector3(0, 0.95, 0) * GA_SCALE
 # Elbow bend directions for the two-handed arm IK (character space).
 const GS_POLES := {"R": Vector3(-.7,-1,-.3), "L": Vector3(.7,-1,-.3)}
 # Greatsword keys use the shared body keys, plus "grip": the right hand's handle point, offset from the
@@ -184,10 +202,10 @@ const GS_FX := {GS_SWEEP: {"trail": Vector2(0.24, 0.44), "impact": 0.34}, GS_SMA
 const GS_CLIPS := {GS_SWEEP: GS_SWEEP_KEYS, GS_SMASH: GS_SMASH_KEYS, GS_GUARD: GS_GUARD_KEYS}
 
 # Dual daggers, one in each hand. The source stands tip-down along +Y like the one-handed sword.
-const DG_SCALE := 0.42
+const DG_SCALE := 0.63
 const DG_GRIP := Vector3(0.0, 0.84, 0.0)
-const DG_FX_INNER := Vector3(0, 0.06, 0)
-const DG_FX_OUTER := Vector3(0, 0.5, 0)
+const DG_FX_INNER := Vector3(0, 0.09, 0)
+const DG_FX_OUTER := Vector3(0, 0.75, 0)
 # Ready stance: the greatsword's, with the right hand carried a little lower and its tip pointing forward,
 # and the left arm held as in the crossed guard, swung about 15 degrees lower at the shoulder
 # ("off"/"blade_l" as in the dagger keys, replacing "off_bend").
@@ -226,6 +244,71 @@ const DG_GUARD_KEYS := [
 		"off": [Vector3(.3,-.45,.8), Vector3(-.3,.7,.8)], "blade_l": Vector3(-.9,.75,.3)},
 ]
 
+# Bow in the left hand, arrows drawn with the right. The bow source stands along +Y with its string side toward +X
+# and no modelled string; the arrow source points its head along +Y with the nock at the origin.
+const BOW_SCALE := 1.2
+const BOW_GRIP := Vector3(-0.026, 0.5, 0.0)
+# Bow-local string ends (inside the tip hooks) and the arrow rest just above the fist.
+const BOW_STRING_TOP := Vector3(0.064, 0.94, 0.0)
+const BOW_STRING_BOTTOM := Vector3(0.064, 0.04, 0.0)
+const BOW_ARROW_REST := Vector3(-0.02, 0.54, 0.0)
+const ARROW_SCALE := 0.75
+# Bow keys use the shared body keys, plus "bow": the left palm on the grip, offset from the shoulder midpoint
+# in arm lengths (character space), and "bow_up": the upper limb's direction. The string faces back along the arm.
+# "draw": the right palm (the arrow's nock), in the same offsets, with "elbow" as its bend direction;
+# "hold": the right hand on the upper limb, this many arm lengths above the grip; otherwise the right arm hangs.
+# "look": how far the head turns back toward the front against the body's turn (default .7).
+# Clips start and end in the ready stance ("ready" keys), held outside them by the grip modifier.
+const BW_DRAW_ELBOW := Vector3(-.4, .35, -1)
+# Ready stance: bow held low at the left side, upper limb forward, the body barely turned.
+const BW_READY := {"yaw": 0.0, "hip_yaw": -10.0, "feet_turn": -10.0, "stance": .05, "hip": Vector3(0,-.05,0),
+	"bow": Vector3(.55,-.8,.35), "bow_up": Vector3(-.1,.5,1)}
+# Side-on stance for aiming: feet across the line of fire, the left shoulder toward the target (+Z).
+const BW_AIM := {"yaw": -40.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95}
+# Straight shot: raise the bow and nock, draw to the cheek, a short aim, loose, follow through, and lower the bow.
+const BW_SHOT_KEYS := [
+	{"t": 0.0, "ready": true},
+	{"t": 0.10, "yaw": -30.0, "hip_yaw": -40.0, "feet_turn": -55.0, "stance": .1, "hip": Vector3(0,-.07,0), "look": .9,
+		"bow": Vector3(.2,-.2,.8), "bow_up": Vector3(.25,1,.1), "draw": Vector3(.05,-.2,.45)},
+	{"t": 0.24, "yaw": -40.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95,
+		"bow": Vector3(-.1,.05,1.15), "bow_up": Vector3(.08,1,0), "draw": Vector3(-.25,.1,.05)},
+	{"t": 0.34, "yaw": -40.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95,
+		"bow": Vector3(-.1,.05,1.15), "bow_up": Vector3(.08,1,0), "draw": Vector3(-.27,.1,-.02)},
+	# Loosed: the drawing hand springs back past the ear and the bow tips forward.
+	{"t": 0.39, "yaw": -44.0, "pitch": -3.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95,
+		"bow": Vector3(-.1,.03,1.18), "bow_up": Vector3(.08,1,.18), "draw": Vector3(-.35,.14,-.35)},
+	{"t": 0.52, "yaw": -42.0, "pitch": -2.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95,
+		"bow": Vector3(-.1,0,1.15), "bow_up": Vector3(.08,1,.15), "draw": Vector3(-.4,.08,-.4)},
+	{"t": 0.75, "ready": true},
+]
+# Charged high shot: lean back and aim steeply up, hold the full draw while it charges, then loose into a long arc.
+const BW_ARC_KEYS := [
+	{"t": 0.0, "ready": true},
+	{"t": 0.12, "yaw": -30.0, "hip_yaw": -40.0, "feet_turn": -55.0, "stance": .12, "hip": Vector3(0,-.1,0), "look": .9,
+		"bow": Vector3(.2,-.1,.8), "bow_up": Vector3(.25,1,-.1), "draw": Vector3(.05,-.1,.45)},
+	{"t": 0.32, "yaw": -40.0, "pitch": -14.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .12, "hip": Vector3(0,-.1,-.02), "look": .95,
+		"bow": Vector3(-.1,.7,.95), "bow_up": Vector3(.08,.8,-.6), "draw": Vector3(-.25,.15,.05)},
+	{"t": 0.55, "yaw": -40.0, "pitch": -16.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .12, "hip": Vector3(0,-.12,-.02), "look": .95,
+		"bow": Vector3(-.1,.72,.95), "bow_up": Vector3(.08,.8,-.6), "draw": Vector3(-.27,.13,0)},
+	{"t": 0.60, "yaw": -44.0, "pitch": -18.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .12, "hip": Vector3(0,-.12,-.02), "look": .95,
+		"bow": Vector3(-.1,.75,.98), "bow_up": Vector3(.08,.8,-.45), "draw": Vector3(-.35,.2,-.35)},
+	{"t": 0.75, "yaw": -42.0, "pitch": -12.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .12, "hip": Vector3(0,-.1,-.02), "look": .95,
+		"bow": Vector3(-.1,.65,.98), "bow_up": Vector3(.08,.8,-.4), "draw": Vector3(-.4,.1,-.4)},
+	{"t": 1.0, "ready": true},
+]
+# Guard: crouch and hold the bow across the front of the body, the right hand bracing the upper limb.
+const BW_GUARD_KEYS := [
+	{"t": 0.0, "ready": true},
+	{"t": 0.12, "yaw": -10.0, "pitch": 6.0, "hip_yaw": -10.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.06), "back": Vector3(0,0,-.1),
+		"bow": Vector3(.35,-.1,.75), "bow_up": Vector3(-1,.7,.1), "hold": .45},
+]
+# Arrow nocked from "nock" until loosed at "release" (seconds), then flying at "speed" (m/s) dropping by "gravity";
+# "flash" sizes the release star, "trail" colours the arrow's wake.
+const BW_FX := {
+	BW_SHOT: {"nock": 0.10, "release": 0.35, "speed": 28.0, "gravity": 2.0, "flash": 0.45, "trail": Color(1, 1, 1, 0.8)},
+	BW_ARC: {"nock": 0.12, "release": 0.56, "speed": 18.0, "gravity": 14.0, "flash": 0.9, "trail": Color(1, 0.86, 0.45, 0.9)},
+}
+
 var skeleton: Skeleton3D
 var socket: BoneAttachment3D
 var grip: Node3D
@@ -245,6 +328,9 @@ var alt_slash_clip := ""
 var _alt_next := false
 # Left-hand weapon grip for dual wielding.
 var off_grip: Node3D
+# Bow loadout: the bow model (authored frame) and the drawing hand's nock point.
+var bow_model: Node3D
+var nock: Node3D
 # Skeleton-space shield orientation in the idle pose; the guard pose rotates the hand from it.
 var _shield_rest := Basis.IDENTITY
 # Right arm length to the palm; ready-stance and greatsword grip offsets are measured in it.
@@ -288,9 +374,10 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 	fx.name = "SwordSlashFx"
 	var library := AnimationLibrary.new()
 	match LOADOUTS.get(model.get("character_id"), "sword_shield"):
-		"greatsword":
-			_attach_greatsword()
-			fx.setup(grip, player, GS_FX, GS_FX_INNER, GS_FX_OUTER)
+		"greatsword", "greataxe":
+			var axe: bool = LOADOUTS.get(model.get("character_id")) == "greataxe"
+			_attach_greatsword(axe)
+			fx.setup(grip, player, GS_FX, GA_FX_INNER if axe else GS_FX_INNER, GA_FX_OUTER if axe else GS_FX_OUTER)
 			library.add_animation("sweep", _make_clip(path, "大剣・横薙ぎ", GS_SWEEP_KEYS))
 			library.add_animation("smash", _make_clip(path, "大剣・振り下ろし", GS_SMASH_KEYS))
 			library.add_animation("guard", _make_clip(path, "大剣・防御", GS_GUARD_KEYS))
@@ -332,6 +419,26 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			holder.setup(self, player, "dagger/")
 			skeleton.add_child(holder)
 			return true
+		"bow":
+			_attach_bow()
+			var shot_fx := BowShotFx.new()
+			shot_fx.name = "BowShotFx"
+			shot_fx.setup(bow_model, nock, player, BW_FX, _make_arrow, BOW_STRING_TOP, BOW_STRING_BOTTOM, BOW_ARROW_REST)
+			model.add_child(shot_fx)
+			library.add_animation("shot", _make_clip(path, "弓・射撃", BW_SHOT_KEYS))
+			library.add_animation("arc_shot", _make_clip(path, "弓・曲射", BW_ARC_KEYS))
+			library.add_animation("guard", _make_clip(path, "弓・防御", BW_GUARD_KEYS))
+			player.add_animation_library("bow", library)
+			slash_clip = BW_SHOT
+			overhead_clip = BW_ARC
+			guard_clip = BW_GUARD
+			# Holds the bow low at the side outside the bow clips.
+			ready_stance = BW_READY
+			var holder: SkeletonModifier3D = TwoHandGrip.new()
+			holder.name = "BowReadyGrip"
+			holder.setup(self, player, "bow/")
+			skeleton.add_child(holder)
+			return true
 		"staff":
 			_attach_staff()
 		_:
@@ -339,7 +446,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			_attach_shield()
 			has_shield = true
 			guard_clip = GUARD
-	fx.setup(grip, player, FX)
+	fx.setup(grip, player, FX, FX_INNER, FX_OUTER)
 	model.add_child(fx)
 	library.add_animation("slash", _make_clip(path, "横薙ぎ", SLASH_KEYS))
 	library.add_animation("overhead", _make_clip(path, "上段斬り", OVERHEAD_KEYS))
@@ -461,16 +568,9 @@ func _attach_staff() -> void:
 	staff.position = -STAFF_GRIP * STAFF_SCALE
 	grip.add_child(staff)
 
-func _attach_greatsword() -> void:
+func _attach_greatsword(axe := false) -> void:
 	two_handed = true
-	# Each hand holds the handle across its palm: fingers perpendicular to the blade, thumb toward the tip.
-	# The thumb side comes from the idle hand (mirrored for the left), so each rig keeps its natural roll.
-	for side in ["R", "L"]:
-		var hand: Basis = (_idle_global[rig["hand." + side]] as Transform3D).basis.orthonormalized()
-		var thumb := READY_BLADE * (Vector3(-1, 1, 1) if side == "L" else Vector3.ONE)
-		thumb = (thumb - hand.y * hand.y.dot(thumb)).normalized()
-		var local_thumb := hand.inverse() * thumb
-		_hand_frame[side] = Basis(Vector3.UP, local_thumb, Vector3.UP.cross(local_thumb)).inverse()
+	_set_thumb_frames()
 	socket = BoneAttachment3D.new()
 	socket.name = "GreatswordHandSocket"
 	socket.bone_name = rig["hand.R"]
@@ -481,13 +581,60 @@ func _attach_greatsword() -> void:
 	# Blade along the thumb axis, edges along the fingers.
 	grip.basis = (_hand_frame["R"] as Basis).inverse()
 	socket.add_child(grip)
-	var sword := GREATSWORD.instantiate() as Node3D
+	var sword := (GREATAXE if axe else GREATSWORD).instantiate() as Node3D
 	_apply_character_toon(sword)
-	sword.name = "EquippedGreatsword"
-	# Same flip as the one-handed sword: tip up along +Y, handle at the grip.
-	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * GS_SCALE)
-	sword.position = -(sword.basis * GS_GRIP)
+	sword.name = "EquippedGreataxe" if axe else "EquippedGreatsword"
+	# Same flip as the one-handed sword: tip up along +Y, handle at the grip. The axe already stands head-up.
+	sword.basis = (Basis.IDENTITY if axe else Basis(Vector3.RIGHT, PI)).scaled(Vector3.ONE * (GA_SCALE if axe else GS_SCALE))
+	sword.position = -(sword.basis * (GA_GRIP if axe else GS_GRIP))
 	grip.add_child(sword)
+
+## Each hand holds a handle across its palm: fingers perpendicular to the handle, thumb along it.
+## The thumb side comes from the idle hand (mirrored for the left), so each rig keeps its natural roll.
+func _set_thumb_frames() -> void:
+	for side in ["R", "L"]:
+		var hand: Basis = (_idle_global[rig["hand." + side]] as Transform3D).basis.orthonormalized()
+		var thumb := READY_BLADE * (Vector3(-1, 1, 1) if side == "L" else Vector3.ONE)
+		thumb = (thumb - hand.y * hand.y.dot(thumb)).normalized()
+		var local_thumb := hand.inverse() * thumb
+		_hand_frame[side] = Basis(Vector3.UP, local_thumb, Vector3.UP.cross(local_thumb)).inverse()
+
+func _attach_bow() -> void:
+	_set_thumb_frames()
+	var bow_socket := BoneAttachment3D.new()
+	bow_socket.name = "BowHandSocket"
+	bow_socket.bone_name = rig["hand.L"]
+	skeleton.add_child(bow_socket)
+	grip = Node3D.new()
+	grip.name = "BowGrip"
+	grip.position = Vector3(0, rig["palm"], 0)
+	# Upper limb along the thumb axis, fingers wrapped across the grip.
+	grip.basis = (_hand_frame["L"] as Basis).inverse()
+	bow_socket.add_child(grip)
+	bow_model = BOW.instantiate() as Node3D
+	_apply_character_toon(bow_model)
+	bow_model.name = "EquippedBow"
+	# Half-turned about the limbs so the string side faces back along the fingers, toward the archer.
+	bow_model.basis = Basis(Vector3.UP, PI).scaled(Vector3.ONE * BOW_SCALE)
+	bow_model.position = -(bow_model.basis * BOW_GRIP)
+	grip.add_child(bow_model)
+	socket = BoneAttachment3D.new()
+	socket.name = "BowDrawSocket"
+	socket.bone_name = rig["hand.R"]
+	skeleton.add_child(socket)
+	nock = Node3D.new()
+	nock.name = "BowNock"
+	nock.position = Vector3(0, rig["palm"], 0)
+	socket.add_child(nock)
+
+## A new arrow for the bow effect: nock at the pivot, head along +Y, at the character's scale before display scaling.
+func _make_arrow() -> Node3D:
+	var pivot := Node3D.new()
+	var arrow := ARROW.instantiate() as Node3D
+	_apply_character_toon(arrow)
+	arrow.scale = Vector3.ONE * ARROW_SCALE
+	pivot.add_child(arrow)
+	return pivot
 
 func _attach_shield() -> void:
 	var shield_socket := BoneAttachment3D.new()
@@ -549,9 +696,10 @@ func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 	return animation
 
 func _pose(key: Dictionary) -> Dictionary:
-	key = gs_key(key)
+	# "ready" keys take the equipped loadout's ready stance (the greatsword's for the greatsword clips).
+	if key.get("ready", false): key = ready_stance.merged(key)
 	var pose := _idle.duplicate()
-	if not key.has("blade") and not key.has("blade_l"): return pose
+	if not key.has("blade") and not key.has("blade_l") and not key.has("bow"): return pose
 	var hip_yaw: float = key.get("hip_yaw", 0.0)
 	if not legs.is_empty():
 		# Drop and shift the pelvis (in leg lengths), then keep the feet planted with leg IK.
@@ -575,8 +723,11 @@ func _pose(key: Dictionary) -> Dictionary:
 	_set_global(pose, rig["spine"], spine)
 	# Counter-rotate the head so the eyes stay on the target while the body turns.
 	var head := _global(pose, skeleton.find_bone(rig["head"]))
-	head.basis = Basis(Vector3.UP, deg_to_rad(-(yaw + hip_yaw) * .7)) * head.basis
+	head.basis = Basis(Vector3.UP, deg_to_rad(-(yaw + hip_yaw) * key.get("look", .7))) * head.basis
 	_set_global(pose, rig["head"], head)
+	if key.has("bow"):
+		_bow_arms(pose, key)
+		return pose
 	if key.has("grip"):
 		_grip_arms(pose, key.grip, key.blade, not key.get("one_hand", false), key.get("elbow", Vector3.ZERO))
 		_bend_off_arm(pose, key.get("off_bend", 0.0))
@@ -692,6 +843,15 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 			var bone := _global(pose, skeleton.find_bone(spec[0]))
 			bone.basis = Basis(Vector3.UP, spec[1]) * bone.basis
 			_set_global(pose, spec[0], bone)
+		if ready_stance.has("bow"):
+			# Hold the bow as keyed, blended from the animated left arm; the right arm keeps its own swing.
+			var animated_left: Array = left.map(func(bone: String) -> Transform3D: return pose[bone])
+			_bow_arms(pose, ready_stance)
+			for index in left.size():
+				pose[left[index]] = (animated_left[index] as Transform3D).interpolate_with(pose[left[index]], ready_weight)
+			for bone: String in torso + left:
+				target.set_bone_pose(target.find_bone(bone), pose[bone])
+			return
 		if ready_stance.has("off"):
 			# Hold the left arm and its weapon as keyed, blended from the animated arm.
 			var animated_left: Array = left.map(func(bone: String) -> Transform3D: return pose[bone])
@@ -709,11 +869,31 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 		var animated: Array = left.map(func(bone: String) -> Transform3D: return pose[bone])
 		var hand := _global(pose, skeleton.find_bone(rig["hand.R"]))
 		var blade := (hand.basis * (_hand_frame["R"] as Basis).inverse().y).normalized()
-		_hold(pose, "L", hand * Vector3(0, rig["palm"], 0) - blade * GS_HAND_SPACING * GS_SCALE, blade)
+		_hold(pose, "L", hand * Vector3(0, rig["palm"], 0) - blade * GS_HAND_SPACING, blade)
 		for index in left.size():
 			pose[left[index]] = (animated[index] as Transform3D).interpolate_with(pose[left[index]], two_hand)
 	for bone: String in torso + right + left:
 		target.set_bone_pose(target.find_bone(bone), pose[bone])
+
+## Left hand on the bow grip; the right hand draws the string, braces the upper limb, or is left as it is.
+func _bow_arms(pose: Dictionary, key: Dictionary) -> void:
+	var shoulders := _shoulders(pose)
+	var up: Vector3 = (key.bow_up as Vector3).normalized()
+	var bow_point: Vector3 = shoulders + (key.bow as Vector3) * arm_reach
+	_hold(pose, "L", bow_point, up)
+	if key.has("draw"):
+		var hand_point: Vector3 = shoulders + (key.draw as Vector3) * arm_reach
+		var aim := (bow_point - hand_point).normalized()
+		_reach(pose, "R", hand_point - aim * rig["palm"], key.get("elbow", BW_DRAW_ELBOW))
+		# The hand carries on from the wrist toward the bow, fingers hooked on the string.
+		var hand := _global(pose, skeleton.find_bone(rig["hand.R"]))
+		hand.basis = Basis(Quaternion(hand.basis.y.normalized(), aim)) * hand.basis
+		_set_global(pose, rig["hand.R"], hand)
+	elif key.has("hold"):
+		_hold(pose, "R", bow_point + up * (key.hold as float) * arm_reach, up)
+
+func _shoulders(pose: Dictionary) -> Vector3:
+	return (_global(pose, skeleton.find_bone(rig["upper_arm.R"])).origin + _global(pose, skeleton.find_bone(rig["upper_arm.L"])).origin) * 0.5
 
 ## Swing the left forearm forward at the elbow (about the character's side axis), keeping whatever the upper arm does.
 func _bend_off_arm(pose: Dictionary, degrees: float) -> void:
@@ -724,12 +904,11 @@ func _bend_off_arm(pose: Dictionary, degrees: float) -> void:
 
 ## The right hand at the grip point (offset from the shoulders in arm lengths); with both, the left hand just below it.
 func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3, both := true, elbow := Vector3.ZERO) -> void:
-	var shoulders := (_global(pose, skeleton.find_bone(rig["upper_arm.R"])).origin + _global(pose, skeleton.find_bone(rig["upper_arm.L"])).origin) * 0.5
-	var point := shoulders + offset * arm_reach
+	var point := _shoulders(pose) + offset * arm_reach
 	blade = blade.normalized()
 	_hold(pose, "R", point, blade, elbow)
 	if both:
-		_hold(pose, "L", point - blade * GS_HAND_SPACING * GS_SCALE, blade)
+		_hold(pose, "L", point - blade * GS_HAND_SPACING, blade)
 
 ## Put the palm center of one hand on a handle point, fingers wrapping across the blade axis.
 func _hold(pose: Dictionary, side: String, point: Vector3, blade: Vector3, elbow := Vector3.ZERO) -> void:

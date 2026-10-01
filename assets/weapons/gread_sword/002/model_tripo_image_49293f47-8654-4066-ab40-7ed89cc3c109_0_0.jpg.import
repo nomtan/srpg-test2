@@ -2,23 +2,24 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d38lt8kr7faxe"
-path="res://.godot/imported/model_tripo_image_1144a5d3-689a-4d03-8c3f-e14bbad0ed7e_0_0.jpg-805d5f666f492eb7bfbe6da2d393174f.ctex"
+uid="uid://b3pcedrxo7qp3"
+path.s3tc="res://.godot/imported/model_tripo_image_49293f47-8654-4066-ab40-7ed89cc3c109_0_0.jpg-6a0ce4adf3c4e26a876b05095bf1a074.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
-"md5": "176e18baa3b4ba22785657dd8a4aa00e"
+"md5": "026ad7cda079127527c2ec23ced5fdfb"
 }
 
 [deps]
 
-source_file="res://assets/characters/tripo/face/005/model_tripo_image_1144a5d3-689a-4d03-8c3f-e14bbad0ed7e_0_0.jpg"
-dest_files=["res://.godot/imported/model_tripo_image_1144a5d3-689a-4d03-8c3f-e14bbad0ed7e_0_0.jpg-805d5f666f492eb7bfbe6da2d393174f.ctex"]
+source_file="res://assets/weapons/gread_sword/002/model_tripo_image_49293f47-8654-4066-ab40-7ed89cc3c109_0_0.jpg"
+dest_files=["res://.godot/imported/model_tripo_image_49293f47-8654-4066-ab40-7ed89cc3c109_0_0.jpg-6a0ce4adf3c4e26a876b05095bf1a074.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -40,7 +40,7 @@ func run() -> void:
 	check(not actor.attack(), "Cannot attack while guarding")
 	actor.set_guard(false)
 	check(not actor.guarding and actor.animation_player.current_animation == "idle", "Releasing guard returns to idle")
-	var ids := ["charcter001", "charcter002", "charcter003", "charcter004"]
+	var ids := ["charcter001", "charcter002", "charcter003", "charcter004", "charcter005", "charcter006"]
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
 		actor.running = clip == "run"
@@ -57,6 +57,10 @@ func run() -> void:
 				check(actor.model.find_child("EquippedDaggerR", true, false) != null and actor.model.find_child("EquippedDaggerL", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 002 equips a dagger in each hand")
 			if ids[next] == "charcter004":
 				check(actor.model.find_child("EquippedSword", true, false) != null and actor.model.find_child("EquippedShield", true, false) != null, "Character 004 equips the one-handed sword and shield")
+			if ids[next] == "charcter005":
+				check(actor.model.find_child("EquippedGreataxe", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 005 equips the two-handed axe")
+			if ids[next] == "charcter006":
+				check(actor.model.find_child("EquippedBow", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 006 equips the bow")
 			check(world.player == actor and actor.position == origin, "Actor identity and position stay unchanged")
 			var expected_clip: String = "walk" if clip == "run" and not actor.animation_player.has_animation("run") else clip
 			check(actor.animation_player.current_animation == expected_clip, "Current movement animation is preserved")

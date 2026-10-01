@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cfnpehw86cx01"
-path="res://.godot/imported/bow.glb-242c0af6b41703250fd05eda7c2b77fc.scn"
+uid="uid://b5vy3mvi2vdvu"
+path="res://.godot/imported/model.glb-fd7f6ddad90d648c09bcaf1ab949f5d7.scn"
 
 [deps]
 
-source_file="res://assets/weapons/bow/bow.glb"
-dest_files=["res://.godot/imported/bow.glb-242c0af6b41703250fd05eda7c2b77fc.scn"]
+source_file="res://assets/characters/modular/face/005/model.glb"
+dest_files=["res://.godot/imported/model.glb-fd7f6ddad90d648c09bcaf1ab949f5d7.scn"]
 
 [params]
 

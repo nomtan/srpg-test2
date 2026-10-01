@@ -12,8 +12,6 @@ const ATTACK_ANIMATION_PLAYER_NAME := &"authored/attack"
 const BOW_ATTACK_ANIMATION_PLAYER_NAME := &"authored/bow_attack"
 const PREVIEW_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/sword/base.png")
 const PREVIEW_SHORT_SWORD_TEXTURE: Texture2D = preload("res://assets/weapons/short_sword/base.png")
-const PREVIEW_BOW_TEXTURE: Texture2D = preload("res://assets/weapons/bow/base.png")
-const PREVIEW_ARROW_TEXTURE: Texture2D = preload("res://assets/weapons/allow/base.png")
 const DEFAULT_WEAPON_GRIP_POSITION := Vector2(626, 1000)
 const ARROW_GRIP_POSITION := Vector2(626, 190)
 const CHARACTER_DIRECTORIES := {
@@ -327,8 +325,8 @@ func _apply_editor_preview_weapon() -> void:
 			weapon_animation_profile = &"short_sword"
 			flip_weapon_face_on_back = true
 		"Bow":
-			weapon_texture = PREVIEW_BOW_TEXTURE
-			offhand_weapon_texture = PREVIEW_ARROW_TEXTURE
+			weapon_texture = null
+			offhand_weapon_texture = null
 			weapon_animation_profile = &"bow"
 			flip_weapon_face_on_back = false
 		_:

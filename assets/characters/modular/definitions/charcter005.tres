@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/character_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "charcter005"
+body_id = "body005"
+face_id = "face005"
