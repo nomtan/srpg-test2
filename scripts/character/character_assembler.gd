@@ -7,6 +7,11 @@ const CHARACTER_TOON := preload("res://assets/characters/_shared/materials/chara
 static var _toon_materials: Dictionary = {}
 
 
+static func clear_cached_materials() -> void:
+	# Primarily for deterministic headless test shutdown and editor reloads.
+	_toon_materials.clear()
+
+
 static func assemble(definition: CharacterDefinition) -> Node3D:
 	if definition == null:
 		push_error("CharacterAssembler requires a CharacterDefinition")
@@ -99,10 +104,21 @@ static func _apply_toon(root: Node) -> void:
 			var source := mesh.get_active_material(surface) as BaseMaterial3D
 			if source == null or source.albedo_texture == null:
 				continue
-			var key := source.albedo_texture.get_instance_id()
+			var semantic := _material_semantic(source.resource_name)
+			var key := "%s:%s" % [source.albedo_texture.get_instance_id(), semantic]
 			if not _toon_materials.has(key):
 				var toon := ShaderMaterial.new()
+				toon.resource_name = semantic
 				toon.shader = CHARACTER_TOON
 				toon.set_shader_parameter("base_color_texture", source.albedo_texture)
 				_toon_materials[key] = toon
 			mesh.set_surface_override_material(surface, _toon_materials[key])
+
+
+static func _material_semantic(source_name: String) -> String:
+	var lowered := source_name.to_lower()
+	if lowered.begins_with("head"):
+		return "Head"
+	if lowered.begins_with("hair"):
+		return "Hair"
+	return "LegacyCombined"

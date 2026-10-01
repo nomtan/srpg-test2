@@ -32,7 +32,19 @@ def contract(kind, part_id):
     path = MODULAR / kind / part_id / "normalization.json"
     if not path.is_file():
         raise ValueError(f"Missing per-part normalization contract: {path}")
-    return json.loads(path.read_text(encoding="utf8"))
+    settings = json.loads(path.read_text(encoding="utf8"))
+    expected = {
+        "standard": "ashen_character_v1",
+        "version": 1,
+        "asset_type": kind,
+        "id": part_id,
+        "rig_profile": "humanoid_v1",
+        "coordinate_space": "humanoid_v1_rest",
+    }
+    mismatches = [key for key, value in expected.items() if settings.get(key) != value]
+    if mismatches:
+        raise ValueError(f"Invalid Standard v1 metadata fields {mismatches}: {path}")
+    return settings
 
 
 def assert_identity(obj, label):
@@ -48,6 +60,25 @@ def inspect_static(obj, kind):
     if obj.vertex_groups or any(mod.type == "ARMATURE" for mod in obj.modifiers):
         raise ValueError(f"{kind} cannot be skinned")
     assert_identity(obj, kind)
+
+
+def clean_toon_materials(obj):
+    """Keep the base-color path and remove PBR inputs ignored by the game shader."""
+    for material in obj.data.materials:
+        if material is None or not material.use_nodes:
+            continue
+        tree = material.node_tree
+        principled = next((node for node in tree.nodes if node.type == "BSDF_PRINCIPLED"), None)
+        if principled is None:
+            continue
+        keep = {"Base Color", "Alpha"}
+        for socket in principled.inputs:
+            if socket.name not in keep:
+                for link in list(socket.links):
+                    tree.links.remove(link)
+        for name, value in (("Metallic", 0.0), ("Roughness", 1.0), ("Specular IOR Level", 0.0)):
+            if name in principled.inputs:
+                principled.inputs[name].default_value = value
 
 
 def export(path, objects, animations):
@@ -98,6 +129,7 @@ def prepare_body(part_id, settings):
         for collection in list(donor.users_collection):
             collection.objects.unlink(donor)
     body.name = "Body"
+    clean_toon_materials(body)
     body.data.materials[0].name = "Body_" + part_id
     root = bpy.data.objects.new("Character", None)
     bpy.context.scene.collection.objects.link(root)
@@ -111,6 +143,33 @@ def prepare_body(part_id, settings):
     assert_identity(rig, "Body rig")
     assert_identity(body, "Body mesh")
     return [root, rig, body]
+
+
+def normalize_head_hair_materials(part, part_id):
+    """Require an explicit Head/Hair material boundary for post-v1 faces.
+
+    Geometry guessing is intentionally avoided: a false hair classification can
+    project eyes onto bangs. Reference faces 001-006 remain legacy-compatible.
+    """
+    if int(part_id) <= 6:
+        return
+    head = []
+    hair = []
+    for material in part.data.materials:
+        lowered = material.name.lower()
+        if lowered.startswith("head"):
+            head.append(material)
+        elif lowered.startswith("hair"):
+            hair.append(material)
+    if not head or not hair:
+        raise ValueError(
+            "Standard v1 Face requires materials named Head* and Hair*; "
+            "prepare the source in Blender instead of guessing geometry"
+        )
+    for index, material in enumerate(head):
+        material.name = "Head" if index == 0 else f"Head_{index + 1:02d}"
+    for index, material in enumerate(hair):
+        material.name = "Hair" if index == 0 else f"Hair_{index + 1:02d}"
 
 
 def prepare_static(kind, part_id, settings):
@@ -127,6 +186,9 @@ def prepare_static(kind, part_id, settings):
     part.data.transform(Matrix.Translation(Vector(position)) @ Matrix.Scale(scale, 4) @ part.matrix_world)
     part.matrix_world = Matrix.Identity(4)
     part.name = kind.capitalize()
+    clean_toon_materials(part)
+    if kind == "face":
+        normalize_head_hair_materials(part, part_id)
     inspect_static(part, kind)
     return [part]
 
@@ -144,6 +206,8 @@ def main():
         raise ValueError("Output cannot overwrite immutable Tripo sources")
     before_hash = hashlib.sha256(source.read_bytes()).hexdigest()
     settings = contract(args.kind, args.id)
+    if settings.get("source_sha256") != before_hash:
+        raise ValueError("Immutable Tripo source hash differs from normalization metadata")
     scene = bpy.context.scene
     scene.unit_settings.scale_length = 1.0
     scene.unit_settings.system = "METRIC"

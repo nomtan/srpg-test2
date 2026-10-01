@@ -1,5 +1,7 @@
 # Body / Face ランタイム移行と Phase 3 表情
 
+> Phase 4 の001〜006実測、Performance Budget、Head/Hair contract、Inspector / Validator は [Ashen Vow Character Asset Standard v1](character-asset-standard-v1.md) を参照する。
+
 ## 現行構造
 
 `CharacterDefinition(body_id, face_id, expression_profile_id)` から `CharacterAssembler` がBodyとFaceを装着する。Face 001〜004は頭部と髪を一体とした既存GLBをそのまま使う。Bodyの唯一のSkeletonにある `head` ボーンへFace全体が追従し、Bodyの4クリップは維持する。`ExpressionController` が目・眉・口のatlas行を個体のFace材質へ設定する。Body側のトゥーン材質、FaceのMesh、テクスチャ、shaderは共有し、表情parameterを持つFace材質だけ複製する。

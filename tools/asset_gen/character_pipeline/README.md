@@ -1,5 +1,12 @@
 # Character Pipeline Tools
 
+正式な Phase 4 仕様と新規アセット手順:
+
+- `docs/character/character-asset-standard-v1.md`
+- `docs/character/character-asset-golden-path.md`
+- `inspect_character_asset.py`: source / modular の機械可読メトリクス
+- `validate_modular_parts.py`: Standard v1 の PASS / WARNING / FAIL 判定
+
 Tripoで生成したFace/Bodyのraw GLBを、Blender MCPでGodot用キャラクターへ変換するための補助ツール。
 
 ## Source layout

@@ -1,5 +1,13 @@
 {
-  "coordinate_space": "humanoid_v1 skeleton rest, Blender Z-up meters",
+  "standard": "ashen_character_v1",
+  "version": 1,
+  "asset_type": "face",
+  "id": "003",
+  "rig_profile": "humanoid_v1",
+  "coordinate_space": "humanoid_v1_rest",
+  "expression_profile": "default",
+  "legacy_exception": "source head is narrower and taller; preserve intentional silhouette and neck fit",
+  "source_sha256": "143991792963967f2885dc550e1363a911c39d15cb4f977f4cee3749a95bdd6c",
   "position": [
     0,
     -0.055,

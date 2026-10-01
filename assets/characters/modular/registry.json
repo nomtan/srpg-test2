@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "standard": "ashen_character_v1",
+  "reference_set": {
+    "bodies": ["body001", "body002", "body003", "body004", "body005", "body006"],
+    "faces": ["face001", "face002", "face003", "face004", "face005", "face006"]
+  },
+  "legacy_characters": ["charcter001", "charcter002", "charcter003", "charcter004"],
+  "roster_characters": ["charcter001", "charcter002", "charcter003", "charcter004", "charcter005", "charcter006"]
+}

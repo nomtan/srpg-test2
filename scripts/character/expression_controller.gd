@@ -37,6 +37,10 @@ func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 			var source := mesh.get_active_material(surface) as ShaderMaterial
 			if source == null:
 				continue
+			# Standard v1 faces name surfaces Head* / Hair*. Legacy reference
+			# faces have one combined surface and remain compatible.
+			if source.resource_name.begins_with("Hair"):
+				continue
 			var material := source.duplicate() as ShaderMaterial
 			mesh.set_surface_override_material(surface, material)
 			material.set_shader_parameter("expression_face_rect", profile.face_rect)
