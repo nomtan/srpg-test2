@@ -1,0 +1,277 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+PASS: fixture 0 binds v2
+PASS: fixture 1 binds v2
+PASS: fixture 2 binds v2
+PASS: fixture 3 binds v2
+PASS: fixture 4 binds v2
+PASS: fixture 5 binds v2
+PASS: fixture 6 binds v2
+PASS: fixture 7 binds v2
+PASS: fixture 8 binds v2
+PASS: fixture 9 binds v2
+PASS: fixture 10 binds v2
+PASS: fixture 11 binds v2
+PASS: fixture 12 binds v2
+PASS: fixture 13 binds v2
+PASS: fixture 14 binds v2
+PASS: fixture 15 binds v2
+PASS: fixture 16 binds v2
+PASS: fixture 17 binds v2
+PASS: fixture 18 binds v2
+PASS: fixture 19 binds v2
+PASS: fixture 20 binds v2
+PASS: fixture 21 binds v2
+PASS: fixture 22 binds v2
+PASS: fixture 23 binds v2
+PASS: fixture 24 binds v2
+PASS: fixture 25 binds v2
+PASS: fixture 26 binds v2
+PASS: fixture 27 binds v2
+PASS: fixture 28 binds v2
+PASS: fixture 29 binds v2
+PASS: fixture 30 binds v2
+PASS: fixture 31 binds v2
+PASS: fixture 32 binds v2
+PASS: fixture 33 binds v2
+PASS: fixture 34 binds v2
+PASS: fixture 35 binds v2
+PASS: fixture 36 binds v2
+PASS: fixture 37 binds v2
+PASS: fixture 38 binds v2
+PASS: fixture 39 binds v2
+PASS: fixture 40 binds v2
+PASS: fixture 41 binds v2
+PASS: fixture 42 binds v2
+PASS: fixture 43 binds v2
+PASS: fixture 44 binds v2
+PASS: fixture 45 binds v2
+PASS: fixture 46 binds v2
+PASS: fixture 47 binds v2
+PASS: fixture 48 binds v2
+PASS: fixture 49 binds v2
+PASS: fixture 50 binds v2
+PASS: fixture 51 binds v2
+PASS: fixture 52 binds v2
+PASS: fixture 53 binds v2
+PASS: fixture 54 binds v2
+PASS: fixture 55 binds v2
+PASS: fixture 56 binds v2
+PASS: fixture 57 binds v2
+PASS: fixture 58 binds v2
+PASS: fixture 59 binds v2
+PASS: 60 fixtures preserve Head/Hair surfaces
+PASS: Blender TEXCOORD_1/COLOR_0 reach Godot UV2/COLOR
+PASS: mask retains excluded and enabled regions
+PASS: v2 accepts normal
+PASS: v2 accepts angry
+PASS: v2 accepts smile
+PASS: v2 accepts sad
+PASS: v2 accepts surprised
+PASS: eyes normal
+PASS: eyes blink
+PASS: eyes closed_strong
+PASS: eyes angry
+PASS: eyes sad
+PASS: eyes surprised
+PASS: eyes narrow
+PASS: eyes happy
+PASS: eyebrows normal
+PASS: eyebrows angry
+PASS: eyebrows sad
+PASS: eyebrows worried
+PASS: eyebrows surprised
+PASS: eyebrows confident
+PASS: mouth normal
+PASS: mouth smile
+PASS: mouth laugh
+PASS: mouth open
+PASS: mouth angry
+PASS: mouth sad
+PASS: mouth smirk
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: Head selects UV mode
+PASS: Hair has no expression atlas
+PASS: atlas is shared
+PASS: angry/normal/smile are isolated
+PASS: 60 fixtures share mesh/base textures/Hair, with 60 independent Head materials
+V2_FIXTURE_PERFORMANCE: unique_meshes=2 unique_materials=61 unique_base_textures=2
+EXPRESSION_V2: PASSED

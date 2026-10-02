@@ -111,6 +111,8 @@ static func _apply_toon(root: Node) -> void:
 				toon.resource_name = semantic
 				toon.shader = CHARACTER_TOON
 				toon.set_shader_parameter("base_color_texture", source.albedo_texture)
+				toon.set_shader_parameter("expression_parts_enabled", false)
+				toon.set_shader_parameter("expression_uv_v2", false)
 				_toon_materials[key] = toon
 			mesh.set_surface_override_material(surface, _toon_materials[key])
 

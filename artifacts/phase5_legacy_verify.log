@@ -1,0 +1,1095 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+PASS: asset registry loads
+PASS: registry declares the 6 Body x 6 Face reference set
+PASS: test_body001_face001 assembles
+PASS: test_body001_face001 has one rig and player
+PASS: test_body001_face001 keeps Body/Face meshes and toon materials
+PASS: test_body001_face001 attaches Face to head
+PASS: test_body001_face001 has ExpressionController
+PASS: test_body001_face001 preserves legacy helmet expression policy
+PASS: test_body001_face001 accepts normal
+PASS: test_body001_face001 accepts angry
+PASS: test_body001_face001 accepts smile
+PASS: test_body001_face001 blinks
+PASS: test_body001_face001 changes eyebrows only
+PASS: test_body001_face001 opens mouth
+PASS: test_body001_face001 keeps independent expression channels
+PASS: test_body001_face001 changes expression without allocating mesh or material
+PASS: test_body001_face001 has head bone
+PASS: test_body001_face001 cancels imported head rest
+PASS: test_body001_face001 has idle
+PASS: test_body001_face001 Face follows idle
+PASS: test_body001_face001 Face keeps rest orientation in idle
+PASS: test_body001_face001 matches legacy head center in idle
+PASS: test_body001_face001 has walk
+PASS: test_body001_face001 Face follows walk
+PASS: test_body001_face001 Face keeps rest orientation in walk
+PASS: test_body001_face001 matches legacy head center in walk
+PASS: test_body001_face001 has attack
+PASS: test_body001_face001 Face follows attack
+PASS: test_body001_face001 Face keeps rest orientation in attack
+PASS: test_body001_face001 matches legacy head center in attack
+PASS: test_body001_face001 has hit
+PASS: test_body001_face001 Face follows hit
+PASS: test_body001_face001 Face keeps rest orientation in hit
+PASS: test_body001_face001 matches legacy head center in hit
+PASS: test_body001_face002 assembles
+PASS: test_body001_face002 has one rig and player
+PASS: test_body001_face002 keeps Body/Face meshes and toon materials
+PASS: test_body001_face002 attaches Face to head
+PASS: test_body001_face002 has ExpressionController
+PASS: test_body001_face002 preserves legacy helmet expression policy
+PASS: test_body001_face002 accepts normal
+PASS: test_body001_face002 accepts angry
+PASS: test_body001_face002 accepts smile
+PASS: test_body001_face002 blinks
+PASS: test_body001_face002 changes eyebrows only
+PASS: test_body001_face002 opens mouth
+PASS: test_body001_face002 keeps independent expression channels
+PASS: test_body001_face002 changes expression without allocating mesh or material
+PASS: test_body001_face002 has head bone
+PASS: test_body001_face002 cancels imported head rest
+PASS: test_body001_face002 has idle
+PASS: test_body001_face002 Face follows idle
+PASS: test_body001_face002 Face keeps rest orientation in idle
+PASS: test_body001_face002 has walk
+PASS: test_body001_face002 Face follows walk
+PASS: test_body001_face002 Face keeps rest orientation in walk
+PASS: test_body001_face002 has attack
+PASS: test_body001_face002 Face follows attack
+PASS: test_body001_face002 Face keeps rest orientation in attack
+PASS: test_body001_face002 has hit
+PASS: test_body001_face002 Face follows hit
+PASS: test_body001_face002 Face keeps rest orientation in hit
+PASS: test_body001_face003 assembles
+PASS: test_body001_face003 has one rig and player
+PASS: test_body001_face003 keeps Body/Face meshes and toon materials
+PASS: test_body001_face003 attaches Face to head
+PASS: test_body001_face003 has ExpressionController
+PASS: test_body001_face003 preserves legacy helmet expression policy
+PASS: test_body001_face003 accepts normal
+PASS: test_body001_face003 accepts angry
+PASS: test_body001_face003 accepts smile
+PASS: test_body001_face003 blinks
+PASS: test_body001_face003 changes eyebrows only
+PASS: test_body001_face003 opens mouth
+PASS: test_body001_face003 keeps independent expression channels
+PASS: test_body001_face003 changes expression without allocating mesh or material
+PASS: test_body001_face003 has head bone
+PASS: test_body001_face003 cancels imported head rest
+PASS: test_body001_face003 has idle
+PASS: test_body001_face003 Face follows idle
+PASS: test_body001_face003 Face keeps rest orientation in idle
+PASS: test_body001_face003 has walk
+PASS: test_body001_face003 Face follows walk
+PASS: test_body001_face003 Face keeps rest orientation in walk
+PASS: test_body001_face003 has attack
+PASS: test_body001_face003 Face follows attack
+PASS: test_body001_face003 Face keeps rest orientation in attack
+PASS: test_body001_face003 has hit
+PASS: test_body001_face003 Face follows hit
+PASS: test_body001_face003 Face keeps rest orientation in hit
+PASS: test_body001_face004 assembles
+PASS: test_body001_face004 has one rig and player
+PASS: test_body001_face004 keeps Body/Face meshes and toon materials
+PASS: test_body001_face004 attaches Face to head
+PASS: test_body001_face004 has ExpressionController
+PASS: test_body001_face004 preserves legacy helmet expression policy
+PASS: test_body001_face004 accepts normal
+PASS: test_body001_face004 accepts angry
+PASS: test_body001_face004 accepts smile
+PASS: test_body001_face004 blinks
+PASS: test_body001_face004 changes eyebrows only
+PASS: test_body001_face004 opens mouth
+PASS: test_body001_face004 keeps independent expression channels
+PASS: test_body001_face004 changes expression without allocating mesh or material
+PASS: test_body001_face004 has head bone
+PASS: test_body001_face004 cancels imported head rest
+PASS: test_body001_face004 has idle
+PASS: test_body001_face004 Face follows idle
+PASS: test_body001_face004 Face keeps rest orientation in idle
+PASS: test_body001_face004 has walk
+PASS: test_body001_face004 Face follows walk
+PASS: test_body001_face004 Face keeps rest orientation in walk
+PASS: test_body001_face004 has attack
+PASS: test_body001_face004 Face follows attack
+PASS: test_body001_face004 Face keeps rest orientation in attack
+PASS: test_body001_face004 has hit
+PASS: test_body001_face004 Face follows hit
+PASS: test_body001_face004 Face keeps rest orientation in hit
+PASS: test_body001_face005 assembles
+PASS: test_body001_face005 has one rig and player
+PASS: test_body001_face005 keeps Body/Face meshes and toon materials
+PASS: test_body001_face005 attaches Face to head
+PASS: test_body001_face005 has ExpressionController
+PASS: test_body001_face005 preserves legacy helmet expression policy
+PASS: test_body001_face005 accepts normal
+PASS: test_body001_face005 accepts angry
+PASS: test_body001_face005 accepts smile
+PASS: test_body001_face005 blinks
+PASS: test_body001_face005 changes eyebrows only
+PASS: test_body001_face005 opens mouth
+PASS: test_body001_face005 keeps independent expression channels
+PASS: test_body001_face005 changes expression without allocating mesh or material
+PASS: test_body001_face005 has head bone
+PASS: test_body001_face005 cancels imported head rest
+PASS: test_body001_face005 has idle
+PASS: test_body001_face005 Face follows idle
+PASS: test_body001_face005 Face keeps rest orientation in idle
+PASS: test_body001_face005 has walk
+PASS: test_body001_face005 Face follows walk
+PASS: test_body001_face005 Face keeps rest orientation in walk
+PASS: test_body001_face005 has attack
+PASS: test_body001_face005 Face follows attack
+PASS: test_body001_face005 Face keeps rest orientation in attack
+PASS: test_body001_face005 has hit
+PASS: test_body001_face005 Face follows hit
+PASS: test_body001_face005 Face keeps rest orientation in hit
+PASS: test_body001_face006 assembles
+PASS: test_body001_face006 has one rig and player
+PASS: test_body001_face006 keeps Body/Face meshes and toon materials
+PASS: test_body001_face006 attaches Face to head
+PASS: test_body001_face006 has ExpressionController
+PASS: test_body001_face006 preserves legacy helmet expression policy
+PASS: test_body001_face006 accepts normal
+PASS: test_body001_face006 accepts angry
+PASS: test_body001_face006 accepts smile
+PASS: test_body001_face006 blinks
+PASS: test_body001_face006 changes eyebrows only
+PASS: test_body001_face006 opens mouth
+PASS: test_body001_face006 keeps independent expression channels
+PASS: test_body001_face006 changes expression without allocating mesh or material
+PASS: test_body001_face006 has head bone
+PASS: test_body001_face006 cancels imported head rest
+PASS: test_body001_face006 has idle
+PASS: test_body001_face006 Face follows idle
+PASS: test_body001_face006 Face keeps rest orientation in idle
+PASS: test_body001_face006 has walk
+PASS: test_body001_face006 Face follows walk
+PASS: test_body001_face006 Face keeps rest orientation in walk
+PASS: test_body001_face006 has attack
+PASS: test_body001_face006 Face follows attack
+PASS: test_body001_face006 Face keeps rest orientation in attack
+PASS: test_body001_face006 has hit
+PASS: test_body001_face006 Face follows hit
+PASS: test_body001_face006 Face keeps rest orientation in hit
+PASS: test_body002_face001 assembles
+PASS: test_body002_face001 has one rig and player
+PASS: test_body002_face001 keeps Body/Face meshes and toon materials
+PASS: test_body002_face001 attaches Face to head
+PASS: test_body002_face001 has ExpressionController
+PASS: test_body002_face001 preserves legacy helmet expression policy
+PASS: test_body002_face001 accepts normal
+PASS: test_body002_face001 accepts angry
+PASS: test_body002_face001 accepts smile
+PASS: test_body002_face001 blinks
+PASS: test_body002_face001 changes eyebrows only
+PASS: test_body002_face001 opens mouth
+PASS: test_body002_face001 keeps independent expression channels
+PASS: test_body002_face001 changes expression without allocating mesh or material
+PASS: test_body002_face001 has head bone
+PASS: test_body002_face001 cancels imported head rest
+PASS: test_body002_face001 has idle
+PASS: test_body002_face001 Face follows idle
+PASS: test_body002_face001 Face keeps rest orientation in idle
+PASS: test_body002_face001 has walk
+PASS: test_body002_face001 Face follows walk
+PASS: test_body002_face001 Face keeps rest orientation in walk
+PASS: test_body002_face001 has attack
+PASS: test_body002_face001 Face follows attack
+PASS: test_body002_face001 Face keeps rest orientation in attack
+PASS: test_body002_face001 has hit
+PASS: test_body002_face001 Face follows hit
+PASS: test_body002_face001 Face keeps rest orientation in hit
+PASS: test_body002_face002 assembles
+PASS: test_body002_face002 has one rig and player
+PASS: test_body002_face002 keeps Body/Face meshes and toon materials
+PASS: test_body002_face002 attaches Face to head
+PASS: test_body002_face002 has ExpressionController
+PASS: test_body002_face002 preserves legacy helmet expression policy
+PASS: test_body002_face002 accepts normal
+PASS: test_body002_face002 accepts angry
+PASS: test_body002_face002 accepts smile
+PASS: test_body002_face002 blinks
+PASS: test_body002_face002 changes eyebrows only
+PASS: test_body002_face002 opens mouth
+PASS: test_body002_face002 keeps independent expression channels
+PASS: test_body002_face002 changes expression without allocating mesh or material
+PASS: test_body002_face002 has head bone
+PASS: test_body002_face002 cancels imported head rest
+PASS: test_body002_face002 has idle
+PASS: test_body002_face002 Face follows idle
+PASS: test_body002_face002 Face keeps rest orientation in idle
+PASS: test_body002_face002 matches legacy head center in idle
+PASS: test_body002_face002 has walk
+PASS: test_body002_face002 Face follows walk
+PASS: test_body002_face002 Face keeps rest orientation in walk
+PASS: test_body002_face002 matches legacy head center in walk
+PASS: test_body002_face002 has attack
+PASS: test_body002_face002 Face follows attack
+PASS: test_body002_face002 Face keeps rest orientation in attack
+PASS: test_body002_face002 matches legacy head center in attack
+PASS: test_body002_face002 has hit
+PASS: test_body002_face002 Face follows hit
+PASS: test_body002_face002 Face keeps rest orientation in hit
+PASS: test_body002_face002 matches legacy head center in hit
+PASS: test_body002_face003 assembles
+PASS: test_body002_face003 has one rig and player
+PASS: test_body002_face003 keeps Body/Face meshes and toon materials
+PASS: test_body002_face003 attaches Face to head
+PASS: test_body002_face003 has ExpressionController
+PASS: test_body002_face003 preserves legacy helmet expression policy
+PASS: test_body002_face003 accepts normal
+PASS: test_body002_face003 accepts angry
+PASS: test_body002_face003 accepts smile
+PASS: test_body002_face003 blinks
+PASS: test_body002_face003 changes eyebrows only
+PASS: test_body002_face003 opens mouth
+PASS: test_body002_face003 keeps independent expression channels
+PASS: test_body002_face003 changes expression without allocating mesh or material
+PASS: test_body002_face003 has head bone
+PASS: test_body002_face003 cancels imported head rest
+PASS: test_body002_face003 has idle
+PASS: test_body002_face003 Face follows idle
+PASS: test_body002_face003 Face keeps rest orientation in idle
+PASS: test_body002_face003 has walk
+PASS: test_body002_face003 Face follows walk
+PASS: test_body002_face003 Face keeps rest orientation in walk
+PASS: test_body002_face003 has attack
+PASS: test_body002_face003 Face follows attack
+PASS: test_body002_face003 Face keeps rest orientation in attack
+PASS: test_body002_face003 has hit
+PASS: test_body002_face003 Face follows hit
+PASS: test_body002_face003 Face keeps rest orientation in hit
+PASS: test_body002_face004 assembles
+PASS: test_body002_face004 has one rig and player
+PASS: test_body002_face004 keeps Body/Face meshes and toon materials
+PASS: test_body002_face004 attaches Face to head
+PASS: test_body002_face004 has ExpressionController
+PASS: test_body002_face004 preserves legacy helmet expression policy
+PASS: test_body002_face004 accepts normal
+PASS: test_body002_face004 accepts angry
+PASS: test_body002_face004 accepts smile
+PASS: test_body002_face004 blinks
+PASS: test_body002_face004 changes eyebrows only
+PASS: test_body002_face004 opens mouth
+PASS: test_body002_face004 keeps independent expression channels
+PASS: test_body002_face004 changes expression without allocating mesh or material
+PASS: test_body002_face004 has head bone
+PASS: test_body002_face004 cancels imported head rest
+PASS: test_body002_face004 has idle
+PASS: test_body002_face004 Face follows idle
+PASS: test_body002_face004 Face keeps rest orientation in idle
+PASS: test_body002_face004 has walk
+PASS: test_body002_face004 Face follows walk
+PASS: test_body002_face004 Face keeps rest orientation in walk
+PASS: test_body002_face004 has attack
+PASS: test_body002_face004 Face follows attack
+PASS: test_body002_face004 Face keeps rest orientation in attack
+PASS: test_body002_face004 has hit
+PASS: test_body002_face004 Face follows hit
+PASS: test_body002_face004 Face keeps rest orientation in hit
+PASS: test_body002_face005 assembles
+PASS: test_body002_face005 has one rig and player
+PASS: test_body002_face005 keeps Body/Face meshes and toon materials
+PASS: test_body002_face005 attaches Face to head
+PASS: test_body002_face005 has ExpressionController
+PASS: test_body002_face005 preserves legacy helmet expression policy
+PASS: test_body002_face005 accepts normal
+PASS: test_body002_face005 accepts angry
+PASS: test_body002_face005 accepts smile
+PASS: test_body002_face005 blinks
+PASS: test_body002_face005 changes eyebrows only
+PASS: test_body002_face005 opens mouth
+PASS: test_body002_face005 keeps independent expression channels
+PASS: test_body002_face005 changes expression without allocating mesh or material
+PASS: test_body002_face005 has head bone
+PASS: test_body002_face005 cancels imported head rest
+PASS: test_body002_face005 has idle
+PASS: test_body002_face005 Face follows idle
+PASS: test_body002_face005 Face keeps rest orientation in idle
+PASS: test_body002_face005 has walk
+PASS: test_body002_face005 Face follows walk
+PASS: test_body002_face005 Face keeps rest orientation in walk
+PASS: test_body002_face005 has attack
+PASS: test_body002_face005 Face follows attack
+PASS: test_body002_face005 Face keeps rest orientation in attack
+PASS: test_body002_face005 has hit
+PASS: test_body002_face005 Face follows hit
+PASS: test_body002_face005 Face keeps rest orientation in hit
+PASS: test_body002_face006 assembles
+PASS: test_body002_face006 has one rig and player
+PASS: test_body002_face006 keeps Body/Face meshes and toon materials
+PASS: test_body002_face006 attaches Face to head
+PASS: test_body002_face006 has ExpressionController
+PASS: test_body002_face006 preserves legacy helmet expression policy
+PASS: test_body002_face006 accepts normal
+PASS: test_body002_face006 accepts angry
+PASS: test_body002_face006 accepts smile
+PASS: test_body002_face006 blinks
+PASS: test_body002_face006 changes eyebrows only
+PASS: test_body002_face006 opens mouth
+PASS: test_body002_face006 keeps independent expression channels
+PASS: test_body002_face006 changes expression without allocating mesh or material
+PASS: test_body002_face006 has head bone
+PASS: test_body002_face006 cancels imported head rest
+PASS: test_body002_face006 has idle
+PASS: test_body002_face006 Face follows idle
+PASS: test_body002_face006 Face keeps rest orientation in idle
+PASS: test_body002_face006 has walk
+PASS: test_body002_face006 Face follows walk
+PASS: test_body002_face006 Face keeps rest orientation in walk
+PASS: test_body002_face006 has attack
+PASS: test_body002_face006 Face follows attack
+PASS: test_body002_face006 Face keeps rest orientation in attack
+PASS: test_body002_face006 has hit
+PASS: test_body002_face006 Face follows hit
+PASS: test_body002_face006 Face keeps rest orientation in hit
+PASS: test_body003_face001 assembles
+PASS: test_body003_face001 has one rig and player
+PASS: test_body003_face001 keeps Body/Face meshes and toon materials
+PASS: test_body003_face001 attaches Face to head
+PASS: test_body003_face001 has ExpressionController
+PASS: test_body003_face001 preserves legacy helmet expression policy
+PASS: test_body003_face001 accepts normal
+PASS: test_body003_face001 accepts angry
+PASS: test_body003_face001 accepts smile
+PASS: test_body003_face001 blinks
+PASS: test_body003_face001 changes eyebrows only
+PASS: test_body003_face001 opens mouth
+PASS: test_body003_face001 keeps independent expression channels
+PASS: test_body003_face001 changes expression without allocating mesh or material
+PASS: test_body003_face001 has head bone
+PASS: test_body003_face001 cancels imported head rest
+PASS: test_body003_face001 has idle
+PASS: test_body003_face001 Face follows idle
+PASS: test_body003_face001 Face keeps rest orientation in idle
+PASS: test_body003_face001 has walk
+PASS: test_body003_face001 Face follows walk
+PASS: test_body003_face001 Face keeps rest orientation in walk
+PASS: test_body003_face001 has attack
+PASS: test_body003_face001 Face follows attack
+PASS: test_body003_face001 Face keeps rest orientation in attack
+PASS: test_body003_face001 has hit
+PASS: test_body003_face001 Face follows hit
+PASS: test_body003_face001 Face keeps rest orientation in hit
+PASS: test_body003_face002 assembles
+PASS: test_body003_face002 has one rig and player
+PASS: test_body003_face002 keeps Body/Face meshes and toon materials
+PASS: test_body003_face002 attaches Face to head
+PASS: test_body003_face002 has ExpressionController
+PASS: test_body003_face002 preserves legacy helmet expression policy
+PASS: test_body003_face002 accepts normal
+PASS: test_body003_face002 accepts angry
+PASS: test_body003_face002 accepts smile
+PASS: test_body003_face002 blinks
+PASS: test_body003_face002 changes eyebrows only
+PASS: test_body003_face002 opens mouth
+PASS: test_body003_face002 keeps independent expression channels
+PASS: test_body003_face002 changes expression without allocating mesh or material
+PASS: test_body003_face002 has head bone
+PASS: test_body003_face002 cancels imported head rest
+PASS: test_body003_face002 has idle
+PASS: test_body003_face002 Face follows idle
+PASS: test_body003_face002 Face keeps rest orientation in idle
+PASS: test_body003_face002 has walk
+PASS: test_body003_face002 Face follows walk
+PASS: test_body003_face002 Face keeps rest orientation in walk
+PASS: test_body003_face002 has attack
+PASS: test_body003_face002 Face follows attack
+PASS: test_body003_face002 Face keeps rest orientation in attack
+PASS: test_body003_face002 has hit
+PASS: test_body003_face002 Face follows hit
+PASS: test_body003_face002 Face keeps rest orientation in hit
+PASS: test_body003_face003 assembles
+PASS: test_body003_face003 has one rig and player
+PASS: test_body003_face003 keeps Body/Face meshes and toon materials
+PASS: test_body003_face003 attaches Face to head
+PASS: test_body003_face003 has ExpressionController
+PASS: test_body003_face003 preserves legacy helmet expression policy
+PASS: test_body003_face003 accepts normal
+PASS: test_body003_face003 accepts angry
+PASS: test_body003_face003 accepts smile
+PASS: test_body003_face003 blinks
+PASS: test_body003_face003 changes eyebrows only
+PASS: test_body003_face003 opens mouth
+PASS: test_body003_face003 keeps independent expression channels
+PASS: test_body003_face003 changes expression without allocating mesh or material
+PASS: test_body003_face003 has head bone
+PASS: test_body003_face003 cancels imported head rest
+PASS: test_body003_face003 has idle
+PASS: test_body003_face003 Face follows idle
+PASS: test_body003_face003 Face keeps rest orientation in idle
+PASS: test_body003_face003 matches legacy head center in idle
+PASS: test_body003_face003 has walk
+PASS: test_body003_face003 Face follows walk
+PASS: test_body003_face003 Face keeps rest orientation in walk
+PASS: test_body003_face003 matches legacy head center in walk
+PASS: test_body003_face003 has attack
+PASS: test_body003_face003 Face follows attack
+PASS: test_body003_face003 Face keeps rest orientation in attack
+PASS: test_body003_face003 matches legacy head center in attack
+PASS: test_body003_face003 has hit
+PASS: test_body003_face003 Face follows hit
+PASS: test_body003_face003 Face keeps rest orientation in hit
+PASS: test_body003_face003 matches legacy head center in hit
+PASS: test_body003_face004 assembles
+PASS: test_body003_face004 has one rig and player
+PASS: test_body003_face004 keeps Body/Face meshes and toon materials
+PASS: test_body003_face004 attaches Face to head
+PASS: test_body003_face004 has ExpressionController
+PASS: test_body003_face004 preserves legacy helmet expression policy
+PASS: test_body003_face004 accepts normal
+PASS: test_body003_face004 accepts angry
+PASS: test_body003_face004 accepts smile
+PASS: test_body003_face004 blinks
+PASS: test_body003_face004 changes eyebrows only
+PASS: test_body003_face004 opens mouth
+PASS: test_body003_face004 keeps independent expression channels
+PASS: test_body003_face004 changes expression without allocating mesh or material
+PASS: test_body003_face004 has head bone
+PASS: test_body003_face004 cancels imported head rest
+PASS: test_body003_face004 has idle
+PASS: test_body003_face004 Face follows idle
+PASS: test_body003_face004 Face keeps rest orientation in idle
+PASS: test_body003_face004 has walk
+PASS: test_body003_face004 Face follows walk
+PASS: test_body003_face004 Face keeps rest orientation in walk
+PASS: test_body003_face004 has attack
+PASS: test_body003_face004 Face follows attack
+PASS: test_body003_face004 Face keeps rest orientation in attack
+PASS: test_body003_face004 has hit
+PASS: test_body003_face004 Face follows hit
+PASS: test_body003_face004 Face keeps rest orientation in hit
+PASS: test_body003_face005 assembles
+PASS: test_body003_face005 has one rig and player
+PASS: test_body003_face005 keeps Body/Face meshes and toon materials
+PASS: test_body003_face005 attaches Face to head
+PASS: test_body003_face005 has ExpressionController
+PASS: test_body003_face005 preserves legacy helmet expression policy
+PASS: test_body003_face005 accepts normal
+PASS: test_body003_face005 accepts angry
+PASS: test_body003_face005 accepts smile
+PASS: test_body003_face005 blinks
+PASS: test_body003_face005 changes eyebrows only
+PASS: test_body003_face005 opens mouth
+PASS: test_body003_face005 keeps independent expression channels
+PASS: test_body003_face005 changes expression without allocating mesh or material
+PASS: test_body003_face005 has head bone
+PASS: test_body003_face005 cancels imported head rest
+PASS: test_body003_face005 has idle
+PASS: test_body003_face005 Face follows idle
+PASS: test_body003_face005 Face keeps rest orientation in idle
+PASS: test_body003_face005 has walk
+PASS: test_body003_face005 Face follows walk
+PASS: test_body003_face005 Face keeps rest orientation in walk
+PASS: test_body003_face005 has attack
+PASS: test_body003_face005 Face follows attack
+PASS: test_body003_face005 Face keeps rest orientation in attack
+PASS: test_body003_face005 has hit
+PASS: test_body003_face005 Face follows hit
+PASS: test_body003_face005 Face keeps rest orientation in hit
+PASS: test_body003_face006 assembles
+PASS: test_body003_face006 has one rig and player
+PASS: test_body003_face006 keeps Body/Face meshes and toon materials
+PASS: test_body003_face006 attaches Face to head
+PASS: test_body003_face006 has ExpressionController
+PASS: test_body003_face006 preserves legacy helmet expression policy
+PASS: test_body003_face006 accepts normal
+PASS: test_body003_face006 accepts angry
+PASS: test_body003_face006 accepts smile
+PASS: test_body003_face006 blinks
+PASS: test_body003_face006 changes eyebrows only
+PASS: test_body003_face006 opens mouth
+PASS: test_body003_face006 keeps independent expression channels
+PASS: test_body003_face006 changes expression without allocating mesh or material
+PASS: test_body003_face006 has head bone
+PASS: test_body003_face006 cancels imported head rest
+PASS: test_body003_face006 has idle
+PASS: test_body003_face006 Face follows idle
+PASS: test_body003_face006 Face keeps rest orientation in idle
+PASS: test_body003_face006 has walk
+PASS: test_body003_face006 Face follows walk
+PASS: test_body003_face006 Face keeps rest orientation in walk
+PASS: test_body003_face006 has attack
+PASS: test_body003_face006 Face follows attack
+PASS: test_body003_face006 Face keeps rest orientation in attack
+PASS: test_body003_face006 has hit
+PASS: test_body003_face006 Face follows hit
+PASS: test_body003_face006 Face keeps rest orientation in hit
+PASS: test_body004_face001 assembles
+PASS: test_body004_face001 has one rig and player
+PASS: test_body004_face001 keeps Body/Face meshes and toon materials
+PASS: test_body004_face001 attaches Face to head
+PASS: test_body004_face001 has ExpressionController
+PASS: test_body004_face001 preserves legacy helmet expression policy
+PASS: test_body004_face001 accepts normal
+PASS: test_body004_face001 accepts angry
+PASS: test_body004_face001 accepts smile
+PASS: test_body004_face001 blinks
+PASS: test_body004_face001 changes eyebrows only
+PASS: test_body004_face001 opens mouth
+PASS: test_body004_face001 keeps independent expression channels
+PASS: test_body004_face001 changes expression without allocating mesh or material
+PASS: test_body004_face001 has head bone
+PASS: test_body004_face001 cancels imported head rest
+PASS: test_body004_face001 has idle
+PASS: test_body004_face001 Face follows idle
+PASS: test_body004_face001 Face keeps rest orientation in idle
+PASS: test_body004_face001 has walk
+PASS: test_body004_face001 Face follows walk
+PASS: test_body004_face001 Face keeps rest orientation in walk
+PASS: test_body004_face001 has attack
+PASS: test_body004_face001 Face follows attack
+PASS: test_body004_face001 Face keeps rest orientation in attack
+PASS: test_body004_face001 has hit
+PASS: test_body004_face001 Face follows hit
+PASS: test_body004_face001 Face keeps rest orientation in hit
+PASS: test_body004_face002 assembles
+PASS: test_body004_face002 has one rig and player
+PASS: test_body004_face002 keeps Body/Face meshes and toon materials
+PASS: test_body004_face002 attaches Face to head
+PASS: test_body004_face002 has ExpressionController
+PASS: test_body004_face002 preserves legacy helmet expression policy
+PASS: test_body004_face002 accepts normal
+PASS: test_body004_face002 accepts angry
+PASS: test_body004_face002 accepts smile
+PASS: test_body004_face002 blinks
+PASS: test_body004_face002 changes eyebrows only
+PASS: test_body004_face002 opens mouth
+PASS: test_body004_face002 keeps independent expression channels
+PASS: test_body004_face002 changes expression without allocating mesh or material
+PASS: test_body004_face002 has head bone
+PASS: test_body004_face002 cancels imported head rest
+PASS: test_body004_face002 has idle
+PASS: test_body004_face002 Face follows idle
+PASS: test_body004_face002 Face keeps rest orientation in idle
+PASS: test_body004_face002 has walk
+PASS: test_body004_face002 Face follows walk
+PASS: test_body004_face002 Face keeps rest orientation in walk
+PASS: test_body004_face002 has attack
+PASS: test_body004_face002 Face follows attack
+PASS: test_body004_face002 Face keeps rest orientation in attack
+PASS: test_body004_face002 has hit
+PASS: test_body004_face002 Face follows hit
+PASS: test_body004_face002 Face keeps rest orientation in hit
+PASS: test_body004_face003 assembles
+PASS: test_body004_face003 has one rig and player
+PASS: test_body004_face003 keeps Body/Face meshes and toon materials
+PASS: test_body004_face003 attaches Face to head
+PASS: test_body004_face003 has ExpressionController
+PASS: test_body004_face003 preserves legacy helmet expression policy
+PASS: test_body004_face003 accepts normal
+PASS: test_body004_face003 accepts angry
+PASS: test_body004_face003 accepts smile
+PASS: test_body004_face003 blinks
+PASS: test_body004_face003 changes eyebrows only
+PASS: test_body004_face003 opens mouth
+PASS: test_body004_face003 keeps independent expression channels
+PASS: test_body004_face003 changes expression without allocating mesh or material
+PASS: test_body004_face003 has head bone
+PASS: test_body004_face003 cancels imported head rest
+PASS: test_body004_face003 has idle
+PASS: test_body004_face003 Face follows idle
+PASS: test_body004_face003 Face keeps rest orientation in idle
+PASS: test_body004_face003 has walk
+PASS: test_body004_face003 Face follows walk
+PASS: test_body004_face003 Face keeps rest orientation in walk
+PASS: test_body004_face003 has attack
+PASS: test_body004_face003 Face follows attack
+PASS: test_body004_face003 Face keeps rest orientation in attack
+PASS: test_body004_face003 has hit
+PASS: test_body004_face003 Face follows hit
+PASS: test_body004_face003 Face keeps rest orientation in hit
+PASS: test_body004_face004 assembles
+PASS: test_body004_face004 has one rig and player
+PASS: test_body004_face004 keeps Body/Face meshes and toon materials
+PASS: test_body004_face004 attaches Face to head
+PASS: test_body004_face004 has ExpressionController
+PASS: test_body004_face004 preserves legacy helmet expression policy
+PASS: test_body004_face004 accepts normal
+PASS: test_body004_face004 accepts angry
+PASS: test_body004_face004 accepts smile
+PASS: test_body004_face004 blinks
+PASS: test_body004_face004 changes eyebrows only
+PASS: test_body004_face004 opens mouth
+PASS: test_body004_face004 keeps independent expression channels
+PASS: test_body004_face004 changes expression without allocating mesh or material
+PASS: test_body004_face004 has head bone
+PASS: test_body004_face004 cancels imported head rest
+PASS: test_body004_face004 has idle
+PASS: test_body004_face004 Face follows idle
+PASS: test_body004_face004 Face keeps rest orientation in idle
+PASS: test_body004_face004 matches legacy head center in idle
+PASS: test_body004_face004 has walk
+PASS: test_body004_face004 Face follows walk
+PASS: test_body004_face004 Face keeps rest orientation in walk
+PASS: test_body004_face004 matches legacy head center in walk
+PASS: test_body004_face004 has attack
+PASS: test_body004_face004 Face follows attack
+PASS: test_body004_face004 Face keeps rest orientation in attack
+PASS: test_body004_face004 matches legacy head center in attack
+PASS: test_body004_face004 has hit
+PASS: test_body004_face004 Face follows hit
+PASS: test_body004_face004 Face keeps rest orientation in hit
+PASS: test_body004_face004 matches legacy head center in hit
+PASS: test_body004_face005 assembles
+PASS: test_body004_face005 has one rig and player
+PASS: test_body004_face005 keeps Body/Face meshes and toon materials
+PASS: test_body004_face005 attaches Face to head
+PASS: test_body004_face005 has ExpressionController
+PASS: test_body004_face005 preserves legacy helmet expression policy
+PASS: test_body004_face005 accepts normal
+PASS: test_body004_face005 accepts angry
+PASS: test_body004_face005 accepts smile
+PASS: test_body004_face005 blinks
+PASS: test_body004_face005 changes eyebrows only
+PASS: test_body004_face005 opens mouth
+PASS: test_body004_face005 keeps independent expression channels
+PASS: test_body004_face005 changes expression without allocating mesh or material
+PASS: test_body004_face005 has head bone
+PASS: test_body004_face005 cancels imported head rest
+PASS: test_body004_face005 has idle
+PASS: test_body004_face005 Face follows idle
+PASS: test_body004_face005 Face keeps rest orientation in idle
+PASS: test_body004_face005 has walk
+PASS: test_body004_face005 Face follows walk
+PASS: test_body004_face005 Face keeps rest orientation in walk
+PASS: test_body004_face005 has attack
+PASS: test_body004_face005 Face follows attack
+PASS: test_body004_face005 Face keeps rest orientation in attack
+PASS: test_body004_face005 has hit
+PASS: test_body004_face005 Face follows hit
+PASS: test_body004_face005 Face keeps rest orientation in hit
+PASS: test_body004_face006 assembles
+PASS: test_body004_face006 has one rig and player
+PASS: test_body004_face006 keeps Body/Face meshes and toon materials
+PASS: test_body004_face006 attaches Face to head
+PASS: test_body004_face006 has ExpressionController
+PASS: test_body004_face006 preserves legacy helmet expression policy
+PASS: test_body004_face006 accepts normal
+PASS: test_body004_face006 accepts angry
+PASS: test_body004_face006 accepts smile
+PASS: test_body004_face006 blinks
+PASS: test_body004_face006 changes eyebrows only
+PASS: test_body004_face006 opens mouth
+PASS: test_body004_face006 keeps independent expression channels
+PASS: test_body004_face006 changes expression without allocating mesh or material
+PASS: test_body004_face006 has head bone
+PASS: test_body004_face006 cancels imported head rest
+PASS: test_body004_face006 has idle
+PASS: test_body004_face006 Face follows idle
+PASS: test_body004_face006 Face keeps rest orientation in idle
+PASS: test_body004_face006 has walk
+PASS: test_body004_face006 Face follows walk
+PASS: test_body004_face006 Face keeps rest orientation in walk
+PASS: test_body004_face006 has attack
+PASS: test_body004_face006 Face follows attack
+PASS: test_body004_face006 Face keeps rest orientation in attack
+PASS: test_body004_face006 has hit
+PASS: test_body004_face006 Face follows hit
+PASS: test_body004_face006 Face keeps rest orientation in hit
+PASS: test_body005_face001 assembles
+PASS: test_body005_face001 has one rig and player
+PASS: test_body005_face001 keeps Body/Face meshes and toon materials
+PASS: test_body005_face001 attaches Face to head
+PASS: test_body005_face001 has ExpressionController
+PASS: test_body005_face001 preserves legacy helmet expression policy
+PASS: test_body005_face001 accepts normal
+PASS: test_body005_face001 accepts angry
+PASS: test_body005_face001 accepts smile
+PASS: test_body005_face001 blinks
+PASS: test_body005_face001 changes eyebrows only
+PASS: test_body005_face001 opens mouth
+PASS: test_body005_face001 keeps independent expression channels
+PASS: test_body005_face001 changes expression without allocating mesh or material
+PASS: test_body005_face001 has head bone
+PASS: test_body005_face001 cancels imported head rest
+PASS: test_body005_face001 has idle
+PASS: test_body005_face001 Face follows idle
+PASS: test_body005_face001 Face keeps rest orientation in idle
+PASS: test_body005_face001 has walk
+PASS: test_body005_face001 Face follows walk
+PASS: test_body005_face001 Face keeps rest orientation in walk
+PASS: test_body005_face001 has attack
+PASS: test_body005_face001 Face follows attack
+PASS: test_body005_face001 Face keeps rest orientation in attack
+PASS: test_body005_face001 has hit
+PASS: test_body005_face001 Face follows hit
+PASS: test_body005_face001 Face keeps rest orientation in hit
+PASS: test_body005_face002 assembles
+PASS: test_body005_face002 has one rig and player
+PASS: test_body005_face002 keeps Body/Face meshes and toon materials
+PASS: test_body005_face002 attaches Face to head
+PASS: test_body005_face002 has ExpressionController
+PASS: test_body005_face002 preserves legacy helmet expression policy
+PASS: test_body005_face002 accepts normal
+PASS: test_body005_face002 accepts angry
+PASS: test_body005_face002 accepts smile
+PASS: test_body005_face002 blinks
+PASS: test_body005_face002 changes eyebrows only
+PASS: test_body005_face002 opens mouth
+PASS: test_body005_face002 keeps independent expression channels
+PASS: test_body005_face002 changes expression without allocating mesh or material
+PASS: test_body005_face002 has head bone
+PASS: test_body005_face002 cancels imported head rest
+PASS: test_body005_face002 has idle
+PASS: test_body005_face002 Face follows idle
+PASS: test_body005_face002 Face keeps rest orientation in idle
+PASS: test_body005_face002 has walk
+PASS: test_body005_face002 Face follows walk
+PASS: test_body005_face002 Face keeps rest orientation in walk
+PASS: test_body005_face002 has attack
+PASS: test_body005_face002 Face follows attack
+PASS: test_body005_face002 Face keeps rest orientation in attack
+PASS: test_body005_face002 has hit
+PASS: test_body005_face002 Face follows hit
+PASS: test_body005_face002 Face keeps rest orientation in hit
+PASS: test_body005_face003 assembles
+PASS: test_body005_face003 has one rig and player
+PASS: test_body005_face003 keeps Body/Face meshes and toon materials
+PASS: test_body005_face003 attaches Face to head
+PASS: test_body005_face003 has ExpressionController
+PASS: test_body005_face003 preserves legacy helmet expression policy
+PASS: test_body005_face003 accepts normal
+PASS: test_body005_face003 accepts angry
+PASS: test_body005_face003 accepts smile
+PASS: test_body005_face003 blinks
+PASS: test_body005_face003 changes eyebrows only
+PASS: test_body005_face003 opens mouth
+PASS: test_body005_face003 keeps independent expression channels
+PASS: test_body005_face003 changes expression without allocating mesh or material
+PASS: test_body005_face003 has head bone
+PASS: test_body005_face003 cancels imported head rest
+PASS: test_body005_face003 has idle
+PASS: test_body005_face003 Face follows idle
+PASS: test_body005_face003 Face keeps rest orientation in idle
+PASS: test_body005_face003 has walk
+PASS: test_body005_face003 Face follows walk
+PASS: test_body005_face003 Face keeps rest orientation in walk
+PASS: test_body005_face003 has attack
+PASS: test_body005_face003 Face follows attack
+PASS: test_body005_face003 Face keeps rest orientation in attack
+PASS: test_body005_face003 has hit
+PASS: test_body005_face003 Face follows hit
+PASS: test_body005_face003 Face keeps rest orientation in hit
+PASS: test_body005_face004 assembles
+PASS: test_body005_face004 has one rig and player
+PASS: test_body005_face004 keeps Body/Face meshes and toon materials
+PASS: test_body005_face004 attaches Face to head
+PASS: test_body005_face004 has ExpressionController
+PASS: test_body005_face004 preserves legacy helmet expression policy
+PASS: test_body005_face004 accepts normal
+PASS: test_body005_face004 accepts angry
+PASS: test_body005_face004 accepts smile
+PASS: test_body005_face004 blinks
+PASS: test_body005_face004 changes eyebrows only
+PASS: test_body005_face004 opens mouth
+PASS: test_body005_face004 keeps independent expression channels
+PASS: test_body005_face004 changes expression without allocating mesh or material
+PASS: test_body005_face004 has head bone
+PASS: test_body005_face004 cancels imported head rest
+PASS: test_body005_face004 has idle
+PASS: test_body005_face004 Face follows idle
+PASS: test_body005_face004 Face keeps rest orientation in idle
+PASS: test_body005_face004 has walk
+PASS: test_body005_face004 Face follows walk
+PASS: test_body005_face004 Face keeps rest orientation in walk
+PASS: test_body005_face004 has attack
+PASS: test_body005_face004 Face follows attack
+PASS: test_body005_face004 Face keeps rest orientation in attack
+PASS: test_body005_face004 has hit
+PASS: test_body005_face004 Face follows hit
+PASS: test_body005_face004 Face keeps rest orientation in hit
+PASS: test_body005_face005 assembles
+PASS: test_body005_face005 has one rig and player
+PASS: test_body005_face005 keeps Body/Face meshes and toon materials
+PASS: test_body005_face005 attaches Face to head
+PASS: test_body005_face005 has ExpressionController
+PASS: test_body005_face005 preserves legacy helmet expression policy
+PASS: test_body005_face005 accepts normal
+PASS: test_body005_face005 accepts angry
+PASS: test_body005_face005 accepts smile
+PASS: test_body005_face005 blinks
+PASS: test_body005_face005 changes eyebrows only
+PASS: test_body005_face005 opens mouth
+PASS: test_body005_face005 keeps independent expression channels
+PASS: test_body005_face005 changes expression without allocating mesh or material
+PASS: test_body005_face005 has head bone
+PASS: test_body005_face005 cancels imported head rest
+PASS: test_body005_face005 has idle
+PASS: test_body005_face005 Face follows idle
+PASS: test_body005_face005 Face keeps rest orientation in idle
+PASS: test_body005_face005 has walk
+PASS: test_body005_face005 Face follows walk
+PASS: test_body005_face005 Face keeps rest orientation in walk
+PASS: test_body005_face005 has attack
+PASS: test_body005_face005 Face follows attack
+PASS: test_body005_face005 Face keeps rest orientation in attack
+PASS: test_body005_face005 has hit
+PASS: test_body005_face005 Face follows hit
+PASS: test_body005_face005 Face keeps rest orientation in hit
+PASS: test_body005_face006 assembles
+PASS: test_body005_face006 has one rig and player
+PASS: test_body005_face006 keeps Body/Face meshes and toon materials
+PASS: test_body005_face006 attaches Face to head
+PASS: test_body005_face006 has ExpressionController
+PASS: test_body005_face006 preserves legacy helmet expression policy
+PASS: test_body005_face006 accepts normal
+PASS: test_body005_face006 accepts angry
+PASS: test_body005_face006 accepts smile
+PASS: test_body005_face006 blinks
+PASS: test_body005_face006 changes eyebrows only
+PASS: test_body005_face006 opens mouth
+PASS: test_body005_face006 keeps independent expression channels
+PASS: test_body005_face006 changes expression without allocating mesh or material
+PASS: test_body005_face006 has head bone
+PASS: test_body005_face006 cancels imported head rest
+PASS: test_body005_face006 has idle
+PASS: test_body005_face006 Face follows idle
+PASS: test_body005_face006 Face keeps rest orientation in idle
+PASS: test_body005_face006 has walk
+PASS: test_body005_face006 Face follows walk
+PASS: test_body005_face006 Face keeps rest orientation in walk
+PASS: test_body005_face006 has attack
+PASS: test_body005_face006 Face follows attack
+PASS: test_body005_face006 Face keeps rest orientation in attack
+PASS: test_body005_face006 has hit
+PASS: test_body005_face006 Face follows hit
+PASS: test_body005_face006 Face keeps rest orientation in hit
+PASS: test_body006_face001 assembles
+PASS: test_body006_face001 has one rig and player
+PASS: test_body006_face001 keeps Body/Face meshes and toon materials
+PASS: test_body006_face001 attaches Face to head
+PASS: test_body006_face001 has ExpressionController
+PASS: test_body006_face001 preserves legacy helmet expression policy
+PASS: test_body006_face001 accepts normal
+PASS: test_body006_face001 accepts angry
+PASS: test_body006_face001 accepts smile
+PASS: test_body006_face001 blinks
+PASS: test_body006_face001 changes eyebrows only
+PASS: test_body006_face001 opens mouth
+PASS: test_body006_face001 keeps independent expression channels
+PASS: test_body006_face001 changes expression without allocating mesh or material
+PASS: test_body006_face001 has head bone
+PASS: test_body006_face001 cancels imported head rest
+PASS: test_body006_face001 has idle
+PASS: test_body006_face001 Face follows idle
+PASS: test_body006_face001 Face keeps rest orientation in idle
+PASS: test_body006_face001 has walk
+PASS: test_body006_face001 Face follows walk
+PASS: test_body006_face001 Face keeps rest orientation in walk
+PASS: test_body006_face001 has attack
+PASS: test_body006_face001 Face follows attack
+PASS: test_body006_face001 Face keeps rest orientation in attack
+PASS: test_body006_face001 has hit
+PASS: test_body006_face001 Face follows hit
+PASS: test_body006_face001 Face keeps rest orientation in hit
+PASS: test_body006_face002 assembles
+PASS: test_body006_face002 has one rig and player
+PASS: test_body006_face002 keeps Body/Face meshes and toon materials
+PASS: test_body006_face002 attaches Face to head
+PASS: test_body006_face002 has ExpressionController
+PASS: test_body006_face002 preserves legacy helmet expression policy
+PASS: test_body006_face002 accepts normal
+PASS: test_body006_face002 accepts angry
+PASS: test_body006_face002 accepts smile
+PASS: test_body006_face002 blinks
+PASS: test_body006_face002 changes eyebrows only
+PASS: test_body006_face002 opens mouth
+PASS: test_body006_face002 keeps independent expression channels
+PASS: test_body006_face002 changes expression without allocating mesh or material
+PASS: test_body006_face002 has head bone
+PASS: test_body006_face002 cancels imported head rest
+PASS: test_body006_face002 has idle
+PASS: test_body006_face002 Face follows idle
+PASS: test_body006_face002 Face keeps rest orientation in idle
+PASS: test_body006_face002 has walk
+PASS: test_body006_face002 Face follows walk
+PASS: test_body006_face002 Face keeps rest orientation in walk
+PASS: test_body006_face002 has attack
+PASS: test_body006_face002 Face follows attack
+PASS: test_body006_face002 Face keeps rest orientation in attack
+PASS: test_body006_face002 has hit
+PASS: test_body006_face002 Face follows hit
+PASS: test_body006_face002 Face keeps rest orientation in hit
+PASS: test_body006_face003 assembles
+PASS: test_body006_face003 has one rig and player
+PASS: test_body006_face003 keeps Body/Face meshes and toon materials
+PASS: test_body006_face003 attaches Face to head
+PASS: test_body006_face003 has ExpressionController
+PASS: test_body006_face003 preserves legacy helmet expression policy
+PASS: test_body006_face003 accepts normal
+PASS: test_body006_face003 accepts angry
+PASS: test_body006_face003 accepts smile
+PASS: test_body006_face003 blinks
+PASS: test_body006_face003 changes eyebrows only
+PASS: test_body006_face003 opens mouth
+PASS: test_body006_face003 keeps independent expression channels
+PASS: test_body006_face003 changes expression without allocating mesh or material
+PASS: test_body006_face003 has head bone
+PASS: test_body006_face003 cancels imported head rest
+PASS: test_body006_face003 has idle
+PASS: test_body006_face003 Face follows idle
+PASS: test_body006_face003 Face keeps rest orientation in idle
+PASS: test_body006_face003 has walk
+PASS: test_body006_face003 Face follows walk
+PASS: test_body006_face003 Face keeps rest orientation in walk
+PASS: test_body006_face003 has attack
+PASS: test_body006_face003 Face follows attack
+PASS: test_body006_face003 Face keeps rest orientation in attack
+PASS: test_body006_face003 has hit
+PASS: test_body006_face003 Face follows hit
+PASS: test_body006_face003 Face keeps rest orientation in hit
+PASS: test_body006_face004 assembles
+PASS: test_body006_face004 has one rig and player
+PASS: test_body006_face004 keeps Body/Face meshes and toon materials
+PASS: test_body006_face004 attaches Face to head
+PASS: test_body006_face004 has ExpressionController
+PASS: test_body006_face004 preserves legacy helmet expression policy
+PASS: test_body006_face004 accepts normal
+PASS: test_body006_face004 accepts angry
+PASS: test_body006_face004 accepts smile
+PASS: test_body006_face004 blinks
+PASS: test_body006_face004 changes eyebrows only
+PASS: test_body006_face004 opens mouth
+PASS: test_body006_face004 keeps independent expression channels
+PASS: test_body006_face004 changes expression without allocating mesh or material
+PASS: test_body006_face004 has head bone
+PASS: test_body006_face004 cancels imported head rest
+PASS: test_body006_face004 has idle
+PASS: test_body006_face004 Face follows idle
+PASS: test_body006_face004 Face keeps rest orientation in idle
+PASS: test_body006_face004 has walk
+PASS: test_body006_face004 Face follows walk
+PASS: test_body006_face004 Face keeps rest orientation in walk
+PASS: test_body006_face004 has attack
+PASS: test_body006_face004 Face follows attack
+PASS: test_body006_face004 Face keeps rest orientation in attack
+PASS: test_body006_face004 has hit
+PASS: test_body006_face004 Face follows hit
+PASS: test_body006_face004 Face keeps rest orientation in hit
+PASS: test_body006_face005 assembles
+PASS: test_body006_face005 has one rig and player
+PASS: test_body006_face005 keeps Body/Face meshes and toon materials
+PASS: test_body006_face005 attaches Face to head
+PASS: test_body006_face005 has ExpressionController
+PASS: test_body006_face005 preserves legacy helmet expression policy
+PASS: test_body006_face005 accepts normal
+PASS: test_body006_face005 accepts angry
+PASS: test_body006_face005 accepts smile
+PASS: test_body006_face005 blinks
+PASS: test_body006_face005 changes eyebrows only
+PASS: test_body006_face005 opens mouth
+PASS: test_body006_face005 keeps independent expression channels
+PASS: test_body006_face005 changes expression without allocating mesh or material
+PASS: test_body006_face005 has head bone
+PASS: test_body006_face005 cancels imported head rest
+PASS: test_body006_face005 has idle
+PASS: test_body006_face005 Face follows idle
+PASS: test_body006_face005 Face keeps rest orientation in idle
+PASS: test_body006_face005 has walk
+PASS: test_body006_face005 Face follows walk
+PASS: test_body006_face005 Face keeps rest orientation in walk
+PASS: test_body006_face005 has attack
+PASS: test_body006_face005 Face follows attack
+PASS: test_body006_face005 Face keeps rest orientation in attack
+PASS: test_body006_face005 has hit
+PASS: test_body006_face005 Face follows hit
+PASS: test_body006_face005 Face keeps rest orientation in hit
+PASS: test_body006_face006 assembles
+PASS: test_body006_face006 has one rig and player
+PASS: test_body006_face006 keeps Body/Face meshes and toon materials
+PASS: test_body006_face006 attaches Face to head
+PASS: test_body006_face006 has ExpressionController
+PASS: test_body006_face006 preserves legacy helmet expression policy
+PASS: test_body006_face006 accepts normal
+PASS: test_body006_face006 accepts angry
+PASS: test_body006_face006 accepts smile
+PASS: test_body006_face006 blinks
+PASS: test_body006_face006 changes eyebrows only
+PASS: test_body006_face006 opens mouth
+PASS: test_body006_face006 keeps independent expression channels
+PASS: test_body006_face006 changes expression without allocating mesh or material
+PASS: test_body006_face006 has head bone
+PASS: test_body006_face006 cancels imported head rest
+PASS: test_body006_face006 has idle
+PASS: test_body006_face006 Face follows idle
+PASS: test_body006_face006 Face keeps rest orientation in idle
+PASS: test_body006_face006 has walk
+PASS: test_body006_face006 Face follows walk
+PASS: test_body006_face006 Face keeps rest orientation in walk
+PASS: test_body006_face006 has attack
+PASS: test_body006_face006 Face follows attack
+PASS: test_body006_face006 Face keeps rest orientation in attack
+PASS: test_body006_face006 has hit
+PASS: test_body006_face006 Face follows hit
+PASS: test_body006_face006 Face keeps rest orientation in hit
+PASS: all 36 registry combinations assemble
+PASS: charcter001 preserves rig
+PASS: charcter001 preserves idle head pose
+PASS: charcter001 preserves walk head pose
+PASS: charcter001 preserves attack head pose
+PASS: charcter001 preserves hit head pose
+PASS: charcter002 preserves rig
+PASS: charcter002 preserves idle head pose
+PASS: charcter002 preserves walk head pose
+PASS: charcter002 preserves attack head pose
+PASS: charcter002 preserves hit head pose
+PASS: charcter003 preserves rig
+PASS: charcter003 preserves idle head pose
+PASS: charcter003 preserves walk head pose
+PASS: charcter003 preserves attack head pose
+PASS: charcter003 preserves hit head pose
+PASS: charcter004 preserves rig
+PASS: charcter004 preserves idle head pose
+PASS: charcter004 preserves walk head pose
+PASS: charcter004 preserves attack head pose
+PASS: charcter004 preserves hit head pose
+PASS: charcter001 roster scene builds modular model
+PASS: charcter001 roster scene plays animation
+PASS: charcter001 roster scene routes expressions
+PASS: charcter001 BattleUnit uses modular visual
+PASS: charcter001 BattleUnit routes expressions
+PASS: charcter002 roster scene builds modular model
+PASS: charcter002 roster scene plays animation
+PASS: charcter002 roster scene routes expressions
+PASS: charcter002 BattleUnit uses modular visual
+PASS: charcter002 BattleUnit routes expressions
+PASS: charcter003 roster scene builds modular model
+PASS: charcter003 roster scene plays animation
+PASS: charcter003 roster scene routes expressions
+PASS: charcter003 BattleUnit uses modular visual
+PASS: charcter003 BattleUnit routes expressions
+PASS: charcter004 roster scene builds modular model
+PASS: charcter004 roster scene plays animation
+PASS: charcter004 roster scene routes expressions
+PASS: charcter004 BattleUnit uses modular visual
+PASS: charcter004 BattleUnit routes expressions
+PASS: charcter005 roster scene builds modular model
+PASS: charcter005 roster scene plays animation
+PASS: charcter005 roster scene routes expressions
+PASS: charcter005 BattleUnit uses modular visual
+PASS: charcter005 BattleUnit routes expressions
+PASS: charcter006 roster scene builds modular model
+PASS: charcter006 roster scene plays animation
+PASS: charcter006 roster scene routes expressions
+PASS: charcter006 BattleUnit uses modular visual
+PASS: charcter006 BattleUnit routes expressions
+PASS: 60 mixed characters instantiate with one independent rig each
+PASS: 60 mixed characters use two mesh nodes each
+PASS: same Body type shares imported mesh resource
+PASS: same Body type shares toon material
+PASS: same Face type shares imported mesh resource
+PASS: same Face type owns independent expression material
+PASS: same Face instances keep angry/normal/smile state isolated
+PERFORMANCE: meshes=120 unique_meshes=12 unique_materials=66 unique_textures=12 triangles=1078140
+PASS: 60-unit reference mix shares 6 Body and 6 Face mesh resources
+PASS: 60-unit reference mix shares source textures
+PASS: 60-unit performance report records triangle total
+MODULAR_PARTS: PASSED
+ERROR: Parameter "material" is null.
+   at: material_get_instance_shader_parameters (servers/rendering/dummy/storage/material_storage.cpp:265)

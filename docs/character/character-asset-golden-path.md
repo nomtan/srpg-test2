@@ -22,6 +22,8 @@ Body は source geometry / material / texture / transform / rig を確認する�
 
 ## 3. Metadata を作る
 
+新規Faceは Head/Hair authoring → ExpressionUV authoring → ExpressionMask を明示してからNormalizerへ進む。[v2契約と作業用GLB手順](face-expression-rendering-v2.md) を使用する。原本に境界がない場合は別working GLBを作り、`--authored-face`で指定する。
+
 既存ファイルをコピーせず、対象 source の hash と実測 fit を書く。Face は `Head*` / `Hair*` material を両方持たせる。分類できない geometry を normalizer に推測させない。
 
 ## 4. Blender normalizer を staging へ実行

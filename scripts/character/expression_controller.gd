@@ -29,7 +29,52 @@ func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 	if profile == null:
 		push_error("Missing expression profile: " + profile_path)
 		return false
-	for child in face.find_children("*", "MeshInstance3D", true, false):
+	var has_head := false
+	var has_hair := false
+	var has_unknown := false
+	var meshes: Array[Node] = face.find_children("*", "MeshInstance3D", true, false)
+	if face is MeshInstance3D:
+		meshes.push_front(face)
+	for child in meshes:
+		var mesh := child as MeshInstance3D
+		if mesh.mesh == null:
+			continue
+		for surface in mesh.mesh.get_surface_count():
+			var source := mesh.get_active_material(surface)
+			var semantic := source.resource_name if source != null else ""
+			has_head = has_head or semantic.begins_with("Head")
+			has_hair = has_hair or semantic.begins_with("Hair")
+			has_unknown = has_unknown or not (semantic.begins_with("Head") or semantic.begins_with("Hair"))
+	# Legacy exports can call their single combined surface Head. Hair is the
+	# explicit separation marker; UV2 is also a v2 marker on Head-only assets.
+	var uv_v2 := has_hair
+	for child in meshes:
+		var mesh := child as MeshInstance3D
+		if mesh.mesh == null:
+			continue
+		for surface in mesh.mesh.get_surface_count():
+			if mesh.get_active_material(surface) != null and mesh.get_active_material(surface).resource_name.begins_with("Head"):
+				uv_v2 = uv_v2 or (mesh.mesh.surface_get_format(surface) & Mesh.ARRAY_FORMAT_TEX_UV2) != 0
+	if uv_v2 and (not has_head or not has_hair or has_unknown):
+		push_error("Separated Face requires only Head* and Hair* surfaces")
+		return false
+	# Validate the entire asset before creating per-instance expression materials.
+	if uv_v2:
+		for child in meshes:
+			var mesh := child as MeshInstance3D
+			if mesh.mesh == null:
+				continue
+			for surface in mesh.mesh.get_surface_count():
+				if not mesh.get_active_material(surface).resource_name.begins_with("Head"):
+					continue
+				var arrays := mesh.mesh.surface_get_arrays(surface)
+				var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2] if arrays[Mesh.ARRAY_TEX_UV2] != null else PackedVector2Array()
+				var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR] if arrays[Mesh.ARRAY_COLOR] != null else PackedColorArray()
+				if uv.size() != vertices.size() or colors.size() != vertices.size():
+					push_error("Head requires ExpressionUV and ExpressionMask")
+					return false
+	for child in meshes:
 		var mesh := child as MeshInstance3D
 		if mesh.mesh == null:
 			continue
@@ -41,6 +86,8 @@ func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 			# faces have one combined surface and remain compatible.
 			if source.resource_name.begins_with("Hair"):
 				continue
+			if uv_v2 and not source.resource_name.begins_with("Head"):
+				continue
 			var material := source.duplicate() as ShaderMaterial
 			mesh.set_surface_override_material(surface, material)
 			material.set_shader_parameter("expression_face_rect", profile.face_rect)
@@ -49,6 +96,7 @@ func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 			material.set_shader_parameter("eyebrows_atlas", _atlases[1])
 			material.set_shader_parameter("mouth_atlas", _atlases[2])
 			material.set_shader_parameter("expression_parts_enabled", show_features)
+			material.set_shader_parameter("expression_uv_v2", uv_v2)
 			_materials.append(material)
 	if _materials.is_empty():
 		push_error("Face has no toon material for expressions")

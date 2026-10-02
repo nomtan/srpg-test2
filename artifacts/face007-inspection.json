@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "standard": "ashen_character_v1",
+  "reference_rig": "assets/characters/_shared/rigs/humanoid_v1.glb",
+  "assets": [
+    {
+      "asset_type": "face",
+      "id": "007",
+      "source": {
+        "path": "assets/characters/tripo/face/007/model.glb",
+        "size_bytes": 501252,
+        "geometry": {
+          "vertex_count": 6821,
+          "triangle_count": 6087,
+          "mesh_count": 1,
+          "mesh_node_count": 1,
+          "primitive_count": 1,
+          "bounds": {
+            "min": [
+              -0.3882569819688797,
+              0.0,
+              -0.4866761118173599
+            ],
+            "max": [
+              0.38864199817180634,
+              0.9448772072792053,
+              0.48874257504940033
+            ],
+            "center": [
+              0.00019250810146331787,
+              0.47243860363960266,
+              0.0010332316160202026
+            ],
+            "size": [
+              0.776898980140686,
+              0.9448772072792053,
+              0.9754186868667603
+            ],
+            "width": 0.776898980140686,
+            "height": 0.9448772072792053,
+            "depth": 0.9754186868667603
+          }
+        },
+        "materials": {
+          "count": 1,
+          "items": [
+            {
+              "index": 0,
+              "name": "tripo_mat_5e5b171b-8648-4375-beaf-c34128725b0f",
+              "texture_roles": [
+                "base_color",
+                "normal"
+              ]
+            }
+          ]
+        },
+        "textures": {
+          "texture_count": 2,
+          "used_texture_count": 2,
+          "unused_texture_indices": [],
+          "image_count": 2,
+          "images": [
+            {
+              "index": 0,
+              "name": "tripo_image_5e5b171b-8648-4375-beaf-c34128725b0f_0_1",
+              "mime_type": "image/jpeg",
+              "width": 512,
+              "height": 512,
+              "embedded_bytes": 112702
+            },
+            {
+              "index": 1,
+              "name": "tripo_image_5e5b171b-8648-4375-beaf-c34128725b0f_0_0",
+              "mime_type": "image/jpeg",
+              "width": 512,
+              "height": 512,
+              "embedded_bytes": 131961
+            }
+          ]
+        },
+        "transform": {
+          "roots": [
+            {
+              "index": 0,
+              "name": "tripo_node_5e5b171b-8648-4375-beaf-c34128725b0f",
+              "translation": [
+                0.00019250810146331787,
+                0,
+                0.0010332316160202026
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "matrix": null
+            }
+          ],
+          "mesh_nodes": [
+            {
+              "index": 0,
+              "name": "tripo_node_5e5b171b-8648-4375-beaf-c34128725b0f",
+              "translation": [
+                0.00019250810146331787,
+                0,
+                0.0010332316160202026
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "matrix": null
+            }
+          ]
+        },
+        "rig": {
+          "skeleton_count": 0,
+          "skin_count": 0,
+          "bone_count": 0,
+          "bones": {},
+          "head_position": null,
+          "weighted_vertices": 0,
+          "unweighted_vertices": 6821,
+          "invalid_joint_vertices": 0,
+          "maximum_influences": 0
+        },
+        "animations": {
+          "player_count": 0,
+          "count": 0,
+          "items": []
+        },
+        "uv": {
+          "sets": [
+            "TEXCOORD_0"
+          ],
+          "set_count": 1
+        },
+        "head_hair": {
+          "method": "legacy_combined",
+          "mesh_names": [
+            "tripo_node_5e5b171b-8648-4375-beaf-c34128725b0f"
+          ],
+          "material_names": [
+            "tripo_mat_5e5b171b-8648-4375-beaf-c34128725b0f"
+          ],
+          "expression_hair_isolated": false
+        }
+      },
+      "modular": null,
+      "normalization": null,
+      "comparison": null,
+      "compatibility": {
+        "standard": "ashen_character_v1",
+        "status": "FAIL"
+      },
+      "warnings": [],
+      "errors": [
+        "missing modular output: assets/characters/modular/face/007/model.glb",
+        "missing normalization metadata: assets/characters/modular/face/007/normalization.json"
+      ]
+    }
+  ]
+}

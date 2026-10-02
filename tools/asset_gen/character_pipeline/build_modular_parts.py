@@ -11,6 +11,7 @@ before replacing a live model.glb.
 import argparse
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -86,10 +87,14 @@ def export(path, objects, animations):
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
         obj.select_set(True)
+    expression_v2 = any(obj.type == "MESH" and obj.data.color_attributes.get("ExpressionMask") is not None for obj in objects)
     bpy.ops.export_scene.gltf(
         filepath=str(path), use_selection=True, use_active_scene=True,
         export_animations=animations, export_animation_mode="ACTIONS",
         export_force_sampling=True, export_frame_range=False, export_extras=True,
+        export_vertex_color="NAME" if expression_v2 else "MATERIAL",
+        export_vertex_color_name="ExpressionMask",
+        export_all_vertex_colors=not expression_v2,
     )
 
 
@@ -145,7 +150,7 @@ def prepare_body(part_id, settings):
     return [root, rig, body]
 
 
-def normalize_head_hair_materials(part, part_id):
+def normalize_head_hair_materials(parts, part_id):
     """Require an explicit Head/Hair material boundary for post-v1 faces.
 
     Geometry guessing is intentionally avoided: a false hair classification can
@@ -155,12 +160,17 @@ def normalize_head_hair_materials(part, part_id):
         return
     head = []
     hair = []
-    for material in part.data.materials:
+    materials = {material for part in parts for material in part.data.materials}
+    for material in sorted(materials, key=lambda item: item.name if item else ""):
+        if material is None:
+            raise ValueError("Face has an unassigned material slot")
         lowered = material.name.lower()
         if lowered.startswith("head"):
             head.append(material)
         elif lowered.startswith("hair"):
             hair.append(material)
+        else:
+            raise ValueError(f"Unclassified Face material: {material.name}")
     if not head or not hair:
         raise ValueError(
             "Standard v1 Face requires materials named Head* and Hair*; "
@@ -172,25 +182,76 @@ def normalize_head_hair_materials(part, part_id):
         material.name = "Hair" if index == 0 else f"Hair_{index + 1:02d}"
 
 
-def prepare_static(kind, part_id, settings):
-    imported = import_source(kind, part_id)
-    if len(imported) != 1:
-        raise ValueError(f"{kind} source must contain one mesh and no rig")
-    part = next(iter(imported))
-    if part.type != "MESH" or part.animation_data:
+def validate_expression_authoring(part):
+    """Consume artist-authored data; never infer Head/Hair or facial landmarks."""
+    mesh = part.data
+    if not any(mesh.materials[p.material_index].name.startswith("Head") for p in mesh.polygons):
+        return False, False
+    if len(mesh.uv_layers) != 2 or mesh.uv_layers[1].name != "ExpressionUV":
+        raise ValueError("Face v2 needs base UV first and ExpressionUV second")
+    mask = mesh.color_attributes.get("ExpressionMask")
+    if mask is None or mesh.color_attributes.active_color != mask:
+        raise ValueError("Face v2 needs active color attribute ExpressionMask (red channel)")
+    if mask.domain not in {"POINT", "CORNER"}:
+        raise ValueError("ExpressionMask must use POINT or CORNER domain")
+    enabled = disabled = False
+    for polygon in mesh.polygons:
+        material = mesh.materials[polygon.material_index]
+        if not material.name.startswith("Head"):
+            continue
+        for loop_index in polygon.loop_indices:
+            uv = mesh.uv_layers[1].data[loop_index].uv
+            index = loop_index if mask.domain == "CORNER" else mesh.loops[loop_index].vertex_index
+            red = mask.data[index].color[0]
+            if not all(math.isfinite(value) and 0 <= value <= 1 for value in (*uv, red)):
+                raise ValueError("ExpressionUV / ExpressionMask must be finite and within 0..1")
+            enabled |= red > 0.5
+            disabled |= red <= 0.5
+    return enabled, disabled
+
+
+def prepare_static(kind, part_id, settings, authored_face=None):
+    if authored_face is None:
+        imported = import_source(kind, part_id)
+    else:
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=str(authored_face))
+        imported = set(bpy.data.objects) - before
+        if any(obj.type == "ARMATURE" or obj.animation_data for obj in imported):
+            raise ValueError("Authored Face must have no rig or animations")
+        imported = {obj for obj in imported if obj.type == "MESH"}
+        # glTF preserves channel order, not Blender UV/color layer names.
+        for obj in imported:
+            if len(obj.data.uv_layers) == 2:
+                obj.data.uv_layers[1].name = "ExpressionUV"
+            if obj.data.color_attributes.active_color is not None:
+                obj.data.color_attributes.active_color.name = "ExpressionMask"
+    if not imported or any(part.type != "MESH" or part.animation_data for part in imported):
         raise ValueError(f"{kind} source must be an unanimated mesh")
     scale = settings.get("scale")
     position = settings.get("position")
     if not isinstance(scale, (float, int)) or scale <= 0 or not isinstance(position, list) or len(position) != 3:
         raise ValueError(f"{kind} normalization requires positive scale and 3D position")
-    part.data.transform(Matrix.Translation(Vector(position)) @ Matrix.Scale(scale, 4) @ part.matrix_world)
-    part.matrix_world = Matrix.Identity(4)
-    part.name = kind.capitalize()
-    clean_toon_materials(part)
     if kind == "face":
-        normalize_head_hair_materials(part, part_id)
-    inspect_static(part, kind)
-    return [part]
+        normalize_head_hair_materials(imported, part_id)
+    enabled = disabled = False
+    for part in imported:
+        world = part.matrix_world.copy()
+        part.parent = None
+        part.data = part.data.copy()
+        part.data.transform(Matrix.Translation(Vector(position)) @ Matrix.Scale(scale, 4) @ world)
+        part.matrix_world = Matrix.Identity(4)
+        clean_toon_materials(part)
+        if kind == "face" and int(part_id) > 6:
+            if settings.get("expression_rendering") != "uv_v2":
+                raise ValueError("New Face metadata must declare expression_rendering=uv_v2")
+            part_enabled, part_disabled = validate_expression_authoring(part)
+            enabled |= part_enabled
+            disabled |= part_disabled
+        inspect_static(part, kind)
+    if kind == "face" and int(part_id) > 6 and (not enabled or not disabled):
+        raise ValueError("Head mask must contain both allowed front and excluded regions")
+    return list(imported)
 
 
 def main():
@@ -198,6 +259,7 @@ def main():
     parser.add_argument("--kind", choices=("body", "face"), required=True)
     parser.add_argument("--id", required=True)
     parser.add_argument("--output-root", type=Path, default=MODULAR)
+    parser.add_argument("--authored-face", type=Path, help="Explicitly classified working GLB with authored UV/mask; raw source remains immutable")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     if not (len(args.id) == 3 and args.id.isdigit() and int(args.id) > 0):
         raise ValueError("Part ID must be a positive three-digit number")
@@ -208,13 +270,19 @@ def main():
     settings = contract(args.kind, args.id)
     if settings.get("source_sha256") != before_hash:
         raise ValueError("Immutable Tripo source hash differs from normalization metadata")
+    if args.authored_face:
+        if args.kind != "face" or args.authored_face.resolve() == source.resolve():
+            raise ValueError("--authored-face requires a separate Face working GLB")
+        if hashlib.sha256(args.authored_face.read_bytes()).hexdigest() != settings.get("authored_sha256"):
+            raise ValueError("Authored Face hash differs from normalization metadata")
     scene = bpy.context.scene
     scene.unit_settings.scale_length = 1.0
     scene.unit_settings.system = "METRIC"
     scene.render.fps = 30
-    objects = prepare_body(args.id, settings) if args.kind == "body" else prepare_static(args.kind, args.id, settings)
+    objects = prepare_body(args.id, settings) if args.kind == "body" else prepare_static(args.kind, args.id, settings, args.authored_face)
     target = args.output_root / args.kind / args.id / "model.glb"
     export(target, objects, args.kind == "body")
+    (target.parent / "normalization.json").write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
     if hashlib.sha256(source.read_bytes()).hexdigest() != before_hash:
         raise ValueError("Immutable Tripo source changed")
     print("DIRECT_MODULAR_EXPORT", args.kind, args.id, target)

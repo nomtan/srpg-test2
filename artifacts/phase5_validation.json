@@ -1,0 +1,1752 @@
+{
+  "schema_version": 1,
+  "standard": "ashen_character_v1",
+  "status": "WARNING",
+  "summary": {
+    "PASS": 274,
+    "WARNING": 16,
+    "FAIL": 0
+  },
+  "checks": [
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "budget.vertices",
+      "message": "vertices 11188 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "budget.triangles",
+      "message": "triangles 11843 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body001",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "budget.vertices",
+      "message": "vertices 8565 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "budget.triangles",
+      "message": "triangles 8896 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body002",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "budget.vertices",
+      "message": "vertices 8898 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "budget.triangles",
+      "message": "triangles 9210 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body003",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "budget.vertices",
+      "message": "vertices 9563 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "budget.triangles",
+      "message": "triangles 9758 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body004",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "budget.vertices",
+      "message": "vertices 10977 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "budget.triangles",
+      "message": "triangles 11324 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body005",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "budget.vertices",
+      "message": "vertices 10436 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "budget.triangles",
+      "message": "triangles 10116 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "budget.textures",
+      "message": "textures 2 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body006",
+      "code": "budget.texture_resolution.1",
+      "message": "texture_resolution.1 512 is within recommended 512"
+    },
+    {
+      "status": "WARNING",
+      "asset": "body006",
+      "code": "texture.toon_roles",
+      "message": "legacy texture roles ignored by the toon runtime: ['normal']"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "metadata.expression_profile",
+      "message": "face declares the default expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds.width",
+      "message": "width 0.5170 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds.height",
+      "message": "height 0.5056 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds.depth",
+      "message": "depth 0.5144 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds.center_x",
+      "message": "center_x 0.0010 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.1428 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0600 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face001",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for reference Face001-006"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face001",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "budget.vertices",
+      "message": "vertices 7587 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "budget.triangles",
+      "message": "triangles 6671 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face001",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "metadata.expression_profile",
+      "message": "face declares the default expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds.width",
+      "message": "width 0.5171 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds.height",
+      "message": "height 0.5204 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds.depth",
+      "message": "depth 0.4971 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds.center_x",
+      "message": "center_x 0.0004 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.1502 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0562 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face002",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for reference Face001-006"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face002",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "budget.vertices",
+      "message": "vertices 7122 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "budget.triangles",
+      "message": "triangles 6460 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face002",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "metadata.expression_profile",
+      "message": "face declares the default expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.bounds.width",
+      "message": "width 0.5170 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face003",
+      "code": "face.bounds.height",
+      "message": "height 0.6129 is outside recommended range [0.47, 0.54]"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.bounds.depth",
+      "message": "depth 0.5290 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.bounds.center_x",
+      "message": "center_x 0.0008 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face003",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.0965 is outside recommended range [1.12, 1.17]"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0557 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face003",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for reference Face001-006"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face003",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "budget.vertices",
+      "message": "vertices 7026 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "budget.triangles",
+      "message": "triangles 5698 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "budget.textures",
+      "message": "textures 2 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face003",
+      "code": "budget.texture_resolution.1",
+      "message": "texture_resolution.1 512 is within recommended 512"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face003",
+      "code": "texture.toon_roles",
+      "message": "legacy texture roles ignored by the toon runtime: ['normal']"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "metadata.expression_profile",
+      "message": "face declares the default expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds.width",
+      "message": "width 0.5248 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds.height",
+      "message": "height 0.5168 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds.depth",
+      "message": "depth 0.5246 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds.center_x",
+      "message": "center_x 0.0011 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.1484 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0550 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face004",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for reference Face001-006"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face004",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "budget.vertices",
+      "message": "vertices 5451 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "budget.triangles",
+      "message": "triangles 6216 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face004",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "metadata.expression_profile",
+      "message": "face declares the default expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds.width",
+      "message": "width 0.5273 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds.height",
+      "message": "height 0.5220 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds.depth",
+      "message": "depth 0.5240 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds.center_x",
+      "message": "center_x 0.0007 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.1510 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0552 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face005",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for reference Face001-006"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face005",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "budget.vertices",
+      "message": "vertices 11534 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "budget.triangles",
+      "message": "triangles 11065 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face005",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "metadata.expression_profile",
+      "message": "face declares the default expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds.width",
+      "message": "width 0.5242 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds.height",
+      "message": "height 0.4824 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds.depth",
+      "message": "depth 0.5252 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds.center_x",
+      "message": "center_x -0.0010 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.1312 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0560 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face006",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for reference Face001-006"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face006",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "budget.vertices",
+      "message": "vertices 10721 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "budget.triangles",
+      "message": "triangles 10557 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face006",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    }
+  ]
+}

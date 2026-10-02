@@ -18,12 +18,14 @@ Face は `Head + Hair` を1部品として扱う。`hair_id`、`HairSocket`、`m
 
 新規 Face007 以降の正式方式は material separation とする。
 
-- material 名 `Head*`: expression projection 対象
+- material 名 `Head*`: Expression UV v2 対象（第2 UV + 頂点カラーRマスク必須）
 - material 名 `Hair*`: expression projection 対象外
 - 同一 GLB / 同一 Face ID の中に両方を持つ。
 - geometry を推測して自動分割しない。分類不能なら normalizer は FAIL し、Blender authoring へ戻す。
 
 この方式は mesh を不必要に分割せず、Godot shader 側で surface を安全に選べる。001〜006 は単一 mesh / material の legacy combined であり、破壊的再生成を避けるため WARNING 互換とする。
+
+UV／maskの出力規格・検証状況は [Face Expression Rendering v2](face-expression-rendering-v2.md) を参照。Face007 authoringは未完了。
 
 ## Reference Measurements
 

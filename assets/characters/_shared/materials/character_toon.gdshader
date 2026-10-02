@@ -7,6 +7,9 @@ uniform sampler2D eyes_atlas : source_color, filter_linear_mipmap, repeat_disabl
 uniform sampler2D eyebrows_atlas : source_color, filter_linear_mipmap, repeat_disable;
 uniform sampler2D mouth_atlas : source_color, filter_linear_mipmap, repeat_disable;
 uniform bool expression_parts_enabled = false;
+// v2: glTF TEXCOORD_1 -> UV2, COLOR_0.r -> authored front-face mask.
+uniform bool expression_uv_v2 = false;
+uniform float expression_mask_threshold = 0.5;
 uniform float eyes_row = 0.0;
 uniform float eyebrows_row = 0.0;
 uniform float mouth_row = 0.0;
@@ -55,12 +58,16 @@ void fragment() {
 		}
 	}
 	if (expression_parts_enabled) {
-		vec2 face_uv = vec2(
+		vec2 face_uv = expression_uv_v2 ? UV2 : vec2(
 			(expression_rest_position.x - expression_face_rect.x) / expression_face_rect.z,
 			1.0 - (expression_rest_position.y - expression_face_rect.y) / expression_face_rect.w
 		);
 		bool face_surface = face_uv.x >= 0.0 && face_uv.x <= 1.0 && face_uv.y >= 0.0 && face_uv.y <= 1.0;
-		face_surface = face_surface && expression_rest_normal.z > 0.15 && expression_rest_position.z >= expression_surface_depth.x && expression_rest_position.z <= expression_surface_depth.y;
+		if (expression_uv_v2) {
+			face_surface = face_surface && COLOR.r > expression_mask_threshold;
+		} else {
+			face_surface = face_surface && expression_rest_normal.z > 0.15 && expression_rest_position.z >= expression_surface_depth.x && expression_rest_position.z <= expression_surface_depth.y;
+		}
 		if (face_surface) {
 			vec2 clamped_uv = clamp(face_uv, vec2(0.002), vec2(0.998));
 			vec4 eyes = texture(eyes_atlas, vec2(clamped_uv.x, (clamped_uv.y + eyes_row) / 8.0));

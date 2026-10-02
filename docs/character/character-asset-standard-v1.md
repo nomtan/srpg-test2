@@ -35,6 +35,7 @@ Immutable Tripo source
 - [Body Asset Standard v1](body-asset-standard-v1.md)
 - [Face Asset Standard v1](face-asset-standard-v1.md)
 - [Expression Asset Standard v1](expression-asset-standard-v1.md)
+- [Face Expression Rendering v2](face-expression-rendering-v2.md)
 - [Golden Path](character-asset-golden-path.md)
 - [Face003 normalization analysis](face003-normalization-analysis.md)
 

@@ -10,11 +10,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from character_asset_metrics import IDENTITY, bone_contract, close, compare_bones, inspect_glb, read_glb
+from character_asset_metrics import IDENTITY, accessor_values, bone_contract, close, compare_bones, inspect_glb, read_glb
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -174,7 +175,7 @@ def _validate_range(report: ValidationReport, asset: str, label: str, value: flo
 def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any], standard: dict[str, Any]) -> None:
     part_id = path.parent.name
     asset = f"face{part_id}"
-    report.require(metrics["rig"]["skeleton_count"] == 0 and metrics["animations"]["count"] == 0, "face.static", "face has no Skeleton, Skin, or Animation", asset)
+    report.require(metrics["rig"]["skeleton_count"] == 0 and metrics["rig"]["skin_count"] == 0 and metrics["animations"]["count"] == 0, "face.static", "face has no Skeleton, Skin, or Animation", asset)
     report.require(_identity_mesh_transforms(metrics), "face.transform", "face mesh transform is normalized", asset)
     report.require(metrics["geometry"]["mesh_count"] >= 1, "face.mesh", "face contains renderable Head + Hair geometry", asset)
     report.require(metrics["uv"]["set_count"] >= 1, "face.uv", "face has texture coordinates", asset)
@@ -193,6 +194,7 @@ def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any]
             _validate_range(report, asset, label, value, standard["face_head_space"][label])
     method = metrics["head_hair"]["method"]
     legacy = part_id in standard["face_structure"]["legacy_combined_ids"]
+    _validate_expression_v2(report, path, legacy)
     if method == standard["face_structure"]["new_asset_method"]:
         report.add("PASS", "face.head_hair", "Head and Hair are isolated by material", asset)
     elif legacy:
@@ -205,6 +207,51 @@ def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any]
     _validate_budget(report, asset, "materials", metrics["materials"]["count"], budget["materials"])
     _validate_budget(report, asset, "textures", metrics["textures"]["image_count"], budget["textures"])
     _validate_textures(report, asset, metrics, standard)
+
+
+def _validate_expression_v2(report: ValidationReport, path: Path, legacy: bool) -> None:
+    asset = "face" + path.parent.name
+    document, binary = read_glb(path)
+    primitives = [p for mesh in document.get("meshes", []) for p in mesh.get("primitives", [])]
+    names = [document.get("materials", [])[p["material"]].get("name", "") if "material" in p else "" for p in primitives]
+    separated = any(name.startswith("Head") for name in names) and any(name.startswith("Hair") for name in names)
+    if legacy and not separated:
+        report.add("WARNING", "face.expression.mode", "legacy_projection retained for reference Face001-006", asset)
+        return
+    report.require(separated and all(name.startswith(("Head", "Hair")) for name in names), "face.expression.materials", "v2 has only classified Head* / Hair* surfaces", asset)
+    metadata = _load_metadata(path.parents[2], "face", path.parent.name) or {}
+    report.require(metadata.get("expression_rendering", "uv_v2") == "uv_v2", "face.expression.mode", "new Face uses uv_v2, not legacy_projection", asset)
+    enabled = excluded = False
+    for index, (primitive, name) in enumerate(zip(primitives, names)):
+        if not name.startswith("Head"):
+            continue
+        attributes = primitive.get("attributes", {})
+        required = {"POSITION", "TEXCOORD_0", "TEXCOORD_1", "COLOR_0"}
+        present = required <= attributes.keys()
+        report.require(present, "face.expression.channels", f"Head surface {index} has base UV, ExpressionUV and mask", asset)
+        if not present:
+            continue
+        positions = accessor_values(document, binary, attributes["POSITION"])
+        uv = accessor_values(document, binary, attributes["TEXCOORD_1"])
+        colors = accessor_values(document, binary, attributes["COLOR_0"])
+        valid_uv = len(uv) == len(positions) and all(len(value) == 2 and all(math.isfinite(v) and 0 <= v <= 1 for v in value) for value in uv)
+        report.require(valid_uv, "face.expression.uv", f"Head surface {index} UV is complete, finite and within 0..1", asset)
+        valid_mask = len(colors) == len(positions) and all(len(value) in (3, 4) and all(math.isfinite(v) and 0 <= v <= 1 for v in value) for value in colors)
+        report.require(valid_mask, "face.expression.mask", f"Head surface {index} COLOR_0 mask is complete, finite and within 0..1", asset)
+        if not valid_uv or not valid_mask:
+            continue
+        enabled |= any(c[0] > 0.5 for c in colors)
+        excluded |= any(c[0] <= 0.5 for c in colors)
+        indices = [int(v[0]) for v in accessor_values(document, binary, primitive["indices"])] if "indices" in primitive else list(range(len(uv)))
+        degenerate = 0
+        for offset in range(0, len(indices) - 2, 3):
+            a, b, c = indices[offset:offset + 3]
+            if not any(colors[i][0] > 0.5 for i in (a, b, c)):
+                continue
+            area = (uv[b][0] - uv[a][0]) * (uv[c][1] - uv[a][1]) - (uv[b][1] - uv[a][1]) * (uv[c][0] - uv[a][0])
+            degenerate += abs(area) < 1e-10
+        report.require(degenerate == 0, "face.expression.uv_area", f"Head surface {index} has {degenerate} degenerate enabled UV triangles", asset)
+    report.require(enabled and excluded, "face.expression.mask_regions", "Head has enabled front and excluded regions across its surfaces", asset)
 
 
 def main() -> int:
