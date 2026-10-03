@@ -328,7 +328,7 @@ const BW_FX := {
 
 # Katana, worn sheathed at the left hip and drawn only inside its clips. All three sources stand tip-down along +Y
 # with the blade edges along Z; saya.model.glb (sheathed) and scabbard.glb (cut from it) sit KT_SHEATH_DROP lower.
-const KT_SCALE := 0.95
+const KT_SCALE := 1.235 # 0.95 * 1.3
 const KT_GRIP := Vector3(0.0, 0.84, 0.0) # Right hand, just above the guard.
 const KT_SHEATH_DROP := Vector3(0.0, 0.02, 0.0)
 # The right hand on the hilt at the left hip. The sheathed katana is placed exactly where this key holds the drawn one,
