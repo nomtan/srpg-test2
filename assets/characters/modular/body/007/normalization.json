@@ -5,8 +5,6 @@
   "id": "007",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "source_sha256": "4dff5d30064e9b200ab294990e00b9eefc48e570f529f3270dba1f918835284c",
-  "arm_alignment": "none",
-  "source_rig": "discard",
-  "decimate_ratio": 0.23
+  "source_sha256": "0b62d9d8865dd02cae2a6250b2c93a4a4e466278dd4847fac5518268cfc919da",
+  "arm_alignment": "none"
 }

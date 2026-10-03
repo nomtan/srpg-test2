@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "standard": "ashen_character_v1",
+  "status": "WARNING",
+  "summary": {
+    "PASS": 46,
+    "WARNING": 3,
+    "FAIL": 0
+  },
+  "checks": [
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.one_rig",
+      "message": "body has exactly one Skeleton/Skin"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.bone_count",
+      "message": "body has 65 humanoid_v1 bones"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.rest_contract",
+      "message": "bone names, hierarchy, and rest transforms match humanoid_v1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.weights.complete",
+      "message": "all body vertices are weighted"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.weights.valid_joints",
+      "message": "all weighted vertices reference valid joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.weights.influences",
+      "message": "maximum influences is 4 (limit 4)"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.animation.unique",
+      "message": "animation names are unique"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.animation.required",
+      "message": "required idle/walk/attack/hit clips exist"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.animation.tracks",
+      "message": "animation tracks target humanoid_v1 joints"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.transform",
+      "message": "body mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "body.mesh",
+      "message": "body contains renderable geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "budget.vertices",
+      "message": "vertices 7297 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "budget.triangles",
+      "message": "triangles 7000 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 1"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "body007",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "metadata.exists",
+      "message": "normalization metadata exists"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "metadata.schema",
+      "message": "metadata identifies Standard v1, type, ID, rig, and coordinate space"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "metadata.no_body001_dependency",
+      "message": "metadata has no Body001 reference-rig dependency"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "source.hash",
+      "message": "immutable source hash matches metadata"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "metadata.expression_profile",
+      "message": "face declares an existing expression profile"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "metadata.face_fit",
+      "message": "face has a positive scale and a three-axis normalization position"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.static",
+      "message": "face has no Skeleton, Skin, or Animation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.transform",
+      "message": "face mesh transform is normalized"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.mesh",
+      "message": "face contains renderable Head + Hair geometry"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.uv",
+      "message": "face has texture coordinates"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.bounds",
+      "message": "face exposes mesh bounds"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.size.reference",
+      "message": "face width matches the approved Face007 reference within 1mm"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.bounds.width",
+      "message": "width 0.4195 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.bounds.height",
+      "message": "height 0.5102 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.bounds.depth",
+      "message": "depth 0.5267 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.bounds.center_x",
+      "message": "center_x 0.0001 is in the recommended range"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "face.bounds.center_y",
+      "message": "center_y 1.1151 is in the recommended range"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face007",
+      "code": "face.bounds.center_z",
+      "message": "center_z 0.0106 is outside recommended range [0.04, 0.08]"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face007",
+      "code": "face.expression.mode",
+      "message": "legacy_projection retained for legacy_combined_ids faces"
+    },
+    {
+      "status": "WARNING",
+      "asset": "face007",
+      "code": "face.head_hair",
+      "message": "legacy combined Head/Hair accepted for reference-set compatibility; new assets must use material separation"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "budget.vertices",
+      "message": "vertices 6827 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "budget.triangles",
+      "message": "triangles 6087 is within recommended 12000"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "budget.materials",
+      "message": "materials 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "budget.textures",
+      "message": "textures 1 is within recommended 2"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "texture.unused",
+      "message": "all embedded textures are referenced"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "budget.texture_resolution.0",
+      "message": "texture_resolution.0 512 is within recommended 512"
+    },
+    {
+      "status": "PASS",
+      "asset": "face007",
+      "code": "texture.toon_roles",
+      "message": "textures match the base-color-only toon runtime"
+    }
+  ]
+}

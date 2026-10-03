@@ -11,9 +11,9 @@ scenes/characters/tripo_roster/character007.tscn
 
 ## Body007
 
-- 原本は65骨のMixamoリグ付き。`normalization.json` の `source_rig: discard` でリグ・ウェイト・ボーン形状用Icosphereを破棄し、
-  bind poseのメッシュだけを使う。以後は001〜006と同じくhumanoid_v1へ高さ合わせ＋ウェイト転写、4 clips生成。
-- 原本は41,060三角形で規格上限を超えるため `decimate_ratio: 0.23`（collapse）で約9.4k三角形 / 11.9k頂点へ削減。
+- 原本（2026-10-04更新）はリグなしの静的メッシュ（7,000三角形 / 1材質）。001〜006と同じくhumanoid_v1へ高さ合わせ＋ウェイト転写、4 clips生成。
+- 旧原本は65骨Mixamoリグ付き・41k三角形だったため `source_rig: discard` と `decimate_ratio: 0.23` を使っていたが、
+  現原本では不要なので `normalization.json` から削除した（`build_modular_parts.py` 側のオプションは残してある）。
 
 ## Face007
 
