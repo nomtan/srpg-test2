@@ -12,7 +12,7 @@ const ARROW = preload("res://assets/weapons/allow/001/model.glb")
 const KATANA = preload("res://assets/weapons/katana/001/model.glb")
 const KATANA_SHEATHED = preload("res://assets/weapons/katana/001/saya.model.glb")
 const KATANA_SCABBARD = preload("res://assets/weapons/katana/001/scabbard.glb")
-const SlashFx = preload("res://scripts/world_jrpg/sword_slash_fx.gd")
+const SlashPlayer = preload("res://scripts/world_jrpg/sword_slash_player.gd")
 const BowShotFx = preload("res://scripts/world_jrpg/bow_shot_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
 const CHARACTER_TOON = preload("res://assets/characters/_shared/materials/character_toon.gdshader")
@@ -39,9 +39,6 @@ const LOADOUTS := {"charcter001": "greatsword", "charcter002": "dual_daggers", "
 const GRIP := Vector3(0.0, 0.9, 0.0)
 const SWORD_SCALE := 0.9
 const STAFF_SCALE := 1.65
-# Slash ribbon for the sword and staff, sized to their 1.5x scale.
-const FX_INNER := Vector3(0, 0.22, 0)
-const FX_OUTER := Vector3(0, 1.17, 0)
 const STAFF_GRIP := Vector3(0, 0.22, 0)
 const SHIELD_SCALE := 0.62 * 1.3 * 1.2 * 0.78
 const SHIELD_GRIP := Vector3(0.0, 0.56, 0.0)
@@ -126,22 +123,23 @@ const GUARD_KEYS := [
 		"arm": [Vector3(-.55,-.75,-.25), Vector3(-.35,-.3,.9)], "blade": Vector3(-.35,.45,1),
 		"off": [Vector3(.45,-.6,.65), Vector3(-.6,.2,.8)], "shield": Vector3(.15,.05,1)},
 ]
-# Blade trail window and impact moment (seconds) for each clip, used by the slash effect.
-const FX := {SLASH: {"trail": Vector2(0.06, 0.26), "impact": 0.13}, OVERHEAD: {"trail": Vector2(0.10, 0.23), "impact": 0.18}}
+# Impact moment (seconds) for each clip: the hit-stop lands here, and the slash profiles' full swing is lined up with it.
+const FX := {SLASH: {"impact": 0.13}, OVERHEAD: {"impact": 0.18}}
+# Slash effects per clip (one profile per blade), tuned in the inspector; see scripts/world_jrpg/sword_slash_profile.gd.
+const SLASH_FX := {
+	SLASH: [preload("res://assets/fx/sword_slash/sword_slash.tres")],
+	OVERHEAD: [preload("res://assets/fx/sword_slash/sword_overhead.tres")],
+}
 
 # Greatsword, held in both hands. The source stands tip-down along +Y with the handle between the guard and pommel.
 const GS_SCALE := 1.5
 const GS_GRIP := Vector3(0.0, 0.825, 0.0) # Right hand, just below the guard.
 const GS_HAND_SPACING := 0.065 # Left hand sits this far toward the pommel; hands keep this gap whatever the weapon scale.
-const GS_FX_INNER := Vector3(0, 0.2, 0) * GS_SCALE
-const GS_FX_OUTER := Vector3(0, 1.05, 0) * GS_SCALE
 # Two-handed axe, swung with the greatsword clips. The source stands head-up along +Y with the haft below,
 # its bit spreading along X like the greatsword's edges, so it needs no flip.
 const GA_SCALE := 2.1
 # Right hand low on the haft; the left hand (GS_HAND_SPACING below) stays clear of the pommel.
 const GA_GRIP := Vector3(0.0, 0.25, 0.0)
-const GA_FX_INNER := Vector3(0, 0.6, 0) * GA_SCALE
-const GA_FX_OUTER := Vector3(0, 0.95, 0) * GA_SCALE
 # Elbow bend directions for the two-handed arm IK (character space).
 const GS_POLES := {"R": Vector3(-.7,-1,-.3), "L": Vector3(.7,-1,-.3)}
 # Greatsword keys use the shared body keys, plus "grip": the right hand's handle point, offset from the
@@ -204,14 +202,27 @@ const GS_GUARD_KEYS := [
 	{"t": 0.14, "yaw": 15.0, "pitch": 6.0, "hip_yaw": 8.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.06), "back": Vector3(0,0,-.1),
 		"grip": Vector3(.21,-.24,.54), "blade": Vector3(-.6,.75,.2)},
 ]
-const GS_FX := {GS_SWEEP: {"trail": Vector2(0.24, 0.44), "impact": 0.34}, GS_SMASH: {"trail": Vector2(0.31, 0.45), "impact": 0.39}}
+const GS_FX := {GS_SWEEP: {"impact": 0.34}, GS_SMASH: {"impact": 0.39}}
+const GS_SLASH_FX := {
+	GS_SWEEP: [preload("res://assets/fx/sword_slash/greatsword_sweep.tres")],
+	GS_SMASH: [preload("res://assets/fx/sword_slash/greatsword_smash.tres")],
+}
+# The axe reaches further along the same clips.
+const GA_SLASH_FX := {
+	GS_SWEEP: [preload("res://assets/fx/sword_slash/greataxe_sweep.tres")],
+	GS_SMASH: [preload("res://assets/fx/sword_slash/greataxe_smash.tres")],
+}
 const GS_CLIPS := {GS_SWEEP: GS_SWEEP_KEYS, GS_SMASH: GS_SMASH_KEYS, GS_GUARD: GS_GUARD_KEYS}
 
 # Dual daggers, one in each hand. The source stands tip-down along +Y like the one-handed sword.
 const DG_SCALE := 0.63
 const DG_GRIP := Vector3(0.0, 0.84, 0.0)
-const DG_FX_INNER := Vector3(0, 0.09, 0)
-const DG_FX_OUTER := Vector3(0, 0.75, 0)
+# Both blades land together in the double cut, each with its own arc (the hit-stop still lands once).
+const DG_SLASH_FX := {
+	DG_SLASH: [preload("res://assets/fx/sword_slash/dagger_slash.tres")],
+	DG_SLASH_L: [preload("res://assets/fx/sword_slash/dagger_slash_l.tres")],
+	DG_OVERHEAD: [preload("res://assets/fx/sword_slash/dagger_overhead_r.tres"), preload("res://assets/fx/sword_slash/dagger_overhead_l.tres")],
+}
 # Ready stance: the greatsword's, with the right hand carried a little lower and its tip pointing forward,
 # and the left arm held as in the crossed guard, swung about 15 degrees lower at the shoulder
 # ("off"/"blade_l" as in the dagger keys, replacing "off_bend").
@@ -320,8 +331,6 @@ const BW_FX := {
 const KT_SCALE := 0.95
 const KT_GRIP := Vector3(0.0, 0.84, 0.0) # Right hand, just above the guard.
 const KT_SHEATH_DROP := Vector3(0.0, 0.02, 0.0)
-const KT_FX_INNER := Vector3(0, 0.12, 0)
-const KT_FX_OUTER := Vector3(0, 0.78, 0)
 # The right hand on the hilt at the left hip. The sheathed katana is placed exactly where this key holds the drawn one,
 # so the swap between the two models at the draw and the sheathing is invisible. "hilt" keys take this pose.
 const KT_HILT := {"yaw": 14.0, "pitch": 8.0, "hip": Vector3(0,-.06,0), "grip": Vector3(.1,-.62,.4), "blade": Vector3(.5,-.3,-1),
@@ -371,7 +380,11 @@ const KT_GUARD_KEYS := [
 	{"t": 0.24, "yaw": -8.0, "pitch": 6.0, "hip_yaw": -6.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.12), "back": Vector3(0,0,-.1),
 		"grip": Vector3(-.05,-.4,.62), "blade": Vector3(.05,.5,.86)},
 ]
-const KT_FX := {KT_IAI: {"trail": Vector2(0.25, 0.42), "impact": 0.32}, KT_KESA: {"trail": Vector2(0.44, 0.56), "impact": 0.50}}
+const KT_FX := {KT_IAI: {"impact": 0.32}, KT_KESA: {"impact": 0.50}}
+const KT_SLASH_FX := {
+	KT_IAI: [preload("res://assets/fx/sword_slash/katana_iai.tres")],
+	KT_KESA: [preload("res://assets/fx/sword_slash/katana_kesa.tres")],
+}
 const KT_CLIPS := {KT_IAI: KT_IAI_KEYS, KT_KESA: KT_KESA_KEYS, KT_GUARD: KT_GUARD_KEYS}
 # Time span of each clip in which the blade is out of the scabbard (from the hilt key to the closing hilt key).
 const KT_DRAWN := {KT_IAI: Vector2(0.14, 0.84), KT_KESA: Vector2(0.14, 0.94), KT_GUARD: Vector2(0.10, INF)}
@@ -444,14 +457,12 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 	if not legs.is_empty():
 		leg_length = maxf((_idle_global[legs.hips] as Transform3D).origin.y - (_idle_global[legs["foot.R"]] as Transform3D).origin.y, 0.01)
 	var path := player.get_node(player.root_node).get_path_to(skeleton)
-	var fx := SlashFx.new()
-	fx.name = "SwordSlashFx"
 	var library := AnimationLibrary.new()
 	match LOADOUTS.get(model.get("character_id"), "sword_shield"):
 		"greatsword", "greataxe":
 			var axe: bool = LOADOUTS.get(model.get("character_id")) == "greataxe"
 			_attach_greatsword(axe)
-			fx.setup(grip, player, GS_FX, GA_FX_INNER if axe else GS_FX_INNER, GA_FX_OUTER if axe else GS_FX_OUTER)
+			_add_slashes(model, player, GA_SLASH_FX if axe else GS_SLASH_FX, GS_FX)
 			library.add_animation("sweep", _make_clip(path, "大剣・横薙ぎ", GS_SWEEP_KEYS))
 			library.add_animation("smash", _make_clip(path, "大剣・振り下ろし", GS_SMASH_KEYS))
 			library.add_animation("guard", _make_clip(path, "大剣・防御", GS_GUARD_KEYS))
@@ -464,19 +475,10 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			holder.name = "GreatswordTwoHandGrip"
 			holder.setup(self, player, "greatsword/")
 			skeleton.add_child(holder)
-			model.add_child(fx)
 			return true
 		"dual_daggers":
 			_attach_daggers()
-			fx.setup(grip, player, {DG_SLASH: FX[SLASH], DG_OVERHEAD: FX[OVERHEAD]}, DG_FX_INNER, DG_FX_OUTER)
-			model.add_child(fx)
-			# Both blades land together in the double cut; only one effect applies the hit-stop.
-			var off_fx := SlashFx.new()
-			off_fx.name = "OffHandSlashFx"
-			var off_overhead: Dictionary = FX[OVERHEAD].duplicate()
-			off_overhead["hit_stop"] = false
-			off_fx.setup(off_grip, player, {DG_SLASH_L: FX[SLASH], DG_OVERHEAD: off_overhead}, DG_FX_INNER, DG_FX_OUTER)
-			model.add_child(off_fx)
+			_add_slashes(model, player, DG_SLASH_FX, {DG_SLASH: FX[SLASH], DG_SLASH_L: FX[SLASH], DG_OVERHEAD: FX[OVERHEAD]})
 			library.add_animation("slash", _make_clip(path, "短剣・右横薙ぎ", SLASH_KEYS))
 			library.add_animation("slash_l", _make_clip(path, "短剣・左横薙ぎ", _mirror_keys(SLASH_KEYS)))
 			library.add_animation("overhead", _make_clip(path, "短剣・二刀振り下ろし", _both(DG_OVERHEAD_KEYS)))
@@ -515,8 +517,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			return true
 		"katana":
 			_attach_katana()
-			fx.setup(grip, player, KT_FX, KT_FX_INNER, KT_FX_OUTER)
-			model.add_child(fx)
+			_add_slashes(model, player, KT_SLASH_FX, KT_FX)
 			library.add_animation("iai", _make_clip(path, "刀・抜刀横薙ぎ", KT_IAI_KEYS))
 			library.add_animation("kesa", _make_clip(path, "刀・袈裟斬り", KT_KESA_KEYS))
 			library.add_animation("guard", _make_clip(path, "刀・中段構え", KT_GUARD_KEYS))
@@ -539,14 +540,20 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			_attach_shield()
 			has_shield = true
 			guard_clip = GUARD
-	fx.setup(grip, player, FX, FX_INNER, FX_OUTER)
-	model.add_child(fx)
+	_add_slashes(model, player, SLASH_FX, FX)
 	library.add_animation("slash", _make_clip(path, "横薙ぎ", SLASH_KEYS))
 	library.add_animation("overhead", _make_clip(path, "上段斬り", OVERHEAD_KEYS))
 	if has_shield:
 		library.add_animation("guard", _make_clip(path, "防御", GUARD_KEYS))
 	player.add_animation_library("sword", library)
 	return true
+
+## Attack clips' slash effects, placed in skeleton space (the frame the clip keys use), with their hit-stops.
+func _add_slashes(model: Node3D, player: AnimationPlayer, profiles: Dictionary, impacts: Dictionary) -> void:
+	var fx := SlashPlayer.new()
+	fx.name = "SwordSlashFx"
+	fx.setup(player, skeleton, profiles, impacts)
+	model.add_child(fx)
 
 func _attach_sword() -> void:
 	socket = BoneAttachment3D.new()

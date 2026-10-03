@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SwordSlashProfile" format=3]
+
+[ext_resource type="Script" path="res://scripts/world_jrpg/sword_slash_profile.gd" id="1_v3jdh"]
+
+[resource]
+script = ExtResource("1_v3jdh")
+start_time = 0.27
+swing_time = 0.09
+afterglow_time = 0.22
+offset = Vector3(0.011, 0.616, 0.229)
+rotation_degrees = Vector3(-6.7, 162.1, 9.6)
+radius = 1.478
+width = 0.99
+sweep_degrees = 166.5

@@ -1,14 +1,9 @@
 extends Node3D
-## Sword swing effect: a gradient crescent with a same-colour glow swept by the blade,
-## and shards, a star flash and hit-stop at impact.
+## Sword swing effect: a crescent with a solid white-hot band swept by the blade, and hit-stop at impact.
 ## Built in world space each frame from the blade's sampled edge.
 const SHADER = preload("res://scripts/world_jrpg/sword_slash_fx.gdshader")
-const FLASH_SHADER = preload("res://scripts/world_jrpg/sword_slash_flash.gdshader")
-const OUTLINE := Color(0.12, 0.14, 0.38)
 const LIFETIME := 0.26
-const SUBDIVISIONS := 4
-# Extra ribbon width on each side (fraction of the blade edge) for the glow halo; matches glow_width.
-const GLOW := 0.25
+const SUBDIVISIONS := 8
 # Ribbon edge along the blade in grip space; the effect reaches well past the tip.
 const INNER := Vector3(0, 0.15, 0)
 const OUTER := Vector3(0, 0.78, 0)
@@ -22,8 +17,6 @@ var outer := OUTER
 var _samples: Array = []
 var _last_time := -1.0
 var _slash: MeshInstance3D
-var _dust: CPUParticles3D
-var _flash: MeshInstance3D
 
 func setup(sword_grip: Node3D, animation_player: AnimationPlayer, clip_timings: Dictionary, edge_inner := INNER, edge_outer := OUTER) -> void:
 	blade = sword_grip
@@ -34,76 +27,13 @@ func setup(sword_grip: Node3D, animation_player: AnimationPlayer, clip_timings: 
 
 func _ready() -> void:
 	top_level = true
-	_slash = _ribbon({
-		"highlight_color": Color(1.0, 1.0, 1.0),
-		"base_color": Color(1.0, 1.0, 1.0),
-		"shade_color": Color(1.0, 1.0, 1.0),
-		"tail_color": Color(1.0, 1.0, 1.0),
-		"glow_width": GLOW
-	})
-	_dust = CPUParticles3D.new()
-	_dust.emitting = false
-	_dust.one_shot = true
-	_dust.amount = 14
-	_dust.lifetime = 0.35
-	_dust.explosiveness = 0.95
-	_dust.local_coords = false
-	_dust.particle_flag_align_y = true
-	_dust.direction = Vector3(0, 0.25, 1)
-	_dust.spread = 75.0
-	_dust.gravity = Vector3.ZERO
-	_dust.damping_min = 6.0
-	_dust.damping_max = 9.0
-	# Cel shards pop and shrink away rather than fading out.
-	var shrink := Curve.new()
-	shrink.add_point(Vector2(0, 1))
-	shrink.add_point(Vector2(0.6, 0.8))
-	shrink.add_point(Vector2(1, 0))
-	_dust.scale_amount_curve = shrink
-	_dust.mesh = _streak_mesh()
-	add_child(_dust)
-	_flash = MeshInstance3D.new()
-	_flash.mesh = QuadMesh.new()
-	_flash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	var flash_material := ShaderMaterial.new()
-	flash_material.shader = FLASH_SHADER
-	flash_material.set_shader_parameter("outline_color", OUTLINE)
-	_flash.material_override = flash_material
-	_flash.visible = false
-	add_child(_flash)
-
-func _ribbon(parameters: Dictionary) -> MeshInstance3D:
-	var ribbon := MeshInstance3D.new()
-	ribbon.mesh = ImmediateMesh.new()
-	ribbon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_slash = MeshInstance3D.new()
+	_slash.mesh = ImmediateMesh.new()
+	_slash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var material := ShaderMaterial.new()
 	material.shader = SHADER
-	for key: String in parameters:
-		material.set_shader_parameter(key, parameters[key])
-	ribbon.material_override = material
-	add_child(ribbon)
-	return ribbon
-
-# Two crossed diamond spikes so the velocity-aligned shards read from any camera angle.
-# A slightly larger dark spike sits between two light faces as the ink outline.
-func _streak_mesh() -> Mesh:
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for layer in [[OUTLINE, 1.6, 0.0], [Color(0.95, 0.98, 1.0), 1.0, 0.004], [Color(0.95, 0.98, 1.0), 1.0, -0.004]]:
-		for axis in [Vector3.RIGHT, Vector3.BACK]:
-			var side: Vector3 = axis * 0.035 * layer[1]
-			var lift: Vector3 = Vector3.UP.cross(axis) * layer[2]
-			var corners := [Vector3.UP * -0.03 * layer[1], side + Vector3.UP * 0.12, Vector3.UP * (0.5 + 0.03 * layer[1]), -side + Vector3.UP * 0.12]
-			for index in [0, 1, 2, 0, 2, 3]:
-				tool.set_color(layer[0])
-				tool.add_vertex(corners[index] + lift)
-	var mesh := tool.commit()
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.vertex_color_use_as_albedo = true
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mesh.surface_set_material(0, material)
-	return mesh
+	_slash.material_override = material
+	add_child(_slash)
 
 func _process(delta: float) -> void:
 	global_transform = Transform3D.IDENTITY
@@ -123,25 +53,6 @@ func _process(delta: float) -> void:
 	_rebuild()
 
 func _impact(hit_stop := true) -> void:
-	var tip := blade.global_transform * outer
-	var reach := (blade.global_transform * outer - blade.global_transform * inner).length()
-	var ground := get_parent() as Node3D
-	var floor_y: float = ground.global_position.y if ground else tip.y
-	_dust.global_position = Vector3(tip.x, floor_y + reach * 0.05, tip.z)
-	var forward := (tip - blade.global_position) * Vector3(1, 0, 1)
-	if not forward.is_zero_approx():
-		_dust.global_basis = Basis.looking_at(-forward.normalized(), Vector3.UP)
-	_dust.initial_velocity_min = reach * 2.0
-	_dust.initial_velocity_max = reach * 4.5
-	_dust.scale_amount_min = reach * 0.35
-	_dust.scale_amount_max = reach * 0.8
-	_dust.restart()
-	_flash.global_transform = Transform3D(Basis.from_scale(Vector3.ONE * reach * 0.9), tip)
-	_flash.visible = true
-	var material := _flash.material_override as ShaderMaterial
-	var tween := create_tween()
-	tween.tween_method(func(value: float) -> void: material.set_shader_parameter("progress", value), 0.0, 1.0, 0.16)
-	tween.tween_callback(_flash.hide)
 	if not hit_stop: return
 	# Brief hit-stop sells the weight of the contact frame.
 	var clip := player.current_animation
@@ -162,11 +73,10 @@ func _strip(mesh: ImmediateMesh, points: Array, lifetime: float, edge: Callable)
 	for point: Dictionary in points:
 		var pair: Array = edge.call(point)
 		var age: float = clampf(point.age / lifetime, 0.0, 1.0)
-		var span: Vector3 = pair[1] - pair[0]
-		mesh.surface_set_uv(Vector2(age, -GLOW))
-		mesh.surface_add_vertex(pair[0] - span * GLOW)
-		mesh.surface_set_uv(Vector2(age, 1.0 + GLOW))
-		mesh.surface_add_vertex(pair[1] + span * GLOW)
+		mesh.surface_set_uv(Vector2(age, 0.0))
+		mesh.surface_add_vertex(pair[0])
+		mesh.surface_set_uv(Vector2(age, 1.0))
+		mesh.surface_add_vertex(pair[1])
 	mesh.surface_end()
 
 # Catmull-Rom between frame samples keeps the arc round during very fast swings.
