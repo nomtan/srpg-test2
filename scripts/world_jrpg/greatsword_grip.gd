@@ -18,11 +18,24 @@ var saya_weight := 0.0
 var sheath_pull := 0.0
 var idle_weight := 1.0
 var hold_weight := 1.0
+# How far the bones a shared clip leaves unkeyed are back at the idle pose from where the last weapon clip left them
+# (see SwordCombat.settle_unkeyed); the residue holds those starting poses until the next weapon clip.
+var settle_weight := 1.0
+var _residue: Dictionary = {}
 
 func setup(equipment: RefCounted, animation_player: AnimationPlayer, prefix: String) -> void:
 	combat = equipment
 	player = animation_player
 	clip_prefix = prefix
+	player.mixer_applied.connect(_settle)
+
+## After each animation update outside the weapon clips, bring the bones the shared clip leaves unkeyed home.
+func _settle() -> void:
+	var skeleton := get_skeleton()
+	var clip := String(player.assigned_animation)
+	# Kept up every frame: while the player blends out of the weapon clip, it still writes those bones.
+	if skeleton == null or clip.begins_with(clip_prefix) or not player.has_animation(clip): return
+	combat.settle_unkeyed(skeleton, player.get_animation(clip), settle_weight, _residue)
 
 func _process_modification_with_delta(delta: float) -> void:
 	var skeleton := get_skeleton()
@@ -42,11 +55,15 @@ func _process_modification_with_delta(delta: float) -> void:
 		# from their closing stance key, so the attacks run from and back into it without letting go.
 		var fading := minf(hold_weight, clampf(1.0 - time / FADE, 0.0, 1.0)) if player.is_playing() else 0.0
 		hold_weight = maxf(combat.stance_weight(clip, time), fading)
+		settle_weight = 0.0
+		_residue.clear()
 	else:
 		# Let go of the handle smoothly when a clip is interrupted mid-swing or the guard is released.
 		two_hand_weight = move_toward(two_hand_weight, 0.0, delta / FADE)
 		saya_weight = move_toward(saya_weight, 0.0, delta / FADE)
 		sheath_pull = move_toward(sheath_pull, 0.0, delta / FADE)
+		# Back to the idle pose as fast as the ready stance returns, so the two hand over without a jump.
+		settle_weight = move_toward(settle_weight, 1.0, delta / FADE)
 		# Crouch only while standing; the greatsword clips carry their own crouch at start and end.
 		idle_weight = move_toward(idle_weight, 1.0 if clip == "idle" else 0.0, delta / CROUCH_FADE)
 		hold_weight = move_toward(hold_weight, 1.0 if clip == "idle" and not combat.idle_hold.is_empty() else 0.0, delta / CROUCH_FADE)

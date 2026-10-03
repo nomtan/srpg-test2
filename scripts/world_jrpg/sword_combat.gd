@@ -415,6 +415,8 @@ var legs: Dictionary
 var leg_length := 1.0
 var _idle: Dictionary = {}
 var _idle_global: Dictionary = {}
+# Per shared clip: the bones it leaves unkeyed, as [bone index, keeps rotation, keeps position].
+var _unkeyed: Dictionary = {}
 var has_shield := false
 var two_handed := false
 # Clips for the equipped weapon; the guard clip is empty when the loadout cannot guard.
@@ -1031,6 +1033,30 @@ func saya_hold(pose: Dictionary) -> Array:
 	var frame := _global(pose, skeleton.find_bone(sheath_bone)) * sheath.transform
 	var along := frame.basis.y.normalized()
 	return [frame.origin + along * KT_SAYA_HOLD, along]
+
+## The shared clips (idle, walk, hit) key only some bones; the rest keep whatever the last clip left, so after a
+## weapon clip they would hold its final pose and the ready stance would be added on top of it twice.
+## Moves those bones from where the weapon clip left them (residue, filled in on the first call) back to the idle
+## pose by weight. Run right after the animation is applied, so the bones themselves are reset, not just one frame.
+func settle_unkeyed(target: Skeleton3D, animation: Animation, weight: float, residue: Dictionary) -> void:
+	if not _unkeyed.has(animation):
+		var keyed: Dictionary = {}
+		for track in animation.get_track_count():
+			keyed[[str(animation.track_get_path(track)).get_slice(":", 1), animation.track_get_type(track)]] = true
+		var bones: Array = []
+		for index in target.get_bone_count():
+			var bone := target.get_bone_name(index)
+			var rotation := not keyed.has([bone, Animation.TYPE_ROTATION_3D])
+			var position := not keyed.has([bone, Animation.TYPE_POSITION_3D])
+			if rotation or position: bones.append([index, rotation, position])
+		_unkeyed[animation] = bones
+	for entry: Array in _unkeyed[animation]:
+		var current := target.get_bone_pose(entry[0])
+		if not residue.has(entry[0]): residue[entry[0]] = current
+		var settled := (residue[entry[0]] as Transform3D).interpolate_with(_idle[target.get_bone_name(entry[0])], weight)
+		if not entry[1]: settled.basis = current.basis
+		if not entry[2]: settled.origin = current.origin
+		target.set_bone_pose(entry[0], settled)
 
 ## Live weapon hold, run by the skeleton modifier after the animation each frame.
 ## ready_weight blends the torso turn and the right arm into the loadout's ready stance;
