@@ -1,0 +1,193 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+[JRPGWorld] Built 400 x 400 terrain; seed=7319
+PASS: Initial Character 001 is matched to the placed roster
+PASS: Character 001 equips the two-handed greatsword
+PASS: Holding guard raises the greatsword
+PASS: Cannot attack while guarding
+PASS: Releasing guard returns to idle
+PASS: idle: switches in roster order to charcter002
+PASS: Character 002 equips a dagger in each hand
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to charcter003
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to charcter004
+PASS: Character 004 equips the one-handed sword and shield
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to charcter005
+PASS: Character 005 equips the two-handed axe
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to charcter006
+PASS: Character 006 equips the bow
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to character007
+PASS: Actor identity and position stay unchanged
+PASS: Character 007 stays unarmed
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: idle: switches in roster order to charcter001
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Full roster wraps back to Character 001
+PASS: walk: switches in roster order to charcter002
+PASS: Character 002 equips a dagger in each hand
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to charcter003
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to charcter004
+PASS: Character 004 equips the one-handed sword and shield
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to charcter005
+PASS: Character 005 equips the two-handed axe
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to charcter006
+PASS: Character 006 equips the bow
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to character007
+PASS: Actor identity and position stay unchanged
+PASS: Character 007 stays unarmed
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: walk: switches in roster order to charcter001
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: Full roster wraps back to Character 001
+PASS: run: switches in roster order to charcter002
+PASS: Character 002 equips a dagger in each hand
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to charcter003
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to charcter004
+PASS: Character 004 equips the one-handed sword and shield
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to charcter005
+PASS: Character 005 equips the two-handed axe
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to charcter006
+PASS: Character 006 equips the bow
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to character007
+PASS: Actor identity and position stay unchanged
+PASS: Character 007 stays unarmed
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: run: switches in roster order to charcter001
+PASS: Actor identity and position stay unchanged
+PASS: Current movement animation is preserved
+PASS: Facing and source orientation are correct
+PASS: Player displays only the selected 3D model
+PASS: HUD shows the selected character
+PASS: Gait phase survives replacement
+PASS: Full roster wraps back to Character 001
+PASS: Button release and keyboard repeat do not switch
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Placed NPC is not replaced
+PASS: Right face button cancels battle selection without switching character
+PASS: Battle keeps the same gameplay hero when the model changes
+PASS: Switching also works in battle
+PASS: Switching also works in dialogue without advancing it
+PASS: Character 003 equips the staff
+PASS: Character 003 has no sword or shield
+PASS: Placed Character 003 also uses staff without shield
+PASS: Placed Character 004 uses the sword and shield
+PASS: Right face button closes dialogue without switching character
+TRIPO_SWITCHING: PASSED
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2641)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)

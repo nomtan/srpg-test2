@@ -1,5 +1,5 @@
 extends SkeletonModifier3D
-## Weapon ready stance applied after the animation every frame (greatsword, dual daggers and bow).
+## Weapon ready stance applied after the animation every frame (greatsword, dual daggers, bow and katana).
 ## Outside the weapon's clips (idle, walk, run, hit) the weapon arm holds the loadout's ready stance;
 ## the override fades out as those clips begin and back in once they end.
 ## Standing idle adds the stance's half crouch; the walk cycle is left as animated.
@@ -24,10 +24,12 @@ func _process_modification_with_delta(delta: float) -> void:
 	if skeleton == null or combat == null or player == null: return
 	# assigned_animation keeps the held guard pose after its clip has finished.
 	var clip := String(player.assigned_animation)
-	var target := 1.0
+	# Loadouts without a ready stance (the sheathed katana) leave the other clips as animated.
+	var target := 0.0 if combat.ready_stance.is_empty() else 1.0
+	var time := 0.0
 	if clip.begins_with(clip_prefix):
-		var time := player.current_animation_position if player.is_playing() else player.get_animation(clip).length
-		target = clampf(1.0 - time / FADE, 0.0, 1.0) if player.is_playing() else 0.0
+		time = player.current_animation_position if player.is_playing() else player.get_animation(clip).length
+		target = clampf(1.0 - time / FADE, 0.0, 1.0) if player.is_playing() and target > 0.0 else 0.0
 		two_hand_weight = combat.two_hand_weight(clip, time)
 	else:
 		# Let go of the handle smoothly when a clip is interrupted mid-swing or the guard is released.
@@ -35,4 +37,5 @@ func _process_modification_with_delta(delta: float) -> void:
 		# Crouch only while standing; the greatsword clips carry their own crouch at start and end.
 		idle_weight = move_toward(idle_weight, 1.0 if clip == "idle" else 0.0, delta / CROUCH_FADE)
 	ready_weight = target if target < ready_weight else move_toward(ready_weight, target, delta / FADE)
+	combat.update_sheath(clip, time)
 	combat.apply_grip(skeleton, ready_weight, two_hand_weight, ready_weight * idle_weight)

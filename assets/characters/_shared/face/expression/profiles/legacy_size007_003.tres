@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="ExpressionProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/expression_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+face_rect = Vector4(-0.1866450571194424, 0.8370670144040333, 0.3732901142388848, 0.2921400894043446)
+surface_depth = Vector2(0.1564375310431752, 0.2781625682949855)

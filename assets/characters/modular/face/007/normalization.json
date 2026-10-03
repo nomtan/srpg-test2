@@ -1,0 +1,20 @@
+{
+  "standard": "ashen_character_v1",
+  "version": 1,
+  "asset_type": "face",
+  "id": "007",
+  "rig_profile": "humanoid_v1",
+  "coordinate_space": "humanoid_v1_rest",
+  "source_sha256": "91e00b84a196c3eb3517ad4ef110524e8e67ec1426699b3fdff0f427c1e6cf04",
+  "expression_profile": "legacy_size007_007",
+  "expression_rendering": "legacy_projection",
+  "position": [
+    0,
+    -0.01,
+    0.86
+  ],
+  "scale": 0.54,
+  "face_width_m": 0.41952547430992126,
+  "size_reference": "face007",
+  "fit_note": "Face007 is deeper than Face001-006 at the shared width; moved 4.5cm back and 3cm down so ears/chin sit over the neck like the reference set"
+}

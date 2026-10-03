@@ -70,7 +70,8 @@ def _validate_metadata(report: ValidationReport, kind: str, part_id: str, metada
     source_hash = hashlib.sha256(source.read_bytes()).hexdigest() if source.is_file() else None
     report.require(source_hash is not None and metadata.get("source_sha256") == source_hash, "source.hash", "immutable source hash matches metadata", asset)
     if kind == "face":
-        report.require(metadata.get("expression_profile") == "default", "metadata.expression_profile", "face declares the default expression profile", asset)
+        profile = metadata.get("expression_profile", "")
+        report.require(isinstance(profile, str) and profile.isidentifier() and (ROOT / "assets/characters/_shared/face/expression/profiles" / (profile + ".tres")).is_file(), "metadata.expression_profile", "face declares an existing expression profile", asset)
         valid_fit = (
             isinstance(metadata.get("scale"), (int, float))
             and metadata["scale"] > 0
@@ -182,6 +183,8 @@ def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any]
     bounds = metrics["geometry"]["bounds"]
     report.require(bounds is not None, "face.bounds", "face exposes mesh bounds", asset)
     if bounds:
+        if "face_size" in standard:
+            report.require(abs(bounds["width"] - standard["face_size"]["width_m"]) < 0.001, "face.size.reference", "face width matches the approved Face007 reference within 1mm", asset)
         values = {
             "width": bounds["width"],
             "height": bounds["height"],
@@ -216,7 +219,7 @@ def _validate_expression_v2(report: ValidationReport, path: Path, legacy: bool) 
     names = [document.get("materials", [])[p["material"]].get("name", "") if "material" in p else "" for p in primitives]
     separated = any(name.startswith("Head") for name in names) and any(name.startswith("Hair") for name in names)
     if legacy and not separated:
-        report.add("WARNING", "face.expression.mode", "legacy_projection retained for reference Face001-006", asset)
+        report.add("WARNING", "face.expression.mode", "legacy_projection retained for legacy_combined_ids faces", asset)
         return
     report.require(separated and all(name.startswith(("Head", "Hair")) for name in names), "face.expression.materials", "v2 has only classified Head* / Hair* surfaces", asset)
     metadata = _load_metadata(path.parents[2], "face", path.parent.name) or {}

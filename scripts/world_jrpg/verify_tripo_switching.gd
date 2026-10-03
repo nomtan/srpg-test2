@@ -40,7 +40,7 @@ func run() -> void:
 	check(not actor.attack(), "Cannot attack while guarding")
 	actor.set_guard(false)
 	check(not actor.guarding and actor.animation_player.current_animation == "idle", "Releasing guard returns to idle")
-	var ids := ["charcter001", "charcter002", "charcter003", "charcter004", "charcter005", "charcter006"]
+	var ids := ["charcter001", "charcter002", "charcter003", "charcter004", "charcter005", "charcter006", "character007"]
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
 		actor.running = clip == "run"
@@ -63,6 +63,10 @@ func run() -> void:
 				check(actor.model.find_child("EquippedBow", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 006 equips the bow")
 			check(world.player == actor and actor.position == origin, "Actor identity and position stay unchanged")
 			var expected_clip: String = "walk" if clip == "run" and not actor.animation_player.has_animation("run") else clip
+			if expected_clip == "idle" and not actor.animation_player.has_animation("idle"):
+				expected_clip = "walk"
+			if ids[next] == "character007":
+				check(actor.model.find_child("SheathedKatana", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 007 wears the sheathed katana")
 			check(actor.animation_player.current_animation == expected_clip, "Current movement animation is preserved")
 			check(is_equal_approx(actor.model.rotation.y, -atan2(.8, .6)) and is_equal_approx(actor.model.get_node("Model").rotation.y, PI / 2), "Facing and source orientation are correct")
 			check(actor.use_3d and not actor.sprite.visible and not actor.model.get_node("NameLabel").visible, "Player displays only the selected 3D model")
@@ -70,7 +74,7 @@ func run() -> void:
 			if clip != "idle":
 				check(is_equal_approx(actor.animation_player.current_animation_position / actor.animation_player.current_animation_length, .37), "Gait phase survives replacement")
 			await process_frame
-			if "--capture" in OS.get_cmdline_user_args() and clip == "idle" and actor.model.character_id.begins_with("charcter"):
+			if "--capture" in OS.get_cmdline_user_args() and clip == "idle" and (actor.model.character_id.begins_with("charcter") or actor.model.character_id == "character007"):
 				await RenderingServer.frame_post_draw
 				root.get_texture().get_image().save_png("res://artifacts/character_batch/sample_" + actor.model.character_id + ".png")
 		check(world.player_roster_index == 0, "Full roster wraps back to Character 001")

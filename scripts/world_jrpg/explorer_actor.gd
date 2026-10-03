@@ -80,9 +80,14 @@ func _update_model() -> void:
 	# Models with only a walk cycle also support sprinting at the existing cadence.
 	if clip == "run" and not animation_player.has_animation("run"):
 		clip = "walk"
+	var resting_walk := clip == "idle" and not animation_player.has_animation("idle") and animation_player.has_animation("walk")
+	if resting_walk:
+		clip = "walk"
 	animation_player.speed_scale = 1.0
 	if walking and locomotion_speed >= 0.0:
 		animation_player.speed_scale = locomotion_speed / (RUN_CYCLE_SPEED if running else WALK_CYCLE_SPEED)
+	if resting_walk:
+		animation_player.speed_scale = 0.0
 	if animation_player.current_animation != clip or not animation_player.is_playing():
 		var previous := animation_player.current_animation
 		var phase := -1.0

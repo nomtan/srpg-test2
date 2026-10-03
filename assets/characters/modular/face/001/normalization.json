@@ -5,12 +5,22 @@
   "id": "001",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "expression_profile": "default",
+  "expression_profile": "legacy_size007_001",
   "source_sha256": "1a5b32d5cf6686ef55867c510ebd9075970bfda482cadbf034755bcbb8996410",
   "position": [
     0,
     -0.055,
     0.89
   ],
-  "scale": 0.5395
+  "scale": 0.4377641073207656,
+  "size_baseline": {
+    "scale": 0.5395,
+    "position": [
+      0,
+      -0.055,
+      0.89
+    ]
+  },
+  "face_width_m": 0.41952547430992126,
+  "size_reference": "face007"
 }

@@ -131,9 +131,16 @@ func _verify_combinations(body_ids: Array, face_ids: Array, legacy_characters: A
 							var old_head := old_model.find_child("Head", true, false) as MeshInstance3D
 							var old_index := old_rig.find_bone("head")
 							var old_skin_transform := old_rig.global_transform * old_rig.get_bone_global_pose(old_index) * old_rig.get_bone_global_rest(old_index).affine_inverse()
-							var old_center := old_skin_transform * old_head.mesh.get_aabb().get_center()
+							var old_local_center := old_head.mesh.get_aabb().get_center()
+							var metadata = JSON.parse_string(FileAccess.get_file_as_string("res://assets/characters/modular/face/%s/normalization.json" % face_number))
+							if metadata.has("size_baseline"):
+								var position: Array = metadata["position"]
+								var pivot := Vector3(position[0], position[2], -position[1])
+								var factor: float = metadata["scale"] / metadata["size_baseline"]["scale"]
+								old_local_center = pivot + (old_local_center - pivot) * factor
+							var old_center := old_skin_transform * old_local_center
 							var new_center := mounted_mesh.global_transform * mounted_mesh.mesh.get_aabb().get_center()
-							check(old_center.distance_to(new_center) < 0.0001, definition.id + " matches legacy head center in " + clip)
+							check(old_center.distance_to(new_center) < 0.0001, definition.id + " matches authorized Face size transform in " + clip)
 			if old_model:
 				old_model.free()
 			character.free()

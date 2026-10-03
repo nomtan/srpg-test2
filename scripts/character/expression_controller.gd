@@ -18,6 +18,11 @@ static var _atlases: Array[Texture2D] = []
 
 func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 	_materials.clear()
+	if profile_id.is_empty():
+		for node in face.find_children("*", "MeshInstance3D", true, false):
+			if node.has_meta("expression_profile"):
+				profile_id = str(node.get_meta("expression_profile"))
+				break
 	if _atlases.is_empty():
 		for path in ATLAS_PATHS:
 			_atlases.append(load(path) as Texture2D)

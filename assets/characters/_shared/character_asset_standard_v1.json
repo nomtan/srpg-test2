@@ -3,27 +3,85 @@
   "version": 1,
   "rig_profile": "humanoid_v1",
   "bone_count": 65,
-  "required_bones": ["hips", "head"],
-  "required_animations": ["idle", "walk", "attack", "hit"],
+  "required_bones": [
+    "hips",
+    "head"
+  ],
+  "required_animations": [
+    "idle",
+    "walk",
+    "attack",
+    "hit"
+  ],
   "maximum_bone_influences": 4,
   "reference_set": {
-    "bodies": ["001", "002", "003", "004", "005", "006"],
-    "faces": ["001", "002", "003", "004", "005", "006"]
+    "bodies": [
+      "001",
+      "002",
+      "003",
+      "004",
+      "005",
+      "006"
+    ],
+    "faces": [
+      "001",
+      "002",
+      "003",
+      "004",
+      "005",
+      "006"
+    ]
   },
   "performance": {
     "body": {
-      "vertices": {"recommended_max": 12000, "warning_max": 16000, "hard_max": 24000},
-      "triangles": {"recommended_max": 12000, "warning_max": 16000, "hard_max": 24000},
-      "materials": {"recommended_max": 1, "warning_max": 2, "hard_max": 4},
-      "textures": {"recommended_max": 2, "warning_max": 3, "hard_max": 4}
+      "vertices": {
+        "recommended_max": 12000,
+        "warning_max": 16000,
+        "hard_max": 24000
+      },
+      "triangles": {
+        "recommended_max": 12000,
+        "warning_max": 16000,
+        "hard_max": 24000
+      },
+      "materials": {
+        "recommended_max": 1,
+        "warning_max": 2,
+        "hard_max": 4
+      },
+      "textures": {
+        "recommended_max": 2,
+        "warning_max": 3,
+        "hard_max": 4
+      }
     },
     "face": {
-      "vertices": {"recommended_max": 12000, "warning_max": 18000, "hard_max": 24000},
-      "triangles": {"recommended_max": 12000, "warning_max": 18000, "hard_max": 24000},
-      "materials": {"recommended_max": 2, "warning_max": 3, "hard_max": 4},
-      "textures": {"recommended_max": 2, "warning_max": 3, "hard_max": 4}
+      "vertices": {
+        "recommended_max": 12000,
+        "warning_max": 18000,
+        "hard_max": 24000
+      },
+      "triangles": {
+        "recommended_max": 12000,
+        "warning_max": 18000,
+        "hard_max": 24000
+      },
+      "materials": {
+        "recommended_max": 2,
+        "warning_max": 3,
+        "hard_max": 4
+      },
+      "textures": {
+        "recommended_max": 2,
+        "warning_max": 3,
+        "hard_max": 4
+      }
     },
-    "texture_resolution": {"recommended_max": 512, "warning_max": 1024, "hard_max": 2048},
+    "texture_resolution": {
+      "recommended_max": 512,
+      "warning_max": 1024,
+      "hard_max": 2048
+    },
     "reference_worst_case_60_units": {
       "triangles": 1374480,
       "base_meshes": 120,
@@ -31,28 +89,92 @@
     }
   },
   "face_head_space": {
-    "width": {"recommended_min": 0.50, "recommended_max": 0.54, "hard_min": 0.45, "hard_max": 0.60},
-    "height": {"recommended_min": 0.47, "recommended_max": 0.54, "hard_min": 0.44, "hard_max": 0.65},
-    "depth": {"recommended_min": 0.48, "recommended_max": 0.54, "hard_min": 0.44, "hard_max": 0.60},
-    "center_x": {"recommended_min": -0.03, "recommended_max": 0.03, "hard_min": -0.08, "hard_max": 0.08},
-    "center_y": {"recommended_min": 1.12, "recommended_max": 1.17, "hard_min": 1.05, "hard_max": 1.20},
-    "center_z": {"recommended_min": 0.04, "recommended_max": 0.08, "hard_min": 0.00, "hard_max": 0.12}
+    "width": {
+      "recommended_min": 0.41,
+      "recommended_max": 0.43,
+      "hard_min": 0.39,
+      "hard_max": 0.45
+    },
+    "height": {
+      "recommended_min": 0.38,
+      "recommended_max": 0.54,
+      "hard_min": 0.35,
+      "hard_max": 0.65
+    },
+    "depth": {
+      "recommended_min": 0.39,
+      "recommended_max": 0.54,
+      "hard_min": 0.35,
+      "hard_max": 0.6
+    },
+    "center_x": {
+      "recommended_min": -0.03,
+      "recommended_max": 0.03,
+      "hard_min": -0.08,
+      "hard_max": 0.08
+    },
+    "center_y": {
+      "recommended_min": 1.03,
+      "recommended_max": 1.12,
+      "hard_min": 0.98,
+      "hard_max": 1.2
+    },
+    "center_z": {
+      "recommended_min": 0.04,
+      "recommended_max": 0.08,
+      "hard_min": 0.0,
+      "hard_max": 0.12
+    }
   },
   "face_structure": {
     "new_asset_method": "material_separation",
     "head_material_prefix": "Head",
     "hair_material_prefix": "Hair",
-    "legacy_combined_ids": ["001", "002", "003", "004", "005", "006"]
+    "legacy_combined_ids": [
+      "001",
+      "002",
+      "003",
+      "004",
+      "005",
+      "006",
+      "007"
+    ]
   },
   "expression_atlas": {
-    "cell_size": [256, 256],
+    "cell_size": [
+      256,
+      256
+    ],
     "padding": 0,
     "alpha": true,
     "filtering": "linear_no_mipmaps",
     "atlases": {
-      "eyes_atlas": {"rows": 8, "resolution": [256, 2048]},
-      "eyebrows_atlas": {"rows": 6, "resolution": [256, 1536]},
-      "mouth_atlas": {"rows": 7, "resolution": [256, 1792]}
+      "eyes_atlas": {
+        "rows": 8,
+        "resolution": [
+          256,
+          2048
+        ]
+      },
+      "eyebrows_atlas": {
+        "rows": 6,
+        "resolution": [
+          256,
+          1536
+        ]
+      },
+      "mouth_atlas": {
+        "rows": 7,
+        "resolution": [
+          256,
+          1792
+        ]
+      }
     }
+  },
+  "face_size": {
+    "reference": "face007",
+    "width_m": 0.41952547430992126,
+    "preserve_aspect_ratio": true
   }
 }

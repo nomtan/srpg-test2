@@ -27,6 +27,13 @@ ROOT = Path(__file__).resolve().parents[3]
 MODULAR = ROOT / "assets/characters/modular"
 REFERENCE_RIG = ROOT / "assets/characters/_shared/rigs/humanoid_v1.glb"
 REQUIRED_CLIPS = ("idle", "walk", "attack", "hit")
+STANDARD = ROOT / "assets/characters/_shared/character_asset_standard_v1.json"
+
+
+def is_legacy_face(part_id):
+    """Faces on legacy_projection with combined Head/Hair (no ExpressionUV authoring)."""
+    standard = json.loads(STANDARD.read_text(encoding="utf8"))
+    return part_id in standard["face_structure"]["legacy_combined_ids"]
 
 
 def contract(kind, part_id):
@@ -98,6 +105,37 @@ def export(path, objects, animations):
     )
 
 
+def discard_source_rig(imported):
+    """Keep only the rest-bound skinned mesh of a pre-rigged source (metadata source_rig=discard).
+
+    humanoid_v1 replaces the source skeleton, so the source weights, armature and
+    bone-shape helpers are dropped. The mesh keeps its bind-pose geometry.
+    """
+    skinned = [obj for obj in imported if obj.type == "MESH" and any(mod.type == "ARMATURE" for mod in obj.modifiers)]
+    if len(skinned) != 1:
+        raise ValueError("source_rig=discard requires exactly one skinned mesh")
+    body = skinned[0]
+    world = body.matrix_world.copy()
+    body.parent = None
+    body.matrix_world = world
+    for mod in [mod for mod in body.modifiers if mod.type == "ARMATURE"]:
+        body.modifiers.remove(mod)
+    body.vertex_groups.clear()
+    for obj in imported - {body}:
+        bpy.data.objects.remove(obj, do_unlink=True)
+    return {body}
+
+
+def decimate(obj, ratio):
+    """Collapse-decimate a dense source to the body triangle budget, keeping UV seams."""
+    modifier = obj.modifiers.new("BudgetDecimate", "DECIMATE")
+    modifier.decimate_type = "COLLAPSE"
+    modifier.ratio = ratio
+    modifier.use_collapse_triangulate = True
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=modifier.name)
+
+
 def prepare_body(part_id, settings):
     if settings.get("rig_profile") != "humanoid_v1":
         raise ValueError("Body requires rig_profile humanoid_v1")
@@ -117,11 +155,15 @@ def prepare_body(part_id, settings):
     body = donor
     if part_id != "001":
         imported_body = import_source("body", part_id)
+        if settings.get("source_rig") == "discard":
+            imported_body = discard_source_rig(imported_body)
         if len(imported_body) != 1:
             raise ValueError("Body source must contain one static mesh")
         body = next(iter(imported_body))
         if body.type != "MESH":
             raise ValueError("Body source must be a mesh")
+        if settings.get("decimate_ratio"):
+            decimate(body, settings["decimate_ratio"])
         lo, hi = bounds(body)
         donor_lo, donor_hi = bounds(donor)
         scale = (donor_hi.z - donor_lo.z) / (hi.z - lo.z)
@@ -154,9 +196,9 @@ def normalize_head_hair_materials(parts, part_id):
     """Require an explicit Head/Hair material boundary for post-v1 faces.
 
     Geometry guessing is intentionally avoided: a false hair classification can
-    project eyes onto bangs. Reference faces 001-006 remain legacy-compatible.
+    project eyes onto bangs. Faces listed as legacy_combined_ids remain legacy-compatible.
     """
-    if int(part_id) <= 6:
+    if is_legacy_face(part_id):
         return
     head = []
     hair = []
@@ -241,15 +283,17 @@ def prepare_static(kind, part_id, settings, authored_face=None):
         part.data = part.data.copy()
         part.data.transform(Matrix.Translation(Vector(position)) @ Matrix.Scale(scale, 4) @ world)
         part.matrix_world = Matrix.Identity(4)
+        if kind == "face":
+            part["expression_profile"] = settings.get("expression_profile", "default")
         clean_toon_materials(part)
-        if kind == "face" and int(part_id) > 6:
+        if kind == "face" and not is_legacy_face(part_id):
             if settings.get("expression_rendering") != "uv_v2":
                 raise ValueError("New Face metadata must declare expression_rendering=uv_v2")
             part_enabled, part_disabled = validate_expression_authoring(part)
             enabled |= part_enabled
             disabled |= part_disabled
         inspect_static(part, kind)
-    if kind == "face" and int(part_id) > 6 and (not enabled or not disabled):
+    if kind == "face" and not is_legacy_face(part_id) and (not enabled or not disabled):
         raise ValueError("Head mask must contain both allowed front and excluded regions")
     return list(imported)
 

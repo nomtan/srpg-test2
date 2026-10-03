@@ -5,7 +5,7 @@
   "id": "003",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "expression_profile": "default",
+  "expression_profile": "legacy_size007_003",
   "legacy_exception": "source head is narrower and taller; preserve intentional silhouette and neck fit",
   "source_sha256": "143991792963967f2885dc550e1363a911c39d15cb4f977f4cee3749a95bdd6c",
   "position": [
@@ -13,5 +13,15 @@
     -0.055,
     0.79
   ],
-  "scale": 0.63
+  "scale": 0.511245156457603,
+  "size_baseline": {
+    "scale": 0.63,
+    "position": [
+      0,
+      -0.055,
+      0.79
+    ]
+  },
+  "face_width_m": 0.41952547430992126,
+  "size_reference": "face007"
 }

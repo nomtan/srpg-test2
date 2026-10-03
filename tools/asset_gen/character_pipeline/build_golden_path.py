@@ -88,12 +88,13 @@ def build_body():
     create_animations(rig)
 
 
-def create_animations(rig):
+def create_animations(rig, clips=None):
     """Shared in-place compatibility clips for the inspected 65-bone Tripo rig."""
     scene = bpy.context.scene
     rig.animation_data_create()
     # A small in-place motion set for compatibility, not production combat art.
-    for clip, frames in [('idle', 60), ('walk', 30), ('attack', 30), ('hit', 24)]:
+    clips = clips or [('idle', 60), ('walk', 30), ('attack', 30), ('hit', 24)]
+    for clip, frames in clips:
         action = bpy.data.actions.new(clip)
         action.use_fake_user = True
         rig.animation_data.action = action
@@ -130,9 +131,9 @@ def create_animations(rig):
                 p.rotation_quaternion = basis.inverted() @ q @ basis
                 p.keyframe_insert('rotation_quaternion', frame=frame, group=p.name)
         action['purpose'] = 'Golden Path compatibility motion'
-    rig.animation_data.action = bpy.data.actions['idle']
+    rig.animation_data.action = bpy.data.actions[clips[0][0]]
     scene.frame_set(1)
-    print('Body ready: 65 original bones, head renamed, four shared actions')
+    print('Body ready:', len(rig.data.bones), 'bones; clips:', [clip for clip, _ in clips])
 
 
 def finish_face(face_id):

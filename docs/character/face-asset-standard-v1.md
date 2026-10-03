@@ -29,6 +29,10 @@ UV／maskの出力規格・検証状況は [Face Expression Rendering v2](face-e
 
 ## Reference Measurements
 
+以下はサイズ統一前のPhase4測定。現行001〜006はFace007基準の幅0.419525mへ等方縮小済み。
+形状・UV0は保持し、縦横比・髪型差は維持する。現行の実寸・接続確認は
+[Face007基準サイズ](face-size007.md)を参照。
+
 | ID | vertices | triangles | textures | bounds W×H×D (m) | center X,Y,Z (m) |
 |---|---:|---:|---:|---|---|
 | 001 | 7,587 | 6,671 | 1 | 0.5170 × 0.5056 × 0.5144 | 0.0010, 1.1428, 0.0600 |
@@ -42,11 +46,11 @@ UV／maskの出力規格・検証状況は [Face Expression Rendering v2](face-e
 
 | value | recommended | hard bounds |
 |---|---|---|
-| width | 0.50–0.54 | 0.45–0.60 |
-| height | 0.47–0.54 | 0.44–0.65 |
-| depth | 0.48–0.54 | 0.44–0.60 |
+| width | 0.41–0.43 | 0.39–0.45 |
+| height | 0.38–0.54 | 0.35–0.65 |
+| depth | 0.39–0.54 | 0.35–0.60 |
 | center X | -0.03–0.03 | -0.08–0.08 |
-| center Y | 1.12–1.17 | 1.05–1.20 |
+| center Y | 1.03–1.12 | 0.98–1.20 |
 | center Z | 0.04–0.08 | 0.00–0.12 |
 
 Face003 は height / center Y が recommended 外だが hard bounds 内の legacy variation である。詳細は [Face003 analysis](face003-normalization-analysis.md) を参照する。
