@@ -335,29 +335,37 @@ const KT_SHEATH_DROP := Vector3(0.0, 0.02, 0.0)
 # so the swap between the two models at the draw and the sheathing is invisible. "hilt" keys take this pose.
 const KT_HILT := {"yaw": 14.0, "pitch": 8.0, "hip": Vector3(0,-.06,0), "grip": Vector3(.1,-.62,.4), "blade": Vector3(.5,-.3,-1),
 	"elbow": Vector3(-1,-.2,.6), "one_hand": true}
-# Keys use the greatsword keys' "grip"/"blade"; "one_hand" keys leave the left hand off the handle.
+# Worn, the sheath hangs clear of the left hip, level and parallel to the facing direction (hilt forward):
+# the hilt grip point sits this far from the pelvis (leg lengths, character space). Around the hilt keys the left hand
+# pulls it in to where KT_HILT holds the hilt, and lets it back out as the blade leaves or once it is home.
+const KT_SHEATH_REST := Vector3(.46,.19,.27)
+# Left hand on the scabbard just behind the guard (koiguchi), this far along the scabbard from the hilt grip point.
+const KT_SAYA_HOLD := 0.12
+# Keys use the greatsword keys' "grip"/"blade"; "one_hand" keys leave the left hand off the handle,
+# and "saya" keys put it on the scabbard mouth instead.
 # Draw-cut: hand to the hilt, draw straight into a horizontal cut from left to right, hold, then sheathe.
+# The left hand keeps hold of the scabbard throughout.
 const KT_IAI_KEYS := [
 	{"t": 0.0, "one_hand": true},
-	{"t": 0.14, "hilt": true},
+	{"t": 0.14, "hilt": true, "saya": true},
 	{"t": 0.24, "yaw": 22.0, "pitch": 10.0, "hip": Vector3(0,-.14,.06), "step": Vector3(-.04,0,.18), "back": Vector3(0,0,-.06),
-		"grip": Vector3(0,-.55,.7), "blade": Vector3(.75,-.15,.65), "elbow": Vector3(-1,-.3,.3), "one_hand": true, "off_bend": 20.0},
+		"grip": Vector3(0,-.55,.7), "blade": Vector3(.75,-.15,.65), "elbow": Vector3(-1,-.3,.3), "one_hand": true, "saya": true},
 	{"t": 0.30, "yaw": -18.0, "pitch": 12.0, "hip_yaw": -8.0, "hip": Vector3(-.02,-.24,.18), "step": Vector3(-.08,0,.46), "back": Vector3(0,0,-.18),
-		"grip": Vector3(-.4,-.35,.6), "blade": Vector3(-.3,.05,1), "elbow": Vector3(-1,-.4,0), "one_hand": true, "off_bend": 20.0},
+		"grip": Vector3(-.4,-.35,.6), "blade": Vector3(-.3,.05,1), "elbow": Vector3(-1,-.4,0), "one_hand": true, "saya": true},
 	{"t": 0.36, "yaw": -46.0, "pitch": 12.0, "hip_yaw": -18.0, "hip": Vector3(-.03,-.27,.22), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
-		"grip": Vector3(-.85,-.25,.3), "blade": Vector3(-.95,.05,-.3), "elbow": Vector3(-.5,-1,0), "one_hand": true, "off_bend": 15.0},
+		"grip": Vector3(-.85,-.25,.3), "blade": Vector3(-.95,.05,-.3), "elbow": Vector3(-.5,-1,0), "one_hand": true, "saya": true},
 	{"t": 0.56, "yaw": -42.0, "pitch": 10.0, "hip_yaw": -16.0, "hip": Vector3(-.03,-.25,.2), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
-		"grip": Vector3(-.85,-.3,.3), "blade": Vector3(-.9,-.15,-.35), "elbow": Vector3(-.5,-1,0), "one_hand": true, "off_bend": 15.0},
+		"grip": Vector3(-.85,-.3,.3), "blade": Vector3(-.9,-.15,-.35), "elbow": Vector3(-.5,-1,0), "one_hand": true, "saya": true},
 	# Shake the blade off and bring the tip back to the scabbard mouth.
 	{"t": 0.70, "yaw": 0.0, "pitch": 8.0, "hip": Vector3(0,-.12,.06), "step": Vector3(-.04,0,.2),
-		"grip": Vector3(-.2,-.5,.6), "blade": Vector3(.45,-.35,.8), "elbow": Vector3(-1,-.3,.3), "one_hand": true},
-	{"t": 0.84, "hilt": true},
+		"grip": Vector3(-.2,-.5,.6), "blade": Vector3(.45,-.35,.8), "elbow": Vector3(-1,-.3,.3), "one_hand": true, "saya": true},
+	{"t": 0.84, "hilt": true, "saya": true},
 	{"t": 1.02, "one_hand": true},
 ]
 # Kesa cut: draw, take the blade up two-handed behind the right shoulder, cut diagonally down to the left, then sheathe.
 const KT_KESA_KEYS := [
 	{"t": 0.0, "one_hand": true},
-	{"t": 0.14, "hilt": true},
+	{"t": 0.14, "hilt": true, "saya": true},
 	{"t": 0.30, "yaw": -24.0, "pitch": -14.0, "hip_yaw": -12.0, "hip": Vector3(0,-.04,-.04), "back": Vector3(0,.02,-.05),
 		"grip": Vector3(-.36,.14,.2), "blade": Vector3(-.35,.3,-.88)},
 	{"t": 0.40, "yaw": -28.0, "pitch": -18.0, "hip_yaw": -14.0, "hip": Vector3(0,-.02,-.05), "back": Vector3(0,.04,-.07), "step": Vector3(0,.05,.04),
@@ -370,13 +378,13 @@ const KT_KESA_KEYS := [
 		"grip": Vector3(.1,-.42,.43), "blade": Vector3(.62,-.6,.5)},
 	{"t": 0.80, "yaw": 4.0, "pitch": 8.0, "hip": Vector3(0,-.12,.06), "step": Vector3(-.04,0,.2),
 		"grip": Vector3(-.2,-.5,.6), "blade": Vector3(.45,-.35,.8), "elbow": Vector3(-1,-.3,.3), "one_hand": true},
-	{"t": 0.94, "hilt": true},
+	{"t": 0.94, "hilt": true, "saya": true},
 	{"t": 1.12, "one_hand": true},
 ]
 # Guard: draw into a two-handed middle stance, the tip at the opponent's throat; held until released.
 const KT_GUARD_KEYS := [
 	{"t": 0.0, "one_hand": true},
-	{"t": 0.10, "hilt": true},
+	{"t": 0.10, "hilt": true, "saya": true},
 	{"t": 0.24, "yaw": -8.0, "pitch": 6.0, "hip_yaw": -6.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.12), "back": Vector3(0,0,-.1),
 		"grip": Vector3(-.05,-.4,.62), "blade": Vector3(.05,.5,.86)},
 ]
@@ -424,6 +432,12 @@ var two_hand_clips: Dictionary = GS_CLIPS
 # Katana: the sheathed model at the hip, and the drawn blade with the empty scabbard left behind.
 var sheathed: Node3D
 var drawn: Array[Node3D] = []
+# The scabbard's frame (blade along +Y, the hilt grip point at the origin), the bone it hangs from,
+# and its placements on that bone: worn at the hip, and pulled in to the hilt pose.
+var sheath: Node3D
+var sheath_bone := ""
+var _sheath_rest := Transform3D.IDENTITY
+var _sheath_drawn := Transform3D.IDENTITY
 # One toon material per weapon texture, shared by every character carrying it.
 static var _toon_materials: Dictionary = {}
 
@@ -706,17 +720,24 @@ func _attach_katana() -> void:
 	var blade_basis := (Basis(Vector3.RIGHT, PI) * Basis(Vector3.UP, PI / 2)).scaled(Vector3.ONE * KT_SCALE)
 	var katana := _katana_part(KATANA, "EquippedKatana", blade_basis, KT_GRIP)
 	grip.add_child(katana)
-	# The sheath hangs from the pelvis where the hilt key holds the drawn katana.
-	var hip_bone: String = legs.hips if not legs.is_empty() else rig["spine"]
+	# The sheath hangs from the pelvis; pulled in, it lies where the hilt key holds the drawn katana.
+	sheath_bone = legs.hips if not legs.is_empty() else rig["spine"]
 	var hip_socket := BoneAttachment3D.new()
 	hip_socket.name = "KatanaHipSocket"
-	hip_socket.bone_name = hip_bone
+	hip_socket.bone_name = sheath_bone
 	skeleton.add_child(hip_socket)
 	var pose := _pose(KT_HILT)
 	var hand := _global(pose, skeleton.find_bone(rig["hand.R"])) * grip.transform
-	var sheath := Node3D.new()
+	sheath = Node3D.new()
 	sheath.name = "KatanaSheath"
-	sheath.transform = _global(pose, skeleton.find_bone(hip_bone)).affine_inverse() * hand
+	_sheath_drawn = _global(pose, skeleton.find_bone(sheath_bone)).affine_inverse() * hand
+	# Worn: the same scabbard turned level along character back (the least turn, so it keeps its roll) and moved out.
+	var hips := _global(_idle, skeleton.find_bone(sheath_bone))
+	var worn := hips * _sheath_drawn
+	worn.basis = Basis(Quaternion(worn.basis.y.normalized(), Vector3.FORWARD)) * worn.basis
+	worn.origin = hips.origin + KT_SHEATH_REST * leg_length
+	_sheath_rest = hips.affine_inverse() * worn
+	sheath.transform = _sheath_rest
 	hip_socket.add_child(sheath)
 	sheathed = _katana_part(KATANA_SHEATHED, "SheathedKatana", blade_basis, KT_GRIP - KT_SHEATH_DROP)
 	sheath.add_child(sheathed)
@@ -956,21 +977,44 @@ static func gs_key(key: Dictionary) -> Dictionary:
 ## How firmly the left hand holds the handle at this point of a greatsword clip:
 ## 0 in "one_hand" keys, 1 in two-handed keys, blended linearly between them.
 func two_hand_weight(clip: String, time: float) -> float:
+	return _key_weight(clip, time, func(key: Dictionary) -> float: return 0.0 if key.get("one_hand", false) else 1.0)
+
+## How firmly the left hand holds the scabbard mouth: 1 in "saya" keys, 0 elsewhere, blended linearly between them.
+func saya_weight(clip: String, time: float) -> float:
+	if sheath == null: return 0.0
+	return _key_weight(clip, time, func(key: Dictionary) -> float: return 1.0 if key.get("saya", false) else 0.0)
+
+## A per-key weight of a two-handed clip, interpolated linearly between its keys.
+func _key_weight(clip: String, time: float, weight_of: Callable) -> float:
 	var keys: Array = (two_hand_clips.get(clip, []) as Array).map(gs_key)
 	if keys.is_empty(): return 0.0
 	var previous: Dictionary = keys[0]
 	for key: Dictionary in keys:
-		var weight := 0.0 if key.get("one_hand", false) else 1.0
+		var weight: float = weight_of.call(key)
 		if key.t >= time:
 			if key.t <= previous.t: return weight
-			return lerpf(0.0 if previous.get("one_hand", false) else 1.0, weight, inverse_lerp(previous.t, key.t, time))
+			return lerpf(weight_of.call(previous), weight, inverse_lerp(previous.t, key.t, time))
 		previous = key
-	return 0.0 if previous.get("one_hand", false) else 1.0
+	return weight_of.call(previous)
+
+## How far the left hand has pulled the scabbard in to the hilt pose: 1 at "hilt" keys, 0 elsewhere.
+func sheath_pull(clip: String, time: float) -> float:
+	if sheath == null: return 0.0
+	return _key_weight(clip, time, func(key: Dictionary) -> float: return 1.0 if key.get("hilt", false) else 0.0)
+
+## The left hand's hold on the scabbard in skeleton space: [palm point, scabbard direction toward the tip].
+func saya_hold(pose: Dictionary) -> Array:
+	var frame := _global(pose, skeleton.find_bone(sheath_bone)) * sheath.transform
+	var along := frame.basis.y.normalized()
+	return [frame.origin + along * KT_SAYA_HOLD, along]
 
 ## Live weapon hold, run by the skeleton modifier after the animation each frame.
 ## ready_weight blends the torso turn and the right arm into the loadout's ready stance;
-## crouch blends in the stance's half crouch; two_hand blends the left hand onto the handle.
-func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0) -> void:
+## crouch blends in the stance's half crouch; two_hand blends the left hand onto the handle, saya onto the scabbard,
+## and pull moves the scabbard from the hip in to the hilt pose.
+func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0, saya := 0.0, pull := 0.0) -> void:
+	if sheath != null:
+		sheath.transform = _sheath_rest.interpolate_with(_sheath_drawn, pull)
 	var pose: Dictionary = {}
 	for index in target.get_bone_count():
 		pose[target.get_bone_name(index)] = target.get_bone_pose(index)
@@ -1027,6 +1071,12 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 		_hold(pose, "L", hand * Vector3(0, rig["palm"], 0) - blade * GS_HAND_SPACING, blade)
 		for index in left.size():
 			pose[left[index]] = (animated[index] as Transform3D).interpolate_with(pose[left[index]], two_hand)
+	if saya > 0.0:
+		var animated: Array = left.map(func(bone: String) -> Transform3D: return pose[bone])
+		var hold := saya_hold(pose)
+		_hold(pose, "L", hold[0], hold[1])
+		for index in left.size():
+			pose[left[index]] = (animated[index] as Transform3D).interpolate_with(pose[left[index]], saya)
 	for bone: String in torso + right + left:
 		target.set_bone_pose(target.find_bone(bone), pose[bone])
 

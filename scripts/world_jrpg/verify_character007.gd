@@ -58,11 +58,16 @@ func run() -> void:
 	var scabbard := character.find_child("EmptyScabbard", true, false) as Node3D
 	# Live: sample each clip with the grip modifier applied (readable once it reports it has finished).
 	var holder := skeleton.get_node("KatanaGrip") as SkeletonModifier3D
-	var gap := [0.0]
+	var gap := [0.0, 0.0]
 	var right := skeleton.find_bone(combat.rig["hand.R"])
 	holder.modification_processed.connect(func() -> void:
 		var handle := skeleton.get_bone_global_pose(right) * combat.grip.transform * Vector3(0, -SwordCombat.GS_HAND_SPACING, 0)
-		gap[0] = (skeleton.get_bone_global_pose(left) * Vector3(0, palm, 0)).distance_to(handle) if holder.two_hand_weight >= 1.0 else 0.0)
+		var left_palm := skeleton.get_bone_global_pose(left) * Vector3(0, palm, 0)
+		gap[0] = left_palm.distance_to(handle) if holder.two_hand_weight >= 1.0 else 0.0
+		var pose: Dictionary = {}
+		for index in skeleton.get_bone_count():
+			pose[skeleton.get_bone_name(index)] = skeleton.get_bone_pose(index)
+		gap[1] = left_palm.distance_to(combat.saya_hold(pose)[0]) if holder.saya_weight >= 1.0 else 0.0)
 	var camera: Camera3D
 	if capture:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://artifacts/katana"))
@@ -80,6 +85,8 @@ func run() -> void:
 		var length := player.get_animation(clip).length
 		var window: Vector2 = SwordCombat.KT_DRAWN.get(clip, Vector2(INF, INF))
 		var worst := 0.0
+		var worst_saya := 0.0
+		var held_saya := false
 		var swapped := true
 		for step in 25:
 			var time := length * step / 24.0
@@ -87,11 +94,16 @@ func run() -> void:
 			await process_frame
 			await process_frame
 			worst = maxf(worst, gap[0])
+			worst_saya = maxf(worst_saya, gap[1])
+			held_saya = held_saya or holder.saya_weight >= 1.0
 			var out := time >= window.x and time < window.y
 			swapped = swapped and katana.visible == out and scabbard.visible == out and sheathed.visible == not out
 			if capture and step % 2 == 0:
 				await _capture(character, camera, "%s_%02d" % [clip.replace("/", "_"), step])
 		check(worst < HOLD_TOLERANCE, "%s keeps the left hand on the handle while gripping (worst %.4f)" % [clip, worst])
+		if clip == SwordCombat.KT_IAI:
+			check(held_saya, "%s holds the scabbard in the left hand" % clip)
+		check(worst_saya < HOLD_TOLERANCE, "%s keeps the left hand on the scabbard mouth while holding it (worst %.4f)" % [clip, worst_saya])
 		check(swapped, "%s shows the katana %s" % [clip, "drawn only between its hilt keys" if window.x < INF else "sheathed throughout"])
 	# The swap is invisible: at the hilt key the drawn katana lies where the sheathed one hangs.
 	player.play(SwordCombat.KT_IAI, 0)
