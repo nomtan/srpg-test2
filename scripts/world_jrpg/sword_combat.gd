@@ -343,26 +343,36 @@ const KT_SHEATH_REST := Vector3(.46,.19,.27)
 const KT_SAYA_HOLD := 0.12
 # Keys use the greatsword keys' "grip"/"blade"; "one_hand" keys leave the left hand off the handle,
 # and "saya" keys put it on the scabbard mouth instead.
-# Draw-cut: hand to the hilt, draw straight into a horizontal cut from left to right, hold, then sheathe.
-# The left hand keeps hold of the scabbard throughout.
+# The katana's stance, held standing idle and as the draw-cut's charge: sunk low over the bent front knee,
+# the right hand on the hilt and the left on the pulled-in scabbard. Only the pelvis and feet move from KT_HILT,
+# so the hand stays on the hilt where the scabbard holds it.
+const KT_STANCE := {"hilt": true, "saya": true, "hip": Vector3(0,-.16,.02), "step": Vector3(-.04,0,.16), "back": Vector3(0,0,-.08)}
+# Draw-cut: from the stance, charge for a second, draw straight into a horizontal cut from left to right,
+# hold, then sheathe and sink back into the stance. The left hand keeps hold of the scabbard throughout.
+const KT_IAI_NOD := 15.0
 const KT_IAI_KEYS := [
-	{"t": 0.0, "one_hand": true},
-	{"t": 0.14, "hilt": true, "saya": true},
-	{"t": 0.24, "yaw": 22.0, "pitch": 10.0, "hip": Vector3(0,-.14,.06), "step": Vector3(-.04,0,.18), "back": Vector3(0,0,-.06),
+	# The charge looks down at the ground; the head comes back up with the draw.
+	{"t": 0.0, "kamae": true, "nod": KT_IAI_NOD},
+	{"t": 1.14, "kamae": true, "nod": KT_IAI_NOD},
+	# The draw and cut run at double speed: through to the end of the cut by 1.25, then held dead still until 1.36.
+	{"t": 1.19, "yaw": 22.0, "pitch": 10.0, "hip": Vector3(0,-.14,.06), "step": Vector3(-.04,0,.18), "back": Vector3(0,0,-.06),
 		"grip": Vector3(0,-.55,.7), "blade": Vector3(.75,-.15,.65), "elbow": Vector3(-1,-.3,.3), "one_hand": true, "saya": true},
-	{"t": 0.30, "yaw": -18.0, "pitch": 12.0, "hip_yaw": -8.0, "hip": Vector3(-.02,-.24,.18), "step": Vector3(-.08,0,.46), "back": Vector3(0,0,-.18),
+	{"t": 1.22, "yaw": -18.0, "pitch": 12.0, "hip_yaw": -8.0, "hip": Vector3(-.02,-.24,.18), "step": Vector3(-.08,0,.46), "back": Vector3(0,0,-.18),
 		"grip": Vector3(-.4,-.35,.6), "blade": Vector3(-.3,.05,1), "elbow": Vector3(-1,-.4,0), "one_hand": true, "saya": true},
-	{"t": 0.36, "yaw": -46.0, "pitch": 12.0, "hip_yaw": -18.0, "hip": Vector3(-.03,-.27,.22), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
+	{"t": 1.25, "yaw": -46.0, "pitch": 12.0, "hip_yaw": -18.0, "hip": Vector3(-.03,-.27,.22), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
 		"grip": Vector3(-.85,-.25,.3), "blade": Vector3(-.95,.05,-.3), "elbow": Vector3(-.5,-1,0), "one_hand": true, "saya": true},
-	{"t": 0.56, "yaw": -42.0, "pitch": 10.0, "hip_yaw": -16.0, "hip": Vector3(-.03,-.25,.2), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
+	{"t": 1.36, "yaw": -46.0, "pitch": 12.0, "hip_yaw": -18.0, "hip": Vector3(-.03,-.27,.22), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
+		"grip": Vector3(-.85,-.25,.3), "blade": Vector3(-.95,.05,-.3), "elbow": Vector3(-.5,-1,0), "one_hand": true, "saya": true},
+	{"t": 1.56, "yaw": -42.0, "pitch": 10.0, "hip_yaw": -16.0, "hip": Vector3(-.03,-.25,.2), "step": Vector3(-.1,0,.52), "back": Vector3(0,0,-.2),
 		"grip": Vector3(-.85,-.3,.3), "blade": Vector3(-.9,-.15,-.35), "elbow": Vector3(-.5,-1,0), "one_hand": true, "saya": true},
 	# Shake the blade off and bring the tip back to the scabbard mouth.
-	{"t": 0.70, "yaw": 0.0, "pitch": 8.0, "hip": Vector3(0,-.12,.06), "step": Vector3(-.04,0,.2),
+	{"t": 1.70, "yaw": 0.0, "pitch": 8.0, "hip": Vector3(0,-.12,.06), "step": Vector3(-.04,0,.2),
 		"grip": Vector3(-.2,-.5,.6), "blade": Vector3(.45,-.35,.8), "elbow": Vector3(-1,-.3,.3), "one_hand": true, "saya": true},
-	{"t": 0.84, "hilt": true, "saya": true},
-	{"t": 1.02, "one_hand": true},
+	{"t": 1.84, "hilt": true, "saya": true},
+	{"t": 2.02, "kamae": true},
 ]
-# Kesa cut: draw, take the blade up two-handed behind the right shoulder, cut diagonally down to the left, then sheathe.
+# Kesa cut: draw, take the blade up two-handed behind the right shoulder, cut diagonally down to the left, then sheathe
+# and sink back into the stance.
 const KT_KESA_KEYS := [
 	{"t": 0.0, "one_hand": true},
 	{"t": 0.14, "hilt": true, "saya": true},
@@ -379,7 +389,7 @@ const KT_KESA_KEYS := [
 	{"t": 0.80, "yaw": 4.0, "pitch": 8.0, "hip": Vector3(0,-.12,.06), "step": Vector3(-.04,0,.2),
 		"grip": Vector3(-.2,-.5,.6), "blade": Vector3(.45,-.35,.8), "elbow": Vector3(-1,-.3,.3), "one_hand": true},
 	{"t": 0.94, "hilt": true, "saya": true},
-	{"t": 1.12, "one_hand": true},
+	{"t": 1.12, "kamae": true},
 ]
 # Guard: draw into a two-handed middle stance, the tip at the opponent's throat; held until released.
 const KT_GUARD_KEYS := [
@@ -388,14 +398,14 @@ const KT_GUARD_KEYS := [
 	{"t": 0.24, "yaw": -8.0, "pitch": 6.0, "hip_yaw": -6.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.12), "back": Vector3(0,0,-.1),
 		"grip": Vector3(-.05,-.4,.62), "blade": Vector3(.05,.5,.86)},
 ]
-const KT_FX := {KT_IAI: {"impact": 0.32}, KT_KESA: {"impact": 0.50}}
+const KT_FX := {KT_IAI: {"impact": 1.23}, KT_KESA: {"impact": 0.50}}
 const KT_SLASH_FX := {
 	KT_IAI: [preload("res://assets/fx/sword_slash/katana_iai.tres")],
 	KT_KESA: [preload("res://assets/fx/sword_slash/katana_kesa.tres")],
 }
 const KT_CLIPS := {KT_IAI: KT_IAI_KEYS, KT_KESA: KT_KESA_KEYS, KT_GUARD: KT_GUARD_KEYS}
-# Time span of each clip in which the blade is out of the scabbard (from the hilt key to the closing hilt key).
-const KT_DRAWN := {KT_IAI: Vector2(0.14, 0.84), KT_KESA: Vector2(0.14, 0.94), KT_GUARD: Vector2(0.10, INF)}
+# Time span of each clip in which the blade is out of the scabbard (from the draw's hilt key to the closing hilt key).
+const KT_DRAWN := {KT_IAI: Vector2(1.14, 1.84), KT_KESA: Vector2(0.14, 0.94), KT_GUARD: Vector2(0.10, INF)}
 
 var skeleton: Skeleton3D
 var socket: BoneAttachment3D
@@ -427,6 +437,8 @@ var arm_reach := 1.0
 var _hand_frame: Dictionary = {}
 # Ready stance held outside the weapon's clips by the grip modifier; empty leaves those clips as animated.
 var ready_stance: Dictionary = GS_READY
+# Whole-body pose held standing idle instead of a ready stance (the katana stance); empty when there is none.
+var idle_hold: Dictionary = {}
 # Clips whose keys decide how firmly the left hand holds the handle.
 var two_hand_clips: Dictionary = GS_CLIPS
 # Katana: the sheathed model at the hip, and the drawn blade with the empty scabbard left behind.
@@ -539,8 +551,10 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			slash_clip = KT_IAI
 			overhead_clip = KT_KESA
 			guard_clip = KT_GUARD
-			# Sheathed outside its clips, so no ready stance; the modifier joins the left hand and swaps the models.
+			# Sheathed outside its clips, so no ready stance: standing idle takes the stance whole, hand on the hilt.
+			# The modifier joins the left hand and swaps the models.
 			ready_stance = {}
+			idle_hold = _pose(KT_STANCE)
 			two_hand_clips = KT_CLIPS
 			var holder: SkeletonModifier3D = TwoHandGrip.new()
 			holder.name = "KatanaGrip"
@@ -871,8 +885,7 @@ func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 
 func _pose(key: Dictionary) -> Dictionary:
 	# "ready" keys take the equipped loadout's ready stance (the greatsword's for the greatsword clips).
-	if key.get("ready", false): key = ready_stance.merged(key)
-	if key.get("hilt", false): key = KT_HILT.merged(key)
+	key = gs_key(key) if not key.get("ready", false) else ready_stance.merged(key)
 	var pose := _idle.duplicate()
 	if not key.has("blade") and not key.has("blade_l") and not key.has("bow"): return pose
 	var hip_yaw: float = key.get("hip_yaw", 0.0)
@@ -899,6 +912,8 @@ func _pose(key: Dictionary) -> Dictionary:
 	# Counter-rotate the head so the eyes stay on the target while the body turns.
 	var head := _global(pose, skeleton.find_bone(rig["head"]))
 	head.basis = Basis(Vector3.UP, deg_to_rad(-(yaw + hip_yaw) * key.get("look", .7))) * head.basis
+	# "nod": degrees the head tips forward to look down.
+	head.basis = Basis(Vector3.RIGHT, deg_to_rad(key.get("nod", 0.0))) * head.basis
 	_set_global(pose, rig["head"], head)
 	if key.has("bow"):
 		_bow_arms(pose, key)
@@ -969,8 +984,9 @@ func _plant_leg(pose: Dictionary, side: String, target: Vector3, turn := 0.0) ->
 	planted.basis = Basis(Vector3.UP, turn) * rest[2].basis
 	_set_global(pose, names[2], planted)
 
-## A two-handed clip key with the ready stance or the katana hilt pose filled in when it is marked so.
+## A two-handed clip key with the ready stance, the katana stance or its hilt pose filled in when it is marked so.
 static func gs_key(key: Dictionary) -> Dictionary:
+	if key.get("kamae", false): key = KT_STANCE.merged(key)
 	if key.get("hilt", false): return KT_HILT.merged(key)
 	return GS_READY.merged(key) if key.get("ready", false) else key
 
@@ -997,6 +1013,14 @@ func _key_weight(clip: String, time: float, weight_of: Callable) -> float:
 		previous = key
 	return weight_of.call(previous)
 
+## How far a katana clip has come back into the idle stance: 1 at a closing "kamae" key, 0 at the keys before it.
+## Earlier "kamae" keys are left as keyed (the draw-cut's charge looks down).
+func stance_weight(clip: String, time: float) -> float:
+	var keys: Array = two_hand_clips.get(clip, [])
+	if idle_hold.is_empty() or keys.is_empty() or not keys[-1].get("kamae", false): return 0.0
+	var closing: float = keys[-1].t
+	return _key_weight(clip, time, func(key: Dictionary) -> float: return 1.0 if key.t == closing else 0.0)
+
 ## How far the left hand has pulled the scabbard in to the hilt pose: 1 at "hilt" keys, 0 elsewhere.
 func sheath_pull(clip: String, time: float) -> float:
 	if sheath == null: return 0.0
@@ -1011,13 +1035,17 @@ func saya_hold(pose: Dictionary) -> Array:
 ## Live weapon hold, run by the skeleton modifier after the animation each frame.
 ## ready_weight blends the torso turn and the right arm into the loadout's ready stance;
 ## crouch blends in the stance's half crouch; two_hand blends the left hand onto the handle, saya onto the scabbard,
-## and pull moves the scabbard from the hip in to the hilt pose.
-func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0, saya := 0.0, pull := 0.0) -> void:
+## pull moves the scabbard from the hip in to the hilt pose, and stance blends the whole body into idle_hold.
+func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0, saya := 0.0, pull := 0.0, stance := 0.0) -> void:
 	if sheath != null:
 		sheath.transform = _sheath_rest.interpolate_with(_sheath_drawn, pull)
 	var pose: Dictionary = {}
 	for index in target.get_bone_count():
-		pose[target.get_bone_name(index)] = target.get_bone_pose(index)
+		var bone := target.get_bone_name(index)
+		pose[bone] = target.get_bone_pose(index)
+		if stance > 0.0 and bone in idle_hold:
+			pose[bone] = (pose[bone] as Transform3D).interpolate_with(idle_hold[bone], stance)
+			target.set_bone_pose(index, pose[bone])
 	var right: Array = ["upper_arm.R", "forearm.R", "hand.R"].map(func(role: String) -> String: return rig[role])
 	var left: Array = ["upper_arm.L", "forearm.L", "hand.L"].map(func(role: String) -> String: return rig[role])
 	var torso: Array = [rig["spine"], rig["head"]]

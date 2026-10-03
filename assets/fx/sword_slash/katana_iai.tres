@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1_83b8y")
-start_time = 0.22
-swing_time = 0.12
+start_time = 1.18
+swing_time = 0.06
 afterglow_time = 0.2
 offset = Vector3(-0.127, 0.508, 0.227)
 rotation_degrees = Vector3(6.9, 158.40001, -175.1)

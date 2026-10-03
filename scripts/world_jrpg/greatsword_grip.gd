@@ -5,6 +5,7 @@ extends SkeletonModifier3D
 ## Standing idle adds the stance's half crouch; the walk cycle is left as animated.
 ## The left hand is solved onto the handle below the right hand wherever the clip swings two-handed,
 ## or onto the scabbard mouth in the katana's "saya" keys, pulling the scabbard in to the hilt around its "hilt" keys.
+## The katana has no ready stance; standing idle takes its whole stance instead, hand on the hilt and scabbard held.
 const FADE := 0.12
 const CROUCH_FADE := 0.2
 
@@ -16,6 +17,7 @@ var two_hand_weight := 0.0
 var saya_weight := 0.0
 var sheath_pull := 0.0
 var idle_weight := 1.0
+var hold_weight := 1.0
 
 func setup(equipment: RefCounted, animation_player: AnimationPlayer, prefix: String) -> void:
 	combat = equipment
@@ -36,6 +38,10 @@ func _process_modification_with_delta(delta: float) -> void:
 		two_hand_weight = combat.two_hand_weight(clip, time)
 		saya_weight = combat.saya_weight(clip, time)
 		sheath_pull = combat.sheath_pull(clip, time)
+		# The idle stance hands over to the clips within their first moment, and takes back over
+		# from their closing stance key, so the attacks run from and back into it without letting go.
+		var fading := minf(hold_weight, clampf(1.0 - time / FADE, 0.0, 1.0)) if player.is_playing() else 0.0
+		hold_weight = maxf(combat.stance_weight(clip, time), fading)
 	else:
 		# Let go of the handle smoothly when a clip is interrupted mid-swing or the guard is released.
 		two_hand_weight = move_toward(two_hand_weight, 0.0, delta / FADE)
@@ -43,6 +49,10 @@ func _process_modification_with_delta(delta: float) -> void:
 		sheath_pull = move_toward(sheath_pull, 0.0, delta / FADE)
 		# Crouch only while standing; the greatsword clips carry their own crouch at start and end.
 		idle_weight = move_toward(idle_weight, 1.0 if clip == "idle" else 0.0, delta / CROUCH_FADE)
+		hold_weight = move_toward(hold_weight, 1.0 if clip == "idle" and not combat.idle_hold.is_empty() else 0.0, delta / CROUCH_FADE)
+	if not combat.idle_hold.is_empty():
+		saya_weight = maxf(saya_weight, hold_weight)
+		sheath_pull = maxf(sheath_pull, hold_weight)
 	ready_weight = target if target < ready_weight else move_toward(ready_weight, target, delta / FADE)
 	combat.update_sheath(clip, time)
-	combat.apply_grip(skeleton, ready_weight, two_hand_weight, ready_weight * idle_weight, saya_weight, sheath_pull)
+	combat.apply_grip(skeleton, ready_weight, two_hand_weight, ready_weight * idle_weight, saya_weight, sheath_pull, hold_weight)

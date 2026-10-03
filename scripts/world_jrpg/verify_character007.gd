@@ -101,13 +101,13 @@ func run() -> void:
 			if capture and step % 2 == 0:
 				await _capture(character, camera, "%s_%02d" % [clip.replace("/", "_"), step])
 		check(worst < HOLD_TOLERANCE, "%s keeps the left hand on the handle while gripping (worst %.4f)" % [clip, worst])
-		if clip == SwordCombat.KT_IAI:
+		if clip in [SwordCombat.KT_IAI, "idle"]:
 			check(held_saya, "%s holds the scabbard in the left hand" % clip)
 		check(worst_saya < HOLD_TOLERANCE, "%s keeps the left hand on the scabbard mouth while holding it (worst %.4f)" % [clip, worst_saya])
 		check(swapped, "%s shows the katana %s" % [clip, "drawn only between its hilt keys" if window.x < INF else "sheathed throughout"])
 	# The swap is invisible: at the hilt key the drawn katana lies where the sheathed one hangs.
 	player.play(SwordCombat.KT_IAI, 0)
-	player.seek(0.14, true)
+	player.seek(SwordCombat.KT_DRAWN[SwordCombat.KT_IAI].x, true)
 	await process_frame
 	await process_frame
 	var drawn_at := katana.global_transform * (SwordCombat.KT_GRIP - Vector3(0, 0.4, 0))
