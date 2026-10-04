@@ -22,6 +22,10 @@
       0.79
     ]
   },
-  "face_width_m": 0.41952547430992126,
-  "size_reference": "face007"
+  "size_reference": "jaw_width_chin_plus_4cm_v1",
+  "head_metrics": {
+    "method": "jaw_width_chin_plus_4cm_v1",
+    "jaw_width_source": 0.3980477808534036,
+    "chin_height_source": 0.20391391230450787
+  }
 }

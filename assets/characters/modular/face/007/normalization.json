@@ -13,8 +13,25 @@
     -0.01,
     0.86
   ],
-  "scale": 0.54,
-  "face_width_m": 0.41952547430992126,
-  "size_reference": "face007",
-  "fit_note": "Face007 is deeper than Face001-006 at the shared width; moved 4.5cm back and 3cm down so ears/chin sit over the neck like the reference set"
+  "scale": 0.49893303064699207,
+  "size_reference": "jaw_width_chin_plus_4cm_v1",
+  "fit_note": "Face007 is deeper than Face001-006; moved 4.5cm back and 3cm down (at scale .54) so ears/chin sit over the neck like the reference set",
+  "head_metrics": {
+    "method": "jaw_width_chin_plus_4cm_v1",
+    "jaw_width_source": 0.4078703703703703,
+    "chin_height_source": 0.08055555555555573
+  },
+  "size_baseline": {
+    "scale": 0.54,
+    "position": [
+      0,
+      -0.01,
+      0.86
+    ],
+    "profile_origin": [
+      0,
+      -0.055,
+      0.89
+    ]
+  }
 }

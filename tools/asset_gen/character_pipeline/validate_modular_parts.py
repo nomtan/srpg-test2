@@ -173,6 +173,20 @@ def _validate_range(report: ValidationReport, asset: str, label: str, value: flo
         report.add("PASS", f"face.bounds.{label}", f"{label} {value:.4f} is in the recommended range", asset)
 
 
+def _validate_face_size(report: ValidationReport, path: Path, asset: str, bounds: dict[str, Any], size: dict[str, Any]) -> None:
+    exception = size.get("exceptions", {}).get(path.parent.name)
+    if exception:
+        report.require(abs(bounds["width"] - exception["width_m"]) < size["tolerance_m"], "face.size.reference", f"face size exception keeps width {exception['width_m']:.4f}m ({exception['reason']})", asset)
+        return
+    metadata = _load_metadata(path.parents[2], "face", path.parent.name) or {}
+    metrics = metadata.get("head_metrics", {})
+    if metrics.get("method") != size["metric"]:
+        report.add("FAIL", "face.size.reference", f"normalization.json needs head_metrics measured with {size['metric']}", asset)
+        return
+    jaw = metrics["jaw_width_source"] * metadata["scale"]
+    report.require(abs(jaw - size["jaw_width_m"]) < size["tolerance_m"], "face.size.reference", f"jaw width {jaw:.4f}m matches {size['jaw_width_m']}m", asset)
+
+
 def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any], standard: dict[str, Any]) -> None:
     part_id = path.parent.name
     asset = f"face{part_id}"
@@ -184,7 +198,7 @@ def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any]
     report.require(bounds is not None, "face.bounds", "face exposes mesh bounds", asset)
     if bounds:
         if "face_size" in standard:
-            report.require(abs(bounds["width"] - standard["face_size"]["width_m"]) < 0.001, "face.size.reference", "face width matches the approved Face007 reference within 1mm", asset)
+            _validate_face_size(report, path, asset, bounds, standard["face_size"])
         values = {
             "width": bounds["width"],
             "height": bounds["height"],

@@ -26,7 +26,7 @@ Face は `ExpressionController` から Eyes / Eyebrows / Mouth を独立変更�
 ## Hair Isolation
 
 サイズ統一後のlegacy Face001〜006は、GLBに記録した`legacy_size007_NNN` profileで
-投影範囲も同じ倍率へ縮小する。[サイズ統一仕様](face-size007.md)を参照。
+投影範囲も同じ倍率へ変換する。[顎幅基準](face-size-jaw.md)を参照。
 
 新規Faceの専用UV／mask契約は [Face Expression Rendering v2](face-expression-rendering-v2.md)。UV0はbase color、UV2は表情、COLOR.rは許可mask。Legacy profile／APIは保持する。
 

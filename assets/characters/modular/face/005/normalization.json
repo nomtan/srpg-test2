@@ -12,7 +12,7 @@
     -0.055,
     0.89
   ],
-  "scale": 0.4296078275344501,
+  "scale": 0.44434659671288734,
   "size_baseline": {
     "scale": 0.54,
     "position": [
@@ -21,6 +21,10 @@
       0.89
     ]
   },
-  "face_width_m": 0.41952547430992126,
-  "size_reference": "face007"
+  "size_reference": "jaw_width_chin_plus_4cm_v1",
+  "head_metrics": {
+    "method": "jaw_width_chin_plus_4cm_v1",
+    "jaw_width_source": 0.4579758267654532,
+    "chin_height_source": 0.018039708551117042
+  }
 }

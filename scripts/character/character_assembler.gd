@@ -4,6 +4,8 @@ extends RefCounted
 
 const PART_ROOT := "res://assets/characters/modular"
 const CHARACTER_TOON := preload("res://assets/characters/_shared/materials/character_toon.gdshader")
+## Global switch for the eyes / eyebrows / mouth overlay. Temporarily off.
+const SHOW_FACE_FEATURES := false
 static var _toon_materials: Dictionary = {}
 
 
@@ -73,7 +75,7 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	expression_controller.name = "ExpressionController"
 	character.add_child(expression_controller)
 	# Face004 is a closed helmet, so facial features should not appear on its visor.
-	if not expression_controller.bind_face(face, definition.expression_profile_id, definition.face_id != "face004"):
+	if not expression_controller.bind_face(face, definition.expression_profile_id, SHOW_FACE_FEATURES and definition.face_id != "face004"):
 		character.free()
 		return null
 	for clip in ["idle", "walk"]:

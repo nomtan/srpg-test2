@@ -2,7 +2,7 @@
 
 > Phase 5の新規Face描画契約と現在の未完了事項は [Face Expression Rendering v2](face-expression-rendering-v2.md) を参照。旧Face001〜006の描画とAPIは維持する。
 
-> 現行Face001〜006はユーザー指定で[Face007基準のサイズ](face-size007.md)へ縮小済み。下記のPhase3測定・default profile説明は当時の記録。
+> 現行Faceのサイズは[顎幅基準](face-size-jaw.md)（Face004のみ例外）。旧[Face007基準のサイズ](face-size007.md)は廃止。下記のPhase3測定・default profile説明は当時の記録。
 
 > Phase 4 以降の正式規格は [Ashen Vow Character Asset Standard v1](character-asset-standard-v1.md) と [Golden Path](character-asset-golden-path.md) を優先する。本書は Phase 3 の実装経緯と互換仕様を記録する。
 
@@ -47,7 +47,7 @@ python tools/asset_gen/character_pipeline/validate_modular_parts.py --root artif
 
 ## 表情
 
-`assets/characters/_shared/face/expression/` の透過SVG atlasはGodotにTexture2Dとして読み込む。`build_expression_atlases.py` で再生成できる。各行は256×256の顔面投影画像で、Eyes 8種、Eyebrows 6種、Mouth 7種。`ExpressionController` の配列順序とatlasの行順は同一のアセット契約である。3つのatlasとトゥーンshaderは全個体で共有し、shader parameterを持つFace材質だけを個体ごとに複製する。Meshは共有する。表情変更時にMesh、Texture、Node、Shaderを生成しない。
+`assets/characters/_shared/face/expression/` の透過SVG atlasはGodotにTexture2Dとして読み込む。`build_expression_atlases.py` で再生成できる。各行は256×256の顔面投影画像で、Eyes 8種、Eyebrows 6種、Mouth 7種。パーツは256グリッドで描いた後、`FEATURE_SCALE`（0.72）で中心(128,128)へ縮小し、髪を含む投影矩形ではなく肌の範囲に収める（線幅は√scaleで縮小）。`ExpressionController` の配列順序とatlasの行順は同一のアセット契約である。3つのatlasとトゥーンshaderは全個体で共有し、shader parameterを持つFace材質だけを個体ごとに複製する。Meshは共有する。表情変更時にMesh、Texture、Node、Shaderを生成しない。
 
 `definitions/expression_*.tres` はプリセットの3チャンネルを定義する。初期プリセットは `normal` / `angry` / `smile` / `sad` / `surprised`。`ExpressionProfile` は顔面投影範囲と正面側の深度を定義し、Definitionの `expression_profile_id` が空なら `profiles/default.tres` を使う。現行Faceは1メッシュでUV島も共通ではないため、1つのFace材質内でrest座標から投影して合成する。前髪より前に常時表示する別メッシュは生成しない。
 

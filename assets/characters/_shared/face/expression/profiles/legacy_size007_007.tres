@@ -4,5 +4,5 @@
 
 [resource]
 script = ExtResource("1")
-face_rect = Vector4(-0.23, 0.818, 0.46, 0.36)
-surface_depth = Vector2(0.135, 0.285)
+face_rect = Vector4(-0.21250851305334845, 0.821194097616345, 0.4250170261066969, 0.332622020431328)
+surface_depth = Vector2(0.12549375709421112, 0.2640862656072645)

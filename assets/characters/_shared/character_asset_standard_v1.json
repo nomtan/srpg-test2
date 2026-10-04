@@ -90,10 +90,10 @@
   },
   "face_head_space": {
     "width": {
-      "recommended_min": 0.41,
-      "recommended_max": 0.43,
-      "hard_min": 0.39,
-      "hard_max": 0.45
+      "recommended_min": 0.38,
+      "recommended_max": 0.46,
+      "hard_min": 0.35,
+      "hard_max": 0.5
     },
     "height": {
       "recommended_min": 0.38,
@@ -173,8 +173,16 @@
     }
   },
   "face_size": {
-    "reference": "face007",
-    "width_m": 0.41952547430992126,
-    "preserve_aspect_ratio": true
+    "metric": "jaw_width_chin_plus_4cm_v1",
+    "reference": "median_face001_002_003_005_006",
+    "jaw_width_m": 0.2035,
+    "tolerance_m": 0.001,
+    "preserve_aspect_ratio": true,
+    "exceptions": {
+      "004": {
+        "reason": "closed helmet: no visible jaw; keeps the previous Head+Hair width",
+        "width_m": 0.41952547430992126
+      }
+    }
   }
 }

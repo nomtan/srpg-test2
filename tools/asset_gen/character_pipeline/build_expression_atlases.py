@@ -10,10 +10,17 @@ ROOT = Path(__file__).resolve().parents[3]
 DESTINATION = ROOT / "assets/characters/_shared/face/expression"
 INK = "#291b25"
 LIGHT = "#f6f0e9"
+# Features are authored on the 256 grid below, then shrunk toward FEATURE_ANCHOR
+# so they sit inside the skin area instead of spanning the full head width.
+FEATURE_SCALE = 0.72
+FEATURE_ANCHOR = (128, 128)
+# Strokes shrink less than the shapes (effective width = authored * sqrt(scale))
+# so lines stay legible at SRPG camera distance.
+STROKE = FEATURE_SCALE ** -0.5
 
 
 def path(d, width=6, color=INK, fill="none"):
-    return f'<path d="{d}" stroke="{color}" stroke-width="{width}" stroke-linecap="round" stroke-linejoin="round" fill="{fill}"/>'
+    return f'<path d="{d}" stroke="{color}" stroke-width="{width * STROKE:.2f}" stroke-linecap="round" stroke-linejoin="round" fill="{fill}"/>'
 
 
 def eyes(style):
@@ -31,7 +38,7 @@ def eyes(style):
     radius = 16 if style == "surprised" else 12
     centers = (78, 178)
     return "".join(
-        f'<ellipse cx="{x}" cy="100" rx="{radius}" ry="{radius + 7}" fill="{LIGHT}" stroke="{INK}" stroke-width="5"/>'
+        f'<ellipse cx="{x}" cy="100" rx="{radius}" ry="{radius + 7}" fill="{LIGHT}" stroke="{INK}" stroke-width="{5 * STROKE:.2f}"/>'
         f'<ellipse cx="{x}" cy="102" rx="7" ry="11" fill="{INK}"/>'
         f'<circle cx="{x - 3}" cy="95" r="3" fill="white"/>'
         for x in centers
@@ -52,7 +59,7 @@ def mouth(style):
     if style == "open" or style == "laugh":
         width, height = (17, 25) if style == "open" else (31, 22)
         return f'<ellipse cx="128" cy="177" rx="{width}" ry="{height}" fill="{INK}"/>' + (
-            '<path d="M108 174 Q128 184 148 174" stroke="white" stroke-width="5" fill="none"/>' if style == "laugh" else ""
+            f'<path d="M108 174 Q128 184 148 174" stroke="white" stroke-width="{5 * STROKE:.2f}" fill="none"/>' if style == "laugh" else ""
         )
     shapes = {
         "normal": "M115 177 Q128 181 141 177",
@@ -65,7 +72,11 @@ def mouth(style):
 
 
 def write_atlas(kind, names, draw):
-    rows = [f'<g transform="translate(0 {index * 256})">{draw(name)}</g>' for index, name in enumerate(names)]
+    ax, ay = FEATURE_ANCHOR
+    shrink = f"translate({ax} {ay}) scale({FEATURE_SCALE}) translate({-ax} {-ay})"
+    rows = [
+        f'<g transform="translate(0 {index * 256}) {shrink}">{draw(name)}</g>' for index, name in enumerate(names)
+    ]
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="{len(names) * 256}" '
         f'viewBox="0 0 256 {len(names) * 256}">\n' + "\n".join(rows) + "\n</svg>\n"

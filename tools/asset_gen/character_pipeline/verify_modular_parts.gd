@@ -96,7 +96,7 @@ func _verify_combinations(body_ids: Array, face_ids: Array, legacy_characters: A
 			check(expression_controller != null, definition.id + " has ExpressionController")
 			if expression_controller != null:
 				var face_material := (meshes[1] as MeshInstance3D).get_active_material(0)
-				check(face_material.get_shader_parameter("expression_parts_enabled") == (face_id != "face004"), definition.id + " preserves legacy helmet expression policy")
+				check(face_material.get_shader_parameter("expression_parts_enabled") == (CharacterAssembler.SHOW_FACE_FEATURES and face_id != "face004"), definition.id + " preserves legacy helmet expression policy")
 				for expression in ["normal", "angry", "smile"]:
 					check(character.set_expression(expression), definition.id + " accepts " + expression)
 				check(character.set_eyes("blink"), definition.id + " blinks")

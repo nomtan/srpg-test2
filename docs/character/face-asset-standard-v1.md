@@ -29,9 +29,9 @@ UV／maskの出力規格・検証状況は [Face Expression Rendering v2](face-e
 
 ## Reference Measurements
 
-以下はサイズ統一前のPhase4測定。現行001〜006はFace007基準の幅0.419525mへ等方縮小済み。
+以下はサイズ統一前のPhase4測定。現行Faceは顎幅0.2035m基準で等方スケール済み（Face004は例外）。
 形状・UV0は保持し、縦横比・髪型差は維持する。現行の実寸・接続確認は
-[Face007基準サイズ](face-size007.md)を参照。
+[顎幅基準](face-size-jaw.md)を参照。
 
 | ID | vertices | triangles | textures | bounds W×H×D (m) | center X,Y,Z (m) |
 |---|---:|---:|---:|---|---|
