@@ -1,5 +1,6 @@
 extends SceneTree
 const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
+const RunCycle = preload("res://scripts/world_jrpg/run_cycle.gd")
 var failed := false
 
 func check(condition: bool, message: String) -> void:
@@ -17,8 +18,9 @@ func run() -> void:
 	actor.set_process(false)
 	check(actor.use_3d and actor.model.visible and not actor.sprite.visible, "3D is default; original sprite remains available")
 	var player: AnimationPlayer = actor.animation_player
-	check(player != null and player.has_animation("walk") and player.has_animation("run"), "Source walk and run clips imported")
-	check(is_equal_approx(player.get_animation("walk").length, 0.8) and is_equal_approx(player.get_animation("run").length, 0.6), "Original clip durations preserved")
+	var run_clip: String = actor.run_clip
+	check(player != null and player.has_animation("walk") and player.has_animation(run_clip), "Walk clip imported and a run clip available")
+	check(run_clip == "gait/run" and is_equal_approx(player.get_animation(run_clip).length, RunCycle.LENGTH) and not player.get_animation_library("").has_animation("run"), "Run built from walk without touching the Body's clips")
 	actor.walking = true
 	actor._process(0)
 	check(player.current_animation == "walk", "Walking selects walk")
@@ -27,29 +29,37 @@ func run() -> void:
 	check(is_equal_approx(player.speed_scale, 1.0), "Normal walking keeps native cadence")
 	player.advance(0.2)
 	player.advance(0)
-	var head: Node3D = actor.model.find_child("ganmen", true, false)
-	var walk_head := head.transform
+	var skeleton := actor.model.find_child("Skeleton3D", true, false) as Skeleton3D
+	var chest := skeleton.find_bone("mixamorig_Spine2")
+	var walk_chest := skeleton.get_bone_pose_rotation(chest)
 	var walk_phase := player.current_animation_position / player.current_animation_length
 	actor.running = true
 	actor.locomotion_speed = 16.0
 	actor._process(0)
-	check(is_equal_approx(player.current_animation_position / player.current_animation_length, walk_phase), "Walk to run preserves stride phase")
+	check(player.current_animation == run_clip and is_equal_approx(player.current_animation_position / player.current_animation_length, walk_phase), "Walk to run preserves stride phase")
 	check(is_equal_approx(player.speed_scale, 1.25), "Sprint cadence stays at a moderate 1.25x")
+	actor.locomotion_speed = 4.5
+	actor._process(0)
+	var walk_rate := 1.0 / player.get_animation("walk").length
+	check(is_equal_approx(player.speed_scale / RunCycle.LENGTH, walk_rate), "Run starting from walking speed keeps the walk cadence")
 	actor.locomotion_speed = 8.0
 	actor._process(0)
-	check(is_equal_approx(player.speed_scale, 0.625), "Partial-speed running slows the cadence without restarting")
-	player.advance(0.2)
+	check(player.speed_scale / RunCycle.LENGTH >= walk_rate - 0.001 and player.speed_scale < 1.25, "Accelerating run quickens the cadence gradually")
+	player.advance(0.4)
 	player.advance(0)
-	check(player.current_animation == "run" and head.transform != walk_head, "Running selects original run pose")
-	var run_phase := player.current_animation_position / player.current_animation_length
+	check(player.current_animation == run_clip and skeleton.get_bone_pose_rotation(chest) != walk_chest, "Running leans into the run pose")
 	actor.running = false
 	actor._process(0)
-	check(is_equal_approx(player.current_animation_position / player.current_animation_length, run_phase), "Run to walk preserves stride phase")
+	check(player.current_animation == run_clip, "Slowing from a sprint keeps running until near walking speed")
+	var run_phase := player.current_animation_position / player.current_animation_length
+	actor.locomotion_speed = 4.5
+	actor._process(0)
+	check(player.current_animation == "walk" and is_equal_approx(player.current_animation_position / player.current_animation_length, run_phase), "Run to walk preserves stride phase")
 	actor.walking = false
 	actor._process(0)
 	player.advance(0.2)
 	player.advance(0)
-	check(player.current_animation == "idle" and head.rotation.is_zero_approx(), "Stopping resets run-only head rotation")
+	check(player.current_animation == "idle", "Stopping returns to idle")
 	check(is_equal_approx(player.speed_scale, 1.0), "Stopping resets playback speed")
 	actor.world_facing = Vector3.FORWARD
 	actor._process(0)
@@ -60,7 +70,7 @@ func run() -> void:
 	actor.walking = true
 	actor.running = true
 	actor.set_3d_enabled(true)
-	check(actor.model.visible and not actor.sprite.visible and player.current_animation == "run", "Returning to 3D restores current locomotion")
+	check(actor.model.visible and not actor.sprite.visible and player.current_animation == run_clip, "Returning to 3D restores current locomotion")
 	actor.free()
 	var sprite_actor := Explorer.new()
 	sprite_actor.use_3d = false
@@ -103,7 +113,7 @@ func capture() -> void:
 		sample.running = i == 2
 		sample.world_facing = Vector3(0, 0, 1)
 		sample._process(0)
-		sample.animation_player.play(["idle", "walk", "run", "idle"][i], 0)
+		sample.animation_player.play(["idle", "walk", sample.run_clip, "idle"][i], 0)
 		sample.animation_player.seek(0.15, true)
 		sample.animation_player.pause()
 		if i == 3: sample.set_3d_enabled(false)

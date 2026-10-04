@@ -146,6 +146,8 @@ const GS_POLES := {"R": Vector3(-.7,-1,-.3), "L": Vector3(.7,-1,-.3)}
 # shoulder midpoint in arm lengths (character space), and "blade": the sword direction. Both hands follow by IK,
 # except in "one_hand" keys, where only the right hand holds the sword and the left arm hangs free.
 # "elbow" overrides the right elbow's bend direction; "ready" keys take the ready stance.
+# "edge" turns the blade's edges toward a direction (character space) instead of along the arms' line, which
+# turns them sideways when the arms reach along the blade, as at the bottom of the downward cut.
 # Ready stance: half-turned with the sword shoulder back, the right hand raised beside the head with the elbow out,
 # and the blade laid on the shoulder, slanting inward behind the head. Clips start and end here.
 # "off_bend": degrees the free left forearm swings forward at the elbow.
@@ -181,16 +183,17 @@ const GS_SMASH_KEYS := [
 	# Dip under the weight with the blade still shouldered; the left hand joins on the heave up.
 	{"t": 0.10, "yaw": 0.0, "pitch": 6.0, "hip_yaw": -30.0, "feet_turn": GS_READY.feet_turn, "stance": GS_READY.stance, "hip": Vector3(0,-.16,-.02),
 		"grip": Vector3(-.64,.18,.32), "blade": Vector3(.42,.3,-.86), "elbow": GS_READY.elbow, "off_bend": GS_READY.off_bend, "one_hand": true},
+	# From the cock back on, the edges lead the swing (vertical, front to back), so the blade cuts and does not slap.
 	{"t": 0.22, "yaw": -26.0, "pitch": -16.0, "hip_yaw": -13.0, "hip": Vector3(0,-.02,-.04), "back": Vector3(0,.02,-.05),
-		"grip": Vector3(-.33,.12,.18), "blade": Vector3(-.3,.2,-.93)},
+		"grip": Vector3(-.33,.12,.18), "blade": Vector3(-.3,.2,-.93), "edge": Vector3(0,.93,.2)},
 	{"t": 0.30, "yaw": -28.0, "pitch": -19.0, "hip_yaw": -14.0, "hip": Vector3(0,0,-.05), "back": Vector3(0,.04,-.07), "step": Vector3(0,.06,.04),
-		"grip": Vector3(-.33,.16,.14), "blade": Vector3(-.25,-.25,-.93)},
+		"grip": Vector3(-.33,.16,.14), "blade": Vector3(-.25,-.25,-.93), "edge": Vector3(0,.93,-.25)},
 	{"t": 0.35, "yaw": -8.0, "pitch": 2.0, "hip_yaw": -4.0, "hip": Vector3(-.02,-.1,.14), "step": Vector3(-.04,.02,.3), "back": Vector3(0,0,-.12),
-		"grip": Vector3(-.1,-.05,.75), "blade": Vector3(-.1,.6,.8)},
+		"grip": Vector3(-.1,-.05,.75), "blade": Vector3(-.1,.6,.8), "edge": Vector3(0,-.8,.6)},
 	{"t": 0.39, "yaw": 4.0, "pitch": 24.0, "hip_yaw": 3.0, "hip": Vector3(-.03,-.28,.24), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
-		"grip": Vector3(.01,-.43,.58), "blade": Vector3(-.05,-.6,.8)},
+		"grip": Vector3(.01,-.43,.58), "blade": Vector3(-.05,-.6,.8), "edge": Vector3(0,-.8,-.6)},
 	{"t": 0.56, "yaw": 5.0, "pitch": 22.0, "hip_yaw": 4.0, "hip": Vector3(-.03,-.26,.23), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
-		"grip": Vector3(.01,-.46,.56), "blade": Vector3(-.03,-.65,.76)},
+		"grip": Vector3(.01,-.46,.56), "blade": Vector3(-.03,-.65,.76), "edge": Vector3(0,-.76,-.65)},
 	# Let go with the left hand and lift the blade up in front and back onto the shoulder.
 	{"t": 0.72, "pitch": 6.0, "hip": Vector3(-.01,-.1,.1), "step": Vector3(-.03,0,.24), "back": Vector3(0,0,-.1),
 		"grip": Vector3(-.2,-.32,.45), "blade": Vector3(-.2,.8,.55), "one_hand": true},
@@ -921,7 +924,7 @@ func _pose(key: Dictionary) -> Dictionary:
 		_bow_arms(pose, key)
 		return pose
 	if key.has("grip"):
-		_grip_arms(pose, key.grip, key.blade, not key.get("one_hand", false), key.get("elbow", Vector3.ZERO))
+		_grip_arms(pose, key.grip, key.blade, not key.get("one_hand", false), key.get("elbow", Vector3.ZERO), key.get("edge", Vector3.ZERO))
 		_bend_off_arm(pose, key.get("off_bend", 0.0))
 		return pose
 	_aim_arm(pose, "R", key.arm[0], key.arm[1])
@@ -1162,19 +1165,24 @@ func _bend_off_arm(pose: Dictionary, degrees: float) -> void:
 	_set_global(pose, rig["forearm.L"], forearm)
 
 ## The right hand at the grip point (offset from the shoulders in arm lengths); with both, the left hand just below it.
-func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3, both := true, elbow := Vector3.ZERO) -> void:
+func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3, both := true, elbow := Vector3.ZERO, edge := Vector3.ZERO) -> void:
 	var point := _shoulders(pose) + offset * arm_reach
 	blade = blade.normalized()
-	_hold(pose, "R", point, blade, elbow)
+	# The right hand sets the edges; the shorter left arm keeps its own line so it still reaches the handle.
+	_hold(pose, "R", point, blade, elbow, edge)
 	if both:
 		_hold(pose, "L", point - blade * GS_HAND_SPACING, blade)
 
 ## Put the palm center of one hand on a handle point, fingers wrapping across the blade axis.
-func _hold(pose: Dictionary, side: String, point: Vector3, blade: Vector3, elbow := Vector3.ZERO) -> void:
+## The fingers (and the blade's edges) point along edge when given.
+func _hold(pose: Dictionary, side: String, point: Vector3, blade: Vector3, elbow := Vector3.ZERO, edge := Vector3.ZERO) -> void:
 	var shoulder := _global(pose, skeleton.find_bone(rig["upper_arm." + side])).origin
 	# The fingers continue the arm's line toward the handle, turned square to the blade.
 	var fingers := point - shoulder
 	fingers = (fingers - blade * blade.dot(fingers)).normalized()
+	edge = edge - blade * blade.dot(edge)
+	if not edge.is_zero_approx():
+		fingers = edge.normalized()
 	var hand_basis := Basis(fingers, blade, fingers.cross(blade)) * (_hand_frame[side] as Basis)
 	_reach(pose, side, point - fingers * rig["palm"], elbow)
 	var hand := _global(pose, skeleton.find_bone(rig["hand." + side]))

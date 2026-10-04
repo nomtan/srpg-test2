@@ -1,7 +1,8 @@
 shader_type spatial;
 render_mode specular_schlick_ggx;
 #include "res://scripts/world_jrpg/open_field_common.gdshaderinc"
-// Vertex COLOR carries material weights: r = dirt path, g = shore sand, b = cobbled plaza.
+// Vertex COLOR carries material weights: r = dirt path, g = shore sand, b = cobbled plaza,
+// a = crop field.
 // Grass, rock (by slope/altitude), snow and lakebed are resolved per pixel.
 uniform float lake_level = 10.0;
 uniform float wetness = 0.0;
@@ -27,6 +28,11 @@ void fragment() {
     float grout = smoothstep(0.42, 0.48, max(edge.x, edge.y));
     vec3 cobble = mix(vec3(0.76, 0.73, 0.66), vec3(0.62, 0.60, 0.56), of_hash(floor(cell)));
     color = mix(color, mix(cobble, vec3(0.45, 0.47, 0.40), grout), COLOR.b);
+    // Crop fields: furrowed soil under rows of green or ripening crops.
+    float rows = smoothstep(0.05, 0.45, sin(p.x * 3.2) * 0.5 + 0.5);
+    vec3 crop = mix(vec3(0.50, 0.66, 0.28), vec3(0.80, 0.74, 0.40), smoothstep(0.35, 0.65, of_noise(p * 0.03)));
+    vec3 farm = mix(mix(crop, vec3(0.56, 0.46, 0.33), 0.55), crop, rows) * (0.93 + fine * 0.12);
+    color = mix(color, farm, COLOR.a);
     float facets = of_noise(p * 0.12 + world_position.y * 0.05) * 0.65 + of_noise(p * 0.45 - world_position.y * 0.2) * 0.35;
     vec3 rock = mix(vec3(0.47, 0.50, 0.56), vec3(0.69, 0.71, 0.74), facets) * (0.9 + fine * 0.15);
     float steep = (1.0 - smoothstep(0.60, 0.80, n.y)) * (1.0 - COLOR.g);

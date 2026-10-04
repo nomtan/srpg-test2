@@ -1,6 +1,6 @@
 extends "res://scripts/world_jrpg/world.gd"
 ## JRPGWorldSample2: JRPGWorldSample's explorer, camera, HUD, weather and input on a
-## smooth open-field map (lake castle, windmill hill, ruins, snow peaks).
+## smooth open-field map (crag castle and its walled town, windmill hill, ruins, snow peaks).
 ## Only the map is replaced; one explorer (switchable through character_roster) roams it
 ## with no NPCs or encounters.
 const Props = preload("res://scripts/world_jrpg/open_field_props.gd")
@@ -9,14 +9,12 @@ const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader"
 const LAKE := 10.0
 const LAKE_CENTER := Vector2(205, 150)
 const LAKE_RADIUS := Vector2(100, 64)
-const ISLAND := Vector2(205, 125)
-const ISLAND_RADIUS := 24.0
-const ISLAND_TOP := 13.5
-const CAUSEWAY_X := 205.0
-const CAUSEWAY_START := 144.0
-const CAUSEWAY_END := 222.0
-const DECK := 11.8
-const LANDING := Vector2(205, 224)
+## The castle crowns a rocky crag on the lake's south shore; its walled town runs
+## down the slope below it, with farmland beyond the gate.
+const CRAG := Vector2(205, 121)
+const CRAG_TOP := 44.0
+const TOWN_RECT := Rect2(180, 146, 50, 54)
+const TOWN_PLAZA := Vector2(205, 178)
 const SPAWN_HILL := Vector2(150, 305)
 const VILLAGE := Vector2(325, 262)
 const RUINS := Vector2(75, 225)
@@ -24,24 +22,36 @@ const RUINS := Vector2(75, 225)
 const MESAS := [
 	[Vector2(325, 255), Vector2(42, 35), 32.0],
 	[Vector2(75, 225), Vector2(32, 24), 27.0],
+	[CRAG, Vector2(19, 17), CRAG_TOP],
 ]
 ## Ramps cut into the mesa cliffs: start, end (on top), half width, mesa index.
 const RAMPS := [
 	[Vector2(258, 298), Vector2(295, 275), 4.5, 0],
 	[Vector2(126, 262), Vector2(96, 237), 4.0, 1],
+	[Vector2(205, 171), Vector2(205, 136), 3.0, 2],
 ]
 ## Dirt roads: half width, control points (smoothed with Catmull-Rom).
 const PATHS := [
-	[2.3, [Vector2(150, 300), Vector2(158, 290), Vector2(172, 276), Vector2(188, 258), Vector2(200, 240), Vector2(205, 228), Vector2(205, 218)]],
+	[2.3, [Vector2(150, 300), Vector2(158, 290), Vector2(172, 276), Vector2(188, 258), Vector2(200, 240), Vector2(205, 228), Vector2(205, 214), Vector2(205, 204)]],
 	[1.9, [Vector2(200, 240), Vector2(222, 252), Vector2(240, 272), Vector2(250, 290), Vector2(258, 298), Vector2(276, 287), Vector2(295, 275), Vector2(312, 265), Vector2(317, 263.5)]],
 	[1.7, [Vector2(172, 276), Vector2(150, 268), Vector2(126, 262), Vector2(111, 250), Vector2(96, 237), Vector2(78, 226)]],
-	[2.0, [Vector2(205, 147), Vector2(205, 134)]],
 	[1.3, [Vector2(150, 300), Vector2(141, 313), Vector2(137, 330)]],
+	# Main street: town gate, plaza, then the ramp up to the castle gate.
+	[2.6, [Vector2(205, 206), Vector2(205, 128)]],
+	[1.5, [Vector2(183, 190), Vector2(227, 190)]],
+	[1.4, [Vector2(184, 160), Vector2(226, 160)]],
+	[1.3, [Vector2(205, 211), Vector2(190, 214), Vector2(172, 218)]],
+	[1.3, [Vector2(205, 211), Vector2(220, 214), Vector2(238, 218)]],
+]
+## Crop fields outside the town walls: center, half extents.
+const FIELDS := [
+	[Vector2(184, 226), Vector2(8, 6)], [Vector2(224, 226), Vector2(8, 6)],
+	[Vector2(174, 240), Vector2(6, 5)], [Vector2(232, 240), Vector2(7, 5)],
 ]
 ## Cobbled plazas: center, radius.
-const PLAZAS := [[VILLAGE, 8.5], [ISLAND, 10.0], [RUINS, 10.0]]
+const PLAZAS := [[VILLAGE, 8.5], [CRAG, 10.0], [TOWN_PLAZA, 8.0], [RUINS, 10.0]]
 ## Open ground kept free of trees and boulders: center, radius.
-const CLEARINGS := [[SPAWN_HILL, 9.0], [Vector2(150, 300), 7.0], [Vector2(166, 279), 15.0], [Vector2(186, 255), 13.0], [ISLAND, 27.0], [VILLAGE, 30.0], [RUINS, 18.0], [LANDING, 9.0]]
+const CLEARINGS := [[SPAWN_HILL, 9.0], [Vector2(150, 300), 7.0], [Vector2(166, 279), 15.0], [Vector2(186, 255), 13.0], [CRAG, 22.0], [Vector2(205, 172), 40.0], [Vector2(205, 228), 32.0], [VILLAGE, 30.0], [RUINS, 18.0]]
 
 var path_field := PackedFloat32Array()
 var path_points: Array = []
@@ -95,14 +105,29 @@ func _ready() -> void:
 
 func _expanded_height(x: float, z: float) -> float:
 	var p := Vector2(x, z)
-	var h := _ground(p)
+	var h := _base(p)
 	for i in MESAS.size():
 		var m := _mesa_mask(p, i)
 		if m > 0.0:
 			h = maxf(h, lerpf(h, MESAS[i][2] + noise.get_noise_2d(x * 3.0, z * 3.0) * 0.6, m))
 	for ramp: Array in RAMPS:
 		h = _apply_ramp(p, h, ramp)
-	return _apply_lake(p, h)
+	return h
+
+## Ground with the lake carved out and the town slope laid in, before mesas and ramps.
+func _base(p: Vector2) -> float:
+	var h := _apply_lake(p, _ground(p))
+	var town := _town_mask(p)
+	return lerpf(h, _town_height(p), town) if town > 0.0 else h
+
+## A broad spit of land from the crag to the south shore carries the town.
+func _town_mask(p: Vector2) -> float:
+	var dx := absf(p.x - CRAG.x) + noise.get_noise_2d(p.x * 1.5 + 300.0, p.y * 1.5) * 4.0
+	return (1.0 - smoothstep(30.0, 42.0, dx)) * smoothstep(118.0, 134.0, p.y) * (1.0 - smoothstep(228.0, 258.0, p.y))
+
+## The town climbs gently from the shore fields toward the foot of the crag.
+func _town_height(p: Vector2) -> float:
+	return 13.5 + 10.5 * (1.0 - smoothstep(146.0, 232.0, p.y)) + noise.get_noise_2d(p.x * 2.0, p.y * 2.0 - 60.0) * 0.4
 
 ## Rolling meadows, the spawn hill, northern ranges and a rim of hills at the map edge.
 func _ground(p: Vector2) -> float:
@@ -136,16 +161,13 @@ func _apply_ramp(p: Vector2, h: float, ramp: Array) -> float:
 	var t := clampf((p - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
 	var d := p.distance_to(a + ab * t)
 	if d > width + 5.0: return h
-	var ramp_height := lerpf(_ground(a), MESAS[ramp[3]][2], smoothstep(0.0, 1.0, t))
+	var ramp_height := lerpf(_base(a), MESAS[ramp[3]][2], smoothstep(0.0, 1.0, t))
 	return lerpf(h, ramp_height, 1.0 - smoothstep(width, width + 5.0, d))
 
 func _apply_lake(p: Vector2, h: float) -> float:
 	var e := ((p - LAKE_CENTER) / LAKE_RADIUS).length() + noise.get_noise_2d(p.x * 0.6 + 900.0, p.y * 0.6) * 0.16
 	if e < 1.5: h = lerpf(LAKE - 7.0, h, smoothstep(0.72, 1.32, e))
-	var ie := p.distance_to(ISLAND) / ISLAND_RADIUS + noise.get_noise_2d(p.x * 2.0, p.y * 2.0 + 40.0) * 0.08
-	if ie < 1.3: h = lerpf(h, ISLAND_TOP + noise.get_noise_2d(p.x * 3.0, p.y * 3.0) * 0.4, 1.0 - smoothstep(0.8, 1.4, ie))
-	# A small headland carries the causeway onto dry ground.
-	return maxf(h, DECK - maxf(0.0, p.distance_to(LANDING) - 6.0) * 0.35)
+	return h
 
 ## Smooth bilinear lookup of the cached height field.
 func _height(x: float, z: float) -> float:
@@ -159,14 +181,8 @@ func _height(x: float, z: float) -> float:
 	var top := lerpf(height_cache[i], height_cache[i + 1], fx)
 	return lerpf(top, lerpf(height_cache[i + row], height_cache[i + row + 1], fx), z - iz)
 
-func _deck(z: float) -> float:
-	return lerpf(ISLAND_TOP, DECK, smoothstep(CAUSEWAY_START, CAUSEWAY_START + 12.0, z))
-
 func _surface(x: float, z: float) -> float:
-	var h := _height(x, z)
-	if absf(x - CAUSEWAY_X) < 1.9 and z > CAUSEWAY_START and z < CAUSEWAY_END:
-		h = maxf(h, _deck(z))
-	return h
+	return _height(x, z)
 
 func _slope(x: float, z: float) -> float:
 	return Vector2(_height(x + 0.5, z) - _height(x - 0.5, z), _height(x, z + 0.5) - _height(x, z - 0.5)).length()
@@ -239,10 +255,16 @@ func _plaza_weight(p: Vector2) -> float:
 		weight = maxf(weight, 1.0 - smoothstep(r - 1.5, r + 1.0, d))
 	return weight
 
+func _field_weight(p: Vector2) -> float:
+	var weight := 0.0
+	for field: Array in FIELDS:
+		var q: Vector2 = (p - field[0]).abs() - field[1]
+		weight = maxf(weight, 1.0 - smoothstep(-0.8, 0.6, maxf(q.x, q.y)))
+	return weight
+
 func _clear(p: Vector2, margin := 0.0) -> bool:
 	for zone: Array in CLEARINGS:
 		if p.distance_to(zone[0]) < zone[1] + margin: return true
-	if absf(p.x - CAUSEWAY_X) < 4.0 and p.y > CAUSEWAY_START - 4.0 and p.y < CAUSEWAY_END + 4.0: return true
 	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(p.x / CHUNK), floori(p.y / CHUNK)), []):
 		if rect.grow(1.0 + margin).has_point(p): return true
 	return false
@@ -263,7 +285,7 @@ func _build_world() -> void:
 	landmarks.name = "Landmarks"
 	add_child(landmarks)
 	_build_castle(landmarks)
-	_build_causeway(landmarks)
+	_build_town(landmarks)
 	_build_village(landmarks)
 	_build_ruins(landmarks)
 	_build_roadside(landmarks)
@@ -293,7 +315,7 @@ func _build_terrain() -> void:
 					normals.append(Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1)).normalized())
 					var road := 1.0 - smoothstep(-0.4, 1.0, _path_distance(x, z) + noise.get_noise_2d(x * 5.0, z * 5.0) * 0.8)
 					var sand := (1.0 - smoothstep(LAKE + 0.4, LAKE + 1.6, h)) * (1.0 - road)
-					colors.append(Color(road, sand, _plaza_weight(Vector2(x, z))))
+					colors.append(Color(road, sand, _plaza_weight(Vector2(x, z)), _field_weight(Vector2(x, z)) * (1.0 - road)))
 			var width := x1 - cx + 1
 			var indices := PackedInt32Array()
 			for z in z1 - cz:
@@ -320,7 +342,7 @@ func _build_far_terrain() -> void:
 			var inside := x >= 0 and x <= SIZE and z >= 0 and z <= SIZE
 			var h := _cached(int(x), int(z)) - 0.4 if inside else maxf(_expanded_height(x, z), LAKE + 2.0)
 			vertices.append(Vector3(x, h, z))
-			colors.append(Color(0, 0, 0))
+			colors.append(Color(0, 0, 0, 0))
 	for j in count:
 		for i in count:
 			var l := vertices[j * count + maxi(i - 1, 0)].y
@@ -395,6 +417,13 @@ func _shape(kind: String, size: Vector3) -> Mesh:
 			"prism":
 				mesh = PrismMesh.new()
 				mesh.size = size
+			"dome":
+				mesh = SphereMesh.new()
+				mesh.radius = size.x
+				mesh.height = size.y * 2.0
+				mesh.is_hemisphere = true
+				mesh.radial_segments = 18
+				mesh.rings = 6
 			"cylinder", "cone":
 				mesh = CylinderMesh.new()
 				mesh.bottom_radius = size.x
@@ -467,13 +496,14 @@ func _lamp(parent: Node3D, at: Vector2, height := NAN) -> void:
 
 func _build_castle(parent: Node3D) -> void:
 	var root := Node3D.new()
-	root.name = "LakeCastle"
+	root.name = "LumiereCastle"
 	parent.add_child(root)
-	var c := Vector3(ISLAND.x, ISLAND_TOP, ISLAND.y)
+	var c := Vector3(CRAG.x, CRAG_TOP, CRAG.y)
 	var stone := Props.rock_material(Color("d6d0c2"), 0.25)
 	var slate := Props.flat(Color("4a5d78"), 0.7)
+	var roof := Props.flat(Color("6e4430"), 0.8)
 	var dark := Props.flat(Color("2c3640"))
-	var ring := 18.0
+	var ring := 11.0
 	var towers: Array[Vector3] = []
 	for k in 8:
 		var angle := (k + 0.5) * TAU / 8.0
@@ -484,70 +514,169 @@ func _build_castle(parent: Node3D) -> void:
 		var dir := b - a
 		var length := dir.length()
 		var wall_yaw := atan2(-dir.z, dir.x)
+		# k == 1 spans the south side, facing the town.
 		var gate := k == 1
-		var pieces: Array = [[0.0, 1.0]] if not gate else [[0.0, 0.34], [0.66, 1.0]]
+		var pieces: Array = [[0.0, 1.0]] if not gate else [[0.0, 0.3], [0.7, 1.0]]
 		for piece: Array in pieces:
 			var t0: float = piece[0]
 			var t1: float = piece[1]
 			var mid := a.lerp(b, (t0 + t1) * 0.5)
-			_part(root, "box", Vector3(length * (t1 - t0), 5.5, 1.4), mid + Vector3(0, 1.75, 0), stone, Vector3(0, wall_yaw, 0))
+			_part(root, "box", Vector3(length * (t1 - t0), 7.0, 1.3), mid + Vector3(0, 1.0, 0), stone, Vector3(0, wall_yaw, 0))
 			var merlons := int(length * (t1 - t0) / 1.6)
 			for m in merlons:
 				var p := a.lerp(b, lerpf(t0, t1, (m + 0.5) / merlons))
-				_part(root, "box", Vector3(0.8, 0.7, 1.5), p + Vector3(0, 4.85, 0), stone, Vector3(0, wall_yaw, 0))
+				_part(root, "box", Vector3(0.8, 0.7, 1.4), p + Vector3(0, 4.85, 0), stone, Vector3(0, wall_yaw, 0))
 			for s in int(length * (t1 - t0) / 1.4) + 1:
 				var p := a.lerp(b, lerpf(t0, t1, float(s) / maxf(1.0, length * (t1 - t0) / 1.4)))
 				_block(Vector2(p.x, p.z), Vector2(0.75, 0.75))
 		if gate:
-			_part(root, "box", Vector3(length * 0.36, 1.6, 1.8), a.lerp(b, 0.5) + Vector3(0, 4.3, 0), stone, Vector3(0, wall_yaw, 0))
+			_part(root, "box", Vector3(length * 0.44, 1.6, 1.7), a.lerp(b, 0.5) + Vector3(0, 4.3, 0), stone, Vector3(0, wall_yaw, 0))
 	for t in towers:
-		_part(root, "cylinder", Vector3(2.1, 9.5, 1.9), t + Vector3(0, 3.75, 0), stone)
-		_part(root, "cylinder", Vector3(2.4, 0.6, 2.4), t + Vector3(0, 8.6, 0), stone)
-		_part(root, "cone", Vector3(2.5, 4.2, 0), t + Vector3(0, 11.0, 0), slate)
-		_part(root, "box", Vector3(0.3, 1.0, 0.3), t + Vector3(0, 6.0, 0) + (t - c).normalized() * 1.9, dark)
-		_block(Vector2(t.x, t.z), Vector2(2.2, 2.2))
-	# Central keep with a tall spire, echoing a lakeside cathedral town.
-	_part(root, "cylinder", Vector3(6.0, 11.0, 5.6), c + Vector3(0, 4.5, 0), stone)
-	_part(root, "cylinder", Vector3(4.4, 7.0, 4.1), c + Vector3(0, 13.5, 0), stone)
-	_part(root, "cylinder", Vector3(3.0, 5.0, 2.8), c + Vector3(0, 19.5, 0), stone)
-	_part(root, "cone", Vector3(3.3, 15.0, 0), c + Vector3(0, 29.5, 0), slate)
+		_part(root, "cylinder", Vector3(1.7, 10.5, 1.55), t + Vector3(0, 3.25, 0), stone)
+		_part(root, "cylinder", Vector3(2.0, 0.6, 2.0), t + Vector3(0, 8.6, 0), stone)
+		_part(root, "cone", Vector3(2.1, 3.8, 0), t + Vector3(0, 10.8, 0), slate)
+		_part(root, "box", Vector3(0.3, 1.0, 0.3), t + Vector3(0, 6.0, 0) + (t - c).normalized() * 1.55, dark)
+		_block(Vector2(t.x, t.z), Vector2(1.8, 1.8))
+	# Palace wings with brown gables flank the keep; a long hall closes the rear.
+	for side in [-1, 1]:
+		_part(root, "box", Vector3(6.0, 7.0, 7.0), c + Vector3(side * 6.2, 2.5, 1.0), stone)
+		_part(root, "prism", Vector3(6.6, 2.6, 7.6), c + Vector3(side * 6.2, 7.3, 1.0), roof)
+		for z in [-1.5, 1.0, 3.5]:
+			_part(root, "box", Vector3(0.1, 1.2, 0.6), c + Vector3(side * 3.15, 4.2, z), dark)
+		_block(CRAG + Vector2(side * 6.2, 1.0), Vector2(3.1, 3.6))
+	_part(root, "box", Vector3(9.0, 8.0, 5.0), c + Vector3(0, 3.0, -6.5), stone)
+	_part(root, "prism", Vector3(5.6, 2.8, 9.6), c + Vector3(0, 8.4, -6.5), roof, Vector3(0, PI / 2, 0))
+	_block(CRAG + Vector2(0, -6.5), Vector2(4.6, 2.6))
+	# Tiered central keep under a tall spire.
+	_part(root, "cylinder", Vector3(4.6, 13.0, 4.3), c + Vector3(0, 5.5, 0), stone)
+	_part(root, "cylinder", Vector3(3.4, 7.0, 3.2), c + Vector3(0, 15.5, 0), stone)
+	_part(root, "cylinder", Vector3(2.3, 5.0, 2.1), c + Vector3(0, 21.5, 0), stone)
+	_part(root, "cone", Vector3(2.6, 13.0, 0), c + Vector3(0, 30.5, 0), slate)
 	for k in 4:
 		var angle := k * TAU / 4.0 + PI / 4.0
-		var t := c + Vector3(cos(angle), 0, sin(angle)) * 5.8
-		_part(root, "cylinder", Vector3(1.3, 14.0, 1.2), t + Vector3(0, 6.0, 0), stone)
-		_part(root, "cone", Vector3(1.6, 4.5, 0), t + Vector3(0, 15.2, 0), slate)
+		var t := c + Vector3(cos(angle), 0, sin(angle)) * 4.6
+		_part(root, "cylinder", Vector3(1.1, 15.0, 1.0), t + Vector3(0, 6.5, 0), stone)
+		_part(root, "cone", Vector3(1.4, 4.0, 0), t + Vector3(0, 16.0, 0), slate)
 	for k in 10:
 		var angle := k * TAU / 10.0
-		_part(root, "box", Vector3(0.35, 1.4, 0.35), c + Vector3(cos(angle) * 5.75, 7.5, sin(angle) * 5.75), dark, Vector3(0, -angle, 0))
-	_block(ISLAND, Vector2(7.0, 7.0))
-	# Town houses ring the keep, ridges tangent to the walls, doors facing the keep.
-	var roofs := [Color("b0583b"), Color("4f6c8a"), Color("a2643f")]
-	for k in 7:
-		var angle: float = PI / 2.0 + [0.8, -0.8, 1.6, -1.6, 2.4, -2.4, PI][k]
-		_house(root, ISLAND + Vector2(cos(angle), sin(angle)) * 12.0, -angle - PI / 2.0, 5.0, 4.0, 3.2, roofs[k % 3])
+		_part(root, "box", Vector3(0.35, 1.4, 0.35), c + Vector3(cos(angle) * 4.4, 9.0, sin(angle) * 4.4), dark, Vector3(0, -angle, 0))
+	_part(root, "box", Vector3(1.6, 2.6, 0.3), c + Vector3(0, 1.3, 4.4), Props.flat(Color("5a3f2c")))
+	_block(CRAG, Vector2(5.0, 5.0))
 
-func _build_causeway(parent: Node3D) -> void:
+## Walled castle town on the slope below the crag, in the spirit of a JRPG royal capital.
+func _build_town(parent: Node3D) -> void:
 	var root := Node3D.new()
-	root.name = "Causeway"
+	root.name = "CastleTown"
 	parent.add_child(root)
-	var stone := Props.rock_material(Color("c9c2b2"), 0.15)
-	var z := CAUSEWAY_START
-	while z < CAUSEWAY_END:
-		var z1 := minf(z + 2.0, CAUSEWAY_END)
-		var y0 := _deck(z)
-		var y1 := _deck(z1)
-		if maxf(y0, y1) > _height(CAUSEWAY_X, (z + z1) * 0.5) - 0.2:
-			var tilt := Vector3(-atan2(y1 - y0, z1 - z), 0, 0)
-			var length := Vector2(z1 - z, y1 - y0).length() + 0.04
-			_part(root, "box", Vector3(3.8, 0.6, length), Vector3(CAUSEWAY_X, (y0 + y1) * 0.5 - 0.3, (z + z1) * 0.5), stone, tilt)
-			for side in [-1, 1]:
-				_part(root, "box", Vector3(0.4, 0.6, length), Vector3(CAUSEWAY_X + side * 2.1, (y0 + y1) * 0.5 + 0.15, (z + z1) * 0.5), stone, tilt)
-		z = z1
-	for pier in range(int(CAUSEWAY_START) + 14, int(CAUSEWAY_END) - 4, 8):
-		_part(root, "box", Vector3(4.6, 6.0, 1.6), Vector3(CAUSEWAY_X, _deck(pier) - 3.6, pier), stone)
-	for lamp_z in range(int(CAUSEWAY_START) + 16, int(CAUSEWAY_END), 14):
-		for side in [-1, 1]:
-			_lamp(root, Vector2(CAUSEWAY_X + side * 2.1, lamp_z), _deck(lamp_z) + 0.45)
+	var stone := Props.rock_material(Color("cfc8b8"), 0.3)
+	var slate := Props.flat(Color("4a5d78"), 0.7)
+	var brown := Props.flat(Color("7f5236"), 0.8)
+	# Town walls: a U open to the crag, gate on the main street.
+	var w := TOWN_RECT.position.x
+	var e := TOWN_RECT.end.x
+	var n := TOWN_RECT.position.y
+	var s := TOWN_RECT.end.y
+	for run in [[Vector2(189, 133), Vector2(w, n)], [Vector2(w, n), Vector2(w, s)], [Vector2(w, s), Vector2(CRAG.x - 3.0, s)],
+			[Vector2(CRAG.x + 3.0, s), Vector2(e, s)], [Vector2(e, s), Vector2(e, n)], [Vector2(e, n), Vector2(221, 133)]]:
+		_wall_run(root, run[0], run[1], stone)
+	var mid := (n + s) * 0.5
+	for at in [Vector2(w, n), Vector2(w, mid), Vector2(w, s), Vector2(e, s), Vector2(e, mid), Vector2(e, n)]:
+		_round_tower(root, at, 2.2, 8.5, stone, slate)
+	for side in [-1, 1]:
+		_round_tower(root, Vector2(CRAG.x + side * 4.2, s), 1.8, 9.5, stone, brown)
+	var gate_top := _height(CRAG.x, s) + 4.2
+	_part(root, "box", Vector3(6.6, 2.0, 1.8), Vector3(CRAG.x, gate_top + 1.0, s), stone)
+	# Houses line the main street and a second row behind it, all facing the street.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world_seed + 77
+	var roofs := [Color("6e4430"), Color("7d4b33"), Color("5e3a28"), Color("4c5a6c"), Color("845034")]
+	for side in [-1, 1]:
+		for z in [195.0, 165.0, 153.5, 146.0]:
+			var offset := 9.5 if z > 170.0 else 11.0
+			_house(root, Vector2(CRAG.x + side * offset, z), side * -PI / 2.0, rng.randf_range(4.6, 5.6), rng.randf_range(4.0, 4.6), rng.randf_range(3.0, 3.6), roofs[rng.randi() % roofs.size()])
+		for z in [195.0, 166.0, 153.5]:
+			_house(root, Vector2(CRAG.x + side * 18.5, z), side * -PI / 2.0, rng.randf_range(4.8, 6.0), rng.randf_range(4.0, 4.6), rng.randf_range(3.0, 3.8), roofs[rng.randi() % roofs.size()])
+	_cathedral(root, Vector2(220, TOWN_PLAZA.y), stone, slate)
+	_church(root, Vector2(190, TOWN_PLAZA.y), stone, slate)
+	_fountain(root, TOWN_PLAZA, stone)
+	for at in [Vector2(201.4, 197), Vector2(208.6, 197), Vector2(201.4, 186.5), Vector2(208.6, 169.5)]:
+		_lamp(root, at)
+	# Farmsteads and a watchtower among the fields outside the gate.
+	for farm in [[Vector2(188, 208), 0.0], [Vector2(222, 207), 0.0], [Vector2(170, 230), PI / 2.0], [Vector2(242, 228), -PI / 2.0], [Vector2(184, 250), 0.0], [Vector2(216, 240), PI], [Vector2(196, 222), 0.0], [Vector2(214, 221), PI]]:
+		_house(root, farm[0], farm[1], rng.randf_range(5.0, 6.5), rng.randf_range(4.0, 4.8), rng.randf_range(2.8, 3.2), roofs[rng.randi() % 3])
+	_round_tower(root, Vector2(240, 212), 2.0, 11.0, Props.rock_material(Color("b9ad98"), 0.4), brown)
+
+## A crenellated wall stepping along the terrain from a to b.
+func _wall_run(parent: Node3D, a: Vector2, b: Vector2, stone: Material) -> void:
+	var length := a.distance_to(b)
+	var count := maxi(1, ceili(length / 3.0))
+	var piece := length / count
+	var wall_yaw := atan2(-(b.y - a.y), b.x - a.x)
+	for i in count:
+		var p0 := a.lerp(b, float(i) / count)
+		var p1 := a.lerp(b, float(i + 1) / count)
+		var center := (p0 + p1) * 0.5
+		var h0 := _height(p0.x, p0.y)
+		var h1 := _height(p1.x, p1.y)
+		var low := minf(h0, h1) - 2.0
+		var top := maxf(h0, h1) + 4.0
+		_part(parent, "box", Vector3(piece + 0.05, top - low, 1.2), Vector3(center.x, (top + low) * 0.5, center.y), stone, Vector3(0, wall_yaw, 0))
+		for m in 2:
+			var q := p0.lerp(p1, (m + 0.5) / 2.0)
+			_part(parent, "box", Vector3(0.7, 0.6, 1.3), Vector3(q.x, top + 0.3, q.y), stone, Vector3(0, wall_yaw, 0))
+		for k in 3:
+			_block(p0.lerp(p1, (k + 0.5) / 3.0), Vector2(0.8, 0.8))
+
+func _round_tower(parent: Node3D, at: Vector2, radius: float, height: float, stone: Material, roof: Material) -> void:
+	var root := _anchor(parent, at)
+	_part(root, "cylinder", Vector3(radius, height + 2.0, radius * 0.92), Vector3(0, height * 0.5 - 1.0, 0), stone)
+	_part(root, "cylinder", Vector3(radius + 0.3, 0.5, radius + 0.3), Vector3(0, height, 0), stone)
+	_part(root, "cone", Vector3(radius + 0.4, radius * 1.9, 0), Vector3(0, height + 0.25 + radius * 0.95, 0), roof)
+	_part(root, "box", Vector3(0.3, 0.9, 0.3), Vector3(0, height * 0.7, radius * 0.95), Props.flat(Color("2c3640")))
+	_block(at, Vector2(radius, radius))
+
+## Domed cathedral facing the plaza (front faces local +Z).
+func _cathedral(parent: Node3D, at: Vector2, stone: Material, dome: Material) -> void:
+	var root := _anchor(parent, at, -PI / 2.0)
+	var dark := Props.flat(Color("2c3640"))
+	_part(root, "box", Vector3(8.0, 8.0, 9.0), Vector3(0, 3.0, 0), stone)
+	_part(root, "cylinder", Vector3(3.0, 2.6, 3.0), Vector3(0, 8.3, 0), stone)
+	_part(root, "dome", Vector3(3.3, 3.3, 0), Vector3(0, 9.6, 0), dome)
+	_part(root, "cylinder", Vector3(0.5, 1.2, 0.5), Vector3(0, 13.4, 0), stone)
+	_part(root, "cone", Vector3(0.65, 1.4, 0), Vector3(0, 14.7, 0), dome)
+	_part(root, "box", Vector3(6.0, 5.6, 1.6), Vector3(0, 1.8, 5.2), stone)
+	_part(root, "prism", Vector3(6.4, 1.6, 1.8), Vector3(0, 5.4, 5.2), stone)
+	_part(root, "box", Vector3(1.8, 3.0, 0.1), Vector3(0, 1.5, 6.05), Props.flat(Color("5a3f2c")))
+	for x in [-2.2, 2.2]:
+		_part(root, "box", Vector3(0.9, 1.8, 0.1), Vector3(x, 3.6, 6.05), dark)
+	for sx in [-1, 1]:
+		for sz in [-1, 1]:
+			_part(root, "cylinder", Vector3(0.75, 9.5, 0.7), Vector3(sx * 4.0, 3.75, sz * 4.5), stone)
+			_part(root, "cone", Vector3(0.95, 2.4, 0), Vector3(sx * 4.0, 9.7, sz * 4.5), dome)
+	_block(at, Vector2(5.4, 4.6))
+
+## Small church with a west steeple (front faces local +Z).
+func _church(parent: Node3D, at: Vector2, stone: Material, slate: Material) -> void:
+	var root := _anchor(parent, at, PI / 2.0)
+	var plaster := Props.flat(Color("efe4cc"))
+	_part(root, "box", Vector3(5.6, 2.0, 9.4), Vector3(0, -0.3, 0), stone)
+	_part(root, "box", Vector3(5.2, 5.0, 9.0), Vector3(0, 3.0, 0), plaster)
+	_part(root, "prism", Vector3(6.2, 2.8, 9.6), Vector3(0, 6.9, 0), Props.flat(Color("74492f"), 0.8))
+	_part(root, "box", Vector3(2.8, 10.0, 2.8), Vector3(0, 5.0, -4.6), stone)
+	_part(root, "box", Vector3(0.5, 1.4, 0.1), Vector3(0, 8.0, -3.15), Props.flat(Color("2c3640")))
+	_part(root, "cone", Vector3(2.1, 6.5, 0), Vector3(0, 13.25, -4.6), slate)
+	_part(root, "box", Vector3(1.3, 2.2, 0.1), Vector3(0, 1.6, 4.55), Props.flat(Color("5a3f2c")))
+	_block(at, Vector2(6.0, 3.0))
+
+func _fountain(parent: Node3D, at: Vector2, stone: Material) -> void:
+	var root := _anchor(parent, at)
+	var water := Props.flat(Color("4f8fa6"), 0.15)
+	_part(root, "cylinder", Vector3(2.2, 0.8, 2.2), Vector3(0, 0.2, 0), stone)
+	_part(root, "cylinder", Vector3(1.95, 0.1, 1.95), Vector3(0, 0.58, 0), water)
+	_part(root, "cylinder", Vector3(0.35, 1.8, 0.35), Vector3(0, 1.3, 0), stone)
+	_part(root, "cylinder", Vector3(0.5, 0.3, 0.9), Vector3(0, 2.2, 0), stone)
+	_part(root, "cylinder", Vector3(0.75, 0.06, 0.75), Vector3(0, 2.36, 0), water)
+	_block(at, Vector2(2.2, 2.2))
 
 func _build_village(parent: Node3D) -> void:
 	var root := Node3D.new()
@@ -744,7 +873,7 @@ func _build_cliffs() -> void:
 				var m := _mesa_mask(p, index)
 				x += 2.3
 				if m < 0.15 or m > 0.85 or _near_ramp(p, 2.0): continue
-				var low := _ground(p)
+				var low := _base(p)
 				if top - low < 2.0: continue
 				var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(rng.randf_range(1.8, 2.8), (top - low) * rng.randf_range(0.75, 0.95), rng.randf_range(1.8, 2.8)))
 				transforms[rng.randi_range(0, 3)].append(Transform3D(basis, Vector3(p.x, low - 0.6, p.y)))
@@ -786,11 +915,13 @@ func _build_trees_and_rocks() -> void:
 			var kind := ""
 			var variant := 0
 			if roll < tree_chance:
-				var conifer := h > 26.0 or forest > 0.12 or pick < 0.25
-				kind = "conifer" if conifer else "broadleaf"
+				# Broadleaf trees are left out for now; drawing the same random number keeps
+				# every other tree and rock where it was.
+				if not (h > 26.0 or forest > 0.12 or pick < 0.25):
+					rng.randf()
+					continue
+				kind = "conifer"
 				variant = int(pick * 30.0) % 3
-				if kind == "broadleaf" and variant == 2 and _mesa_mask(p, 0) < 0.5: variant = 0
-				if not conifer: size *= 1.15
 				obstacles.append(Rect2(p - Vector2(0.45, 0.45) * size, Vector2(0.9, 0.9) * size))
 			elif roll < tree_chance + 0.025:
 				kind = "rock"
@@ -806,16 +937,6 @@ func _build_trees_and_rocks() -> void:
 			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * (rng.randf_range(0.6, 0.9) if kind == "rock" else rng.randf_range(0.9, 1.15)), size))
 			chunks[key][mesh_key].append(Transform3D(basis, Vector3(p.x, h - (0.35 * size if kind == "rock" else 0.1), p.y)))
 		z += spacing
-	# Landmark trees: a lone oak on the spawn hill and blossoms in the village.
-	var featured := {"broadleaf_0": [[Vector2(140, 292), 1.7]], "broadleaf_2": [[Vector2(333, 251), 1.1], [Vector2(305, 266), 1.0], [Vector2(345, 266), 1.05]]}
-	for mesh_key: String in featured:
-		for entry: Array in featured[mesh_key]:
-			var p: Vector2 = entry[0]
-			var key := Vector2i(floori(p.x / 64.0), floori(p.y / 64.0))
-			if not chunks.has(key): chunks[key] = {}
-			if not chunks[key].has(mesh_key): chunks[key][mesh_key] = []
-			chunks[key][mesh_key].append(Transform3D(Basis.from_scale(Vector3.ONE * entry[1]), Vector3(p.x, _height(p.x, p.y) - 0.1, p.y)))
-			obstacles.append(Rect2(p - Vector2(0.6, 0.6), Vector2(1.2, 1.2)))
 	var root := Node3D.new()
 	root.name = "Forest"
 	add_child(root)
@@ -851,7 +972,7 @@ func _build_grass() -> void:
 						if h < LAKE + 0.5 or h > 50.0: continue
 						var road := _path_distance(px, pz)
 						if road < -0.2 or (road < 0.8 and roll > 0.3): continue
-						if _slope(px, pz) > 0.65 or _plaza_weight(Vector2(px, pz)) > 0.3: continue
+						if _slope(px, pz) > 0.65 or _plaza_weight(Vector2(px, pz)) > 0.3 or _field_weight(Vector2(px, pz)) > 0.3: continue
 						var group := 0 if roll < 0.45 else 1
 						if roll > 0.69: group = 2 + int(angle * 10.0) % 2
 						groups[group].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3(size, size, size)), Vector3(px, h - 0.03, pz)))
@@ -862,7 +983,7 @@ func _build_grass() -> void:
 				_multimesh(detail, Props.mesh("grass" if g < 2 else "flower", g % 2), groups[g], Props.foliage_material(), "Grass_%d" % g, false, 70.0)
 
 func _build_labels(parent: Node3D) -> void:
-	for entry in [["湖上の城 ルミエール", ISLAND, 38.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0]]:
+	for entry in [["ルミエール城", CRAG, 44.0], ["城下町", TOWN_PLAZA, 16.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0]]:
 		var label := Label3D.new()
 		label.text = entry[0]
 		var p: Vector2 = entry[1]
@@ -913,10 +1034,10 @@ func _preset(index: int) -> void:
 			pitch = 0.32
 			distance = 46
 		3:
-			focus = Vector3(ISLAND.x, 18, ISLAND.y)
-			yaw = -0.15
-			pitch = 0.22
-			distance = 95
+			focus = Vector3(CRAG.x, 26, 168)
+			yaw = 0.0
+			pitch = 0.42
+			distance = 120
 		4:
 			focus = Vector3(RUINS.x, 30, RUINS.y)
 			yaw = 0.7
@@ -926,8 +1047,8 @@ func _preset(index: int) -> void:
 
 func _region() -> String:
 	var p := Vector2(player.position.x, player.position.z)
-	if p.distance_to(ISLAND) < 28.0: return "湖上の城 ルミエール"
-	if absf(p.x - CAUSEWAY_X) < 3.0 and p.y > CAUSEWAY_START and p.y < CAUSEWAY_END: return "湖上の石橋"
+	if _mesa_mask(p, 2) > 0.5: return "ルミエール城"
+	if TOWN_RECT.grow(1.0).has_point(p): return "城下町ルミエール"
 	if _mesa_mask(p, 0) > 0.5: return "風車の丘"
 	if _mesa_mask(p, 1) > 0.5: return "白霧の遺跡"
 	if p.y < 95.0: return "北嶺の麓"
@@ -943,7 +1064,7 @@ func _process(delta: float) -> void:
 		crystal.position.y = 4.2 + sin(Time.get_ticks_msec() * 0.0015) * 0.25
 	_sync_conditions()
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
-		prompt_text.text = "目標 : 湖上の城を目指して、開けた野を自由に旅しよう"
+		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"
 
 ## Mirrors FieldWeather's time/weather onto the open-field materials.
 func _sync_conditions() -> void:

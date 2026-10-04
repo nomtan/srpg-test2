@@ -23,11 +23,15 @@ const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
 const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
 const WALK_SPEED := 4.5
 const RUN_SPEED := 16.0
+# Shift eases the gait between walk and sprint instead of jumping 3.5x in one frame.
+const RUN_ACCELERATION := 38.0
+const RUN_DECELERATION := 30.0
 @export var use_3d_player := true
 @export var player_model: PackedScene
 @export var player_spawn_position := Vector3(32, 14.05, 60)
 @export var character_roster: Array[PackedScene] = []
 var player_roster_index := -1
+var move_speed := 0.0
 var character_text: Label
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
@@ -650,7 +654,10 @@ func _process(delta: float) -> void:
 			distance = 27
 			_focus_player()
 		player.running = Input.is_physical_key_pressed(KEY_SHIFT) or GamepadInput.held(JOY_BUTTON_RIGHT_SHOULDER)
-		var velocity := (Vector3(cos(yaw), 0, -sin(yaw)) * motion.x + Vector3(sin(yaw), 0, cos(yaw)) * motion.y) * (RUN_SPEED if player.running else WALK_SPEED)
+		# Starting and stopping stay immediate; only the walk/sprint change ramps.
+		var target_speed := RUN_SPEED if player.running else WALK_SPEED
+		move_speed = move_toward(maxf(move_speed, WALK_SPEED), target_speed, (RUN_ACCELERATION if move_speed < target_speed else RUN_DECELERATION) * delta)
+		var velocity := (Vector3(cos(yaw), 0, -sin(yaw)) * motion.x + Vector3(sin(yaw), 0, cos(yaw)) * motion.y) * move_speed
 		player.world_facing = velocity.normalized()
 		var start_position: Vector3 = player.position
 		# Substeps keep water, cliffs and building bounds solid at low frame rates.
@@ -664,6 +671,8 @@ func _process(delta: float) -> void:
 		player.walking = not moved.is_zero_approx()
 		if delta > 0.0: player.locomotion_speed = moved.length() / delta
 		player.facing = (1 if motion.x > 0 else 2) if absf(motion.x) > absf(motion.y) else (0 if motion.y > 0 else 3)
+	else:
+		move_speed = 0.0
 	if not overview:
 		_update_follow_focus(delta)
 		_update_camera()

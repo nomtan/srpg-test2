@@ -98,7 +98,12 @@ func _run() -> void:
 	Input.parse_input_event(sprint_key)
 	Input.flush_buffered_events()
 	world._process(0.01)
-	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.16) and world.player.running, "Running is 16 units per second, twice previous speed")
+	var first_step: float = world.player.position.x - spawn_position.x
+	check(first_step > 0.045 and first_step < 0.16 and world.player.running, "Sprint ramps up from walking speed")
+	for i in 40:
+		world.player.position = spawn_position
+		world._process(0.01)
+	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.16) and world.player.running, "Running reaches 16 units per second")
 	world.player._process(0)
 	check(is_equal_approx(world.player.animation_player.speed_scale, 1.25), "World sprint speed drives moderate animation cadence")
 	var chunk_key := Vector2i(floori(world.player.position.x / world.CHUNK), floori(world.player.position.z / world.CHUNK))
