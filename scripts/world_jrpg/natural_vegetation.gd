@@ -105,15 +105,18 @@ static func _triangle(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, color
 	_vertex(st, b, n, color, canopy)
 	_vertex(st, c, n, color, canopy)
 
-static func _branch(st: SurfaceTool, a: Vector3, b: Vector3, r0: float, r1: float, rng: RandomNumberGenerator) -> void:
+## Seven bark colors are always drawn from `rng`, whatever `sides` is, so coarser
+## LODs keep the same random sequence and their leaves stay where LOD0 put them.
+static func _branch(st: SurfaceTool, a: Vector3, b: Vector3, r0: float, r1: float, rng: RandomNumberGenerator, sides := 7) -> void:
 	var axis := (b - a).normalized()
 	var side := axis.cross(Vector3.FORWARD).normalized()
 	if side.length_squared() < 0.1: side = Vector3.RIGHT
 	var other := axis.cross(side).normalized()
 	for i in 7:
-		var u := side * cos(i * TAU / 7) + other * sin(i * TAU / 7)
-		var v := side * cos((i + 1) * TAU / 7) + other * sin((i + 1) * TAU / 7)
 		var color := Color("746047").lerp(Color("403b29"), rng.randf_range(0.0, 0.55))
+		if i >= sides: continue
+		var u := side * cos(i * TAU / sides) + other * sin(i * TAU / sides)
+		var v := side * cos((i + 1) * TAU / sides) + other * sin((i + 1) * TAU / sides)
 		color.a = 0.0
 		_triangle(st, a + u * r0, b + u * r1, b + v * r1, color, 0.0)
 		_triangle(st, a + u * r0, b + v * r1, a + v * r0, color, 0.0)
@@ -122,28 +125,28 @@ static func _leaf(st: SurfaceTool, p: Vector3, direction: Vector3, width: float,
 	var side := direction.cross(Vector3.UP).normalized()
 	if side.length_squared() < 0.1: side = Vector3.RIGHT
 	var middle := p + direction * 0.48
-	var ridge := middle + Vector3.UP * width * 0.24
 	var left := middle - side * width
 	var right := middle + side * width
 	# Tilted soft normals keep small leaves readable from the grazing game camera.
+	# The shared normal makes a raised midrib invisible, so a flat diamond suffices.
 	var n := (Vector3.UP + direction.normalized() * 0.45).normalized()
-	_triangle(st, p, left, ridge, color, canopy, n)
-	_triangle(st, left, p + direction, ridge, color, canopy, n)
-	_triangle(st, p + direction, right, ridge, color, canopy, n)
-	_triangle(st, right, p, ridge, color, canopy, n)
+	_triangle(st, p, left, p + direction, color, canopy, n)
+	_triangle(st, p + direction, right, p, color, canopy, n)
 
 static func _tree(st: SurfaceTool, rng: RandomNumberGenerator, pine: bool, variant: int, lod: int = 0) -> void:
 	var height := 5.8 if pine else 4.9
+	# Beyond the LOD1 range a branch is under a pixel wide, so a pentagon suffices.
+	var sides := 7 if lod < 2 else 5
 	var bend := Vector3(rng.randf_range(-0.32, 0.32), 0, rng.randf_range(-0.25, 0.25))
 	var previous := Vector3.ZERO
 	for i in 7:
 		var t := float(i + 1) / 7.0
 		var point := Vector3(0, height * t, 0) + bend * t * t
-		_branch(st, previous, point, lerpf(0.24, 0.025, float(i) / 7.0), lerpf(0.24, 0.025, t), rng)
+		_branch(st, previous, point, lerpf(0.24, 0.025, float(i) / 7.0), lerpf(0.24, 0.025, t), rng, sides)
 		previous = point
 	for i in 5:
 		var angle := i * TAU / 5.0 + rng.randf() * 0.4
-		_branch(st, Vector3(0, 0.34, 0), Vector3(cos(angle) * 0.55, 0.015, sin(angle) * 0.55), 0.13, 0.025, rng)
+		_branch(st, Vector3(0, 0.34, 0), Vector3(cos(angle) * 0.55, 0.015, sin(angle) * 0.55), 0.13, 0.025, rng, sides)
 	if pine:
 		for tier in 9:
 			var y := 1.65 + tier * 0.48
@@ -153,7 +156,8 @@ static func _tree(st: SurfaceTool, rng: RandomNumberGenerator, pine: bool, varia
 				var start := Vector3(0, y + rng.randf_range(-0.14, 0.14), 0) + bend * (y / height)
 				var radial := Vector3(cos(angle), 0, sin(angle))
 				var end := start + radial * radius * rng.randf_range(0.85, 1.15) + Vector3(0, rng.randf_range(-0.12, 0.28), 0)
-				_branch(st, start, end, 0.055 * (1.0 - tier * 0.09), 0.009, rng)
+				# LOD2 crowns enclose the thin arms entirely.
+				_branch(st, start, end, 0.055 * (1.0 - tier * 0.09), 0.009, rng, 0 if lod == 2 else 7)
 				if lod == 2:
 					_crown(st, start.lerp(end, 0.6), Vector3(radius * 0.6, 0.3, radius * 0.6), Color("416a4f"))
 					continue
@@ -180,14 +184,15 @@ static func _tree(st: SurfaceTool, rng: RandomNumberGenerator, pine: bool, varia
 			var start := Vector3(0, 1.65 + tier * 2.3, 0) + bend * tier
 			var end := Vector3(cos(angle) * (1.6 - tier * 0.65), 3.0 + tier * 1.85, sin(angle) * (1.5 - tier * 0.6)) + bend
 			var fork := start.lerp(end, 0.55) - Vector3(0, 0.18, 0)
-			_branch(st, start, fork, 0.105 * (1.0 - tier * 0.5), 0.05, rng)
-			_branch(st, fork, end, 0.05, 0.015, rng)
+			_branch(st, start, fork, 0.105 * (1.0 - tier * 0.5), 0.05, rng, sides)
+			_branch(st, fork, end, 0.05, 0.015, rng, sides)
 			if lod == 2:
 				_crown(st, end, Vector3(0.95, 0.75, 0.95), dark.lerp(light, 0.5))
 				continue
 			for cluster in 6:
 				var center := end + Vector3(rng.randf_range(-0.6, 0.6), rng.randf_range(-0.25, 0.6), rng.randf_range(-0.6, 0.6))
-				_branch(st, end, center, 0.014, 0.004, rng)
+				# Centimetre twigs are sub-pixel beyond the LOD0 range.
+				_branch(st, end, center, 0.014, 0.004, rng, 7 if lod == 0 else 0)
 				for leaf in 19:
 					var offset := Vector3(rng.randf_range(-0.58, 0.58), rng.randf_range(-0.38, 0.38), rng.randf_range(-0.58, 0.58))
 					var direction := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.45, 0.7), rng.randf_range(-1, 1)).normalized()

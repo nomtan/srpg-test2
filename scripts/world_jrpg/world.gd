@@ -181,19 +181,25 @@ func _build_world() -> void:
 					elif h < 3.5 or (x < 128 and (river_distance < 6 or (z > 105 and z < 128))): color = "sand"
 					elif _path(x, z): color = "path"
 					else: color = ["grass", "grass_light", "grass_dark"][rng.randi_range(0, 2)]
-					# Only exposed side depth is emitted, avoiding buried columns.
+					# Only visible faces are emitted: the top and each side down to its
+					# neighbour. Strata bands still start at the lowest neighbour.
 					var low := h
-					for d in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
-						low = minf(low, _height(x + d.x, z + d.y))
 					if x == 0 or z == 0 or x == SIZE - 1 or z == SIZE - 1: low = -1.0
-					if low < h - 0.25:
+					var neighbors: Array[float] = []
+					for d in SIDES:
+						neighbors.append(-1.0 if x + d.x < 0 or z + d.y < 0 or x + d.x >= SIZE or z + d.y >= SIZE else _height(x + d.x, z + d.y))
+						low = minf(low, neighbors[-1])
+					b.quad(Vector3(x, h, z), Vector3.RIGHT, Vector3.BACK, Vector3.UP, color)
+					for i in SIDES.size():
+						if neighbors[i] >= h: continue
+						_side_face(b, x, z, SIDES[i], maxf(neighbors[i], h - 0.25), h, color)
 						var base := low
 						while base < h - 0.25:
 							var top := minf(base + 1.5, h - 0.25)
 							var stratum := "cliff_light" if int(base / 1.5) % 3 == 0 else "cliff"
-							b.box(Vector3(x + 0.5, (base + top) / 2, z + 0.5), Vector3(1, top - base, 1), stratum if h > 9 else "earth")
+							if top > neighbors[i]:
+								_side_face(b, x, z, SIDES[i], maxf(base, neighbors[i]), top, stratum if h > 9 else "earth")
 							base = top
-					b.box(Vector3(x + 0.5, h - 0.125, z + 0.5), Vector3(1, 0.25, 1), color)
 					if h < WATER:
 						b.box(Vector3(x + 0.5, WATER, z + 0.5), Vector3(1, 0.15, 1), "sea" if z > 106 else "water")
 						if rng.randf() < 0.045:
@@ -234,6 +240,12 @@ func _build_world() -> void:
 	_index_obstacles()
 	_build_grass()
 	print("[JRPGWorld] Built ", SIZE, " x ", SIZE, " terrain; seed=", world_seed)
+
+const SIDES: Array[Vector2i] = [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]
+
+func _side_face(b: Batch, x: int, z: int, d: Vector2i, bottom: float, top: float, color: String) -> void:
+	var corner := Vector3(x + maxi(d.x, 0), bottom, z + maxi(d.y, 0))
+	b.quad(corner, Vector3(absi(d.y), 0, absi(d.x)), Vector3(0, top - bottom, 0), Vector3(d.x, 0, d.y), color)
 
 func _index_obstacles() -> void:
 	obstacle_chunks.clear()

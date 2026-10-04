@@ -1,0 +1,16 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/world_jrpg/open_field_world.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter001.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter002.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter003.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter004.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter005.tscn" id="character005"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter006.tscn" id="character006"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/character007.tscn" id="character007"]
+
+[node name="JRPGWorldSample2" type="Node3D"]
+script = ExtResource("1")
+player_spawn_position = Vector3(150, 0, 300)
+player_model = ExtResource("17")
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007")])
