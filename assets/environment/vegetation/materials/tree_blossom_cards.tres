@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://scripts/world_jrpg/open_field_leaf_card.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://assets/environment/vegetation/textures/blossom_cards.png" id="2"]
+
+[resource]
+resource_name = "TreeBlossomCardMaterial"
+shader = ExtResource("1")
+shader_parameter/leaf_texture = ExtResource("2")
+shader_parameter/shadow_color = Color(0.6, 0.38, 0.52, 1)
+shader_parameter/base_color = Color(0.89, 0.6, 0.71, 1)
+shader_parameter/highlight_color = Color(1, 0.86, 0.9, 1)
+shader_parameter/biome_harmony = 0.1
+shader_parameter/shade_tint = Color(0.85, 0.82, 1.05, 1)

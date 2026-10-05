@@ -16,13 +16,16 @@ Conventions shared with Godot (scripts/world_jrpg/open_field_vegetation.gd)
     * Origin at the trunk / cluster bottom center.
     * Trees hold one object per LOD: <asset>_LOD0 .. _LOD2, plus a very low _LOD3;
       bushes hold _LOD0 .. _LOD2; grass and flower clusters are a single object.
-    * Material slots: "Trunk" + "Leaves" for trees and bushes, "Grass" for grass,
+    * Material slots: "Trunk" + "Leaves" for trees and bushes, "Trunk" + "<Kind>Cards" +
+      "<Kind>Core" for the leaf-card trees (Leaf / Needle / Blossom; cards UV into
+      textures/<kind>_cards.png), "Grass" for grass,
       "Grass" + "Flower" for flower clusters.
     * Vertex color "Color" (float, linear) carries data, not albedo:
         R = tone   0 shadow / 0.5 base / 1 highlight
         G = wind weight   0 at the root, 1 at the freest tip
         B = phase   per foliage mass / per blade, desynchronizes the wind
-        A = petal palette on flower heads (1 warm, 0 cool); 1 elsewhere
+        A = petal palette on flower heads (1 warm, 0 cool); on leaf-card crowns 1 card,
+            0 solid core; 1 elsewhere
 """
 import math
 import os
@@ -50,11 +53,16 @@ class MeshBuilder:
         self.colors = []
         self.faces = []
         self.face_materials = []
+        self.uvs = None
 
-    def vertex(self, co, normal, tone, wind, phase, alpha=1.0):
+    def vertex(self, co, normal, tone, wind, phase, alpha=1.0, uv=None):
         self.verts.append(Vector(co))
         self.normals.append(Vector(normal).normalized())
         self.colors.append((clamp01(tone), clamp01(wind), clamp01(phase), alpha))
+        if uv is not None and self.uvs is None:
+            self.uvs = [(0.0, 0.0)] * (len(self.verts) - 1)
+        if self.uvs is not None:
+            self.uvs.append(uv or (0.0, 0.0))
         return len(self.verts) - 1
 
     def face(self, indices, material):
@@ -76,6 +84,10 @@ class MeshBuilder:
         for i, color in enumerate(self.colors):
             attribute.data[i].color = color
         mesh.color_attributes.active_color = attribute
+        if self.uvs is not None:
+            layer = mesh.uv_layers.new(name="UVMap")
+            for loop in mesh.loops:
+                layer.data[loop.index].uv = self.uvs[loop.vertex_index]
         mesh.validate(clean_customdata=False)
         mesh.normals_split_custom_set_from_vertices([tuple(n) for n in self.normals])
         obj = bpy.data.objects.new(name, mesh)
@@ -238,6 +250,9 @@ class TreeDesign:
         self.trunk_radius = 0.3
         self.wind_scale = 1.0    # bushes sway less than tree crowns
         self.trunk_flare = (0.55, 0.3)   # root buttresses: LOD0-1, LOD2+
+        self.card_scale = 1.0    # leaf-card trees: card size relative to CARD_SCALE
+        self.card_density = 1.0  # leaf-card trees: card count relative to CARD_DENSITY
+        self.core_scale = 1.0    # leaf-card trees: core size relative to the LOD's core scale
 
 
 def design_broadleaf_a():
@@ -679,6 +694,384 @@ def build_tree(name, tree, trunk_mat, leaf_mat, lods=None):
     return objects, report
 
 
+# --- Leaf-card trees (illustration style) -------------------------------------------------
+# The crown is the same Mass layout as the solid trees, but each mass becomes a shadowed
+# core plus many alpha-cut leaf cards scattered over its surface. Every card vertex takes
+# the normal of the smooth proxy volume under it (the Data Transfer trick), so the flat
+# cards shade as one soft, painted clump while their cut-out edges break the silhouette.
+# Vertex color A tells the leaf-card shader which faces sample the card texture: 1 card,
+# 0 solid core. The cores sit in their own "LeafCore" slot (same runtime material) so
+# Godot can draw the cards without shadow casting: only the smooth cores shadow the crown,
+# which keeps the self-shadow from shimmering as the shadow map moves.
+
+CARD_TEXTURE_SIZE = 512
+# Card kind -> (texture, card slot, core slot). Each kind is its own runtime material
+# (palette + texture); the core slot maps to the same material as its cards.
+CARD_KINDS = {
+    "leaf": ("textures/leaf_cards.png", "LeafCards", "LeafCore"),
+    "needle": ("textures/needle_cards.png", "NeedleCards", "NeedleCore"),
+    "blossom": ("textures/blossom_cards.png", "BlossomCards", "BlossomCore"),
+}
+
+
+def _lens(u, v, cx, cy, angle, length, width_ratio):
+    """Pointed lens from (cx, cy) along `angle`: inside mask and 0..1 position along it."""
+    import numpy as np
+    du, dv = u - cx, v - cy
+    along = du * math.cos(angle) + dv * math.sin(angle)
+    across = -du * math.sin(angle) + dv * math.cos(angle)
+    t = along / length
+    width = width_ratio * length * np.sin(np.pi * np.clip(t, 0.0, 1.0) ** 0.85) ** 0.9
+    return (t > 0.0) & (t < 1.0) & (np.abs(across) < width), t
+
+
+def _leaf_cluster(rng, u, v, alpha, gray):
+    leaves = []
+    for _ in range(40):
+        # Leaves radiate from the cluster center, the outer ones pointing outward.
+        a = rng.uniform(0, math.tau)
+        r = 0.5 * rng.random()
+        leaves.append((math.cos(a) * r * 0.8, math.sin(a) * r * 0.8, a + rng.uniform(-0.5, 0.5), rng.uniform(0.24, 0.36), rng.random()))
+    # Inner leaves first so the outer ones overlap them (painted from the back).
+    for cx, cy, angle, length, value in sorted(leaves, key=lambda l: l[0] ** 2 + l[1] ** 2):
+        inside, t = _lens(u, v, cx, cy, angle, length, 0.28)
+        alpha[inside] = 1.0
+        gray[inside] = (0.45 + 0.4 * t + 0.3 * (value - 0.5))[inside]
+
+
+def _needle_cluster(rng, u, v, alpha, gray):
+    # Three or four sprays fanning out from the center, each a stem lined with paired,
+    # stubby needles swept toward the tip: a fir branch read at illustration scale.
+    base = rng.uniform(0, math.tau)
+    sprays = rng.randint(5, 6)
+    for k in range(sprays):
+        angle = base + k * math.tau / sprays + rng.uniform(-0.3, 0.3)
+        length = rng.uniform(0.62, 0.85)
+        value = rng.random()
+        inside, t = _lens(u, v, 0.0, 0.0, angle, length, 0.06)
+        alpha[inside] = 1.0
+        gray[inside] = 0.35
+        steps = 11
+        for i in range(1, steps):
+            s = i / steps * length
+            px, py = math.cos(angle) * s, math.sin(angle) * s
+            n = 0.27 * (1.0 - 0.5 * i / steps)
+            for side in (-1, 1):
+                needle_angle = angle + side * rng.uniform(0.75, 1.0)
+                inside, t = _lens(u, v, px, py, needle_angle, n, 0.26)
+                alpha[inside] = 1.0
+                gray[inside] = (0.5 + 0.4 * t + 0.25 * (value - 0.5))[inside]
+
+
+def _blossom_cluster(rng, u, v, alpha, gray):
+    import numpy as np
+    # Five-petal flowers heaped into a ball, back ones darker; a small dark eye each.
+    flowers = []
+    for _ in range(34):
+        a = rng.uniform(0, math.tau)
+        r = 0.55 * rng.random() ** 0.6
+        flowers.append((math.cos(a) * r, math.sin(a) * r, rng.uniform(0.13, 0.19), rng.uniform(0, math.tau), rng.random()))
+    for cx, cy, size, turn, value in sorted(flowers, key=lambda f: f[4]):
+        for k in range(5):
+            inside, t = _lens(u, v, cx, cy, turn + k * math.tau / 5, size, 0.5)
+            alpha[inside] = 1.0
+            gray[inside] = (0.55 + 0.35 * t + 0.3 * (value - 0.5))[inside]
+        eye = (u - cx) ** 2 + (v - cy) ** 2 < (size * 0.18) ** 2
+        alpha[eye] = 1.0
+        gray[eye] = 0.25
+
+
+CLUSTERS = {"leaf": _leaf_cluster, "needle": _needle_cluster, "blossom": _blossom_cluster}
+
+
+def card_texture(kind):
+    """2x2 atlas of one card kind's clusters: alpha = silhouettes, gray = per-leaf value
+    (the shader multiplies the palette by it). Deterministic, rewritten per build."""
+    import numpy as np
+    size = CARD_TEXTURE_SIZE
+    cell = size // 2
+    rgba = np.zeros((size, size, 4), dtype=np.float32)
+    ys, xs = np.mgrid[0:cell, 0:cell].astype(np.float32)
+    u = (xs + 0.5) / cell * 2.0 - 1.0
+    v = (ys + 0.5) / cell * 2.0 - 1.0
+    for index in range(4):
+        rng = random.Random(4100 + index + 100 * list(CLUSTERS).index(kind))
+        alpha = np.zeros((cell, cell), dtype=np.float32)
+        gray = np.zeros((cell, cell), dtype=np.float32)
+        CLUSTERS[kind](rng, u, v, alpha, gray)
+        gray = np.clip(gray, 0.0, 1.0)
+        row, col = divmod(index, 2)
+        block = rgba[row * cell:(row + 1) * cell, col * cell:(col + 1) * cell]
+        block[..., 0] = gray
+        block[..., 1] = gray
+        block[..., 2] = gray
+        block[..., 3] = alpha
+    path = os.path.join(ASSET_DIR, CARD_KINDS[kind][0])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    image = bpy.data.images.new(kind + "_cards", size, size, alpha=True)
+    # Blender images are stored bottom row first.
+    image.pixels.foreach_set(rgba[::-1].ravel())
+    image.filepath_raw = path
+    image.file_format = "PNG"
+    image.save()
+    return image
+
+
+def proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.0):
+    """Normal, tone and wind of the smooth proxy volume at p: the mass's own bulge
+    blended with the whole crown (more crown than the solid trees, so the cards read as
+    one clump). `inner` darkens points that sit deeper inside the crown."""
+    local = mass.rotation.transposed() @ (p - mass.center)
+    own = (mass.rotation @ Vector((local.x / mass.radius ** 2, local.y / (mass.radius * mass.stretch) ** 2, local.z / mass.height ** 2))).normalized()
+    whole = Vector(((p.x - crown_center.x) / crown_half.x, (p.y - crown_center.y) / crown_half.x, (p.z - crown_center.z) / crown_half.z)).normalized()
+    normal = (own * 0.4 + whole * 0.6).normalized()
+    height01 = clamp01((p.z - (crown_center.z - crown_half.z)) / (2.0 * crown_half.z))
+    outer = clamp01(Vector((p.x - crown_center.x, p.y - crown_center.y, (p.z - crown_center.z) * 1.4)).length / max(crown_half.x, crown_half.z))
+    tone = 0.12 + 0.42 * height01 + 0.22 * max(0.0, normal.z) + 0.22 * outer - 0.3 * max(0.0, -normal.z) + mass.tone_bias - inner
+    reach = Vector((p.x, p.y, 0.0)).length
+    wind = (0.35 + 0.45 * clamp01(reach / trunk_reach) + 0.2 * height01) * wind_scale
+    return normal, tone, wind
+
+
+def emit_core(mb, mass, material, subdivisions, scale, crown_center, crown_half, trunk_reach, wind_scale):
+    """The mass shrunk into a shadowed core that fills the gaps between the cards."""
+    verts, faces = unit_sphere(subdivisions)
+    indices = []
+    for d in verts:
+        p = mass.center + mass.rotation @ (mass.surface(d) * scale)
+        normal, tone, wind = proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.12)
+        indices.append(mb.vertex(p, normal, tone, wind, mass.phase, alpha=0.0))
+    for f in faces:
+        mb.face(tuple(indices[i] for i in f), material)
+
+
+def design_card_conifer(p):
+    """Leaf-card conifer: a straight trunk under `tiers` flattened masses that shrink to a
+    spire, so the stack reads as a stepped triangle. Each tier is a lumpy, flat-bottomed
+    skirt (Mass) with its own drift, so the needle cards break the outline per step."""
+    rng = random.Random(p["seed"])
+    tree = TreeDesign()
+    lean = Vector(p["lean"]).normalized()
+    top_z = p["height"]
+    steps = 6
+    for i in range(steps + 1):
+        t = i / steps
+        z = -0.35 + (top_z - 0.5 + 0.35) * t
+        tree.trunk.append((lean * (p["bend"] * t * t) + Vector((0, 0, z)), p["trunk_radius"] * (1.0 - 0.85 * t) + 0.03))
+    tree.trunk_radius = p["trunk_radius"]
+    tree.trunk_flare = (0.4, 0.2)
+    count = p["tiers"]
+    for i in range(count):
+        t = i / (count - 1)
+        z = p["first_tier"] + (top_z - p["first_tier"] - 1.4) * (t ** p["spacing"])
+        center, _ = _trunk_at(tree, min(z, tree.trunk[-1][0].z))
+        center = Vector((center.x + rng.uniform(-0.12, 0.12), center.y + rng.uniform(-0.12, 0.12), z))
+        radius = (p["base_radius"] * (1.0 - t) + p["top_radius"] * t) * rng.uniform(0.9, 1.08) * p.get("scale_tier", {}).get(i, 1.0)
+        height = radius * p["flat"] * rng.uniform(0.92, 1.08)
+        tree.masses.append((Mass(center, radius, height, p["seed"] % 997 + i, tone_bias=-0.08 * (1.0 - t), tilt=rng.uniform(-0.08, 0.08)), 3))
+    tip = tree.trunk[-1][0]
+    tree.masses.append((Mass(Vector((tip.x, tip.y, top_z - 0.75)), p["top_radius"] * 0.6, 0.75, p["seed"] % 997 + 50, tone_bias=0.06), 3))
+    _measure_crown(tree)
+    tree.height = max(tree.height, top_z)
+    # Needle sprays read at a smaller size than leaf clusters (and keep the low skirts
+    # above the ground), so more of them cover each tier; small cards cost little overdraw.
+    tree.card_scale = p.get("card_scale", 0.7)
+    tree.card_density = 1.0 / tree.card_scale ** 2
+    # Small needle cards cover less, so a slimmer core keeps it from showing as a smooth
+    # egg between them (the far LOD3 keeps its full core).
+    tree.core_scale = 0.75
+    return tree
+
+
+CARD_SPRUCE = {
+    # Tall, narrow spruce: seven close tiers over a short bare trunk, a sharp spire.
+    "seed": 20261201, "lean": (0.6, 0.8, 0.0), "bend": 0.2, "height": 8.6, "trunk_radius": 0.3,
+    "tiers": 7, "first_tier": 1.9, "spacing": 0.95, "base_radius": 2.3, "top_radius": 0.75, "flat": 0.42,
+}
+
+CARD_FIR = {
+    # Broad, older fir: six heavier skirts on a wide triangle, a leaning top and one thin
+    # tier that opens a gap in the outline.
+    "seed": 20261207, "lean": (-0.9, 0.45, 0.0), "bend": 0.45, "height": 8.0, "trunk_radius": 0.34,
+    "tiers": 6, "first_tier": 2.2, "spacing": 0.9, "base_radius": 2.6, "top_radius": 0.7, "flat": 0.45,
+    "scale_tier": {3: 0.8},
+}
+
+CARD_BLOSSOM = {
+    # Blossom tree: a short trunk splitting low into spreading limbs under a broad,
+    # cloud-like crown of flower clusters; a rare pink accent in the meadows.
+    "seed": 20261213, "lean": (0.8, -0.6, 0.0), "trunk_radius": 0.3,
+    "trunk": [(0.0, -0.35, 0.4), (0.0, 0.0, 0.38), (0.1, 0.8, 0.3), (0.25, 1.6, 0.25), (0.32, 2.4, 0.2),
+              (0.3, 3.1, 0.15), (0.24, 3.7, 0.1)],
+    "primaries": 6, "fork_z": 1.5, "fork_step": 0.3, "pitch": (30, 40), "pitch_step": 2.5,
+    "length": (2.1, 2.5), "length_step": 0.08, "rise": 0.3, "limb_radius": 0.6, "limb_tip": 0.045,
+    "secondaries": 1, "sub_rise": 0.3, "sub_length": (0.9, 1.2), "sub_radius": 0.06,
+    "top": [((0.0, 0.0, 0.9), 2.0, 1.2, 0.08)],
+    "fill": (2, 1.4, 0.95, 1.0, -0.2),
+    "tip": (1.1, 1.3, 0.8, 0.95, 0.4), "accent": (0.65, 0.8, 0.5, 0.62, 0.25),
+}
+
+
+def _scaled_cards(tree, scale):
+    tree.card_scale = scale
+    return tree
+
+
+CARD_DENSITY = 11.0  # LOD0 cards per mass, per m of radius x (radius + height)
+CARD_SCALE = 1.3
+CARD_CAP = 3.2  # cards per mass at most, times CARD_DENSITY
+CARD_MIN = 8
+
+
+def emit_cards(mb, mass, material, fraction, crown_center, crown_half, trunk_reach, wind_scale, card_scale=1.0, card_density=1.0):
+    """Leaf cards over the mass surface, facing outward with a random roll and tilt.
+
+    Every LOD draws from the same seeded card list and keeps its first `fraction`, so a
+    coarser LOD is a thinned copy of LOD0: walking up to a tree only adds cards, it
+    never moves or resizes the ones already there. The list is ordered outermost first,
+    so the cards a far LOD drops are the inner ones that the silhouette hides anyway."""
+    rng = random.Random(mass.seed * 7919)
+    density = CARD_DENSITY * card_density
+    # Even a small mass (a spire, an accent) gets enough cards to hide its core.
+    want = max(CARD_MIN, int(density * mass.radius * (mass.radius + mass.height)))
+    # Big masses are capped and get larger cards instead: alpha overdraw, not triangles,
+    # is what a crown of cards costs.
+    count = min(want, max(CARD_MIN, int(density * CARD_CAP)))
+    grow = min(1.3, math.sqrt(want / count))
+    half_size = CARD_SCALE * card_scale * (0.42 + 0.22 * mass.radius) * grow
+    keep = max(2, round(count * fraction))
+    cards = []
+    for i in range(count):
+        d = Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1) + 0.15)).normalized()
+        # Enlarged cards sit deeper so they do not stand out of the clump's outline.
+        depth = rng.uniform(0.8, 0.97) - 0.25 * (grow - 1.0)
+        tilt = Vector((rng.uniform(-0.4, 0.4), rng.uniform(-0.4, 0.4), rng.uniform(-0.25, 0.2)))
+        roll = rng.uniform(0, math.tau)
+        h = half_size * rng.uniform(0.8, 1.2)
+        atlas = rng.randrange(4)
+        reach = mass.surface(d).length * depth + h * 0.5 + 0.1 * rng.random()
+        cards.append((reach, i, d, depth, tilt, roll, h, atlas))
+    cards.sort(key=lambda c: (-c[0], c[1]))
+    for _, _, d, depth, tilt, roll, h, atlas in cards[:keep]:
+        center = mass.center + mass.rotation @ (mass.surface(d) * depth)
+        outward = (mass.rotation @ d).normalized()
+        facing = (outward + tilt).normalized()
+        side = perpendicular(facing)
+        side = side * math.cos(roll) + facing.cross(side) * math.sin(roll)
+        up = facing.cross(side)
+        u0, v0 = (atlas % 2) * 0.5, (atlas // 2) * 0.5
+        indices = []
+        for cx, cy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            p = center + side * (cx * h) + up * (cy * h)
+            normal, tone, wind = proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.25 * (1.0 - depth))
+            uv = (u0 + (cx + 1) * 0.25, v0 + (cy + 1) * 0.25)
+            indices.append(mb.vertex(p, normal, tone, wind, mass.phase, alpha=1.0, uv=uv))
+        mb.face(indices, material)
+
+
+CARD_TALL = {
+    # Tall and narrow: a straight trunk carrying a stacked, upright oval crown of three
+    # tiers (poplar-like); short, steep limbs keep the sides close.
+    "seed": 20261107, "lean": (0.25, -1.0, 0.0), "trunk_radius": 0.28,
+    "trunk": [(0.0, -0.35, 0.36), (0.0, 0.0, 0.34), (0.02, 1.0, 0.27), (0.04, 2.0, 0.23), (0.04, 3.0, 0.19),
+              (0.02, 4.0, 0.15), (0.0, 5.0, 0.1)],
+    "primaries": 5, "fork_z": 2.2, "fork_step": 0.55, "pitch": (60, 68), "pitch_step": 1.5,
+    "length": (1.3, 1.55), "length_step": 0.05, "rise": 0.35, "limb_radius": 0.6, "limb_tip": 0.04,
+    "secondaries": 1, "sub_rise": 0.6, "sub_length": (0.6, 0.8), "sub_radius": 0.055,
+    "top": [((0.0, 0.0, 0.2), 1.35, 1.35, 0.03), ((0.1, -0.05, 1.45), 1.1, 1.1, 0.07), ((0.15, -0.1, 2.45), 0.75, 0.75, 0.12)],
+    "fill": (2, 1.05, 1.1, 0.55, -1.0),
+    "tip": (0.8, 0.95, 0.9, 1.05, 0.4), "accent": (0.5, 0.62, 0.5, 0.6, 0.25),
+}
+
+CARD_UMBRELLA = {
+    # Umbrella: a tall, clean trunk that opens high into near-level limbs under one wide,
+    # flat-topped canopy (stone pine / acacia read); the underside stays open.
+    "seed": 20261113, "lean": (1.0, 0.3, 0.0), "trunk_radius": 0.32,
+    "trunk": [(0.0, -0.35, 0.42), (0.0, 0.0, 0.4), (0.08, 1.2, 0.31), (0.2, 2.4, 0.26), (0.28, 3.4, 0.21),
+              (0.3, 4.2, 0.16), (0.28, 4.8, 0.11)],
+    "primaries": 6, "fork_z": 3.7, "fork_step": 0.18, "pitch": (22, 30), "pitch_step": 1.0,
+    "length": (2.6, 3.0), "length_step": 0.05, "rise": 0.18, "limb_radius": 0.6, "limb_tip": 0.05,
+    "secondaries": 1, "sub_rise": 0.1, "sub_length": (1.1, 1.4), "sub_radius": 0.065,
+    "top": [((0.0, 0.0, 0.75), 2.7, 0.75, 0.08)],
+    "fill": (3, 1.6, 0.6, 1.5, 0.45),
+    "tip": (1.25, 1.45, 0.55, 0.65, 0.45), "accent": (0.75, 0.9, 0.42, 0.5, 0.25),
+}
+
+CARD_OAK = {
+    # Broad oak for open land: a thick, short trunk and long, low limbs under a wide dome
+    # built from overlapping, slightly flattened masses.
+    "seed": 20261119, "lean": (0.6, 0.8, 0.0), "trunk_radius": 0.55, "flare": 0.75,
+    "trunk": [(0.0, -0.35, 0.72), (0.0, 0.0, 0.68), (0.05, 0.9, 0.55), (0.12, 1.8, 0.47), (0.14, 2.6, 0.38),
+              (0.1, 3.3, 0.28), (0.04, 3.9, 0.18)],
+    "primaries": 7, "fork_z": 1.7, "fork_step": 0.26, "pitch": (14, 22), "pitch_step": 3.0,
+    "length": (3.0, 3.5), "length_step": 0.1, "rise": 0.45, "limb_radius": 0.6, "limb_tip": 0.07,
+    "secondaries": 1, "sub_rise": 0.3, "sub_length": (1.2, 1.6), "sub_radius": 0.1,
+    "top": [((0.0, 0.0, 1.0), 2.6, 1.55, 0.06)],
+    "fill": (3, 1.7, 1.05, 1.4, -0.2),
+    "tip": (1.45, 1.7, 0.95, 1.1, 0.45), "accent": (0.9, 1.1, 0.62, 0.75, 0.3), "tip_bias": -0.02,
+}
+
+CARD_LEAN = {
+    # Windswept: a trunk that bends hard to one side, a co-dominant stem and a lopsided
+    # crown streaming downwind, with a gap that shows the limbs.
+    "seed": 20261127, "lean": (-1.0, 0.25, 0.0), "trunk_radius": 0.34,
+    "trunk": [(0.0, -0.35, 0.44), (0.0, 0.0, 0.42), (0.18, 0.8, 0.33), (0.5, 1.6, 0.28), (0.85, 2.4, 0.23),
+              (1.1, 3.2, 0.17), (1.25, 3.9, 0.11)],
+    "primaries": 5, "fork_z": 2.0, "fork_step": 0.38, "pitch": (26, 36), "pitch_step": 3.0,
+    "length": (2.0, 2.4), "length_step": 0.1, "rise": 0.3, "limb_radius": 0.6, "limb_tip": 0.05,
+    "override": {0: {"pitch": 55, "length": 2.4, "radius": 0.8, "tip_scale": 1.1}},
+    "secondaries": 1, "sub_rise": 0.25, "sub_length": (0.9, 1.2), "sub_radius": 0.07,
+    "top": [((-0.4, 0.1, 0.8), 1.9, 1.25, 0.06), ((-1.5, 0.3, 0.2), 1.3, 0.95, 0.02)],
+    "fill": (2, 1.3, 0.95, 1.0, -0.35),
+    "tip": (1.0, 1.25, 0.8, 0.95, 0.35), "accent": (0.6, 0.78, 0.5, 0.6, 0.2),
+}
+
+
+CARD_TREE_LODS = {
+    # level: (trunk sides, trunk ring stride, limb sides, limb ring stride, max limb level,
+    #         core icosphere subdivisions, core scale, share of the LOD0 cards kept)
+    # LOD0 and LOD1 share the core so the 34 m switch only thins the cards.
+    0: (8, 1, 6, 1, 2, 2, 0.8, 1.0),
+    1: (6, 2, 5, 2, 1, 2, 0.8, 0.45),
+    2: (5, 4, 0, 0, 0, 1, 0.9, 0.16),
+    # Far distance: the cores alone, inflated to stand in for the cards.
+    3: (4, 7, 0, 0, 0, 1, 1.4, 0.0),
+}
+
+
+def build_card_tree(name, tree, trunk_mat, card_mat, core_mat, lods=None):
+    objects = []
+    report = {}
+    for level, (t_sides, t_stride, l_sides, l_stride, max_limb, subdiv, core_scale, fraction) in (lods or CARD_TREE_LODS).items():
+        mb = MeshBuilder()
+        trunk = tree.trunk[::t_stride]
+        if trunk[-1] is not tree.trunk[-1]:
+            trunk.append(tree.trunk[-1])
+        tube(mb, trunk, t_sides, 0, (0.3, 0.75), (0.0, 0.06), 0.0, flare=tree.trunk_flare[0 if level < 2 else 1])
+        for points, r0, r1, w0, w1, limb_level in tree.limbs:
+            if limb_level > max_limb:
+                continue
+            pts = points[::l_stride]
+            if pts[-1] is not points[-1]:
+                pts.append(points[-1])
+            ring = [(p, r0 + (r1 - r0) * i / (len(pts) - 1)) for i, p in enumerate(pts)]
+            tube(mb, ring, l_sides, 0, (0.4, 0.65), (w0, w1), 0.0)
+        for mass, keep in tree.masses:
+            if keep < level:
+                continue
+            emit_core(mb, mass, 2, subdiv, core_scale * (tree.core_scale if level < 3 else 1.0), tree.crown_center, tree.crown_half, tree.reach, tree.wind_scale)
+            if fraction > 0.0:
+                emit_cards(mb, mass, 1, fraction, tree.crown_center, tree.crown_half, tree.reach, tree.wind_scale,
+                           tree.card_scale, tree.card_density)
+        obj = mb.build("%s_LOD%d" % (name, level), [trunk_mat, card_mat, core_mat])
+        obj["height"] = round(tree.height, 3)
+        obj["trunk_radius"] = tree.trunk_radius
+        obj["crown_radius"] = round(tree.reach, 3)
+        objects.append(obj)
+        report["LOD%d" % level] = mb.triangles()
+    return objects, report
+
+
 # --- Grass -------------------------------------------------------------------------------
 
 BLADE_ROWS = [(0.0, 1.0), (0.5, 0.78), (0.82, 0.42)]
@@ -883,6 +1276,32 @@ def tree_asset(name, group, design, lods=None):
     return make
 
 
+CARD_PREVIEW_COLORS = {"leaf": (0.3, 0.52, 0.22, 1.0), "needle": (0.18, 0.36, 0.27, 1.0), "blossom": (0.92, 0.66, 0.76, 1.0)}
+
+
+def card_tree_asset(name, group, design, kind="leaf", lods=None):
+    def make():
+        reset_scene()
+        _, card_slot, core_slot = CARD_KINDS[kind]
+        color = CARD_PREVIEW_COLORS[kind]
+        trunk = preview_material("Trunk", (0.36, 0.25, 0.17, 1.0))
+        cards = preview_material(card_slot, color)
+        core = preview_material(core_slot, tuple(c * 0.7 for c in color[:3]) + (1.0,))
+        image = card_texture(kind)
+        # Preview only: the cut-out in the viewport. Godot swaps in its own material.
+        nodes = cards.node_tree.nodes
+        bsdf = next(n for n in nodes if n.type == "BSDF_PRINCIPLED")
+        texture = nodes.new("ShaderNodeTexImage")
+        texture.image = image
+        cards.node_tree.links.new(texture.outputs["Alpha"], bsdf.inputs["Alpha"])
+        tree = design()
+        objects, report = build_card_tree(name, tree, trunk, cards, core, lods)
+        report["height"] = round(tree.height, 2)
+        report["crown_radius"] = round(tree.reach, 2)
+        return objects, group, name, report
+    return make
+
+
 def grass_asset(name, *args, **kwargs):
     def make():
         reset_scene()
@@ -916,6 +1335,16 @@ ASSETS = {
     "bush_a": tree_asset("bush_a", "bushes", lambda: design_bush(BUSH_A), BUSH_LODS),
     "bush_b": tree_asset("bush_b", "bushes", lambda: design_bush(BUSH_B), BUSH_LODS),
     "bush_c": tree_asset("bush_c", "bushes", lambda: design_bush(BUSH_C), BUSH_LODS),
+    # Illustration-style leaf-card trees: five silhouettes that replace the solid broadleaf
+    # and oak set on the map.
+    "card_round": card_tree_asset("card_round", "trees/card", design_broadleaf_a),
+    "card_tall": card_tree_asset("card_tall", "trees/card", lambda: design_spreading(CARD_TALL)),
+    "card_umbrella": card_tree_asset("card_umbrella", "trees/card", lambda: design_spreading(CARD_UMBRELLA)),
+    "card_oak": card_tree_asset("card_oak", "trees/card", lambda: design_spreading(CARD_OAK)),
+    "card_lean": card_tree_asset("card_lean", "trees/card", lambda: design_spreading(CARD_LEAN)),
+    "card_spruce": card_tree_asset("card_spruce", "trees/card", lambda: design_card_conifer(CARD_SPRUCE), "needle"),
+    "card_fir": card_tree_asset("card_fir", "trees/card", lambda: design_card_conifer(CARD_FIR), "needle"),
+    "card_blossom": card_tree_asset("card_blossom", "trees/card", lambda: _scaled_cards(design_spreading(CARD_BLOSSOM), 0.9), "blossom"),
     # name, seed, blades, height range, spread, blade width range (+ lean, rows, stalks)
     "grass_short": grass_asset("grass_short", 3102, 10, (0.08, 0.14), 0.12, (0.035, 0.05), (0.25, 0.55)),
     "grass_tall": grass_asset("grass_tall", 3103, 14, (0.3, 0.48), 0.2, (0.04, 0.06), (0.15, 0.42), TALL_BLADE_ROWS),

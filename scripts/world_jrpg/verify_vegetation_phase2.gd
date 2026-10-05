@@ -22,6 +22,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	for asset in Vegetation.TREES: _check_tree(asset)
+	for asset in Vegetation.CARD_TREES:
+		_check_tree(asset, Vegetation.card_material(asset))
+		_check_cards(asset)
 	for asset in Vegetation.BUSHES: _check_bush(asset)
 	for asset in Vegetation.GRASSES: _check_grass(asset)
 	for asset in Vegetation.FLOWERS: _check_flower(asset)
@@ -50,16 +53,18 @@ func _surface_named(mesh: Mesh, material: Material) -> int:
 		if mesh.surface_get_material(s) == material: return s
 	return -1
 
-func _check_tree(asset: String) -> void:
+func _check_tree(asset: String, leaf_material: Material = Vegetation.FOLIAGE_MATERIAL) -> void:
+	# Card trees have no triangle floor: their look comes from the cards, kept light.
+	var floors := [0, 0, 0] if asset in Vegetation.CARD_TREES else [2000, 800, 200]
 	var lods := Vegetation.lod_meshes(asset)
 	check(lods.size() == 4, "%s has LOD0-LOD3 (%d meshes)" % [asset, lods.size()])
 	if lods.size() < 4: return
 	var tris: Array[int] = []
 	for mesh in lods: tris.append(Vegetation.triangle_count(mesh))
 	print(asset, " triangles: ", tris)
-	check(tris[0] >= 2000 and tris[0] <= 6000, "%s LOD0 within 2,000-6,000 triangles (%d)" % [asset, tris[0]])
-	check(tris[1] >= 800 and tris[1] <= 2500, "%s LOD1 within 800-2,500 triangles (%d)" % [asset, tris[1]])
-	check(tris[2] >= 200 and tris[2] <= 800, "%s LOD2 within 200-800 triangles (%d)" % [asset, tris[2]])
+	check(tris[0] >= floors[0] and tris[0] <= 6000, "%s LOD0 within %d-6,000 triangles (%d)" % [asset, floors[0], tris[0]])
+	check(tris[1] >= floors[1] and tris[1] <= 2500 and tris[1] < tris[0], "%s LOD1 within %d-2,500 triangles (%d)" % [asset, floors[1], tris[1]])
+	check(tris[2] >= floors[2] and tris[2] <= 800 and tris[2] < tris[1], "%s LOD2 within %d-800 triangles (%d)" % [asset, floors[2], tris[2]])
 	check(tris[3] < tris[2], "%s LOD3 is coarser than LOD2 (%d)" % [asset, tris[3]])
 	var aabb := lods[0].get_aabb()
 	print(asset, " LOD0 AABB: ", aabb)
@@ -71,9 +76,9 @@ func _check_tree(asset: String) -> void:
 	for level in lods.size():
 		var bounds := lods[level].get_aabb()
 		check(bounds.end.y > aabb.end.y * 0.9 and bounds.size.x > aabb.size.x * 0.85, "%s LOD%d keeps the LOD0 silhouette envelope" % [asset, level])
-		check(_surface_named(lods[level], Vegetation.TRUNK_MATERIAL) >= 0 and _surface_named(lods[level], Vegetation.FOLIAGE_MATERIAL) >= 0, "%s LOD%d uses the shared trunk and foliage materials" % [asset, level])
+		check(_surface_named(lods[level], Vegetation.TRUNK_MATERIAL) >= 0 and _surface_named(lods[level], leaf_material) >= 0, "%s LOD%d uses the shared trunk and foliage materials" % [asset, level])
 	var trunk := _surface_named(lods[0], Vegetation.TRUNK_MATERIAL)
-	var leaves := _surface_named(lods[0], Vegetation.FOLIAGE_MATERIAL)
+	var leaves := _surface_named(lods[0], leaf_material)
 	var trunk_wind := _channel_range(lods[0], trunk, 1)
 	var arrays := lods[0].surface_get_arrays(trunk)
 	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -89,6 +94,66 @@ func _check_tree(asset: String) -> void:
 	check(tone.x < 0.2 and tone.y > 0.85, "%s foliage tone spans shadow to highlight (%.2f-%.2f)" % [asset, tone.x, tone.y])
 	var phase := _channel_range(lods[0], leaves, 2)
 	check(phase.y - phase.x > 0.5, "%s foliage masses carry distinct wind phases" % asset)
+
+## Leaf-card crowns: textured cards (alpha 1, with UVs) over solid cores (alpha 0) in the
+## shadow-casting body; the cards thin out toward the far LODs, which keep only the cores,
+## and their MultiMeshes never cast shadows.
+func _check_cards(asset: String) -> void:
+	var cards: Array[int] = []
+	var material := Vegetation.card_material(asset)
+	var lod0_cards := PackedVector3Array()
+	for level in Vegetation.lod_meshes(asset).size():
+		var parts := Vegetation.split_cards(asset, level)
+		var body: Mesh = parts[0]
+		var core := false
+		for surface in body.get_surface_count():
+			if body.surface_get_material(surface) == material:
+				core = _channel_range(body, surface, 3).y < 0.5
+		check(core, "%s LOD%d body holds the solid crown core" % [asset, level])
+		if parts[1] == null:
+			cards.append(0)
+			continue
+		var arrays := (parts[1] as Mesh).surface_get_arrays(0)
+		var colors: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+		cards.append(colors.size() / 4)
+		# Coarser LODs are a prefix of LOD0's cards: same corners, so cards never move.
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		if level == 0: lod0_cards = verts
+		else: check(_cards_subset(verts, lod0_cards), "%s LOD%d cards are a subset of LOD0's" % [asset, level])
+		if level == 0:
+			check(_channel_range(parts[1], 0, 3).x > 0.5, "%s cards are all textured (alpha 1)" % asset)
+			check(arrays[Mesh.ARRAY_TEX_UV] != null and (arrays[Mesh.ARRAY_TEX_UV] as PackedVector2Array).size() == colors.size(), "%s cards carry UVs" % asset)
+	print(asset, " cards per LOD: ", cards)
+	check(cards[0] > cards[1] and cards[1] > cards[2] and cards[3] == 0, "%s cards thin out per LOD, none at LOD3" % asset)
+	var stand := Node3D.new()
+	Vegetation.add_tree_chunk(stand, asset, [Transform3D(), Transform3D(Basis(), Vector3(20, 0, 0))])
+	var card_nodes := 0
+	var casting := 0
+	for node: MultiMeshInstance3D in stand.find_children("*_cards", "MultiMeshInstance3D", false, false):
+		card_nodes += 1
+		if node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: casting += 1
+	# LOD2 over the stand + LOD0 / LOD1 in each of the two fine cells.
+	check(card_nodes == 5 and casting == 0, "%s card MultiMeshes (%d) cast no shadow" % [asset, card_nodes])
+	stand.free()
+
+## Every card corner of `cards` also appears in `lod0`, within 1 cm: the importer
+## quantizes positions against each LOD's own AABB, so exact equality does not hold.
+func _cards_subset(cards: PackedVector3Array, lod0: PackedVector3Array) -> bool:
+	var cells := {}
+	for v in lod0:
+		var key := Vector3i((v * 20.0).floor())
+		if not cells.has(key): cells[key] = []
+		cells[key].append(v)
+	for v in cards:
+		var base := Vector3i((v * 20.0).floor())
+		var found := false
+		for dx in range(-1, 2):
+			for dy in range(-1, 2):
+				for dz in range(-1, 2):
+					for w: Vector3 in cells.get(base + Vector3i(dx, dy, dz), []):
+						if w.distance_to(v) < 0.01: found = true
+		if not found: return false
+	return true
 
 func _check_bush(asset: String) -> void:
 	var lods := Vegetation.lod_meshes(asset)
@@ -250,6 +315,18 @@ func _render(directory: String) -> void:
 		var wide := 1.35 if asset == "oak_a" else 1.0
 		await _shoot(directory, "%s_lods" % asset, Vector3(0, 4.5, 26 * wide), Vector3(0, 4.0, 0))
 		lineup.queue_free()
+	# Leaf-card trees: one LOD lineup, all five at LOD0, and a close-up.
+	var card_lods := _lineup(stage, "card_round", Vegetation.lod_meshes("card_round"), 9.0)
+	await _shoot(directory, "card_round_lods", Vector3(0, 4.5, 26), Vector3(0, 4.0, 0))
+	card_lods.queue_free()
+	var card_trees: Array[Mesh] = []
+	for asset in Vegetation.CARD_TREES: card_trees.append(Vegetation.lod_meshes(asset)[0])
+	var card_row := _lineup(stage, "card_trees", card_trees, 10.0)
+	await _shoot(directory, "card_trees_lineup", Vector3(0, 5.0, 66), Vector3(0, 4.0, 0))
+	card_row.queue_free()
+	var hero := _lineup(stage, "card_single", [Vegetation.lod_meshes("card_oak")[0]], 0.0)
+	await _shoot(directory, "card_oak_single", Vector3(5.0, 3.0, 14.0), Vector3(0, 4.2, 0))
+	hero.queue_free()
 	# 2. Broadleaf A hero close-up, slightly from below like the explore camera.
 	var single := _lineup(stage, "broadleaf_a", [Vegetation.lod_meshes("broadleaf_a")[0]], 0.0)
 	await _shoot(directory, "broadleaf_a_single", Vector3(4.0, 3.0, 11.5), Vector3(0, 4.2, 0))

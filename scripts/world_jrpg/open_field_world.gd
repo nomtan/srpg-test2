@@ -8,6 +8,9 @@ const Biomes = preload("res://scripts/world_jrpg/open_field_biome.gd")
 const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
+## Every tree is drawn as an illustration-style leaf-card tree (Vegetation.CARD_SWAP);
+## off restores the solid Phase 2 trees and the procedural blossom tree.
+@export var card_trees := true
 const LAKE := 10.0
 const LAKE_CENTER := Vector2(205, 150)
 const LAKE_RADIUS := Vector2(100, 64)
@@ -1252,20 +1255,23 @@ func _build_trees_and_rocks() -> void:
 				if pick * (broadleaf + conifer) < conifer:
 					# The broad, drooping spruce (B) takes over toward the highlands.
 					kind = "conifer_b" if shape < 0.35 + 0.3 * smoothstep(30.0, 50.0, h) else "conifer_a"
+					if card_trees: kind = Vegetation.CARD_SWAP[kind]
 					size = variation
 				else:
 					# Blossom trees are rare accents in the open meadows and on the shore.
 					var meadow := biome.weight(Biomes.Biome.PLAINS, p.x, p.y) + biome.weight(Biomes.Biome.LAKESHORE, p.x, p.y)
 					var open_land := meadow + biome.weight(Biomes.Biome.FARMLAND, p.x, p.y) + biome.weight(Biomes.Biome.HIGHLAND, p.x, p.y)
 					if fmod(pick * 97.0, 1.0) < 0.06 * meadow:
-						kind = "broadleaf"
+						kind = Vegetation.CARD_SWAP["blossom"] if card_trees else "broadleaf"
 						variant = 2
 						trunk = 0.5
+						if card_trees: size = variation
 					else:
 						# Oaks stand on open land; the woods are broadleaf A / B / C.
 						var oak := fmod(pick * 53.0, 1.0) < 0.1 + 0.45 * clampf(open_land, 0.0, 1.0)
 						kind = ("oak_b" if shape < 0.3 else "oak_a") if oak else ["broadleaf_a", "broadleaf_b", "broadleaf_c"][int(shape * 3.0)]
 						trunk = 0.65 if oak else 0.45
+						if card_trees: kind = Vegetation.CARD_SWAP[kind]
 						size = variation
 				obstacles.append(Rect2(p - Vector2(trunk, trunk) * size, Vector2(trunk, trunk) * 2.0 * size))
 				cover_cells[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
