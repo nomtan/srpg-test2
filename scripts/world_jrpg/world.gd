@@ -2,6 +2,11 @@ extends Node3D
 ## Independent exploration and encounter prototype. Existing battle scenes are untouched.
 const Batch = preload("res://scripts/world_jrpg/voxel_batch.gd")
 const Prop = preload("res://scripts/world_jrpg/voxel_prop.gd")
+const MANOR_MODEL = preload("res://assets/house/001/model.glb")
+# Half-timbered manor at the north edge of town; the arched front (+Z) faces the town.
+const MANOR_AT := Vector2(47, 63)
+const MANOR_SCALE := 4.5
+const MANOR_HALF := Vector2(4.3, 3.5)
 const SIZE := 400
 const CHUNK := 32
 const WATER := 2.6
@@ -228,6 +233,13 @@ func _build_world() -> void:
 		house.position = Vector3(pos.x, 3.5, pos.y)
 		landmarks.add_child(house)
 		obstacles.append(Rect2(pos - Vector2(2.8, 2.3), Vector2(5.6, 4.6)))
+	var manor := MANOR_MODEL.instantiate() as Node3D
+	manor.name = "Manor"
+	manor.scale = Vector3.ONE * MANOR_SCALE
+	# The mesh is centred on its origin; lift its base (y = -0.65) onto the ground.
+	manor.position = Vector3(MANOR_AT.x, 3.5 + 0.65 * MANOR_SCALE, MANOR_AT.y)
+	landmarks.add_child(manor)
+	obstacles.append(Rect2(MANOR_AT - MANOR_HALF, MANOR_HALF * 2))
 	_build_castle(landmarks)
 	var bridge := Batch.new()
 	var center := _river(80)
@@ -262,6 +274,7 @@ func _index_obstacles() -> void:
 				obstacle_chunks[key].append(bounds)
 
 func _reserved(x: float, z: float) -> bool:
+	if Rect2(MANOR_AT - MANOR_HALF, MANOR_HALF * 2).grow(1.0).has_point(Vector2(x, z)): return true
 	if x > 43 and x < 51 and z > 101: return true
 	if absf(x - 24) < 4 and z > 28 and z < 52: return true
 	return (x > 16 and x < 37 and z > 46 and z < 99) or (x > 77 and x < 106 and z > 32 and z < 58) or Vector2(x - 44, z - 80).length() < 17 or Vector2(x - 93, z - 42).length() < 6 or absf(z - 80) < 4 or _path(x - 2, z) or _path(x + 2, z)

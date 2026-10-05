@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://scripts/world_jrpg/open_field_grass.gdshader" id="1"]
+
+[resource]
+resource_name = "FlowerMaterial"
+shader = ExtResource("1")
+shader_parameter/flower = 1.0

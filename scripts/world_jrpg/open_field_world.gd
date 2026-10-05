@@ -4,6 +4,8 @@ extends "res://scripts/world_jrpg/world.gd"
 ## Only the map is replaced; one explorer (switchable through character_roster) roams it
 ## with no NPCs or encounters.
 const Props = preload("res://scripts/world_jrpg/open_field_props.gd")
+const Biomes = preload("res://scripts/world_jrpg/open_field_biome.gd")
+const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
 const LAKE := 10.0
@@ -15,6 +17,9 @@ const CRAG := Vector2(205, 121)
 const CRAG_TOP := 44.0
 const TOWN_RECT := Rect2(180, 146, 50, 54)
 const TOWN_PLAZA := Vector2(205, 178)
+## The house/001 manor takes the west back-row lot at z = 166, facing the main street.
+const TOWN_MANOR_LOT := Vector2(186.5, 166.0)
+const TOWN_MANOR_AT := Vector2(186.5, 167.0)
 const SPAWN_HILL := Vector2(150, 305)
 const VILLAGE := Vector2(325, 262)
 const RUINS := Vector2(75, 225)
@@ -53,6 +58,76 @@ const PLAZAS := [[VILLAGE, 8.5], [CRAG, 10.0], [TOWN_PLAZA, 8.0], [RUINS, 10.0]]
 ## Open ground kept free of trees and boulders: center, radius.
 const CLEARINGS := [[SPAWN_HILL, 9.0], [Vector2(150, 300), 7.0], [Vector2(166, 279), 15.0], [Vector2(186, 255), 13.0], [CRAG, 22.0], [Vector2(205, 172), 40.0], [Vector2(205, 228), 32.0], [VILLAGE, 30.0], [RUINS, 18.0]]
 
+## Designed macro landforms. They give the field its silhouette; noise only adds detail.
+## 見晴らしの丘 rises this far above the plain within this radius.
+const SPAWN_HILL_RISE := 15.0
+const SPAWN_HILL_RADIUS := 62.0
+## Ridges: start, end, half width, crest height (tapering away at both ends).
+const RIDGES := [
+	[Vector2(18, 24), Vector2(80, 182), 52.0, 22.0],
+	[Vector2(146, 312), Vector2(40, 372), 30.0, 8.0],
+]
+## East highland plateau overlooking the lake: center, half extents, rise, edge width.
+const PLATEAU := [Vector2(362, 118), Vector2(52, 62), 15.0, 34.0]
+## Low wet basin on the lake's south-west bay.
+const WETLAND := Vector2(130, 208)
+## 北嶺アルヴァ and the far ranges beyond the playable square: position, height, radius.
+## The first peak stands right behind the castle on the 見晴らしの丘 sightline.
+const PEAKS := [
+	[Vector2(330, -320), 235.0, 250.0], [Vector2(215, -235), 150.0, 170.0], [Vector2(455, -260), 175.0, 190.0],
+	[Vector2(100, -215), 130.0, 170.0], [Vector2(570, -170), 125.0, 170.0], [Vector2(-50, -175), 110.0, 180.0],
+	[Vector2(650, 70), 105.0, 190.0], [Vector2(630, 280), 80.0, 170.0], [Vector2(-170, 130), 85.0, 190.0],
+	[Vector2(-160, 330), 65.0, 170.0],
+]
+## Woodland regions as capsules (start, end, radius); the first follows the west ridge.
+const WOODS := [
+	[Vector2(18, 24), Vector2(80, 182), 58.0], [Vector2(-20, 42), Vector2(420, 46), 60.0],
+	[Vector2(300, 348), Vector2(392, 386), 48.0], [Vector2(18, 292), Vector2(58, 392), 42.0],
+]
+## Deep-forest core of the west woods: start, end.
+const DEEP_CORE := [Vector2(28, 58), Vector2(60, 140)]
+const FARMLAND_CENTER := Vector2(205, 232)
+const FARMLAND_HALF := Vector2(40, 22)
+## Designed view corridors kept free of trees: from, to, half width at each end.
+## The first is the hero view: 見晴らしの丘 → meadow → lake → town → castle → Alva.
+const SIGHTLINES := [
+	[SPAWN_HILL + Vector2(-4, 14), CRAG, 18.0, 36.0],
+	[Vector2(52, 118), CRAG, 7.0, 16.0],
+	[RUINS, CRAG, 8.0, 18.0],
+	[VILLAGE, CRAG, 8.0, 18.0],
+	[Vector2(330, 372), Vector2(346, 239), 6.0, 12.0],
+	[Vector2(120, 40), CRAG, 6.0, 14.0],
+]
+## Region names for open country, by biome (landmark regions are matched first).
+const REGION_NAMES := {
+	Biomes.Biome.PLAINS: "翠風の野", Biomes.Biome.FOREST: "緑陰の森", Biomes.Biome.DEEP_FOREST: "深緑の森",
+	Biomes.Biome.HIGHLAND: "東の高原", Biomes.Biome.MOUNTAIN: "北嶺の山腹", Biomes.Biome.WETLAND: "湖畔の湿原",
+	Biomes.Biome.FARMLAND: "城下の畑", Biomes.Biome.LAKESHORE: "鏡の湖畔",
+}
+## Battle-grid conventions: 1 m cells; logical heights snap to 1 m steps.
+const CELL_SIZE := 1.0
+const HEIGHT_STEP := 1.0
+## Visual-only micro relief amplitude at ground_roughness 1.0.
+const MICRO_RELIEF := 0.18
+## Named viewpoints (from, look-at) for captures and the 5 key; `from` heights are above
+## the ground and each viewpoint keeps a small tree-free clearing.
+const SHOTS := {
+	"hero": [Vector3(147, 5.0, 318), Vector3(207, 36, 128)],
+	"plains": [Vector3(200, 3.0, 302), Vector3(346, 34, 239)],
+	"forest_edge": [Vector3(122, 3.0, 296), Vector3(30, 22, 336)],
+	"forest": [Vector3(56, 2.5, 116), Vector3(205, 50, 121)],
+	"lakeshore": [Vector3(150, 2.2, 228), Vector3(220, 40, 121)],
+	"highland": [Vector3(372, 3.5, 140), Vector3(205, 40, 125)],
+	"mountain": [Vector3(372, 6.0, 72), Vector3(318, 130, -300)],
+}
+
+var biome := Biomes.new()
+## Height without the visual micro relief; the source for gameplay and the battle grid.
+var gameplay_cache := PackedFloat32Array()
+var biome_debug_map: ImageTexture
+var biome_debug := false
+var terrain_panel: PanelContainer
+var terrain_text: Label
 var path_field := PackedFloat32Array()
 var path_points: Array = []
 var terrain_material: ShaderMaterial
@@ -62,6 +137,9 @@ var spinning: Array[Node3D] = []
 var crystal: Node3D
 var conditions_key := -1
 var meshes: Dictionary = {}
+## Visual vegetation as SRPG cover, per CELL_SIZE cell: "TREE" under a trunk (also an
+## obstacle), "LIGHT" under a bush (walkable). Grass and flowers never affect the grid.
+var cover_cells: Dictionary = {}
 
 func _ready() -> void:
 	noise.seed = world_seed
@@ -84,11 +162,23 @@ func _ready() -> void:
 		if arg == "--view=village": _preset(2)
 		if arg == "--view=castle": _preset(3)
 		if arg == "--view=ruins": _preset(4)
+		if arg.begins_with("--view=") and SHOTS.has(arg.get_slice("=", 1)): _shot(arg.get_slice("=", 1))
+		if arg == "--debug-biome": _set_biome_debug(true)
+		if arg == "--debug-terrain": terrain_panel.visible = true
+		if arg == "--hide-hud":
+			hud.visible = false
+			field_weather.controls.visible = false
 		if arg.begins_with("--time="):
 			field_weather.apply_conditions(maxi(0, ["morning", "day", "evening", "night"].find(arg.get_slice("=", 1))), field_weather.weather_index)
 		if arg.begins_with("--weather="):
 			field_weather.apply_conditions(field_weather.time_index, maxi(0, ["clear", "rain", "cloudy", "snow"].find(arg.get_slice("=", 1))))
+	if "--dump-maps" in args:
+		for arg in args:
+			if arg.begins_with("--capture-dir="): _dump_maps(arg.get_slice("=", 1))
 	if "--sample-capture" in args:
+		# Stray keys or stick drift reaching the capture window must not move the explorer
+		# (which would snap the camera back to it); only explore mode reads movement.
+		mode = "capture"
 		await get_tree().create_timer(2.0).timeout
 		await RenderingServer.frame_post_draw
 		var capture_name := "hill"
@@ -98,6 +188,7 @@ func _ready() -> void:
 			if arg.begins_with("--capture-dir="): directory = arg.get_slice("=", 1)
 		for arg in args:
 			if arg.begins_with("--time=") or arg.begins_with("--weather="): capture_name += "_" + arg.get_slice("=", 1)
+		if biome_debug: capture_name += "_biome"
 		get_viewport().get_texture().get_image().save_png(directory.path_join("open_field_%s.png" % capture_name))
 		get_tree().quit()
 
@@ -129,21 +220,203 @@ func _town_mask(p: Vector2) -> float:
 func _town_height(p: Vector2) -> float:
 	return 13.5 + 10.5 * (1.0 - smoothstep(146.0, 232.0, p.y)) + noise.get_noise_2d(p.x * 2.0, p.y * 2.0 - 60.0) * 0.4
 
-## Rolling meadows, the spawn hill, northern ranges and a rim of hills at the map edge.
+## Macro terrain: a gently swelling plain carrying the designed landforms — 見晴らしの丘
+## and its shoulder, the west ridge, the east plateau, the wetland basin, the northern
+## foothills and the Alva massif — plus a rim of hills at the map edge. The two noise
+## terms are only broad swell and meso detail; they no longer decide the shapes.
 func _ground(p: Vector2) -> float:
-	var h := 17.0 + noise.get_noise_2d(p.x * 0.35, p.y * 0.35) * 11.0 + noise.get_noise_2d(p.x * 1.4 + 500.0, p.y * 1.4 - 300.0) * 1.6
-	h += 12.0 * exp(-(p - SPAWN_HILL).length_squared() / 1800.0)
-	# Forested foothills north of the lake; the snow peaks stand beyond the map.
-	var north := 1.0 - smoothstep(-20.0, 95.0, p.y)
-	var ridge := 1.0 - absf(noise.get_noise_2d(p.x * 0.9 + 77.0, p.y * 0.9))
-	h += north * north * (20.0 + ridge * 24.0)
-	h += 230.0 * pow(maxf(0.0, 1.0 - p.distance_to(Vector2(290, -270)) / 250.0), 1.5)
-	h += 160.0 * pow(maxf(0.0, 1.0 - p.distance_to(Vector2(30, -210)) / 190.0), 1.5)
-	h += 140.0 * pow(maxf(0.0, 1.0 - p.distance_to(Vector2(600, 40)) / 190.0), 1.5)
+	var h := 16.0 + noise.get_noise_2d(p.x * 0.22, p.y * 0.22) * 5.0 + noise.get_noise_2d(p.x * 1.4 + 500.0, p.y * 1.4 - 300.0) * 1.2
+	h += SPAWN_HILL_RISE * _dome(p.distance_to(SPAWN_HILL) / SPAWN_HILL_RADIUS)
+	for ridge: Array in RIDGES:
+		h += _ridge(p, ridge)
+	h += _plateau(p) * PLATEAU[2]
+	h -= 3.5 * _dome(p.distance_to(WETLAND) / 34.0)
+	# Forested foothills north of the lake, folded into east-west ridges.
+	var north := 1.0 - smoothstep(-10.0, 100.0, p.y)
+	var crest := 1.0 - absf(noise.get_noise_2d(p.x * 0.45 + 77.0, p.y * 1.1))
+	h += north * north * (24.0 + crest * 30.0)
+	h += _peaks(p)
 	var edge := minf(minf(p.x, SIZE - p.x), minf(SIZE - p.y, p.y + 40.0))
 	var rim := 1.0 - smoothstep(-10.0, 55.0, edge)
-	h += rim * rim * (26.0 + noise.get_noise_2d(p.x * 0.7, p.y * 0.7 + 99.0) * 14.0) + maxf(0.0, -edge) * 0.18
+	h += rim * rim * (20.0 + noise.get_noise_2d(p.x * 0.7, p.y * 0.7 + 99.0) * 12.0) + maxf(0.0, -edge) * 0.08
 	return h
+
+## Rounded cosine bump: 1 at t = 0, 0 from t = 1 on, with a soft crest and foot.
+func _dome(t: float) -> float:
+	return 0.5 + 0.5 * cos(PI * t) if t < 1.0 else 0.0
+
+func _segment_t(p: Vector2, a: Vector2, b: Vector2) -> float:
+	return clampf((p - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
+
+func _segment_distance(p: Vector2, a: Vector2, b: Vector2) -> float:
+	return p.distance_to(a.lerp(b, _segment_t(p, a, b)))
+
+func _rect_sdf(p: Vector2, center: Vector2, half: Vector2) -> float:
+	var q := (p - center).abs() - half
+	return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0)
+
+## A long rounded ridge whose crest tapers off toward both ends and is notched by
+## ridged noise, so it reads as one landform with a broken skyline.
+func _ridge(p: Vector2, ridge: Array) -> float:
+	var t := _segment_t(p, ridge[0], ridge[1])
+	var d := p.distance_to((ridge[0] as Vector2).lerp(ridge[1], t))
+	var half: float = ridge[2]
+	if d >= half: return 0.0
+	var taper := smoothstep(0.0, 0.3, t) * (1.0 - smoothstep(0.7, 1.0, t))
+	var notch := 0.85 + 0.3 * (1.0 - absf(noise.get_noise_2d(p.x * 0.8 + 200.0, p.y * 0.8)))
+	return ridge[3] * taper * notch * _dome(d / half)
+
+## 0..1 plateau mask: a flat top whose escarpment edge wanders with noise.
+func _plateau(p: Vector2) -> float:
+	var sdf := _rect_sdf(p, PLATEAU[0], PLATEAU[1])
+	if sdf > PLATEAU[3] * 0.5 + 14.0: return 0.0
+	sdf += noise.get_noise_2d(p.x * 1.2 + 50.0, p.y * 1.2) * 14.0
+	return 1.0 - smoothstep(-PLATEAU[3] * 0.5, PLATEAU[3] * 0.5, sdf)
+
+## Distinct peaks (the highest wins, leaving saddles between them) broken into crags
+## by ridged noise, so the far skyline has a recognizable silhouette.
+func _peaks(p: Vector2) -> float:
+	var m := 0.0
+	for peak: Array in PEAKS:
+		var t: float = 1.0 - p.distance_to(peak[0]) / peak[2]
+		if t > 0.0: m = maxf(m, peak[1] * pow(t, 1.25))
+	if m <= 0.0: return 0.0
+	var crag := 1.0 - absf(noise.get_noise_2d(p.x * 0.45 + 40.0, p.y * 0.45 - 90.0))
+	return m * (0.8 + 0.32 * crag)
+
+## Visual-only micro relief (about ±0.05–0.18 m), scaled by the biome's ground roughness
+## and calmed on roads, plazas and fields. It never reaches the gameplay height.
+func _micro(x: float, z: float) -> float:
+	var p := Vector2(x, z)
+	var calm := (1.0 - _plaza_weight(p)) * smoothstep(-0.5, 2.0, _path_distance(x, z)) * (1.0 - _field_weight(p) * 0.8)
+	if calm <= 0.0: return 0.0
+	var amplitude := biome.param_smooth(Biomes.Param.GROUND_ROUGHNESS, x, z) * MICRO_RELIEF * calm
+	return (noise.get_noise_2d(x * 7.0 + 1300.0, z * 7.0 - 800.0) * 1.5 + noise.get_noise_2d(x * 19.0, z * 19.0 + 77.0) * 0.5) * amplitude
+
+## Gameplay heights first, then biomes (which read them), then the visual heights that
+## the terrain mesh, props and the explorer stand on.
+func _cache_heights() -> void:
+	var started := Time.get_ticks_msec()
+	_build_paths()
+	var row := SIZE + 2
+	gameplay_cache.resize(row * row)
+	for z in range(-1, SIZE + 1):
+		for x in range(-1, SIZE + 1):
+			gameplay_cache[(z + 1) * row + x + 1] = _expanded_height(x, z)
+	biome.bake(SIZE, _biome_signals)
+	height_cache.resize(row * row)
+	for z in range(-1, SIZE + 1):
+		for x in range(-1, SIZE + 1):
+			var i := (z + 1) * row + x + 1
+			var inside := x >= 0 and z >= 0 and x <= SIZE and z <= SIZE
+			height_cache[i] = gameplay_cache[i] + (_micro(x, z) if inside else 0.0)
+	print("[JRPGWorld2] Heights and biomes baked in ", Time.get_ticks_msec() - started, " ms")
+
+## Landform signals for the biome system (see Biomes.Landform). Noise warps every boundary
+## so no biome edge runs straight.
+func _biome_signals(x: float, z: float) -> PackedFloat32Array:
+	var p := Vector2(x, z)
+	var h := get_gameplay_height(x, z)
+	var warp := noise.get_noise_2d(x * 1.6 + 611.0, z * 1.6 - 207.0) + noise.get_noise_2d(x * 4.0 - 90.0, z * 4.0 + 33.0) * 0.35
+	var s := PackedFloat32Array()
+	s.resize(Biomes.LANDFORM_COUNT)
+	var town := 1.0 - smoothstep(-2.0, 6.0, _rect_sdf(p, TOWN_RECT.get_center(), TOWN_RECT.size * 0.5 + Vector2(3, 3)) + warp * 4.0)
+	var village := 1.0 - smoothstep(24.0, 34.0, p.distance_to(VILLAGE) + warp * 6.0)
+	s[Biomes.Landform.SETTLEMENT] = maxf(maxf(town, village), _mesa_mask(p, 2))
+	s[Biomes.Landform.RUINS] = 1.0 - smoothstep(28.0, 42.0, p.distance_to(RUINS) + warp * 7.0)
+	s[Biomes.Landform.FARMLAND] = maxf(_field_weight(p), 1.0 - smoothstep(-4.0, 8.0, _rect_sdf(p, FARMLAND_CENTER, FARMLAND_HALF) + warp * 6.0))
+	var e := ((p - LAKE_CENTER) / LAKE_RADIUS).length() + warp * 0.07
+	s[Biomes.Landform.SHORE] = (1.0 - smoothstep(1.0, 1.25, e)) * (1.0 - smoothstep(LAKE + 3.0, LAKE + 7.0, h))
+	s[Biomes.Landform.WETLAND] = 1.0 - smoothstep(22.0, 36.0, p.distance_to(WETLAND) + warp * 8.0)
+	s[Biomes.Landform.MOUNTAIN] = smoothstep(44.0, 58.0, h + warp * 8.0)
+	var forest := 0.0
+	for wood: Array in WOODS:
+		var radius: float = wood[2]
+		forest = maxf(forest, 1.0 - smoothstep(radius * 0.55, radius, _segment_distance(p, wood[0], wood[1]) + warp * 14.0))
+	s[Biomes.Landform.FOREST] = forest
+	s[Biomes.Landform.DEEP] = 1.0 - smoothstep(10.0, 30.0, _segment_distance(p, DEEP_CORE[0], DEEP_CORE[1]) + warp * 10.0)
+	s[Biomes.Landform.HIGHLAND] = maxf(_plateau(p), smoothstep(38.0, 48.0, h + warp * 6.0))
+	return s
+
+## 0..1: how far inside a designed view corridor (SIGHTLINES) this point is.
+func _sightline_mask(p: Vector2) -> float:
+	var mask := 0.0
+	for line: Array in SIGHTLINES:
+		var a: Vector2 = line[0]
+		var b: Vector2 = line[1]
+		var t := (p - a).dot(b - a) / (b - a).length_squared()
+		if t < 0.0 or t > 1.0: continue
+		var width := lerpf(line[2], line[3], t)
+		mask = maxf(mask, 1.0 - smoothstep(width * 0.6, width, p.distance_to(a.lerp(b, t))))
+	return mask
+
+## Density rhythm: clumps, thinner edges and open glades instead of an even spread.
+func _density_rhythm(p: Vector2) -> float:
+	var clump := smoothstep(-0.25, 0.25, noise.get_noise_2d(p.x * 1.1 + 1234.0, p.y * 1.1 - 77.0))
+	var glade := smoothstep(0.2, 0.34, noise.get_noise_2d(p.x * 0.9 - 300.0, p.y * 0.9 + 140.0))
+	return lerpf(0.4, 1.45, clump) * (1.0 - 0.85 * glade)
+
+# --- Terrain query API (SRPG foundation) ------------------------------------------
+# Gameplay height = macro + meso terrain; visual height = gameplay + micro relief.
+# A future battle grid reads gameplay heights in 1 m cells (CELL_SIZE) and can snap
+# them to logical steps (HEIGHT_STEP); exploration keeps using the smooth visual surface.
+
+func get_gameplay_height(x: float, z: float) -> float:
+	if gameplay_cache.is_empty() or x < -1.0 or z < -1.0 or x >= SIZE or z >= SIZE:
+		return _expanded_height(x, z)
+	var ix := floori(x)
+	var iz := floori(z)
+	var row := SIZE + 2
+	var i := (iz + 1) * row + ix + 1
+	var fx := x - ix
+	var top := lerpf(gameplay_cache[i], gameplay_cache[i + 1], fx)
+	return lerpf(top, lerpf(gameplay_cache[i + row], gameplay_cache[i + row + 1], fx), z - iz)
+
+func get_visual_height(x: float, z: float) -> float:
+	return _height(x, z)
+
+## Gameplay height snapped to HEIGHT_STEP, e.g. 10 m / 11 m / 12 m tiers for battle.
+func get_logical_height(x: float, z: float) -> float:
+	return snappedf(get_gameplay_height(x, z), HEIGHT_STEP)
+
+func get_biome_at(x: float, z: float) -> int:
+	return biome.biome_at(x, z)
+
+## {Biome: weight} at this point, e.g. {PLAINS: 0.65, FOREST: 0.35}.
+func get_biome_weights(x: float, z: float) -> Dictionary:
+	return biome.weights_at(x, z)
+
+## Gradient (rise / run) of the gameplay height, free of micro relief.
+func get_slope_at(x: float, z: float) -> float:
+	return Vector2(get_gameplay_height(x + 0.5, z) - get_gameplay_height(x - 0.5, z), get_gameplay_height(x, z + 0.5) - get_gameplay_height(x, z - 0.5)).length()
+
+## Static walkability with the same limits as _can_walk: map bounds, lake, cliff
+## steepness and building/tree/rock obstacles.
+func is_walkable_at(x: float, z: float) -> bool:
+	if x < 2 or z < 2 or x >= SIZE - 2 or z >= SIZE - 2: return false
+	if _surface(x, z) < LAKE + 0.2 or _slope(x, z) > 1.05: return false
+	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(x / CHUNK), floori(z / CHUNK)), []):
+		if rect.has_point(Vector2(x, z)): return false
+	return true
+
+func world_position_to_cell(p: Vector3) -> Vector2i:
+	return Vector2i(floori(p.x / CELL_SIZE), floori(p.z / CELL_SIZE))
+
+## Cell center on the visible ground, where a unit standing in the cell is placed.
+func cell_to_world_position(cell: Vector2i) -> Vector3:
+	var x := (cell.x + 0.5) * CELL_SIZE
+	var z := (cell.y + 0.5) * CELL_SIZE
+	return Vector3(x, get_visual_height(x, z), z)
+
+## Everything a future BattleCell needs for one cell.
+func get_cell_info(cell: Vector2i) -> Dictionary:
+	var center := cell_to_world_position(cell)
+	return {
+		"coord": cell, "world_position": center,
+		"height": get_gameplay_height(center.x, center.z), "logical_height": get_logical_height(center.x, center.z),
+		"biome": get_biome_at(center.x, center.z), "slope": get_slope_at(center.x, center.z),
+		"walkable": is_walkable_at(center.x, center.z), "cover": cover_cells.get(cell, "NONE"),
+	}
 
 ## 1 on the mesa top, 0 outside, across a ~4 m cliff band with a wobbly outline.
 func _mesa_mask(p: Vector2, index: int) -> float:
@@ -265,6 +538,10 @@ func _field_weight(p: Vector2) -> float:
 func _clear(p: Vector2, margin := 0.0) -> bool:
 	for zone: Array in CLEARINGS:
 		if p.distance_to(zone[0]) < zone[1] + margin: return true
+	# Named viewpoints (SHOTS) stand in small clearings so their vistas stay open.
+	for shot: Array in SHOTS.values():
+		var from: Vector3 = shot[0]
+		if p.distance_to(Vector2(from.x, from.z)) < 7.0 + margin: return true
 	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(p.x / CHUNK), floori(p.y / CHUNK)), []):
 		if rect.grow(1.0 + margin).has_point(p): return true
 	return false
@@ -273,7 +550,6 @@ func _clear(p: Vector2, margin := 0.0) -> bool:
 
 func _build_world() -> void:
 	var started := Time.get_ticks_msec()
-	_build_paths()
 	terrain_material = ShaderMaterial.new()
 	terrain_material.shader = TERRAIN_SHADER
 	terrain_material.set_shader_parameter("lake_level", LAKE)
@@ -293,8 +569,10 @@ func _build_world() -> void:
 	_build_cliffs()
 	_build_trees_and_rocks()
 	_index_obstacles()
+	_build_bushes()
 	_build_grass()
 	_build_labels(landmarks)
+	_apply_biome_maps()
 	print("[JRPGWorld2] Built ", SIZE, " x ", SIZE, " open field in ", Time.get_ticks_msec() - started, " ms; seed=", world_seed)
 
 func _build_terrain() -> void:
@@ -314,7 +592,8 @@ func _build_terrain() -> void:
 					vertices.append(Vector3(x, h, z))
 					normals.append(Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1)).normalized())
 					var road := 1.0 - smoothstep(-0.4, 1.0, _path_distance(x, z) + noise.get_noise_2d(x * 5.0, z * 5.0) * 0.8)
-					var sand := (1.0 - smoothstep(LAKE + 0.4, LAKE + 1.6, h)) * (1.0 - road)
+					var shore := biome.weight(Biomes.Biome.LAKESHORE, x, z) * (1.0 - smoothstep(LAKE + 1.2, LAKE + 3.0, h)) * 0.85
+					var sand := maxf(1.0 - smoothstep(LAKE + 0.4, LAKE + 1.6, h), shore) * (1.0 - road)
 					colors.append(Color(road, sand, _plaza_weight(Vector2(x, z)), _field_weight(Vector2(x, z)) * (1.0 - road)))
 			var width := x1 - cx + 1
 			var indices := PackedInt32Array()
@@ -483,6 +762,30 @@ func _house(parent: Node3D, at: Vector2, yaw_angle: float, w: float, d: float, w
 		hi = hi.max(r)
 	obstacles.append(Rect2(at + lo, hi - lo))
 
+## House/001 model on a stone plinth that absorbs the slope; its arched front (+Z) faces yaw_angle.
+func _manor(parent: Node3D, at: Vector2, yaw_angle: float) -> void:
+	var half := Vector2(0.95, 0.78) * MANOR_SCALE
+	var lo := INF
+	var hi := -INF
+	for dz in range(-ceili(half.y), ceili(half.y) + 1):
+		for dx in range(-ceili(half.x), ceili(half.x) + 1):
+			var p := at + Vector2(clampf(dx, -half.x, half.x), clampf(dz, -half.y, half.y)).rotated(-yaw_angle)
+			var h := _height(p.x, p.y)
+			lo = minf(lo, h)
+			hi = maxf(hi, h)
+	var floor_y := hi + 0.15
+	var root := _anchor(parent, at, yaw_angle, floor_y)
+	root.name = "Manor"
+	var plinth := floor_y - lo + 0.6
+	_part(root, "box", Vector3(half.x * 2.0 + 0.4, plinth, half.y * 2.0 + 0.4), Vector3(0, -plinth * 0.5, 0), Props.rock_material(Color("8f8d86"), 0.3))
+	var manor := MANOR_MODEL.instantiate() as Node3D
+	manor.scale = Vector3.ONE * MANOR_SCALE
+	# The mesh is centred on its origin; lift its base (y = -0.65) onto the plinth.
+	manor.position.y = 0.65 * MANOR_SCALE
+	root.add_child(manor)
+	var extent := (half + Vector2(0.2, 0.2)).rotated(-yaw_angle).abs()
+	_block(at, extent)
+
 func _lamp(parent: Node3D, at: Vector2, height := NAN) -> void:
 	var root := _anchor(parent, at, 0.0, height)
 	var iron := Props.flat(Color("2d2f33"), 0.6)
@@ -595,6 +898,12 @@ func _build_town(parent: Node3D) -> void:
 			var offset := 9.5 if z > 170.0 else 11.0
 			_house(root, Vector2(CRAG.x + side * offset, z), side * -PI / 2.0, rng.randf_range(4.6, 5.6), rng.randf_range(4.0, 4.6), rng.randf_range(3.0, 3.6), roofs[rng.randi() % roofs.size()])
 		for z in [195.0, 166.0, 153.5]:
+			if Vector2(CRAG.x + side * 18.5, z) == TOWN_MANOR_LOT:
+				# Draw the cottage's random numbers anyway so every other house keeps its look.
+				for i in 3: rng.randf()
+				rng.randi()
+				_manor(root, TOWN_MANOR_AT, PI / 2.0)
+				continue
 			_house(root, Vector2(CRAG.x + side * 18.5, z), side * -PI / 2.0, rng.randf_range(4.8, 6.0), rng.randf_range(4.0, 4.6), rng.randf_range(3.0, 3.8), roofs[rng.randi() % roofs.size()])
 	_cathedral(root, Vector2(220, TOWN_PLAZA.y), stone, slate)
 	_church(root, Vector2(190, TOWN_PLAZA.y), stone, slate)
@@ -892,49 +1201,88 @@ func _near_ramp(p: Vector2, margin: float) -> bool:
 		if p.distance_to(a + ab * t) < ramp[2] + 5.0 + margin: return true
 	return false
 
+## Trees and boulders from the biome table: density, broadleaf/conifer mix and size come
+## from the blended BiomeData; density rhythm clumps them into groves and glades, and the
+## designed sightlines stay open. Trees are the Blender-built Phase 2 set with
+## hierarchical LOD (Vegetation.add_tree_chunk): broadleaf A/B/C in the woods, oaks
+## favoured on open land, conifer A/B. Blossom trees and boulders are still procedural.
 func _build_trees_and_rocks() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 5
 	var chunks: Dictionary = {}
 	var spacing := 4.0
+	var grid := biome.param_grid
+	var counts := {}
 	var z := 0.0
 	while z < SIZE:
 		var x := 0.0
 		while x < SIZE:
+			# Every random number is drawn up front so a skipped spot never shifts the rest.
 			var p := Vector2(x + rng.randf() * spacing, z + rng.randf() * spacing)
 			var roll := rng.randf()
 			var pick := rng.randf()
 			var size := rng.randf_range(0.75, 1.25)
 			var angle := rng.randf() * TAU
+			var stretch := rng.randf()
 			x += spacing
 			var h := _height(p.x, p.y)
-			if h < LAKE + 1.0 or h > 66.0 or _path_distance(p.x, p.y) < 3.0 or _slope(p.x, p.y) > 0.8: continue
+			if h < LAKE + 1.0 or _path_distance(p.x, p.y) < 3.0: continue
 			if _clear(p) or _near_ramp(p, 0.0): continue
-			var forest := noise.get_noise_2d(p.x * 0.9 + 1234.0, p.y * 0.9 - 77.0) + (1.0 - smoothstep(70.0, 125.0, p.y)) * 0.3
-			var tree_chance := 0.018 + smoothstep(0.02, 0.3, forest) * 0.6
+			var c := biome.cell(p.x, p.y)
+			if h < grid[c + Biomes.Param.MIN_HEIGHT] or h > grid[c + Biomes.Param.MAX_HEIGHT]: continue
+			var slope := get_slope_at(p.x, p.y)
+			var open := 1.0 - _sightline_mask(p)
+			var tree_chance := grid[c + Biomes.Param.TREE_DENSITY] * _density_rhythm(p)
+			# Small broadleaf groves dot the plains.
+			var grove := smoothstep(0.28, 0.42, noise.get_noise_2d(p.x * 1.5 + 911.0, p.y * 1.5 - 45.0))
+			tree_chance += biome.weight(Biomes.Biome.PLAINS, p.x, p.y) * grove * 0.4
+			tree_chance *= open * (1.0 - smoothstep(grid[c + Biomes.Param.MAX_SLOPE] - 0.1, grid[c + Biomes.Param.MAX_SLOPE], slope))
+			var rock_chance := (grid[c + Biomes.Param.ROCK_DENSITY] + 0.05 * smoothstep(0.35, 0.75, slope)) * lerpf(0.4, 1.0, open)
 			var kind := ""
 			var variant := 0
 			if roll < tree_chance:
-				# Broadleaf trees are left out for now; drawing the same random number keeps
-				# every other tree and rock where it was.
-				if not (h > 26.0 or forest > 0.12 or pick < 0.25):
-					rng.randf()
-					continue
-				kind = "conifer"
-				variant = int(pick * 30.0) % 3
-				obstacles.append(Rect2(p - Vector2(0.45, 0.45) * size, Vector2(0.9, 0.9) * size))
-			elif roll < tree_chance + 0.025:
+				# Authored assets keep their designed silhouette within 0.85-1.15.
+				var variation := remap(size, 0.75, 1.25, 0.85, 1.15) * grid[c + Biomes.Param.TREE_SCALE]
+				var broadleaf := grid[c + Biomes.Param.BROADLEAF_WEIGHT]
+				var conifer := grid[c + Biomes.Param.CONIFER_WEIGHT] + smoothstep(32.0, 56.0, h) * 0.6
+				size *= grid[c + Biomes.Param.TREE_SCALE] * lerpf(0.85, 1.1, stretch)
+				# Variants are hashed from the draws above, never drawn, so the layout is stable.
+				var shape := fmod(pick * 211.0, 1.0)
+				var trunk := 0.45
+				if pick * (broadleaf + conifer) < conifer:
+					# The broad, drooping spruce (B) takes over toward the highlands.
+					kind = "conifer_b" if shape < 0.35 + 0.3 * smoothstep(30.0, 50.0, h) else "conifer_a"
+					size = variation
+				else:
+					# Blossom trees are rare accents in the open meadows and on the shore.
+					var meadow := biome.weight(Biomes.Biome.PLAINS, p.x, p.y) + biome.weight(Biomes.Biome.LAKESHORE, p.x, p.y)
+					var open_land := meadow + biome.weight(Biomes.Biome.FARMLAND, p.x, p.y) + biome.weight(Biomes.Biome.HIGHLAND, p.x, p.y)
+					if fmod(pick * 97.0, 1.0) < 0.06 * meadow:
+						kind = "broadleaf"
+						variant = 2
+						trunk = 0.5
+					else:
+						# Oaks stand on open land; the woods are broadleaf A / B / C.
+						var oak := fmod(pick * 53.0, 1.0) < 0.1 + 0.45 * clampf(open_land, 0.0, 1.0)
+						kind = ("oak_b" if shape < 0.3 else "oak_a") if oak else ["broadleaf_a", "broadleaf_b", "broadleaf_c"][int(shape * 3.0)]
+						trunk = 0.65 if oak else 0.45
+						size = variation
+				obstacles.append(Rect2(p - Vector2(trunk, trunk) * size, Vector2(trunk, trunk) * 2.0 * size))
+				cover_cells[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
+			elif roll < tree_chance + rock_chance:
 				kind = "rock"
 				variant = int(pick * 40.0) % 4
 				size *= 1.1 if pick < 0.7 else 2.2
 				obstacles.append(Rect2(p - Vector2(0.7, 0.7) * size, Vector2(1.4, 1.4) * size))
 			else:
 				continue
-			var key := Vector2i(floori(p.x / 64.0), floori(p.y / 64.0))
+			counts[kind] = counts.get(kind, 0) + 1
+			var key := Vector2i(floori(p.x / Vegetation.COARSE_CHUNK), floori(p.y / Vegetation.COARSE_CHUNK))
 			if not chunks.has(key): chunks[key] = {}
-			var mesh_key := "%s_%d" % [kind, variant]
+			var mesh_key := kind if Vegetation.SCENES.has(kind) else "%s_%d" % [kind, variant]
 			if not chunks[key].has(mesh_key): chunks[key][mesh_key] = []
-			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * (rng.randf_range(0.6, 0.9) if kind == "rock" else rng.randf_range(0.9, 1.15)), size))
+			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.95, 1.05, stretch) if Vegetation.SCENES.has(kind) else lerpf(0.9, 1.15, stretch)
+			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * tall, size))
 			chunks[key][mesh_key].append(Transform3D(basis, Vector3(p.x, h - (0.35 * size if kind == "rock" else 0.1), p.y)))
 		z += spacing
 	var root := Node3D.new()
@@ -945,42 +1293,148 @@ func _build_trees_and_rocks() -> void:
 		chunk.name = "Forest_%d_%d" % [key.x, key.y]
 		root.add_child(chunk)
 		for mesh_key: String in chunks[key]:
+			if Vegetation.SCENES.has(mesh_key):
+				Vegetation.add_tree_chunk(chunk, mesh_key, chunks[key][mesh_key])
+				continue
 			var kind := mesh_key.get_slice("_", 0)
 			var material: Material = Props.rock_material(Color("8d939c"), 0.75) if kind == "rock" else Props.foliage_material()
 			_multimesh(chunk, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), chunks[key][mesh_key], material, mesh_key)
+	print("[JRPGWorld2] Vegetation: ", counts)
 
+## Bushes along forest edges, in the understory and on road verges (Blender-built
+## bush A / B / C). Walkable light cover: no obstacle, recorded in cover_cells.
+func _build_bushes() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world_seed + 7
+	var grid := biome.param_grid
+	var chunks: Dictionary = {}
+	var counts := {}
+	var spacing := 3.0
+	var z := 0.0
+	while z < SIZE:
+		var x := 0.0
+		while x < SIZE:
+			var p := Vector2(x + rng.randf() * spacing, z + rng.randf() * spacing)
+			var roll := rng.randf()
+			var pick := rng.randf()
+			var size := rng.randf_range(0.85, 1.15)
+			var angle := rng.randf() * TAU
+			x += spacing
+			var h := _height(p.x, p.y)
+			var road := _path_distance(p.x, p.y)
+			if h < LAKE + 0.8 or road < 2.0 or _clear(p) or _near_ramp(p, 0.0): continue
+			var c := biome.cell(p.x, p.y)
+			if h > grid[c + Biomes.Param.MAX_HEIGHT] or _slope(p.x, p.y) > 0.6: continue
+			if _plaza_weight(p) > 0.3 or _field_weight(p) > 0.3: continue
+			# Densest where the woods thin out (forest edge), some understory inside, a few
+			# on the road verges; sightlines thin them but low shrubs rarely block a view.
+			var trees := grid[c + Biomes.Param.TREE_DENSITY] * _density_rhythm(p)
+			var edge := smoothstep(0.04, 0.22, trees) * (1.0 - smoothstep(0.7, 1.1, trees))
+			var verge := (1.0 - smoothstep(4.0, 7.0, road)) * (1.0 - biome.weight(Biomes.Biome.SETTLEMENT, p.x, p.y))
+			var chance := (0.4 * edge + 0.12 * smoothstep(0.5, 1.0, trees) + 0.1 * verge) * lerpf(0.5, 1.0, 1.0 - _sightline_mask(p))
+			if roll >= chance: continue
+			var deep := biome.weight(Biomes.Biome.DEEP_FOREST, p.x, p.y) + biome.weight(Biomes.Biome.FOREST, p.x, p.y) * 0.5
+			var asset := "bush_c" if pick < 0.2 + 0.4 * deep else ("bush_b" if pick < 0.55 + 0.3 * verge else "bush_a")
+			counts[asset] = counts.get(asset, 0) + 1
+			var key := Vector2i(floori(p.x / Vegetation.COARSE_CHUNK), floori(p.y / Vegetation.COARSE_CHUNK))
+			if not chunks.has(key): chunks[key] = {}
+			if not chunks[key].has(asset): chunks[key][asset] = []
+			chunks[key][asset].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * size), Vector3(p.x, h - 0.05, p.y)))
+			var cell := world_position_to_cell(Vector3(p.x, 0, p.y))
+			if not cover_cells.has(cell): cover_cells[cell] = "LIGHT"
+		z += spacing
+	var root := Node3D.new()
+	root.name = "Bushes"
+	add_child(root)
+	for key: Vector2i in chunks:
+		var chunk := Node3D.new()
+		chunk.name = "Bushes_%d_%d" % [key.x, key.y]
+		root.add_child(chunk)
+		for asset: String in chunks[key]:
+			Vegetation.add_bush_chunk(chunk, asset, chunks[key][asset])
+	print("[JRPGWorld2] Bushes: ", counts)
+
+## Grass clumps and wildflowers, all Blender-built clusters with shader wind. Density per
+## biome; within it the cluster type follows the ground: short grass on verges, slopes
+## and thin ground, tall / wild grass where it is wet or rocky, and flowers gathered into
+## drifts of one kind (star flowers A, cool spikes B where it is wetter).
 func _build_grass() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 91
 	var root := Node3D.new()
 	root.name = "Meadow"
 	add_child(root)
+	var grid := biome.param_grid
 	var cell := 20
+	var counts := {}
 	for cz in range(0, SIZE, cell):
 		for cx in range(0, SIZE, cell):
-			var groups: Array = [[], [], [], []]
+			var groups := {}
 			for z in range(cz, cz + cell):
 				for x in range(cx, cx + cell):
+					var c := biome.cell(x + 0.5, z + 0.5)
+					var drift := lerpf(0.15, 3.0, smoothstep(0.05, 0.4, noise.get_noise_2d(x * 2.2 + 70.0, z * 2.2 - 31.0)))
+					var flower_p := 0.03 * grid[c + Biomes.Param.FLOWER_DENSITY] * drift
+					var grass_p := minf(0.69 * grid[c + Biomes.Param.GRASS_DENSITY], 1.0 - flower_p)
+					var wet := grid[c + Biomes.Param.WETNESS]
+					var tall_share := 0.33 + 0.5 * wet
+					var top := grid[c + Biomes.Param.MAX_HEIGHT]
+					# Per-cell patches: which flower a drift is, where tall grass turns wild,
+					# and short-grass lawns that break up the meadow.
+					var flower_b := noise.get_noise_2d(x * 1.3 + 300.0, z * 1.3 - 80.0) > 0.12 - 0.5 * wet
+					var wild := noise.get_noise_2d(x * 1.7 - 150.0, z * 1.7 + 60.0) > 0.18 - 0.6 * grid[c + Biomes.Param.ROCKINESS]
+					var lawn := noise.get_noise_2d(x * 1.9 + 520.0, z * 1.9 + 210.0) > 0.3 or grid[c + Biomes.Param.GRASS_DENSITY] < 0.45
 					for k in 3:
 						var px := x + rng.randf()
 						var pz := z + rng.randf()
 						var roll := rng.randf()
 						var size := rng.randf_range(0.8, 1.3)
 						var angle := rng.randf() * TAU
-						if roll > 0.72: continue
+						if roll >= flower_p + grass_p: continue
 						var h := _height(px, pz)
-						if h < LAKE + 0.5 or h > 50.0: continue
+						if h < LAKE + 0.5 or h > top: continue
 						var road := _path_distance(px, pz)
 						if road < -0.2 or (road < 0.8 and roll > 0.3): continue
-						if _slope(px, pz) > 0.65 or _plaza_weight(Vector2(px, pz)) > 0.3 or _field_weight(Vector2(px, pz)) > 0.3: continue
-						var group := 0 if roll < 0.45 else 1
-						if roll > 0.69: group = 2 + int(angle * 10.0) % 2
-						groups[group].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3(size, size, size)), Vector3(px, h - 0.03, pz)))
+						var slope := _slope(px, pz)
+						if slope > 0.65 or _plaza_weight(Vector2(px, pz)) > 0.3 or _field_weight(Vector2(px, pz)) > 0.3: continue
+						var asset := ""
+						if roll < flower_p:
+							asset = "flower_grass_b" if flower_b else "flower_grass_a"
+						elif fmod(roll * 13.7, 1.0) < tall_share and road > 2.0:
+							asset = "grass_wild" if wild else "grass_tall"
+						elif lawn or road < 2.2 or slope > 0.45:
+							asset = "grass_short"
+						else:
+							asset = "grass_normal"
+						if not groups.has(asset): groups[asset] = []
+						groups[asset].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * remap(size, 0.8, 1.3, 0.85, 1.15)), Vector3(px, h - 0.03, pz)))
 			var detail := Node3D.new()
 			detail.name = "Meadow_%d_%d" % [cx, cz]
 			root.add_child(detail)
-			for g in 4:
-				_multimesh(detail, Props.mesh("grass" if g < 2 else "flower", g % 2), groups[g], Props.foliage_material(), "Grass_%d" % g, false, 70.0)
+			for asset: String in groups:
+				counts[asset] = counts.get(asset, 0) + groups[asset].size()
+				Vegetation.add_grass_chunk(detail, asset, groups[asset])
+	print("[JRPGWorld2] Grass: ", counts)
+
+## Hands the baked biome tint/debug maps to every open-field shader material.
+func _apply_biome_maps() -> void:
+	var tint := biome.tint_texture()
+	biome_debug_map = biome.debug_texture()
+	var surface := biome.surface_texture()
+	for material in _field_materials():
+		material.set_shader_parameter("biome_map", tint)
+		material.set_shader_parameter("biome_debug_map", biome_debug_map)
+		material.set_shader_parameter("biome_surface_map", surface)
+		material.set_shader_parameter("biome_uv_scale", biome.uv_scale())
+		material.set_shader_parameter("biome_uv_offset", biome.uv_offset())
+		material.set_shader_parameter("biome_extent", float(SIZE))
+		material.set_shader_parameter("biome_enabled", 1.0)
+
+func _field_materials() -> Array[ShaderMaterial]:
+	var materials: Array[ShaderMaterial] = Props.shader_materials()
+	materials.append_array(Vegetation.shader_materials())
+	materials.append(terrain_material)
+	return materials
 
 func _build_labels(parent: Node3D) -> void:
 	for entry in [["ルミエール城", CRAG, 44.0], ["城下町", TOWN_PLAZA, 16.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0]]:
@@ -1043,7 +1497,102 @@ func _preset(index: int) -> void:
 			yaw = 0.7
 			pitch = 0.3
 			distance = 38
+		5:
+			_shot("hero")
+			return
 	_update_camera()
+
+## Frames a named SHOTS view. The orbit focus sits 20 m along the line of sight so the
+## distance-scaled fog matches what the explorer sees in play.
+func _shot(shot_name: String) -> void:
+	var shot: Array = SHOTS[shot_name]
+	var from: Vector3 = shot[0]
+	from.y += maxf(_height(from.x, from.z), LAKE)
+	var direction := ((shot[1] as Vector3) - from).normalized()
+	overview = true
+	distance = 20.0
+	focus = from + direction * distance
+	yaw = atan2(-direction.x, -direction.z)
+	pitch = asin(-direction.y)
+	_update_camera()
+
+## Top-down 1 px = 1 m map: biome debug colors over a hillshade, sightlines in white.
+func _dump_maps(directory: String) -> void:
+	var image := Image.create_empty(SIZE + 1, SIZE + 1, false, Image.FORMAT_RGB8)
+	var debug := biome_debug_map.get_image()
+	var light := Vector3(-1, 2, -1).normalized()
+	for z in SIZE + 1:
+		for x in SIZE + 1:
+			var normal := Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1)).normalized()
+			var color := debug.get_pixel(mini(x >> 1, debug.get_width() - 1), mini(z >> 1, debug.get_height() - 1))
+			if _cached(x, z) < LAKE: color = Color("1d3f66")
+			color = color * lerpf(0.45, 1.15, maxf(normal.dot(light), 0.0))
+			if _sightline_mask(Vector2(x, z)) > 0.5: color = color.lerp(Color.WHITE, 0.25)
+			image.set_pixel(x, z, color)
+	for rect in obstacles:
+		var center := rect.get_center()
+		if center.x >= 0 and center.y >= 0 and center.x <= SIZE and center.y <= SIZE:
+			image.set_pixel(int(center.x), int(center.y), Color.WHITE)
+	image.save_png(directory.path_join("open_field_map_biome.png"))
+
+func _set_biome_debug(on: bool) -> void:
+	biome_debug = on
+	for material in _field_materials():
+		material.set_shader_parameter("biome_debug", 1.0 if on else 0.0)
+
+func _setup_hud() -> void:
+	super._setup_hud()
+	for label: Label in hud.find_children("*", "Label", true, false):
+		if label.text.begins_with("WASD"):
+			label.text += "
+5 : 絶景（見晴らしの丘）　F3 : バイオーム表示　F4 : 地形情報"
+	terrain_panel = _panel(Vector2.ZERO)
+	terrain_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	terrain_panel.offset_left = -284
+	terrain_panel.offset_right = -20
+	terrain_panel.offset_top = 420
+	terrain_text = Label.new()
+	terrain_text.add_theme_font_size_override("font_size", 15)
+	terrain_panel.add_child(terrain_text)
+	terrain_panel.visible = false
+
+func _update_terrain_hud() -> void:
+	var p: Vector3 = player.position
+	var weights := get_biome_weights(p.x, p.z)
+	var ids := weights.keys()
+	ids.sort_custom(func(a: int, b: int) -> bool: return weights[a] > weights[b])
+	var shares: Array[String] = []
+	for id: int in ids.slice(0, 3):
+		shares.append("%s %.2f" % [Biomes.NAMES[id], weights[id]])
+	var cell := world_position_to_cell(p)
+	terrain_text.text = "Biome: %s
+  %s
+Cell: (%d, %d)
+Visual Height: %.2fm
+Gameplay Height: %.2fm
+Logical Height: %.0fm
+Slope: %.2f
+Walkable: %s" % [
+		Biomes.NAMES[get_biome_at(p.x, p.z)], " / ".join(shares), cell.x, cell.y,
+		get_visual_height(p.x, p.z), get_gameplay_height(p.x, p.z), get_logical_height(p.x, p.z),
+		get_slope_at(p.x, p.z), str(is_walkable_at(p.x, p.z))]
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and mode == "explore":
+		match event.keycode:
+			KEY_F3:
+				_set_biome_debug(not biome_debug)
+				get_viewport().set_input_as_handled()
+				return
+			KEY_F4:
+				terrain_panel.visible = not terrain_panel.visible
+				get_viewport().set_input_as_handled()
+				return
+			KEY_5:
+				_preset(5)
+				get_viewport().set_input_as_handled()
+				return
+	super._unhandled_input(event)
 
 func _region() -> String:
 	var p := Vector2(player.position.x, player.position.z)
@@ -1054,7 +1603,7 @@ func _region() -> String:
 	if p.y < 95.0: return "北嶺の麓"
 	if p.distance_to(SPAWN_HILL) < 40.0: return "見晴らしの丘"
 	if ((p - LAKE_CENTER) / LAKE_RADIUS).length() < 1.3: return "鏡の湖畔"
-	return "翠風の野"
+	return REGION_NAMES.get(get_biome_at(p.x, p.y), "翠風の野")
 
 func _process(delta: float) -> void:
 	super._process(delta)
@@ -1063,6 +1612,7 @@ func _process(delta: float) -> void:
 		crystal.rotation.y += delta * 0.6
 		crystal.position.y = 4.2 + sin(Time.get_ticks_msec() * 0.0015) * 0.25
 	_sync_conditions()
+	if terrain_panel.visible: _update_terrain_hud()
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
 		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"
 
@@ -1075,8 +1625,17 @@ func _sync_conditions() -> void:
 	var wet := 1.0 if field_weather.weather_index == 1 else 0.0
 	var snow := 0.8 if field_weather.weather_index == 3 else 0.0
 	var materials: Array[ShaderMaterial] = Props.shader_materials()
+	materials.append_array(Vegetation.shader_materials())
 	materials.append_array([terrain_material, lake_material])
 	for material in materials:
 		material.set_shader_parameter("wetness", wet)
 		material.set_shader_parameter("snow_cover", snow)
+	# Wind for the Phase 2 vegetation: livelier in rain and cloud, calmer in snow.
+	var wind := [1.0, 1.7, 1.3, 0.6][field_weather.weather_index] as float
+	for material in Vegetation.shader_materials():
+		material.set_shader_parameter("wind_strength", wind)
+	# Aerial perspective: distant land fades toward a cool, time-of-day haze.
+	var haze := [Color(0.74, 0.79, 0.86), Color(0.60, 0.73, 0.88), Color(0.78, 0.68, 0.68), Color(0.10, 0.14, 0.24)][field_weather.time_index] as Color
+	if field_weather.weather_index != 0: haze = haze.lerp(Color(0.62, 0.66, 0.70) if field_weather.time_index != 3 else Color(0.12, 0.14, 0.2), 0.6)
+	terrain_material.set_shader_parameter("haze_color", Vector3(haze.r, haze.g, haze.b))
 	lamp_material.emission_energy_multiplier = 3.0 if field_weather.time_index == 3 else (1.2 if field_weather.time_index == 2 else 0.3)

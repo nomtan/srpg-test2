@@ -24,7 +24,10 @@ void fragment() {
     if (UV.y > 0.5) {
         color = COLOR.rgb * (0.9 + 0.2 * of_hash(origin.xz));
     } else {
-        color = of_grass(world_position.xz) * mix(0.62, 1.2, COLOR.r);
+        vec4 biome = of_biome(world_position.xz);
+        color = of_grass_tinted(world_position.xz, biome.rgb) * mix(0.62, 1.2, COLOR.r);
+        color *= mix(vec3(1.0), vec3(0.85, 0.9, 0.9), biome.a * 0.6);
+        if (biome_debug > 0.5) color = of_biome_debug(world_position.xz) * mix(0.55, 1.0, COLOR.r);
     }
     color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * smoothstep(0.3, 0.8, world_normal.y) * 0.75);
     color *= 1.0 - wetness * 0.18;

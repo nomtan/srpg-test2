@@ -46,6 +46,10 @@ const SHIELD_WRIST_CLEARANCE := 0.08
 # Idle shield face: out to the left side and turned a little forward, standing nearly upright.
 const SHIELD_FACE := Vector3(1.0, 0.0, 0.55)
 const READY_BLADE := Vector3(-0.55, 0.24, 1.0)
+# One-handed sword at rest: tip raised well up and forward, a little outward, instead of lying level.
+const SWORD_REST_BLADE := Vector3(-0.3, 0.8, 0.75)
+# Mesh weight on the hand and its fingers above which a vertex counts as part of the fist.
+const FIST_WEIGHT := 0.6
 # Rig-neutral roles mapped to each supported skeleton's bone names.
 const RIGS := [
 	{"spine": "spine", "head": "head", "upper_arm.R": "upper_arm.R", "forearm.R": "forearm.R", "hand.R": "hand.R",
@@ -438,6 +442,8 @@ var nock: Node3D
 var _shield_rest := Basis.IDENTITY
 # Right arm length to the palm; ready-stance and greatsword grip offsets are measured in it.
 var arm_reach := 1.0
+# Right-hand weapon direction in the idle pose (character space); clip keys turn the hand from it.
+var _rest_blade := READY_BLADE
 # Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
 var _hand_frame: Dictionary = {}
 # Ready stance held outside the weapon's clips by the grip modifier; empty leaves those clips as animated.
@@ -595,10 +601,15 @@ func _attach_sword() -> void:
 	skeleton.add_child(socket)
 	grip = Node3D.new()
 	grip.name = "SwordGrip"
-	# The hand bone begins at the wrist; move the grip to the palm center along it.
-	grip.position = Vector3(0, rig["palm"], 0)
+	# The handle runs through the fist itself; the Tripo hand meshes often sit off the bone's axis.
+	grip.position = _fist_center("R")
 	var hand: Transform3D = _idle_global[rig["hand.R"]]
-	grip.basis = hand.basis.inverse() * Basis(Quaternion(Vector3.UP, READY_BLADE.normalized()))
+	_rest_blade = SWORD_REST_BLADE
+	var blade := SWORD_REST_BLADE.normalized()
+	# Edges (the guard, along X) line up with the knuckles: the hand's finger axis, square to the blade.
+	var fingers := hand.basis.y.normalized()
+	fingers = (fingers - blade * blade.dot(fingers)).normalized()
+	grip.basis = hand.basis.inverse() * Basis(fingers, blade, fingers.cross(blade))
 	socket.add_child(grip)
 	var sword := SWORD.instantiate() as Node3D
 	_apply_character_toon(sword)
@@ -648,7 +659,51 @@ func _attach_daggers() -> void:
 
 ## Idle blade direction per hand; the left hand mirrors the right across the character's X axis.
 func _ready_blade(side: String) -> Vector3:
-	return (READY_BLADE * (Vector3(-1, 1, 1) if side == "L" else Vector3.ONE)).normalized()
+	return (_rest_blade * (Vector3(-1, 1, 1) if side == "L" else Vector3.ONE)).normalized()
+
+## Center of the fist mesh (the hand and its fingers) in the hand bone's frame; the palm on the bone axis without skin data.
+func _fist_center(side: String) -> Vector3:
+	var hand := skeleton.find_bone(rig["hand." + side])
+	var bones := [hand]
+	var index := 0
+	while index < bones.size():
+		bones.append_array(skeleton.get_bone_children(bones[index]))
+		index += 1
+	var sum := Vector3.ZERO
+	var count := 0
+	for node in skeleton.find_children("*", "MeshInstance3D", true, false):
+		var mesh := node as MeshInstance3D
+		var skin := mesh.skin
+		if skin == null or mesh.mesh == null: continue
+		# Per bind: whether it moves with the fist, and the hand bind that brings bind-pose vertices into the hand's frame.
+		var in_fist: Array[bool] = []
+		var to_hand := Transform3D()
+		var has_hand := false
+		for bind in skin.get_bind_count():
+			var bone := skin.get_bind_bone(bind)
+			if bone < 0: bone = skeleton.find_bone(skin.get_bind_name(bind))
+			in_fist.append(bone in bones)
+			if bone == hand:
+				to_hand = skin.get_bind_pose(bind)
+				has_hand = true
+		if not has_hand: continue
+		for surface in mesh.mesh.get_surface_count():
+			var arrays := mesh.mesh.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			if arrays[Mesh.ARRAY_BONES] == null or vertices.is_empty(): continue
+			var vertex_bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+			var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+			@warning_ignore("integer_division")
+			var per := vertex_bones.size() / vertices.size()
+			for vertex in vertices.size():
+				var weight := 0.0
+				for slot in per:
+					var bind := vertex_bones[vertex * per + slot]
+					if bind < in_fist.size() and in_fist[bind]: weight += weights[vertex * per + slot]
+				if weight > FIST_WEIGHT:
+					sum += to_hand * vertices[vertex]
+					count += 1
+	return sum / count if count > 0 else Vector3(0, rig["palm"], 0)
 
 ## Mirror one-handed keys onto the other side: the left arm swings as the right did, and the body turns the other way.
 func _mirror_keys(keys: Array) -> Array:

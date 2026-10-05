@@ -22,7 +22,7 @@ void fragment() {
     float fine = of_noise(wp.xz * 4.0 + wp.y * 3.0);
     vec3 color = stone.rgb * (0.82 + grain * 0.22 + fine * 0.08) * mix(0.6, 1.0, COLOR.r);
     float top = smoothstep(0.55, 0.85, n.y) * moss * smoothstep(0.3, 0.6, of_noise(wp.xz * 0.5 + 3.0) + 0.25);
-    color = mix(color, of_to_linear(of_grass(wp.xz)) * 0.9, top);
+    color = mix(color, of_to_linear(of_grass_tinted(wp.xz, of_biome(wp.xz).rgb)) * 0.9, top);
     color = mix(color, vec3(0.82, 0.88, 0.93), snow_cover * smoothstep(0.5, 0.9, n.y));
     color *= 1.0 - wetness * 0.25;
     ALBEDO = color;
