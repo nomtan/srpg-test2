@@ -26,6 +26,8 @@ Conventions shared with Godot (scripts/world_jrpg/open_field_vegetation.gd)
         B = phase   per foliage mass / per blade, desynchronizes the wind
         A = petal palette on flower heads (1 warm, 0 cool); on leaf-card crowns 1 card,
             0 solid core; 1 elsewhere
+    * UV2 on leaf cards: the billboard corner's offset from the card center (m); the
+      leaf-card shader spreads the cards in the view plane.
 """
 import math
 import os
@@ -54,8 +56,9 @@ class MeshBuilder:
         self.faces = []
         self.face_materials = []
         self.uvs = None
+        self.uv2s = None
 
-    def vertex(self, co, normal, tone, wind, phase, alpha=1.0, uv=None):
+    def vertex(self, co, normal, tone, wind, phase, alpha=1.0, uv=None, uv2=None):
         self.verts.append(Vector(co))
         self.normals.append(Vector(normal).normalized())
         self.colors.append((clamp01(tone), clamp01(wind), clamp01(phase), alpha))
@@ -63,6 +66,10 @@ class MeshBuilder:
             self.uvs = [(0.0, 0.0)] * (len(self.verts) - 1)
         if self.uvs is not None:
             self.uvs.append(uv or (0.0, 0.0))
+        if uv2 is not None and self.uv2s is None:
+            self.uv2s = [(0.0, 0.0)] * (len(self.verts) - 1)
+        if self.uv2s is not None:
+            self.uv2s.append(uv2 or (0.0, 0.0))
         return len(self.verts) - 1
 
     def face(self, indices, material):
@@ -88,6 +95,10 @@ class MeshBuilder:
             layer = mesh.uv_layers.new(name="UVMap")
             for loop in mesh.loops:
                 layer.data[loop.index].uv = self.uvs[loop.vertex_index]
+        if self.uv2s is not None:
+            layer = mesh.uv_layers.new(name="UV2")
+            for loop in mesh.loops:
+                layer.data[loop.index].uv = self.uv2s[loop.vertex_index]
         mesh.validate(clean_customdata=False)
         mesh.normals_split_custom_set_from_vertices([tuple(n) for n in self.normals])
         obj = bpy.data.objects.new(name, mesh)
@@ -696,9 +707,10 @@ def build_tree(name, tree, trunk_mat, leaf_mat, lods=None):
 
 # --- Leaf-card trees (illustration style) -------------------------------------------------
 # The crown is the same Mass layout as the solid trees, but each mass becomes a shadowed
-# core plus many alpha-cut leaf cards scattered over its surface. Every card vertex takes
-# the normal of the smooth proxy volume under it (the Data Transfer trick), so the flat
-# cards shade as one soft, painted clump while their cut-out edges break the silhouette.
+# core plus many alpha-cut, camera-facing leaf cards scattered over its surface. Every card
+# takes the normal of its clump's sphere (the Data Transfer trick, see BUBBLE_NORMAL), so
+# the flat cards shade as round, painted bubbles while their cut-out edges break the
+# silhouette.
 # Vertex color A tells the leaf-card shader which faces sample the card texture: 1 card,
 # 0 solid core. The cores sit in their own "LeafCore" slot (same runtime material) so
 # Godot can draw the cards without shadow casting: only the smooth cores shadow the crown,
@@ -817,17 +829,27 @@ def card_texture(kind):
     return image
 
 
+# Ghibli "bubble" crowns (Lightning Boy Studio, "How to Create Ghibli Trees in 3D"): the
+# leaves take the normals of their own clump's sphere, not the whole crown's, so every
+# clump lights as a separate ball - bright top, cool shaded underside - and the crown
+# reads as a heap of painted bubbles. BUBBLE_NORMAL is the share of the clump's normal.
+BUBBLE_NORMAL = 0.8
+
+
 def proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.0):
-    """Normal, tone and wind of the smooth proxy volume at p: the mass's own bulge
-    blended with the whole crown (more crown than the solid trees, so the cards read as
-    one clump). `inner` darkens points that sit deeper inside the crown."""
+    """Normal, tone and wind of the smooth proxy volume at p: mostly the clump's own
+    sphere (BUBBLE_NORMAL), a little of the whole crown so the bubbles still share one
+    light direction. Tone darkens each bubble's underside and the bubbles deep in the
+    crown; `inner` darkens points that sit deeper inside the clump."""
     local = mass.rotation.transposed() @ (p - mass.center)
     own = (mass.rotation @ Vector((local.x / mass.radius ** 2, local.y / (mass.radius * mass.stretch) ** 2, local.z / mass.height ** 2))).normalized()
     whole = Vector(((p.x - crown_center.x) / crown_half.x, (p.y - crown_center.y) / crown_half.x, (p.z - crown_center.z) / crown_half.z)).normalized()
-    normal = (own * 0.4 + whole * 0.6).normalized()
+    normal = (own * BUBBLE_NORMAL + whole * (1.0 - BUBBLE_NORMAL)).normalized()
     height01 = clamp01((p.z - (crown_center.z - crown_half.z)) / (2.0 * crown_half.z))
-    outer = clamp01(Vector((p.x - crown_center.x, p.y - crown_center.y, (p.z - crown_center.z) * 1.4)).length / max(crown_half.x, crown_half.z))
-    tone = 0.12 + 0.42 * height01 + 0.22 * max(0.0, normal.z) + 0.22 * outer - 0.3 * max(0.0, -normal.z) + mass.tone_bias - inner
+    # How far the clump itself stands out of the crown: outer bubbles stay light.
+    c = mass.center
+    outer = clamp01(Vector((c.x - crown_center.x, c.y - crown_center.y, (c.z - crown_center.z) * 1.4)).length / max(crown_half.x, crown_half.z))
+    tone = 0.32 + 0.25 * height01 + 0.22 * outer + 0.25 * own.z - 0.15 * max(0.0, -own.z) + mass.tone_bias - inner
     reach = Vector((p.x, p.y, 0.0)).length
     wind = (0.35 + 0.45 * clamp01(reach / trunk_reach) + 0.2 * height01) * wind_scale
     return normal, tone, wind
@@ -839,7 +861,7 @@ def emit_core(mb, mass, material, subdivisions, scale, crown_center, crown_half,
     indices = []
     for d in verts:
         p = mass.center + mass.rotation @ (mass.surface(d) * scale)
-        normal, tone, wind = proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.12)
+        normal, tone, wind = proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.06)
         indices.append(mb.vertex(p, normal, tone, wind, mass.phase, alpha=0.0))
     for f in faces:
         mb.face(tuple(indices[i] for i in f), material)
@@ -917,10 +939,11 @@ def _scaled_cards(tree, scale):
     return tree
 
 
-CARD_DENSITY = 11.0  # LOD0 cards per mass, per m of radius x (radius + height)
+CARD_DENSITY = 13.0  # LOD0 cards per mass, per m of radius x (radius + height)
 CARD_SCALE = 1.3
 CARD_CAP = 3.2  # cards per mass at most, times CARD_DENSITY
 CARD_MIN = 8
+CARD_SEED = 0.01  # billboard cards: half size of the exported quad around its center (m)
 
 
 def emit_cards(mb, mass, material, fraction, crown_center, crown_half, trunk_reach, wind_scale, card_scale=1.0, card_density=1.0):
@@ -942,10 +965,14 @@ def emit_cards(mb, mass, material, fraction, crown_center, crown_half, trunk_rea
     keep = max(2, round(count * fraction))
     cards = []
     for i in range(count):
-        d = Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1) + 0.15)).normalized()
-        # Enlarged cards sit deeper so they do not stand out of the clump's outline.
-        depth = rng.uniform(0.8, 0.97) - 0.25 * (grow - 1.0)
-        tilt = Vector((rng.uniform(-0.4, 0.4), rng.uniform(-0.4, 0.4), rng.uniform(-0.25, 0.2)))
+        # Even all round, underside included: the billboards must hide the faceted core.
+        d = Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1))).normalized()
+        # Cards lie on the bubble's skin (the particle leaves of the tutorial), so the clump
+        # keeps its round outline; enlarged cards sit a little deeper.
+        depth = rng.uniform(0.9, 1.0) - 0.2 * (grow - 1.0)
+        # Tilt only orients the tiny exported quad (the shader billboards the card); it is
+        # still drawn so the seeded sequence, and with it every card, stays put.
+        tilt = Vector((rng.uniform(-0.22, 0.22), rng.uniform(-0.22, 0.22), rng.uniform(-0.12, 0.12)))
         roll = rng.uniform(0, math.tau)
         h = half_size * rng.uniform(0.8, 1.2)
         atlas = rng.randrange(4)
@@ -960,12 +987,17 @@ def emit_cards(mb, mass, material, fraction, crown_center, crown_half, trunk_rea
         side = side * math.cos(roll) + facing.cross(side) * math.sin(roll)
         up = facing.cross(side)
         u0, v0 = (atlas % 2) * 0.5, (atlas // 2) * 0.5
+        # The card is a camera-facing billboard: its corners sit CARD_SEED m around the
+        # center (a real, non-degenerate quad for the exporters) and UV2 holds the corner's
+        # offset in the view plane, rolled per card; the shader spreads it out. A card on
+        # the bubble's silhouette therefore never turns edge-on into a streak.
+        normal, tone, wind = proxy_shade(mass, center, crown_center, crown_half, trunk_reach, wind_scale, inner=0.25 * (1.0 - depth))
         indices = []
         for cx, cy in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
-            p = center + side * (cx * h) + up * (cy * h)
-            normal, tone, wind = proxy_shade(mass, p, crown_center, crown_half, trunk_reach, wind_scale, inner=0.25 * (1.0 - depth))
+            p = center + side * (cx * CARD_SEED) + up * (cy * CARD_SEED)
             uv = (u0 + (cx + 1) * 0.25, v0 + (cy + 1) * 0.25)
-            indices.append(mb.vertex(p, normal, tone, wind, mass.phase, alpha=1.0, uv=uv))
+            offset = ((cx * math.cos(roll) - cy * math.sin(roll)) * h, (cx * math.sin(roll) + cy * math.cos(roll)) * h)
+            indices.append(mb.vertex(p, normal, tone, wind, mass.phase, alpha=1.0, uv=uv, uv2=offset))
         mb.face(indices, material)
 
 
@@ -1031,8 +1063,8 @@ CARD_TREE_LODS = {
     # level: (trunk sides, trunk ring stride, limb sides, limb ring stride, max limb level,
     #         core icosphere subdivisions, core scale, share of the LOD0 cards kept)
     # LOD0 and LOD1 share the core so the 34 m switch only thins the cards.
-    0: (8, 1, 6, 1, 2, 2, 0.8, 1.0),
-    1: (6, 2, 5, 2, 1, 2, 0.8, 0.45),
+    0: (8, 1, 6, 1, 2, 2, 0.72, 1.0),
+    1: (6, 2, 5, 2, 1, 2, 0.72, 0.45),
     2: (5, 4, 0, 0, 0, 1, 0.9, 0.16),
     # Far distance: the cores alone, inflated to stand in for the cards.
     3: (4, 7, 0, 0, 0, 1, 1.4, 0.0),
@@ -1076,16 +1108,18 @@ def build_card_tree(name, tree, trunk_mat, card_mat, core_mat, lods=None):
 
 BLADE_ROWS = [(0.0, 1.0), (0.5, 0.78), (0.82, 0.42)]
 TALL_BLADE_ROWS = [(0.0, 1.0), (0.35, 0.86), (0.62, 0.66), (0.85, 0.36)]
+# Meadow carpet blades (Ghibli / BotW look): one quad and a tip, so a clump can carry
+# many blades. Many short, broad, pointed blades read as a soft carpet, not as tufts.
+CARPET_ROWS = [(0.0, 1.0), (0.55, 0.7)]
+TALL_CARPET_ROWS = [(0.0, 1.0), (0.4, 0.82), (0.72, 0.5)]
 
 
 def blade(mb, material, base, height, lean_dir, lean, side, width, phase, shade, rows=BLADE_ROWS, tip=True):
     """One curved blade from `base`: a strip of quads through `rows` [(t, width factor)]
     closed by a tip triangle. Returns the blade's top point."""
-    face_normal = side.cross(UP).normalized()
-    if face_normal.dot(lean_dir) < 0:
-        face_normal = -face_normal
-    # Normals lean mostly up so a clump is lit like the ground under it.
-    normal = (UP * 0.8 + face_normal * 0.35).normalized()
+    # Normals point straight up: a blade is lit like the ground it grows from (the
+    # stylized-grass normal transfer). Godot swaps in the terrain normal per clump.
+    normal = UP
 
     def point(t):
         bend = lean * height * t * t
@@ -1128,14 +1162,18 @@ def fan(rng, b, blades, spread, height_range, width_range, lean_range=(0.18, 0.5
 
 
 def build_grass_cluster(name, grass_mat, seed, blades, height_range, spread, width_range,
-                        lean_range=(0.18, 0.5), rows=BLADE_ROWS, stalks=0):
-    """A small clump of curved blades fanning out from one root, so the clump reads as
-    blades rather than a card. `stalks` adds thin seed-head stems above the blades
-    (grass_wild)."""
+                        lean_range=(0.18, 0.5), rows=CARPET_ROWS, stalks=0):
+    """A broad patch of curved blades fanning out from one root. Patches are wide and
+    dense enough that neighbours overlap into one carpet; outer blades are shorter so a
+    patch domes up in the middle instead of ending in a hard rim. `stalks` adds thin
+    seed-head stems above the blades (grass_wild)."""
     rng = random.Random(seed)
     mb = MeshBuilder()
+    low, high = height_range
     for b in range(blades):
         base, height, lean_dir, lean, side, width, phase, shade = fan(rng, b, blades, spread, height_range, width_range, lean_range)
+        rim = base.length / spread
+        height = min(height, high - (high - low) * 0.6 * rim)
         blade(mb, 0, base, height, lean_dir, lean, side, width, phase, shade, rows)
     top = height_range[1]
     for k in range(stalks):
@@ -1258,7 +1296,7 @@ def asset_broadleaf_a():
 def asset_grass_normal():
     reset_scene()
     grass = preview_material("Grass", (0.4, 0.6, 0.25, 1.0))
-    objects, report = build_grass_cluster("grass_normal", grass, 3101, 12, (0.15, 0.3), 0.16, (0.045, 0.065))
+    objects, report = build_grass_cluster("grass_normal", grass, 3101, 30, (0.16, 0.3), 0.3, (0.04, 0.06), (0.25, 0.6))
     report["height"] = 0.3
     return objects, "grass", "grass_normal", report
 
@@ -1346,9 +1384,9 @@ ASSETS = {
     "card_fir": card_tree_asset("card_fir", "trees/card", lambda: design_card_conifer(CARD_FIR), "needle"),
     "card_blossom": card_tree_asset("card_blossom", "trees/card", lambda: _scaled_cards(design_spreading(CARD_BLOSSOM), 0.9), "blossom"),
     # name, seed, blades, height range, spread, blade width range (+ lean, rows, stalks)
-    "grass_short": grass_asset("grass_short", 3102, 10, (0.08, 0.14), 0.12, (0.035, 0.05), (0.25, 0.55)),
-    "grass_tall": grass_asset("grass_tall", 3103, 14, (0.3, 0.48), 0.2, (0.04, 0.06), (0.15, 0.42), TALL_BLADE_ROWS),
-    "grass_wild": grass_asset("grass_wild", 3104, 14, (0.18, 0.4), 0.22, (0.03, 0.07), (0.2, 0.75), TALL_BLADE_ROWS, 3),
+    "grass_short": grass_asset("grass_short", 3102, 30, (0.09, 0.15), 0.28, (0.035, 0.05), (0.3, 0.65)),
+    "grass_tall": grass_asset("grass_tall", 3103, 22, (0.3, 0.48), 0.28, (0.035, 0.055), (0.15, 0.42), TALL_CARPET_ROWS),
+    "grass_wild": grass_asset("grass_wild", 3104, 20, (0.18, 0.4), 0.3, (0.03, 0.06), (0.2, 0.75), TALL_CARPET_ROWS, 3),
     # name, seed, leaves, stems, stem height range, head kind, palette (1 warm / 0 cool)
     "flower_grass_a": flower_asset("flower_grass_a", 3201, 8, 5, (0.16, 0.28), "star", 1.0),
     "flower_grass_b": flower_asset("flower_grass_b", 3202, 7, 3, (0.26, 0.4), "spike", 0.0),

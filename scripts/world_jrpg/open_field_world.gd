@@ -117,6 +117,8 @@ const MICRO_RELIEF := 0.18
 const SHOTS := {
 	"hero": [Vector3(147, 5.0, 318), Vector3(207, 36, 128)],
 	"plains": [Vector3(200, 3.0, 302), Vector3(346, 34, 239)],
+	# Eye-level look into the plains meadow, for the grass carpet.
+	"meadow": [Vector3(200, 1.7, 302), Vector3(222, 13.5, 296)],
 	"forest_edge": [Vector3(122, 3.0, 296), Vector3(30, 22, 336)],
 	"forest": [Vector3(56, 2.5, 116), Vector3(205, 50, 121)],
 	"lakeshore": [Vector3(150, 2.2, 228), Vector3(220, 40, 121)],
@@ -462,6 +464,10 @@ func _surface(x: float, z: float) -> float:
 
 func _slope(x: float, z: float) -> float:
 	return Vector2(_height(x + 0.5, z) - _height(x - 0.5, z), _height(x, z + 0.5) - _height(x, z - 0.5)).length()
+
+## Up-facing terrain normal from the height field, over the same 1 m span as _slope.
+func _ground_normal(x: float, z: float) -> Vector3:
+	return Vector3(_height(x - 0.5, z) - _height(x + 0.5, z), 1.0, _height(x, z - 0.5) - _height(x, z + 0.5)).normalized()
 
 func _cached(ix: int, iz: int) -> float:
 	if ix < -1 or iz < -1 or ix > SIZE or iz > SIZE: return _expanded_height(ix, iz)
@@ -1360,7 +1366,8 @@ func _build_bushes() -> void:
 			Vegetation.add_bush_chunk(chunk, asset, chunks[key][asset])
 	print("[JRPGWorld2] Bushes: ", counts)
 
-## Grass clumps and wildflowers, all Blender-built clusters with shader wind. Density per
+## Grass carpet patches and wildflowers, all Blender-built clusters with shader wind; each
+## clump carries the terrain normal it stands on (see open_field_grass.gdshader). Density per
 ## biome; within it the cluster type follows the ground: short grass on verges, slopes
 ## and thin ground, tall / wild grass where it is wet or rocky, and flowers gathered into
 ## drifts of one kind (star flowers A, cool spikes B where it is wetter).
@@ -1376,6 +1383,7 @@ func _build_grass() -> void:
 	for cz in range(0, SIZE, cell):
 		for cx in range(0, SIZE, cell):
 			var groups := {}
+			var normals := {}
 			for z in range(cz, cz + cell):
 				for x in range(cx, cx + cell):
 					var c := biome.cell(x + 0.5, z + 0.5)
@@ -1390,7 +1398,7 @@ func _build_grass() -> void:
 					var flower_b := noise.get_noise_2d(x * 1.3 + 300.0, z * 1.3 - 80.0) > 0.12 - 0.5 * wet
 					var wild := noise.get_noise_2d(x * 1.7 - 150.0, z * 1.7 + 60.0) > 0.18 - 0.6 * grid[c + Biomes.Param.ROCKINESS]
 					var lawn := noise.get_noise_2d(x * 1.9 + 520.0, z * 1.9 + 210.0) > 0.3 or grid[c + Biomes.Param.GRASS_DENSITY] < 0.45
-					for k in 3:
+					for k in 4:
 						var px := x + rng.randf()
 						var pz := z + rng.randf()
 						var roll := rng.randf()
@@ -1412,14 +1420,17 @@ func _build_grass() -> void:
 							asset = "grass_short"
 						else:
 							asset = "grass_normal"
-						if not groups.has(asset): groups[asset] = []
+						if not groups.has(asset):
+							groups[asset] = []
+							normals[asset] = []
 						groups[asset].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * remap(size, 0.8, 1.3, 0.85, 1.15)), Vector3(px, h - 0.03, pz)))
+						normals[asset].append(_ground_normal(px, pz))
 			var detail := Node3D.new()
 			detail.name = "Meadow_%d_%d" % [cx, cz]
 			root.add_child(detail)
 			for asset: String in groups:
 				counts[asset] = counts.get(asset, 0) + groups[asset].size()
-				Vegetation.add_grass_chunk(detail, asset, groups[asset])
+				Vegetation.add_grass_chunk(detail, asset, groups[asset], normals[asset])
 	print("[JRPGWorld2] Grass: ", counts)
 
 ## Hands the baked biome tint/debug maps to every open-field shader material.

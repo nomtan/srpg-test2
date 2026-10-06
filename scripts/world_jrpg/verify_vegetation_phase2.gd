@@ -197,8 +197,8 @@ func _check_cluster(asset: String) -> Mesh:
 			tip_wind = maxf(tip_wind, colors[i].g)
 			if leaf_surface: phases[snappedf(colors[i].b, 0.0001)] = true
 	check(root_wind == 0.0 and tip_wind > 0.99, "%s roots pinned (weight %.2f), tips free (%.2f)" % [asset, root_wind, tip_wind])
-	# Every blade / stem carries its own wind phase.
-	check(phases.size() >= 8 and phases.size() <= 20, "%s has 8-20 blades and stems (%d)" % [asset, phases.size()])
+	# Every blade / stem carries its own wind phase; grass patches are dense carpets.
+	check(phases.size() >= 8 and phases.size() <= 36, "%s has 8-36 blades and stems (%d)" % [asset, phases.size()])
 	return mesh
 
 func _check_grass(asset: String) -> void:

@@ -23,19 +23,10 @@ void fragment() {
     vec3 n = normalize(world_normal);
     float fine = of_noise(p * 1.7);
     vec4 biome = of_biome(p);
-    vec3 color = of_grass_tinted(p, biome.rgb) * (0.93 + fine * 0.12);
-    // Macro color variation at ~100 m, ~30 m and ~5 m. The domain warp bends the noise
-    // so it reads as soil and light changes across the land rather than a pattern.
+    vec3 color = of_meadow(p, biome.rgb);
     vec2 q = p + vec2(of_noise(p * 0.017), of_noise(p * 0.017 + 9.0)) * 40.0;
-    color *= 0.93 + 0.14 * of_noise(q * 0.01 + 31.0);
-    color = mix(color, color * vec3(1.08, 1.02, 0.80), smoothstep(0.58, 0.82, of_noise(q * 0.033 + 5.0)) * 0.45);
-    color = mix(color, color * vec3(0.90, 0.98, 1.02), smoothstep(0.6, 0.85, of_noise(q * 0.03 - 13.0)) * 0.35);
-    color *= 0.97 + 0.06 * of_noise(p * 0.2 + 2.0);
     vec3 dirt = mix(vec3(0.80, 0.71, 0.56), vec3(0.67, 0.58, 0.45), of_noise(p * 0.6)) * (0.92 + fine * 0.14);
-    // Forest floor: darker loam and leaf litter under the canopy, broken into patches.
     vec2 surface = of_biome_surface(p);
-    float litter = surface.g * smoothstep(0.3, 0.7, of_noise(p * 0.25 + 19.0) * 0.6 + of_noise(p * 1.1) * 0.4 + surface.g * 0.3);
-    color = mix(color, mix(vec3(0.33, 0.36, 0.20), vec3(0.42, 0.35, 0.22), of_noise(p * 0.5 + 4.0)) * (0.9 + fine * 0.2), litter * 0.6);
     // Rocky biomes expose stone outcrops through the turf.
     float outcrop_noise = of_noise(q * 0.09 + 23.0) * 0.65 + of_noise(p * 0.5 - 8.0) * 0.35;
     float outcrop = smoothstep(0.8 - surface.r * 0.32, 0.88 - surface.r * 0.32, outcrop_noise) * step(0.01, surface.r);

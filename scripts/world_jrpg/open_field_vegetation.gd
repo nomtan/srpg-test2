@@ -71,6 +71,8 @@ const BUSH_SHADOWS := [true, false, false]
 ## Grass: every clump near the camera, half of them (slightly larger) in the mid band.
 const GRASS_NEAR := 36.0
 const GRASS_FAR := 70.0
+## Billboard leaf cards reach this far (m, at scale 1) outside their mesh's AABB.
+const CARD_CULL_MARGIN := 2.5
 static var meshes: Dictionary = {}
 ## Leaf-card trees: per LOD, the "<Kind>Cards" surface index (-1 when that LOD has none).
 static var card_surfaces: Dictionary = {}
@@ -143,12 +145,20 @@ static func triangle_count(mesh: Mesh) -> int:
 		total += (indices.size() if not indices.is_empty() else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
 	return total
 
-static func _instances(parent: Node3D, mesh: Mesh, transforms: Array, node_name: String, shadows: bool) -> MultiMeshInstance3D:
+## `custom` (optional, one Color per transform) is the shader's INSTANCE_CUSTOM.
+static func _instances(parent: Node3D, mesh: Mesh, transforms: Array, node_name: String, shadows: bool, custom: Array = []) -> MultiMeshInstance3D:
 	var multi := MultiMesh.new()
 	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.use_custom_data = not custom.is_empty()
+	# The Compatibility renderer feeds custom data into COLOR unless the per-instance
+	# color slot is in use too; a white instance color leaves the vertex data intact.
+	multi.use_colors = multi.use_custom_data
 	multi.mesh = mesh
 	multi.instance_count = transforms.size()
 	for i in transforms.size(): multi.set_instance_transform(i, transforms[i])
+	for i in custom.size():
+		multi.set_instance_custom_data(i, custom[i])
+		multi.set_instance_color(i, Color.WHITE)
 	var instance := MultiMeshInstance3D.new()
 	instance.name = node_name
 	instance.multimesh = multi
@@ -165,7 +175,11 @@ static func _tree_instances(parent: Node3D, asset: String, level: int, transform
 		return list
 	var parts := split_cards(asset, level)
 	list.append(_instances(parent, parts[0], transforms, node_name, shadows))
-	if parts[1] != null: list.append(_instances(parent, parts[1], transforms, node_name + "_cards", false))
+	if parts[1] != null:
+		var cards := _instances(parent, parts[1], transforms, node_name + "_cards", false)
+		# The shader spreads each billboard card around its center, past the mesh AABB.
+		cards.extra_cull_margin = CARD_CULL_MARGIN
+		list.append(cards)
 	return list
 
 static func _range(instance: GeometryInstance3D, begin: float, end: float) -> void:
@@ -209,15 +223,21 @@ static func add_bush_chunk(parent: Node3D, asset: String, transforms: Array) -> 
 ## One grass or flower chunk: all clumps up to GRASS_NEAR, every other clump (scaled up 15 % to keep
 ## the cover) out to GRASS_FAR, where the shader has already sunk them into the ground.
 ## Sparse flower drifts skip the thinned band: one MultiMesh to GRASS_FAR is fewer draws.
-static func add_grass_chunk(parent: Node3D, asset: String, transforms: Array) -> void:
+## `normals` (optional, one per transform) are the terrain normals under the clumps; the
+## grass shader lights each blade with them so the meadow shades like the ground.
+static func add_grass_chunk(parent: Node3D, asset: String, transforms: Array, normals: Array = []) -> void:
 	if transforms.is_empty(): return
 	var mesh := lod_meshes(asset)[0]
+	var custom: Array = []
+	for n: Vector3 in normals: custom.append(Color(n.x, n.y, n.z, 0.0))
 	if asset in FLOWERS:
-		_range(_instances(parent, mesh, transforms, asset, false), 0.0, GRASS_FAR)
+		_range(_instances(parent, mesh, transforms, asset, false, custom), 0.0, GRASS_FAR)
 		return
-	_range(_instances(parent, mesh, transforms, asset, false), 0.0, GRASS_NEAR)
+	_range(_instances(parent, mesh, transforms, asset, false, custom), 0.0, GRASS_NEAR)
 	var sparse: Array = []
+	var sparse_custom: Array = []
 	for i in range(0, transforms.size(), 2):
 		var t: Transform3D = transforms[i]
 		sparse.append(Transform3D(t.basis.scaled(Vector3.ONE * 1.15), t.origin))
-	_range(_instances(parent, mesh, sparse, asset + "_mid", false), GRASS_NEAR, GRASS_FAR)
+		if not custom.is_empty(): sparse_custom.append(custom[i])
+	_range(_instances(parent, mesh, sparse, asset + "_mid", false, sparse_custom), GRASS_NEAR, GRASS_FAR)

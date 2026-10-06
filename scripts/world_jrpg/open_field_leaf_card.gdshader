@@ -2,10 +2,13 @@ shader_type spatial;
 render_mode world_vertex_coords, specular_disabled, cull_disabled;
 #include "res://scripts/world_jrpg/open_field_common.gdshaderinc"
 #include "res://scripts/world_jrpg/open_field_wind.gdshaderinc"
-// Illustration-style leaf-card crowns (tools/vegetation: build_card_tree). The cards carry
-// the smooth proxy volume's normals, so lighting them in a few flat bands paints the crown
-// as soft clumps; the leaf texture only cuts the outline and adds per-leaf value.
+// Illustration-style "Ghibli bubble" crowns (tools/vegetation: build_card_tree). Each card
+// carries the normal of its own clump's sphere, so lighting them in three flat bands
+// (shade / lit / highlight) paints every clump as a round, sunlit bubble; the leaf texture
+// only cuts the outline and adds per-leaf value.
 // Vertex COLOR: r = tone, g = wind weight, b = per-mass phase, a = 1 card / 0 solid core.
+// UV2 (cards only): the corner's offset from the card center in the view plane (m); the
+// cards are camera-facing billboards, so none turns edge-on at a clump's silhouette.
 uniform sampler2D leaf_texture : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform float alpha_cutoff = 0.5;
 // Mipmaps average the thin leaf tips away, so at a distance the cut-out would erode and
@@ -27,8 +30,14 @@ uniform float shadow_softness = 0.3;
 // The shaded side keeps this much sun, tinted cool, instead of going to ambient only.
 uniform float shade_level = 0.32;
 uniform vec3 shade_tint : source_color = vec3(0.75, 0.9, 1.1);
+// Sunlit cap of each bubble: a third, warm band on top of the lit one.
+uniform float highlight_threshold = 0.8;
+uniform float highlight_strength = 0.22;
+uniform vec3 highlight_tint : source_color = vec3(1.0, 0.97, 0.7);
 // Thin bright rim where the crown turns away from the camera toward the sun.
 uniform float rim = 0.25;
+// How far a billboard card is pulled toward the camera, relative to its half diagonal.
+uniform float card_push = 0.6;
 uniform float sway = 0.16;
 uniform float rustle = 0.03;
 // The card flutter fades out by this distance: sub-pixel motion only reads as flicker.
@@ -58,6 +67,11 @@ void vertex() {
     // Cards flutter a little more than the cores so the outline shimmers in the wind.
     float near = 1.0 - smoothstep(rustle_distance * 0.5, rustle_distance, distance(VERTEX, CAMERA_POSITION_WORLD));
     float leaf = sin(TIME * 4.1 + dot(VERTEX, vec3(1.7, 2.3, 1.1)) + COLOR.b * 6.283) * rustle * wind_strength * w * mix(0.4, 1.0, COLOR.a) * near * scale;
+    if (COLOR.a > 0.5) {
+        // Billboard, pulled toward the camera so its own bubble's core does not cut it.
+        vec3 to_camera = normalize(CAMERA_POSITION_WORLD - VERTEX);
+        VERTEX += (INV_VIEW_MATRIX[0].xyz * UV2.x + INV_VIEW_MATRIX[1].xyz * UV2.y + to_camera * length(UV2) * card_push) * scale;
+    }
     VERTEX.xz += offset;
     VERTEX += NORMAL * leaf;
     world_normal = NORMAL;
@@ -100,6 +114,8 @@ void light() {
         float shadow = smoothstep(shadow_band - shadow_softness, shadow_band + shadow_softness, ATTENUATION);
         float band = lit * shadow;
         DIFFUSE_LIGHT += mix(shade_level * shade_tint, vec3(1.0), band) * sun;
+        float cap = smoothstep(highlight_threshold - band_softness, highlight_threshold + band_softness, ndl);
+        DIFFUSE_LIGHT += cap * band * highlight_strength * highlight_tint * sun;
         float edge = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
         DIFFUSE_LIGHT += edge * rim * band * sun * vec3(1.0, 1.0, 0.8);
     } else {
