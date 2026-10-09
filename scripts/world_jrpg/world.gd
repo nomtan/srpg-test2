@@ -10,6 +10,8 @@ const MANOR_HALF := Vector2(4.3, 3.5)
 const SIZE := 400
 const CHUNK := 32
 const WATER := 2.6
+## Closest explore-camera distance; near enough to frame the explorer's face.
+const MIN_CAMERA_DISTANCE := 2.5
 @export var world_seed: int = 7319
 var noise := FastNoiseLite.new()
 var height_cache := PackedFloat32Array()
@@ -318,9 +320,10 @@ func _setup_view() -> void:
 
 func _update_camera() -> void:
 	camera.position = focus + Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * distance
-	# Keep an orbiting inspection camera above stepped terrain.
+	# Keep an orbiting inspection camera above stepped terrain. The clearance
+	# shrinks with distance so close-ups stay near eye level.
 	if camera.position.x >= 0 and camera.position.x < SIZE and camera.position.z >= 0 and camera.position.z < SIZE:
-		camera.position.y = maxf(camera.position.y, _height(camera.position.x, camera.position.z) + 3)
+		camera.position.y = maxf(camera.position.y, _height(camera.position.x, camera.position.z) + minf(3.0, 0.5 + distance * 0.25))
 	camera.look_at(focus)
 
 func _preset(index: int) -> void:
@@ -660,7 +663,7 @@ func _process(delta: float) -> void:
 	if not look.is_zero_approx() or not is_zero_approx(GamepadInput.zoom()):
 		yaw -= look.x * delta * 2.2
 		pitch = clampf(pitch + look.y * delta * 1.5, 0.2, 1.35)
-		distance = clampf(distance * exp(-GamepadInput.zoom() * delta), 9.0, SIZE * 1.8)
+		distance = clampf(distance * exp(-GamepadInput.zoom() * delta), MIN_CAMERA_DISTANCE, SIZE * 1.8)
 		_update_camera()
 	if motion.length_squared() > 0 and not player.attacking and not player.guarding:
 		if overview:
@@ -830,7 +833,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		pitch = clampf(pitch + event.relative.y * 0.005, 0.2, 1.35)
 		_update_camera()
 	elif mode == "explore" and event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP: distance = maxf(9, distance * 0.9)
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP: distance = maxf(MIN_CAMERA_DISTANCE, distance * 0.9)
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: distance = minf(SIZE * 1.8, distance * 1.1)
 		_update_camera()
 

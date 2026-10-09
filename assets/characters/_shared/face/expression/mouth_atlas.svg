@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="1792" viewBox="0 0 256 1792">
-<g transform="translate(0 0) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M115 177 Q128 181 141 177" stroke="#291b25" stroke-width="7.07" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
-<g transform="translate(0 256) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M101 167 Q128 200 155 167" stroke="#291b25" stroke-width="7.07" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
-<g transform="translate(0 512) translate(128 128) scale(0.72) translate(-128 -128)"><ellipse cx="128" cy="177" rx="31" ry="22" fill="#291b25"/><path d="M108 174 Q128 184 148 174" stroke="white" stroke-width="5.89" fill="none"/></g>
-<g transform="translate(0 768) translate(128 128) scale(0.72) translate(-128 -128)"><ellipse cx="128" cy="177" rx="17" ry="25" fill="#291b25"/></g>
-<g transform="translate(0 1024) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M108 185 Q128 168 148 185" stroke="#291b25" stroke-width="7.07" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
-<g transform="translate(0 1280) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M107 190 Q128 165 149 190" stroke="#291b25" stroke-width="7.07" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
-<g transform="translate(0 1536) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M105 180 Q130 187 155 166" stroke="#291b25" stroke-width="7.07" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+<g transform="translate(0 0) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M123.5 182 Q128 179.5 132.5 182" stroke="#b06e5c" stroke-width="2.83" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+<g transform="translate(0 256) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M120 179 Q128 187 136 179" stroke="#b06e5c" stroke-width="2.83" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+<g transform="translate(0 512) translate(128 128) scale(0.72) translate(-128 -128)"><defs><clipPath id="m2"><path d="M118 178 Q128 181 138 178 Q137 192 128 193 Q119 192 118 178 Z"/></clipPath></defs><path d="M118 178 Q128 181 138 178 Q137 192 128 193 Q119 192 118 178 Z" fill="#7a3633"/><g clip-path="url(#m2)"><ellipse cx="128" cy="194" rx="7" ry="5" fill="#d9817c"/></g></g>
+<g transform="translate(0 768) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M128 177 C133 177 134 189 128 189 C122 189 123 177 128 177 Z" fill="#7a3633"/><ellipse cx="128" cy="186" rx="3" ry="2" fill="#d9817c"/></g>
+<g transform="translate(0 1024) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M121 184 Q124.5 180 128 182 Q131.5 180 135 184" stroke="#b06e5c" stroke-width="2.83" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+<g transform="translate(0 1280) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M121 184 Q128 177 135 184" stroke="#b06e5c" stroke-width="2.83" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
+<g transform="translate(0 1536) translate(128 128) scale(0.72) translate(-128 -128)"><path d="M122 182 Q130 184 136 178" stroke="#b06e5c" stroke-width="2.83" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>
 </svg>

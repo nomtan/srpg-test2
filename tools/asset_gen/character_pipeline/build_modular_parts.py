@@ -252,9 +252,11 @@ def validate_expression_authoring(part):
     return enabled, disabled
 
 
-def prepare_static(kind, part_id, settings, authored_face=None):
+def prepare_static(kind, part_id, settings, source, authored_face=None):
     if authored_face is None:
-        imported = import_source(kind, part_id)
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        imported = set(bpy.data.objects) - before
     else:
         before = set(bpy.data.objects)
         bpy.ops.import_scene.gltf(filepath=str(authored_face))
@@ -285,6 +287,9 @@ def prepare_static(kind, part_id, settings, authored_face=None):
         part.matrix_world = Matrix.Identity(4)
         if kind == "face":
             part["expression_profile"] = settings.get("expression_profile", "default")
+            if settings.get("baked_face_features"):
+                # The source texture already paints eyes/eyebrows/mouth.
+                part["baked_face_features"] = True
         clean_toon_materials(part)
         if kind == "face" and not is_legacy_face(part_id):
             if settings.get("expression_rendering") != "uv_v2":
@@ -307,11 +312,12 @@ def main():
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
     if not (len(args.id) == 3 and args.id.isdigit() and int(args.id) > 0):
         raise ValueError("Part ID must be a positive three-digit number")
-    source = ROOT / "assets/characters/tripo" / args.kind / args.id / "model.glb"
+    settings = contract(args.kind, args.id)
+    # A per-part source_file selects an alternate immutable source in the same Tripo folder.
+    source = ROOT / "assets/characters/tripo" / args.kind / args.id / settings.get("source_file", "model.glb")
     if (ROOT / "assets/characters/tripo").resolve() in args.output_root.resolve().parents or args.output_root.resolve() == (ROOT / "assets/characters/tripo").resolve():
         raise ValueError("Output cannot overwrite immutable Tripo sources")
     before_hash = hashlib.sha256(source.read_bytes()).hexdigest()
-    settings = contract(args.kind, args.id)
     if settings.get("source_sha256") != before_hash:
         raise ValueError("Immutable Tripo source hash differs from normalization metadata")
     if args.authored_face:
@@ -323,7 +329,7 @@ def main():
     scene.unit_settings.scale_length = 1.0
     scene.unit_settings.system = "METRIC"
     scene.render.fps = 30
-    objects = prepare_body(args.id, settings) if args.kind == "body" else prepare_static(args.kind, args.id, settings, args.authored_face)
+    objects = prepare_body(args.id, settings) if args.kind == "body" else prepare_static(args.kind, args.id, settings, source, args.authored_face)
     target = args.output_root / args.kind / args.id / "model.glb"
     export(target, objects, args.kind == "body")
     (target.parent / "normalization.json").write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")

@@ -1,8 +1,10 @@
-[gd_resource type="Resource" script_class="ExpressionProfile" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ExpressionProfile" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/character/expression_profile.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://er214d8014t8" path="res://assets/characters/_shared/face/expression/profiles/legacy_size007_006_skin_depth.png" id="2"]
 
 [resource]
 script = ExtResource("1")
-face_rect = Vector4(-0.19610819438758081, 0.8541889384161809, 0.39221638877516163, 0.30695195643273515)
-surface_depth = Vector2(0.16158054042803305, 0.28947718894167274)
+face_rect = Vector4(-0.18523645569858904, 0.8561742124376489, 0.3704729113971781, 0.2899353219630089)
+surface_depth = Vector2(0.141581, 0.28947718894167274)
+skin_depth = ExtResource("2")

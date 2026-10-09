@@ -2,23 +2,24 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cy0vomxs4dk1k"
-path="res://.godot/imported/model_tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0.jpg-547e359394e5ac56946f0f9ce0ff8ed8.ctex"
+uid="uid://egslh68awdc8"
+path.s3tc="res://.godot/imported/model_tripo_image_4634cb5f-f180-4ff3-9074-54bc26f83f26_0_0.jpg-41e3232096122f0e06d36ab26a74ec37.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
-"md5": "881d1a0207df343470bc45e414daf7f7"
+"md5": "b406e54a58131178b57f19c7de5f5610"
 }
 
 [deps]
 
-source_file="res://assets/characters/modular/face/002/model_tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0.jpg"
-dest_files=["res://.godot/imported/model_tripo_image_3eea2bd2-5199-4cbc-8098-9c7cf11bf7c6_0_0.jpg-547e359394e5ac56946f0f9ce0ff8ed8.ctex"]
+source_file="res://assets/characters/tripo/paical/sample/model_tripo_image_4634cb5f-f180-4ff3-9074-54bc26f83f26_0_0.jpg"
+dest_files=["res://.godot/imported/model_tripo_image_4634cb5f-f180-4ff3-9074-54bc26f83f26_0_0.jpg-41e3232096122f0e06d36ab26a74ec37.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

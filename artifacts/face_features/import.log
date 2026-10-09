@@ -1,0 +1,227 @@
+Godot Engine v4.6.1.stable.official.14d19694e - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started プロジェクトの初期化 (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | ファイル構造をスキャン中...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | グローバルクラス名を読み込み中...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | GDExtensionを検証中...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | 自動読み込みスクリプトを作成中...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | プラグインを初期化中...[39m[0m
+
+=== MCP SERVER STARTING ===
+Creating command handler...
+Connecting command handler signals...
+Port 9080 taken (err 22), trying next...
+MCP WebSocket listening on port 9081
+Loading MCP Status Panel...
+=== MCP SERVER INITIALIZED ===
+
+Command handler initializing...
+WebSocket server reference set: @EditorPlugin@18495:<EditorPlugin#1569156302618>
+SCRIPT ERROR: Parse Error: Class "AshenMCP_NodeCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/node_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:24)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/node_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:24)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_ScriptCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/script_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:25)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/script_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:25)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_SceneCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/scene_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:26)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/scene_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:26)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_ProjectCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/project_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:27)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/project_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:27)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_EditorCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/editor_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:28)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/editor_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:28)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_EditorScriptCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/editor_script_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:29)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/editor_script_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:29)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_AnimationCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/animation_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:30)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/animation_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:30)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_AudioCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/audio_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:31)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/audio_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:31)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_IntrospectionCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/introspection_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:32)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/introspection_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:32)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Parse Error: Class "AshenMCP_VisualizerCommands" hides a global script class.
+   at: GDScript::reload (res://addons/godot_mcp/commands/visualizer_commands.gd:2)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:33)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+ERROR: Failed to load script "res://addons/godot_mcp/commands/visualizer_commands.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2907)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:33)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+   at: _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:35)
+   GDScript backtrace (most recent call first):
+       [0] _initialize_command_processors (res://addons/godot_mcp/command_handler.gd:35)
+       [1] _ready (res://addons/godot_mcp/command_handler.gd:18)
+Command handler initialized and ready to process commands
+[  83% ] [90m[1mfirst_scan_filesystem[22m | ファイルスキャンを開始...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+WARNING: UID duplicate detected between res://godot_mcp/commands/animation_commands.gd and res://addons/godot_mcp/commands/animation_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/audio_commands.gd and res://addons/godot_mcp/commands/audio_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/base_command_processor.gd and res://addons/godot_mcp/commands/base_command_processor.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/editor_commands.gd and res://addons/godot_mcp/commands/editor_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/editor_script_commands.gd and res://addons/godot_mcp/commands/editor_script_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/introspection_commands.gd and res://addons/godot_mcp/commands/introspection_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/node_commands.gd and res://addons/godot_mcp/commands/node_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/project_commands.gd and res://addons/godot_mcp/commands/project_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/scene_commands.gd and res://addons/godot_mcp/commands/scene_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/script_commands.gd and res://addons/godot_mcp/commands/script_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/commands/visualizer_commands.gd and res://addons/godot_mcp/commands/visualizer_commands.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/ui/mcp_panel.gd and res://addons/godot_mcp/ui/mcp_panel.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/ui/mcp_panel.tscn and res://addons/godot_mcp/ui/mcp_panel.tscn.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/utils/node_utils.gd and res://addons/godot_mcp/utils/node_utils.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/utils/resource_utils.gd and res://addons/godot_mcp/utils/resource_utils.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/utils/script_utils.gd and res://addons/godot_mcp/utils/script_utils.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/command_handler.gd and res://addons/godot_mcp/command_handler.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/mcp_server.gd and res://addons/godot_mcp/mcp_server.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+WARNING: UID duplicate detected between res://godot_mcp/websocket_server.gd and res://addons/godot_mcp/websocket_server.gd.
+   at: _process_file_system (editor/file_system/editor_file_system.cpp:1377)
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started グローバルクラスを登録中... (15 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_AnimationCommands[39m[0m
+[   6% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_AudioCommands[39m[0m
+[  12% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_BaseCommandProcessor[39m[0m
+[  18% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_EditorCommands[39m[0m
+[  25% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_EditorScriptCommands[39m[0m
+[  31% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_IntrospectionCommands[39m[0m
+[  37% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_NodeCommands[39m[0m
+[  43% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_ProjectCommands[39m[0m
+[  50% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_SceneCommands[39m[0m
+[  56% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_ScriptCommands[39m[0m
+[  62% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_VisualizerCommands[39m[0m
+[  68% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_NodeUtils[39m[0m
+[  75% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_ResourceUtils[39m[0m
+[  81% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_ScriptUtils[39m[0m
+[  87% ] [90m[1mupdate_scripts_classes[22m | AshenMCP_WebSocketServer[39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started アクションをスキャン中... (7 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | legacy_size007_001_skin_depth.png[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | legacy_size007_002_skin_depth.png[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | legacy_size007_003_skin_depth.png[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | legacy_size007_004_skin_depth.png[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | legacy_size007_005_skin_depth.png[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | legacy_size007_006_skin_depth.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | legacy_size007_007_skin_depth.png[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started アセットを(再)インポート中 (7 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[  12% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[  25% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[  37% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[  50% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[  62% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[  75% ] [90m[1mreimport[22m | 再インポートするファイルを準備中...[39m[0m
+[   0% ] [90m[1mreimport[22m | 再インポート前の操作を実行中...[39m[0m
+[   0% ] [90m[1mreimport[22m | legacy_size007_001_skin_depth.png[39m[0m
+[  12% ] [90m[1mreimport[22m | legacy_size007_002_skin_depth.png[39m[0m
+[  25% ] [90m[1mreimport[22m | legacy_size007_003_skin_depth.png[39m[0m
+[  37% ] [90m[1mreimport[22m | legacy_size007_004_skin_depth.png[39m[0m
+[  50% ] [90m[1mreimport[22m | legacy_size007_005_skin_depth.png[39m[0m
+[  62% ] [90m[1mreimport[22m | legacy_size007_006_skin_depth.png[39m[0m
+[  75% ] [90m[1mreimport[22m | legacy_size007_007_skin_depth.png[39m[0m
+[  87% ] [90m[1mreimport[22m | アセットインポートを終了しています...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started アセットを(再)インポート中 (7 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | 再インポート後の操作を実行中...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started エディターの読み込み (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | エディターレイアウトを読み込み中...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | ドックを読み込み中...[39m[0m
+[  33% ] [90m[1mloading_editor_layout[22m | シーンを再オープン中...[39m[0m
+[  50% ] [90m[1mloading_editor_layout[22m | 中央エディターを読み込み中...[39m[0m
+[  66% ] [90m[1mloading_editor_layout[22m | プラグインのウィンドウレイアウトを読み込み中...[39m[0m
+[  83% ] [90m[1mloading_editor_layout[22m | エディターレイアウトの準備完了。[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+=== MCP SERVER SHUTDOWN ===

@@ -6,6 +6,9 @@ const EYES := ["normal", "blink", "closed_strong", "angry", "sad", "surprised", 
 const EYEBROWS := ["normal", "angry", "sad", "worried", "surprised", "confident"]
 const MOUTH := ["normal", "smile", "laugh", "open", "angry", "sad", "smirk"]
 const ATLAS_PATHS := [ROOT + "/eyes_atlas.svg", ROOT + "/eyebrows_atlas.svg", ROOT + "/mouth_atlas.svg"]
+## Legacy projected Faces wear Face002's painted features (build_face002_feature_atlases.py)
+## over Face002's shared face_rect, so they match Face002 in position and texture.
+const LEGACY_ATLAS_PATHS := [ROOT + "/legacy_eyes_atlas.png", ROOT + "/legacy_eyebrows_atlas.png", ROOT + "/legacy_mouth_atlas.png"]
 const PARAMETERS := [&"eyes_row", &"eyebrows_row", &"mouth_row"]
 
 var current_expression := "normal"
@@ -14,6 +17,7 @@ var current_eyebrows := "normal"
 var current_mouth := "normal"
 var _materials: Array[ShaderMaterial] = []
 static var _atlases: Array[Texture2D] = []
+static var _legacy_atlases: Array[Texture2D] = []
 
 
 func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
@@ -23,10 +27,17 @@ func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 			if node.has_meta("expression_profile"):
 				profile_id = str(node.get_meta("expression_profile"))
 				break
+			# The glTF importer stores node extras as one "extras" dictionary.
+			var extras = node.get_meta("extras", {})
+			if extras is Dictionary and extras.has("expression_profile"):
+				profile_id = str(extras["expression_profile"])
+				break
 	if _atlases.is_empty():
 		for path in ATLAS_PATHS:
 			_atlases.append(load(path) as Texture2D)
-	if _atlases.any(func(atlas: Texture2D) -> bool: return atlas == null):
+		for path in LEGACY_ATLAS_PATHS:
+			_legacy_atlases.append(load(path) as Texture2D)
+	if (_atlases + _legacy_atlases).any(func(atlas: Texture2D) -> bool: return atlas == null):
 		push_error("Expression atlases are missing")
 		return false
 	var profile_path := ROOT + "/profiles/%s.tres" % (profile_id if not profile_id.is_empty() else "default")
@@ -97,9 +108,12 @@ func bind_face(face: Node3D, profile_id := "", show_features := true) -> bool:
 			mesh.set_surface_override_material(surface, material)
 			material.set_shader_parameter("expression_face_rect", profile.face_rect)
 			material.set_shader_parameter("expression_surface_depth", profile.surface_depth)
-			material.set_shader_parameter("eyes_atlas", _atlases[0])
-			material.set_shader_parameter("eyebrows_atlas", _atlases[1])
-			material.set_shader_parameter("mouth_atlas", _atlases[2])
+			material.set_shader_parameter("expression_skin_depth", profile.skin_depth)
+			material.set_shader_parameter("expression_skin_depth_enabled", profile.skin_depth != null)
+			var atlases := _atlases if uv_v2 else _legacy_atlases
+			material.set_shader_parameter("eyes_atlas", atlases[0])
+			material.set_shader_parameter("eyebrows_atlas", atlases[1])
+			material.set_shader_parameter("mouth_atlas", atlases[2])
 			material.set_shader_parameter("expression_parts_enabled", show_features)
 			material.set_shader_parameter("expression_uv_v2", uv_v2)
 			_materials.append(material)

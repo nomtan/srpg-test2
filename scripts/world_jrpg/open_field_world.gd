@@ -8,6 +8,9 @@ const Biomes = preload("res://scripts/world_jrpg/open_field_biome.gd")
 const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
+## Every tree is a low-poly, static anime tree (Vegetation.TOON_SWAP). Off falls back to
+## card_trees.
+@export var toon_trees := true
 ## Every tree is drawn as an illustration-style leaf-card tree (Vegetation.CARD_SWAP);
 ## off restores the solid Phase 2 trees and the procedural blossom tree.
 @export var card_trees := true
@@ -1261,23 +1264,23 @@ func _build_trees_and_rocks() -> void:
 				if pick * (broadleaf + conifer) < conifer:
 					# The broad, drooping spruce (B) takes over toward the highlands.
 					kind = "conifer_b" if shape < 0.35 + 0.3 * smoothstep(30.0, 50.0, h) else "conifer_a"
-					if card_trees: kind = Vegetation.CARD_SWAP[kind]
+					kind = _tree_asset(kind)
 					size = variation
 				else:
 					# Blossom trees are rare accents in the open meadows and on the shore.
 					var meadow := biome.weight(Biomes.Biome.PLAINS, p.x, p.y) + biome.weight(Biomes.Biome.LAKESHORE, p.x, p.y)
 					var open_land := meadow + biome.weight(Biomes.Biome.FARMLAND, p.x, p.y) + biome.weight(Biomes.Biome.HIGHLAND, p.x, p.y)
 					if fmod(pick * 97.0, 1.0) < 0.06 * meadow:
-						kind = Vegetation.CARD_SWAP["blossom"] if card_trees else "broadleaf"
+						kind = _tree_asset("blossom") if toon_trees or card_trees else "broadleaf"
 						variant = 2
 						trunk = 0.5
-						if card_trees: size = variation
+						if toon_trees or card_trees: size = variation
 					else:
 						# Oaks stand on open land; the woods are broadleaf A / B / C.
 						var oak := fmod(pick * 53.0, 1.0) < 0.1 + 0.45 * clampf(open_land, 0.0, 1.0)
 						kind = ("oak_b" if shape < 0.3 else "oak_a") if oak else ["broadleaf_a", "broadleaf_b", "broadleaf_c"][int(shape * 3.0)]
 						trunk = 0.65 if oak else 0.45
-						if card_trees: kind = Vegetation.CARD_SWAP[kind]
+						kind = _tree_asset(kind)
 						size = variation
 				obstacles.append(Rect2(p - Vector2(trunk, trunk) * size, Vector2(trunk, trunk) * 2.0 * size))
 				cover_cells[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
@@ -1291,9 +1294,9 @@ func _build_trees_and_rocks() -> void:
 			counts[kind] = counts.get(kind, 0) + 1
 			var key := Vector2i(floori(p.x / Vegetation.COARSE_CHUNK), floori(p.y / Vegetation.COARSE_CHUNK))
 			if not chunks.has(key): chunks[key] = {}
-			var mesh_key := kind if Vegetation.SCENES.has(kind) else "%s_%d" % [kind, variant]
+			var mesh_key := kind if Vegetation.has_asset(kind) else "%s_%d" % [kind, variant]
 			if not chunks[key].has(mesh_key): chunks[key][mesh_key] = []
-			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.95, 1.05, stretch) if Vegetation.SCENES.has(kind) else lerpf(0.9, 1.15, stretch)
+			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.95, 1.05, stretch) if Vegetation.has_asset(kind) else lerpf(0.9, 1.15, stretch)
 			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * tall, size))
 			chunks[key][mesh_key].append(Transform3D(basis, Vector3(p.x, h - (0.35 * size if kind == "rock" else 0.1), p.y)))
 		z += spacing
@@ -1305,13 +1308,19 @@ func _build_trees_and_rocks() -> void:
 		chunk.name = "Forest_%d_%d" % [key.x, key.y]
 		root.add_child(chunk)
 		for mesh_key: String in chunks[key]:
-			if Vegetation.SCENES.has(mesh_key):
+			if Vegetation.has_asset(mesh_key):
 				Vegetation.add_tree_chunk(chunk, mesh_key, chunks[key][mesh_key])
 				continue
 			var kind := mesh_key.get_slice("_", 0)
 			var material: Material = Props.rock_material(Color("8d939c"), 0.75) if kind == "rock" else Props.foliage_material()
 			_multimesh(chunk, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), chunks[key][mesh_key], material, mesh_key)
 	print("[JRPGWorld2] Vegetation: ", counts)
+
+## The tree asset drawn for a Phase 2 tree kind under the toon / card / solid styles.
+func _tree_asset(kind: String) -> String:
+	if toon_trees: return Vegetation.TOON_SWAP[kind]
+	if card_trees: return Vegetation.CARD_SWAP[kind]
+	return kind
 
 ## Bushes along forest edges, in the understory and on road verges (Blender-built
 ## bush A / B / C). Walkable light cover: no obstacle, recorded in cover_cells.

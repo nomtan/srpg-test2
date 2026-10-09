@@ -287,8 +287,9 @@ def main() -> int:
     for kind in ("body", "face"):
         for path in paths[kind]:
             part_id = path.parent.name
-            source = TRIPO / kind / part_id / "model.glb"
-            _validate_metadata(report, kind, part_id, _load_metadata(root, kind, part_id), source)
+            metadata = _load_metadata(root, kind, part_id)
+            source = TRIPO / kind / part_id / ((metadata or {}).get("source_file") or "model.glb")
+            _validate_metadata(report, kind, part_id, metadata, source)
             try:
                 metrics = inspect_glb(path)
                 if kind == "body":

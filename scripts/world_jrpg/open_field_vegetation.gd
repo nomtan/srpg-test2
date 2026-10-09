@@ -10,6 +10,8 @@ const NEEDLE_CARD_MATERIAL = preload("res://assets/environment/vegetation/materi
 const BLOSSOM_CARD_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_blossom_cards.tres")
 const GRASS_MATERIAL = preload("res://assets/environment/vegetation/materials/grass.tres")
 const FLOWER_MATERIAL = preload("res://assets/environment/vegetation/materials/flower.tres")
+const TOON_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_toon.tres")
+const ToonTrees = preload("res://scripts/world_jrpg/open_field_toon_trees.gd")
 const ROOT := "res://assets/environment/vegetation/"
 const SCENES := {
 	"broadleaf_a": ROOT + "trees/broadleaf/broadleaf_a.glb",
@@ -45,6 +47,11 @@ const CARD_TREES := ["card_round", "card_tall", "card_umbrella", "card_oak", "ca
 const CARD_SWAP := {"broadleaf_a": "card_round", "broadleaf_b": "card_tall", "broadleaf_c": "card_lean",
 	"oak_a": "card_oak", "oak_b": "card_umbrella", "conifer_a": "card_spruce", "conifer_b": "card_fir",
 	"blossom": "card_blossom"}
+## Low-poly anime trees built in code (open_field_toon_trees.gd): opaque, no wind, three LODs.
+const TOON_TREES := ["toon_round", "toon_tall", "toon_umbrella", "toon_oak", "toon_lean", "toon_spruce", "toon_fir", "toon_blossom"]
+const TOON_SWAP := {"broadleaf_a": "toon_round", "broadleaf_b": "toon_tall", "broadleaf_c": "toon_lean",
+	"oak_a": "toon_oak", "oak_b": "toon_umbrella", "conifer_a": "toon_spruce", "conifer_b": "toon_fir",
+	"blossom": "toon_blossom"}
 const BUSHES := ["bush_a", "bush_b", "bush_c"]
 const GRASSES := ["grass_short", "grass_normal", "grass_tall", "grass_wild"]
 const FLOWERS := ["flower_grass_a", "flower_grass_b"]
@@ -79,8 +86,14 @@ static var card_surfaces: Dictionary = {}
 ## Leaf-card trees: per LOD, [body mesh (trunk + cores), cards mesh or null].
 static var card_parts: Dictionary = {}
 
+## True for every asset lod_meshes can build (Blender GLBs and the procedural toon trees).
+static func has_asset(asset: String) -> bool:
+	return SCENES.has(asset) or asset in TOON_TREES
+
 ## LOD meshes of one asset, finest first, with the shared materials assigned.
 static func lod_meshes(asset: String) -> Array[Mesh]:
+	if not meshes.has(asset) and asset in TOON_TREES:
+		meshes[asset] = ToonTrees.build(asset, TOON_MATERIAL)
 	if not meshes.has(asset):
 		var list: Array[Mesh] = []
 		var scene := (load(SCENES[asset]) as PackedScene).instantiate()
@@ -130,7 +143,7 @@ static func split_cards(asset: String, level: int) -> Array:
 	return card_parts[asset][level]
 
 static func shader_materials() -> Array[ShaderMaterial]:
-	return [TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL]
+	return [TOON_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL]
 
 ## The card (and core) material of a leaf-card tree: leaf, needle or blossom palette.
 static func card_material(asset: String) -> Material:

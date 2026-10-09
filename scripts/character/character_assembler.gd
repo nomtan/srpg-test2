@@ -4,8 +4,8 @@ extends RefCounted
 
 const PART_ROOT := "res://assets/characters/modular"
 const CHARACTER_TOON := preload("res://assets/characters/_shared/materials/character_toon.gdshader")
-## Global switch for the eyes / eyebrows / mouth overlay. Temporarily off.
-const SHOW_FACE_FEATURES := false
+## Global switch for the eyes / eyebrows / mouth overlay.
+const SHOW_FACE_FEATURES := true
 static var _toon_materials: Dictionary = {}
 
 
@@ -69,13 +69,18 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	# imported head rest transform once, then let the socket supply each pose.
 	var rest_inverse := skeleton.get_bone_global_rest(skeleton.find_bone("head")).affine_inverse()
 	face.transform = rest_inverse
+	# Painted Tripo textures already carry their shading; extra toon bands and
+	# received shadows muddy them, so those Faces render flat. The Face sits under
+	# the Body skeleton now, so convert it first or the Body pass claims it.
+	_apply_toon(face, _has_baked_features(face))
 	_apply_toon(body)
-	_apply_toon(face)
 	var expression_controller := ExpressionController.new()
 	expression_controller.name = "ExpressionController"
 	character.add_child(expression_controller)
 	# Face004 is a closed helmet, so facial features should not appear on its visor.
-	if not expression_controller.bind_face(face, definition.expression_profile_id, SHOW_FACE_FEATURES and definition.face_id != "face004"):
+	# Faces whose texture already paints the features skip the overlay too.
+	var show_features := SHOW_FACE_FEATURES and definition.face_id != "face004" and not _has_baked_features(face)
+	if not expression_controller.bind_face(face, definition.expression_profile_id, show_features):
 		character.free()
 		return null
 	for clip in ["idle", "walk"]:
@@ -88,6 +93,15 @@ static func _is_static_part(part: Node3D) -> bool:
 	return not (part is Skeleton3D) and part.find_children("*", "Skeleton3D", true, false).is_empty() and part.find_children("*", "AnimationPlayer", true, false).is_empty()
 
 
+static func _has_baked_features(face: Node3D) -> bool:
+	for node in face.find_children("*", "MeshInstance3D", true, false):
+		# The glTF importer stores node extras as one "extras" dictionary.
+		var extras = node.get_meta("extras", {})
+		if extras is Dictionary and extras.get("baked_face_features", false):
+			return true
+	return false
+
+
 static func _part_path(kind: String, id: String) -> String:
 	if not id.begins_with(kind):
 		return ""
@@ -97,7 +111,7 @@ static func _part_path(kind: String, id: String) -> String:
 	return "%s/%s/%03d/model.glb" % [PART_ROOT, kind, int(number)]
 
 
-static func _apply_toon(root: Node) -> void:
+static func _apply_toon(root: Node, flat := false) -> void:
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
 		if mesh.mesh == null:
@@ -107,7 +121,7 @@ static func _apply_toon(root: Node) -> void:
 			if source == null or source.albedo_texture == null:
 				continue
 			var semantic := _material_semantic(source.resource_name)
-			var key := "%s:%s" % [source.albedo_texture.get_instance_id(), semantic]
+			var key := "%s:%s:%s" % [source.albedo_texture.get_instance_id(), semantic, flat]
 			if not _toon_materials.has(key):
 				var toon := ShaderMaterial.new()
 				toon.resource_name = semantic
@@ -115,6 +129,7 @@ static func _apply_toon(root: Node) -> void:
 				toon.set_shader_parameter("base_color_texture", source.albedo_texture)
 				toon.set_shader_parameter("expression_parts_enabled", false)
 				toon.set_shader_parameter("expression_uv_v2", false)
+				toon.set_shader_parameter("shade_strength", 0.0 if flat else 1.0)
 				_toon_materials[key] = toon
 			mesh.set_surface_override_material(surface, _toon_materials[key])
 

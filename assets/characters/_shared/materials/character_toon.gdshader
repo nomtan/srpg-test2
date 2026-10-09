@@ -22,10 +22,18 @@ uniform vec4 expression_face_rect = vec4(-0.23, 0.96, 0.46, 0.32);
 uniform vec2 expression_atlas_offset = vec2(0.0, 0.0);
 uniform vec2 expression_surface_depth = vec2(-1.0, 1.0);
 uniform float expression_feature_scale = 1.0;
+// Legacy only: R = deepest front-facing (skin) depth over the face rect, normalized
+// to expression_surface_depth. Parts are drawn only within the tolerance of it.
+uniform sampler2D expression_skin_depth : hint_default_white, filter_linear, repeat_disable;
+uniform bool expression_skin_depth_enabled = false;
+uniform float expression_skin_tolerance = 0.004;
 // CUSTOM0/CUSTOM1 hold bind-pose position/normal so projected features follow skinning.
 uniform bool expression_rest_custom = false;
 uniform float shadow_band = 0.68;
 uniform float middle_band = 0.84;
+// 0 = flat albedo with no light bands or received shadows, for textures that
+// already paint their own shading (Tripo look). 1 = full toon bands.
+uniform float shade_strength = 1.0;
 
 // Reserved for future palette, expression, emblem, and gameplay effects.
 // Keep per-surface ShaderMaterial instances so Head parameters can change independently.
@@ -67,6 +75,10 @@ void fragment() {
 			face_surface = face_surface && COLOR.r > expression_mask_threshold;
 		} else {
 			face_surface = face_surface && expression_rest_normal.z > 0.15 && expression_rest_position.z >= expression_surface_depth.x && expression_rest_position.z <= expression_surface_depth.y;
+			if (expression_skin_depth_enabled) {
+				float skin = mix(expression_surface_depth.x, expression_surface_depth.y, texture(expression_skin_depth, face_uv).r);
+				face_surface = face_surface && expression_rest_position.z <= skin + expression_skin_tolerance;
+			}
 		}
 		if (face_surface) {
 			vec2 clamped_uv = clamp(face_uv, vec2(0.002), vec2(0.998));
@@ -82,12 +94,12 @@ void fragment() {
 	METALLIC = 0.0;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
-	EMISSION = ALBEDO * shadow_band;
+	EMISSION = ALBEDO * mix(1.0, shadow_band, shade_strength);
 }
 
 void light() {
 	float energy = clamp(max(max(LIGHT_COLOR.r, LIGHT_COLOR.g), LIGHT_COLOR.b) / PI, 0.0, 1.0);
 	float illumination = max(dot(normalize(NORMAL), LIGHT), 0.0) * ATTENUATION * energy * (2.2 / PI) + 0.045;
 	float band = illumination >= 0.60 ? 1.0 : (illumination >= 0.28 ? middle_band : shadow_band);
-	DIFFUSE_LIGHT = max(DIFFUSE_LIGHT, vec3(band - shadow_band));
+	DIFFUSE_LIGHT = max(DIFFUSE_LIGHT, vec3((band - shadow_band) * shade_strength));
 }
