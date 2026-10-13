@@ -10,6 +10,8 @@ const NEEDLE_CARD_MATERIAL = preload("res://assets/environment/vegetation/materi
 const BLOSSOM_CARD_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_blossom_cards.tres")
 const GRASS_MATERIAL = preload("res://assets/environment/vegetation/materials/grass.tres")
 const FLOWER_MATERIAL = preload("res://assets/environment/vegetation/materials/flower.tres")
+## The procedural grass carpet's material (open_field_meadow.gd).
+const MEADOW_MATERIAL = preload("res://assets/environment/vegetation/materials/meadow_grass.tres")
 const TOON_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_toon.tres")
 const ToonTrees = preload("res://scripts/world_jrpg/open_field_toon_trees.gd")
 const ROOT := "res://assets/environment/vegetation/"
@@ -143,7 +145,7 @@ static func split_cards(asset: String, level: int) -> Array:
 	return card_parts[asset][level]
 
 static func shader_materials() -> Array[ShaderMaterial]:
-	return [TOON_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL]
+	return [TOON_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
 
 ## The card (and core) material of a leaf-card tree: leaf, needle or blossom palette.
 static func card_material(asset: String) -> Material:

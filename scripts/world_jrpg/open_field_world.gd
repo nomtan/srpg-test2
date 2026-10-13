@@ -6,6 +6,7 @@ extends "res://scripts/world_jrpg/world.gd"
 const Props = preload("res://scripts/world_jrpg/open_field_props.gd")
 const Biomes = preload("res://scripts/world_jrpg/open_field_biome.gd")
 const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
+const Meadow = preload("res://scripts/world_jrpg/open_field_meadow.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
 ## Every tree is a low-poly, static anime tree (Vegetation.TOON_SWAP). Off falls back to
@@ -1375,11 +1376,12 @@ func _build_bushes() -> void:
 			Vegetation.add_bush_chunk(chunk, asset, chunks[key][asset])
 	print("[JRPGWorld2] Bushes: ", counts)
 
-## Grass carpet patches and wildflowers, all Blender-built clusters with shader wind; each
-## clump carries the terrain normal it stands on (see open_field_grass.gdshader). Density per
-## biome; within it the cluster type follows the ground: short grass on verges, slopes
-## and thin ground, tall / wild grass where it is wet or rocky, and flowers gathered into
-## drifts of one kind (star flowers A, cool spikes B where it is wetter).
+## Ghibli grass carpet and wildflowers. Every 1 m cell of open ground takes one
+## procedural blade patch (open_field_meadow.gd) sheared onto the slope and lit with the
+## terrain normal, so the carpet closes over the ground and shades with the hills. Blade
+## height follows the ground: short on verges, slopes, lawns and thin ground, knee-high
+## where it is wet or wild. Blender-built flower clusters gather in drifts of one kind
+## (star flowers A, cool spikes B where it is wetter), standing a little above the grass.
 func _build_grass() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 91
@@ -1387,60 +1389,65 @@ func _build_grass() -> void:
 	root.name = "Meadow"
 	add_child(root)
 	var grid := biome.param_grid
-	var cell := 20
+	var cell := int(Meadow.CELL)
+	var patches := 0
 	var counts := {}
 	for cz in range(0, SIZE, cell):
 		for cx in range(0, SIZE, cell):
+			var carpet: Array = []
+			var carpet_normals: Array = []
 			var groups := {}
 			var normals := {}
 			for z in range(cz, cz + cell):
 				for x in range(cx, cx + cell):
 					var c := biome.cell(x + 0.5, z + 0.5)
-					var drift := lerpf(0.15, 3.0, smoothstep(0.05, 0.4, noise.get_noise_2d(x * 2.2 + 70.0, z * 2.2 - 31.0)))
-					var flower_p := 0.03 * grid[c + Biomes.Param.FLOWER_DENSITY] * drift
-					var grass_p := minf(0.69 * grid[c + Biomes.Param.GRASS_DENSITY], 1.0 - flower_p)
+					var density := grid[c + Biomes.Param.GRASS_DENSITY]
 					var wet := grid[c + Biomes.Param.WETNESS]
-					var tall_share := 0.33 + 0.5 * wet
 					var top := grid[c + Biomes.Param.MAX_HEIGHT]
-					# Per-cell patches: which flower a drift is, where tall grass turns wild,
-					# and short-grass lawns that break up the meadow.
-					var flower_b := noise.get_noise_2d(x * 1.3 + 300.0, z * 1.3 - 80.0) > 0.12 - 0.5 * wet
-					var wild := noise.get_noise_2d(x * 1.7 - 150.0, z * 1.7 + 60.0) > 0.18 - 0.6 * grid[c + Biomes.Param.ROCKINESS]
-					var lawn := noise.get_noise_2d(x * 1.9 + 520.0, z * 1.9 + 210.0) > 0.3 or grid[c + Biomes.Param.GRASS_DENSITY] < 0.45
-					for k in 4:
-						var px := x + rng.randf()
-						var pz := z + rng.randf()
-						var roll := rng.randf()
-						var size := rng.randf_range(0.8, 1.3)
-						var angle := rng.randf() * TAU
-						if roll >= flower_p + grass_p: continue
-						var h := _height(px, pz)
-						if h < LAKE + 0.5 or h > top: continue
-						var road := _path_distance(px, pz)
-						if road < -0.2 or (road < 0.8 and roll > 0.3): continue
-						var slope := _slope(px, pz)
-						if slope > 0.65 or _plaza_weight(Vector2(px, pz)) > 0.3 or _field_weight(Vector2(px, pz)) > 0.3: continue
-						var asset := ""
-						if roll < flower_p:
-							asset = "flower_grass_b" if flower_b else "flower_grass_a"
-						elif fmod(roll * 13.7, 1.0) < tall_share and road > 2.0:
-							asset = "grass_wild" if wild else "grass_tall"
-						elif lawn or road < 2.2 or slope > 0.45:
-							asset = "grass_short"
-						else:
-							asset = "grass_normal"
-						if not groups.has(asset):
-							groups[asset] = []
-							normals[asset] = []
-						groups[asset].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * remap(size, 0.8, 1.3, 0.85, 1.15)), Vector3(px, h - 0.03, pz)))
-						normals[asset].append(_ground_normal(px, pz))
+					var px := x + 0.5 + rng.randf_range(-0.3, 0.3)
+					var pz := z + 0.5 + rng.randf_range(-0.3, 0.3)
+					var yaw := rng.randf() * TAU
+					var jitter := rng.randf_range(0.85, 1.15)
+					var roll := rng.randf()
+					# Thin biomes (forest floor, mountain) break into tufts; open land closes up.
+					if roll > density * 1.5: continue
+					var h := _height(px, pz)
+					if h < LAKE + 0.4 or h > top: continue
+					var road := _path_distance(px, pz)
+					if road < -0.1: continue
+					var slope := _slope(px, pz)
+					if slope > 0.7 or _plaza_weight(Vector2(px, pz)) > 0.3 or _field_weight(Vector2(px, pz)) > 0.3: continue
+					# Height: lawns and verges short, the open meadow mid, wet or wild drifts tall.
+					var lawn := smoothstep(0.15, 0.45, noise.get_noise_2d(px * 1.9 + 520.0, pz * 1.9 + 210.0))
+					var wild := smoothstep(0.0, 0.35, noise.get_noise_2d(px * 1.7 - 150.0, pz * 1.7 + 60.0) + 0.6 * grid[c + Biomes.Param.ROCKINESS] + 0.5 * wet)
+					var tall := lerpf(0.42, 0.72, wild)
+					tall = lerpf(tall, 0.24, maxf(lawn, 1.0 - smoothstep(0.2, 0.45, density)))
+					tall *= lerpf(0.45, 1.0, smoothstep(0.0, 2.5, road)) * lerpf(1.0, 0.6, smoothstep(0.35, 0.7, slope))
+					var n := _ground_normal(px, pz)
+					carpet.append(Meadow.patch_transform(Vector3(px, h - 0.04, pz), n, tall * jitter, yaw))
+					carpet_normals.append(n)
+					# Wildflower drifts on top of the carpet.
+					var drift := lerpf(0.15, 3.0, smoothstep(0.05, 0.4, noise.get_noise_2d(px * 2.2 + 70.0, pz * 2.2 - 31.0)))
+					var flower_p := 0.1 * grid[c + Biomes.Param.FLOWER_DENSITY] * drift
+					if rng.randf() >= flower_p or road < 1.0: continue
+					var flower_b := noise.get_noise_2d(px * 1.3 + 300.0, pz * 1.3 - 80.0) > 0.12 - 0.5 * wet
+					var asset := "flower_grass_b" if flower_b else "flower_grass_a"
+					var fx := x + rng.randf()
+					var fz := z + rng.randf()
+					if not groups.has(asset):
+						groups[asset] = []
+						normals[asset] = []
+					groups[asset].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(1.25, 1.6)), Vector3(fx, _height(fx, fz) - 0.03, fz)))
+					normals[asset].append(_ground_normal(fx, fz))
 			var detail := Node3D.new()
 			detail.name = "Meadow_%d_%d" % [cx, cz]
 			root.add_child(detail)
+			patches += carpet.size()
+			Meadow.add_cell(detail, carpet, carpet_normals, "Grass")
 			for asset: String in groups:
 				counts[asset] = counts.get(asset, 0) + groups[asset].size()
 				Vegetation.add_grass_chunk(detail, asset, groups[asset], normals[asset])
-	print("[JRPGWorld2] Grass: ", counts)
+	print("[JRPGWorld2] Grass patches: ", patches, " flowers: ", counts)
 
 ## Hands the baked biome tint/debug maps to every open-field shader material.
 func _apply_biome_maps() -> void:
