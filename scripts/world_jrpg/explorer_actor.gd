@@ -8,6 +8,8 @@ const RUN_CYCLE_SPEED := 12.8 # Full sprint uses 1.25x, avoiding frantic torso b
 # Still faster than a walk while slowing from a sprint: keep the run until then.
 const RUN_EXIT_SPEED := 5.5
 const GAIT_BLEND := 0.25
+## The attack clip just reached its contact moment (the arrow's release for the bow).
+signal attack_impact(clip: String)
 @export var model_scene: PackedScene = MODEL
 # Exploration supplies actual horizontal speed; -1 keeps standalone/battle clips native.
 var locomotion_speed := -1.0
@@ -19,6 +21,8 @@ var use_3d := true
 var sword_combat: RefCounted
 var attacking := false
 var guarding := false
+var _impact_clip := ""
+var _impact_time := -1.0
 
 func _ready() -> void:
 	super._ready()
@@ -90,6 +94,19 @@ func set_3d_enabled(enabled: bool) -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 	if use_3d: _update_model()
+	_check_impact()
+
+func _check_impact() -> void:
+	if not attacking or sword_combat == null or animation_player == null: return
+	var clip := String(animation_player.current_animation)
+	var time := animation_player.current_animation_position
+	if clip != _impact_clip or time < _impact_time:
+		_impact_clip = clip
+		_impact_time = -1.0
+	var impact: float = sword_combat.impact_time(clip)
+	if impact >= 0.0 and _impact_time < impact and time >= impact:
+		attack_impact.emit(clip)
+	_impact_time = time
 
 func _update_model() -> void:
 	if not model or not animation_player: return
@@ -135,6 +152,7 @@ func attack(overhead := false) -> bool:
 	if attacking or guarding or not use_3d or sword_combat == null: return false
 	_update_model()
 	attacking = true
+	_impact_clip = ""
 	walking = false
 	running = false
 	animation_player.speed_scale = 1.0

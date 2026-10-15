@@ -433,6 +433,8 @@ var guard_clip := ""
 # Second one-handed slash for the other hand; attacks alternate between the two when set.
 var alt_slash_clip := ""
 var _alt_next := false
+# Attack clip → contact moment in seconds (an arrow's release for the bow).
+var impacts: Dictionary = {}
 # Left-hand weapon grip for dual wielding.
 var off_grip: Node3D
 # Bow loadout: the bow model (authored frame) and the drawing hand's nock point.
@@ -538,6 +540,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			shot_fx.name = "BowShotFx"
 			shot_fx.setup(bow_model, nock, player, BW_FX, _make_arrow, BOW_STRING_TOP, BOW_STRING_BOTTOM, BOW_ARROW_REST)
 			model.add_child(shot_fx)
+			for clip: String in BW_FX: impacts[clip] = {"impact": BW_FX[clip].release}
 			library.add_animation("shot", _make_clip(path, "弓・射撃", BW_SHOT_KEYS))
 			library.add_animation("arc_shot", _make_clip(path, "弓・曲射", BW_ARC_KEYS))
 			library.add_animation("guard", _make_clip(path, "弓・防御", BW_GUARD_KEYS))
@@ -588,10 +591,11 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 	return true
 
 ## Attack clips' slash effects, placed in skeleton space (the frame the clip keys use), with their hit-stops.
-func _add_slashes(model: Node3D, player: AnimationPlayer, profiles: Dictionary, impacts: Dictionary) -> void:
+func _add_slashes(model: Node3D, player: AnimationPlayer, profiles: Dictionary, clip_impacts: Dictionary) -> void:
+	impacts = clip_impacts
 	var fx := SlashPlayer.new()
 	fx.name = "SwordSlashFx"
-	fx.setup(player, skeleton, profiles, impacts)
+	fx.setup(player, skeleton, profiles, clip_impacts)
 	model.add_child(fx)
 
 func _attach_sword() -> void:
@@ -624,6 +628,13 @@ func next_slash_clip() -> String:
 	if alt_slash_clip.is_empty(): return slash_clip
 	_alt_next = not _alt_next
 	return slash_clip if _alt_next else alt_slash_clip
+
+## Contact moment of an attack clip in seconds, or -1 when the clip has none.
+func impact_time(clip: String) -> float:
+	return float((impacts.get(clip, {}) as Dictionary).get("impact", -1.0))
+
+func is_ranged() -> bool:
+	return bow_model != null
 
 func is_attack_clip(clip: String) -> bool:
 	return not clip.is_empty() and clip in [slash_clip, alt_slash_clip, overhead_clip]

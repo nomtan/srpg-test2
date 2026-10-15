@@ -9,6 +9,13 @@ const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
 const Meadow = preload("res://scripts/world_jrpg/open_field_meadow.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
+const RIVER_SHADER = preload("res://scripts/world_jrpg/open_field_river.gdshader")
+const SPARRING_SCENE = preload("res://scenes/characters/tripo_roster/charcter001.tscn")
+# Sparring partner stands this far ahead of the spawn; melee reaches it within MELEE_REACH,
+# arrows within BOW_REACH, both only inside the attacker's forward cone.
+const SPARRING_OFFSET := 2.5
+const MELEE_REACH := 3.0
+const BOW_REACH := 30.0
 ## Every tree is a low-poly, static anime tree (Vegetation.TOON_SWAP). Off falls back to
 ## card_trees.
 @export var toon_trees := true
@@ -18,6 +25,24 @@ const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader"
 const LAKE := 10.0
 const LAKE_CENTER := Vector2(205, 150)
 const LAKE_RADIUS := Vector2(100, 64)
+## 碧の海 fills the east and south-east and runs on past the map edge to the horizon.
+const SEA := 2.0
+## Coastline from north to south; the sea lies on its east side. Sea cliffs flank the
+## river mouth below the plateau; elsewhere sandy beaches run up into the hills.
+const COAST := [
+	Vector2(600, -260), Vector2(470, -40), Vector2(405, 110), Vector2(380, 190), Vector2(386, 232),
+	Vector2(360, 298), Vector2(298, 330), Vector2(245, 362), Vector2(200, 420), Vector2(130, 720),
+]
+## Water up to an explorer's waist is walkable shallows; anything deeper blocks.
+const WADE_DEPTH := 0.9
+## Rivers: control points (source first), half width at source and mouth, valley wall
+## slope, valley width beyond the banks, waterfall step, the still water it ends in, name.
+## 白瀬川 tumbles down the northern foothills into the lake in a chain of falls; 碧瀬川
+## leaves the lake eastward and drops off the sea cliffs into 碧の海.
+const RIVERS := [
+	[[Vector2(300, 12), Vector2(293, 30), Vector2(272, 50), Vector2(260, 72), Vector2(252, 92), Vector2(250, 108)], 3.0, 5.5, 0.8, 10.0, 5.0, LAKE, "白瀬川"],
+	[[Vector2(282, 160), Vector2(305, 180), Vector2(330, 192), Vector2(356, 197), Vector2(382, 201), Vector2(410, 206)], 6.5, 8.0, 0.3, 22.0, 4.0, SEA, "碧瀬川"],
+]
 ## The castle crowns a rocky crag on the lake's south shore; its walled town runs
 ## down the slope below it, with farmland beyond the gate.
 const CRAG := Vector2(205, 121)
@@ -83,8 +108,7 @@ const WETLAND := Vector2(130, 208)
 const PEAKS := [
 	[Vector2(330, -320), 235.0, 250.0], [Vector2(215, -235), 150.0, 170.0], [Vector2(455, -260), 175.0, 190.0],
 	[Vector2(100, -215), 130.0, 170.0], [Vector2(570, -170), 125.0, 170.0], [Vector2(-50, -175), 110.0, 180.0],
-	[Vector2(650, 70), 105.0, 190.0], [Vector2(630, 280), 80.0, 170.0], [Vector2(-170, 130), 85.0, 190.0],
-	[Vector2(-160, 330), 65.0, 170.0],
+	[Vector2(-170, 130), 85.0, 190.0], [Vector2(-160, 330), 65.0, 170.0],
 ]
 ## Woodland regions as capsules (start, end, radius); the first follows the west ridge.
 const WOODS := [
@@ -128,6 +152,10 @@ const SHOTS := {
 	"lakeshore": [Vector3(150, 2.2, 228), Vector3(220, 40, 121)],
 	"highland": [Vector3(372, 3.5, 140), Vector3(205, 40, 125)],
 	"mountain": [Vector3(372, 6.0, 72), Vector3(318, 130, -300)],
+	# 白瀬川's chain of falls from below, and 碧瀬川 dropping off the sea cliffs.
+	"falls": [Vector3(250, 3.0, 104), Vector3(263, 24, 64)],
+	"river_mouth": [Vector3(424, 7.0, 236), Vector3(384, 6, 203)],
+	"coast": [Vector3(262, 4.0, 318), Vector3(352, 2, 372)],
 }
 
 var biome := Biomes.new()
@@ -141,6 +169,17 @@ var path_field := PackedFloat32Array()
 var path_points: Array = []
 var terrain_material: ShaderMaterial
 var lake_material: ShaderMaterial
+var sea_material: ShaderMaterial
+var river_material: ShaderMaterial
+## Baked rivers (see _build_rivers), and per grid point the distance to the nearest river
+## centerline and which river sample that is (river index << 16 | sample index).
+var rivers: Array[Dictionary] = []
+var river_dist := PackedFloat32Array()
+var river_ref := PackedInt32Array()
+## Water surface height per grid point: sea, lake or river level.
+var water_cache := PackedFloat32Array()
+## The sea side of COAST, closed far out of sight; decides which side of the coast a point is.
+var sea_polygon := PackedVector2Array(COAST + [Vector2(130, 1600), Vector2(1800, 1600), Vector2(1800, -1200), Vector2(700, -1200)])
 var lamp_material: StandardMaterial3D
 var spinning: Array[Node3D] = []
 var crystal: Node3D
@@ -149,6 +188,7 @@ var meshes: Dictionary = {}
 ## Visual vegetation as SRPG cover, per CELL_SIZE cell: "TREE" under a trunk (also an
 ## obstacle), "LIGHT" under a bush (walkable). Grass and flowers never affect the grid.
 var cover_cells: Dictionary = {}
+var sparring_partner: Node3D
 
 func _ready() -> void:
 	noise.seed = world_seed
@@ -172,6 +212,12 @@ func _ready() -> void:
 		if arg == "--view=castle": _preset(3)
 		if arg == "--view=ruins": _preset(4)
 		if arg.begins_with("--view=") and SHOTS.has(arg.get_slice("=", 1)): _shot(arg.get_slice("=", 1))
+		if arg.begins_with("--spawn="):
+			# --spawn=x,z puts the explorer there (e.g. to check wading in the shallows).
+			var at := arg.get_slice("=", 1).split_floats(",")
+			player.position = Vector3(at[0], _surface(at[0], at[1]) + 0.05, at[1])
+			_focus_player()
+			_update_camera()
 		if arg == "--debug-biome": _set_biome_debug(true)
 		if arg == "--debug-terrain": terrain_panel.visible = true
 		if arg == "--hide-hud":
@@ -204,6 +250,10 @@ func _ready() -> void:
 # --- Height field -----------------------------------------------------------
 
 func _expanded_height(x: float, z: float) -> float:
+	return _apply_river(Vector2(x, z), _landform_height(x, z))
+
+## Landforms before the river valleys are cut; the rivers' fall profiles are read from it.
+func _landform_height(x: float, z: float) -> float:
 	var p := Vector2(x, z)
 	var h := _base(p)
 	for i in MESAS.size():
@@ -248,7 +298,28 @@ func _ground(p: Vector2) -> float:
 	var edge := minf(minf(p.x, SIZE - p.x), minf(SIZE - p.y, p.y + 40.0))
 	var rim := 1.0 - smoothstep(-10.0, 55.0, edge)
 	h += rim * rim * (20.0 + noise.get_noise_2d(p.x * 0.7, p.y * 0.7 + 99.0) * 12.0) + maxf(0.0, -edge) * 0.08
-	return h
+	return _apply_sea(p, h)
+
+## Signed distance to the coastline, positive out at sea; noise makes it wander.
+func _coast_distance(p: Vector2) -> float:
+	var best := INF
+	for i in COAST.size() - 1:
+		best = minf(best, _segment_distance(p, COAST[i], COAST[i + 1]))
+	var side := 1.0 if Geometry2D.is_point_in_polygon(p, sea_polygon) else -1.0
+	return best * side + noise.get_noise_2d(p.x * 0.8 + 1700.0, p.y * 0.8) * 7.0
+
+## Sea floor shelving off the coast; sea cliffs around the river mouth, beaches with the
+## land rising behind them elsewhere.
+func _apply_sea(p: Vector2, h: float) -> float:
+	var d := _coast_distance(p)
+	var seabed := maxf(SEA + 1.0 - d * 0.14, SEA - 24.0)
+	# Flat sand, then slopes up the hinterland; past ~60 m it climbs steeply enough to
+	# leave the far ranges untouched.
+	var land := SEA + 1.0 - d * 0.05 + maxf(-d - 18.0, 0.0) * 0.45 + maxf(-d - 60.0, 0.0) * 2.0
+	var beach := minf(h, seabed if d > 0.0 else land)
+	var cliff_foot := minf(seabed, SEA - 2.5)
+	var cliff := minf(h, lerpf(cliff_foot, h, 1.0 - smoothstep(-6.0, -1.0, d)))
+	return lerpf(beach, cliff, smoothstep(80.0, 130.0, p.y) * (1.0 - smoothstep(225.0, 275.0, p.y)))
 
 ## Rounded cosine bump: 1 at t = 0, 0 from t = 1 on, with a soft crest and foot.
 func _dome(t: float) -> float:
@@ -307,11 +378,13 @@ func _micro(x: float, z: float) -> float:
 func _cache_heights() -> void:
 	var started := Time.get_ticks_msec()
 	_build_paths()
+	_build_rivers()
 	var row := SIZE + 2
 	gameplay_cache.resize(row * row)
 	for z in range(-1, SIZE + 1):
 		for x in range(-1, SIZE + 1):
 			gameplay_cache[(z + 1) * row + x + 1] = _expanded_height(x, z)
+	_bake_water()
 	biome.bake(SIZE, _biome_signals)
 	height_cache.resize(row * row)
 	for z in range(-1, SIZE + 1):
@@ -336,6 +409,8 @@ func _biome_signals(x: float, z: float) -> PackedFloat32Array:
 	s[Biomes.Landform.FARMLAND] = maxf(_field_weight(p), 1.0 - smoothstep(-4.0, 8.0, _rect_sdf(p, FARMLAND_CENTER, FARMLAND_HALF) + warp * 6.0))
 	var e := ((p - LAKE_CENTER) / LAKE_RADIUS).length() + warp * 0.07
 	s[Biomes.Landform.SHORE] = (1.0 - smoothstep(1.0, 1.25, e)) * (1.0 - smoothstep(LAKE + 3.0, LAKE + 7.0, h))
+	var coast := (1.0 - smoothstep(-30.0, -8.0, _coast_distance(p) + warp * 6.0)) * (1.0 - smoothstep(SEA + 3.0, SEA + 8.0, h))
+	s[Biomes.Landform.SHORE] = maxf(s[Biomes.Landform.SHORE], coast)
 	s[Biomes.Landform.WETLAND] = 1.0 - smoothstep(22.0, 36.0, p.distance_to(WETLAND) + warp * 8.0)
 	s[Biomes.Landform.MOUNTAIN] = smoothstep(44.0, 58.0, h + warp * 8.0)
 	var forest := 0.0
@@ -399,11 +474,11 @@ func get_biome_weights(x: float, z: float) -> Dictionary:
 func get_slope_at(x: float, z: float) -> float:
 	return Vector2(get_gameplay_height(x + 0.5, z) - get_gameplay_height(x - 0.5, z), get_gameplay_height(x, z + 0.5) - get_gameplay_height(x, z - 0.5)).length()
 
-## Static walkability with the same limits as _can_walk: map bounds, lake, cliff
-## steepness and building/tree/rock obstacles.
+## Static walkability with the same limits as _can_walk: map bounds, water deeper than
+## the waist, cliff steepness and building/tree/rock obstacles.
 func is_walkable_at(x: float, z: float) -> bool:
 	if x < 2 or z < 2 or x >= SIZE - 2 or z >= SIZE - 2: return false
-	if _surface(x, z) < LAKE + 0.2 or _slope(x, z) > 1.05: return false
+	if _water_depth(x, z) > WADE_DEPTH or _slope(x, z) > 1.05: return false
 	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(x / CHUNK), floori(z / CHUNK)), []):
 		if rect.has_point(Vector2(x, z)): return false
 	return true
@@ -425,6 +500,7 @@ func get_cell_info(cell: Vector2i) -> Dictionary:
 		"height": get_gameplay_height(center.x, center.z), "logical_height": get_logical_height(center.x, center.z),
 		"biome": get_biome_at(center.x, center.z), "slope": get_slope_at(center.x, center.z),
 		"walkable": is_walkable_at(center.x, center.z), "cover": cover_cells.get(cell, "NONE"),
+		"water_depth": maxf(_water_depth(center.x, center.z), 0.0),
 	}
 
 ## 1 on the mesa top, 0 outside, across a ~4 m cliff band with a wobbly outline.
@@ -446,10 +522,160 @@ func _apply_ramp(p: Vector2, h: float, ramp: Array) -> float:
 	var ramp_height := lerpf(_base(a), MESAS[ramp[3]][2], smoothstep(0.0, 1.0, t))
 	return lerpf(h, ramp_height, 1.0 - smoothstep(width, width + 5.0, d))
 
+## Elliptical lake distance: < 1 is open water, the shore lies around 1.0-1.3.
+func _lake_e(p: Vector2) -> float:
+	return ((p - LAKE_CENTER) / LAKE_RADIUS).length() + noise.get_noise_2d(p.x * 0.6 + 900.0, p.y * 0.6) * 0.16
+
 func _apply_lake(p: Vector2, h: float) -> float:
-	var e := ((p - LAKE_CENTER) / LAKE_RADIUS).length() + noise.get_noise_2d(p.x * 0.6 + 900.0, p.y * 0.6) * 0.16
+	var e := _lake_e(p)
 	if e < 1.5: h = lerpf(LAKE - 7.0, h, smoothstep(0.72, 1.32, e))
 	return h
+
+# --- Rivers and water ---------------------------------------------------------
+
+## Lays each river out as 1 m samples and gives it a stepped water profile: the running
+## minimum of the banks below the source, snapped down to whole fall steps, so every reach
+## sits a little below its banks and drops to the next one in a waterfall. A ford (shallow
+## across the whole bed) sits in the middle of the longest reach. The samples are then
+## rasterized into river_dist / river_ref for the valley carving.
+func _build_rivers() -> void:
+	for spec: Array in RIVERS:
+		var points := _resample(_smooth(spec[0]), 1.0)
+		var count := points.size()
+		var step: float = spec[5]
+		var end: float = spec[6]
+		var widths := PackedFloat32Array()
+		var levels := PackedFloat32Array()
+		# A river leaving the lake starts at the lake's level; one from the hills at its spring.
+		var run := LAKE if end == SEA else INF
+		for i in count:
+			var c: Vector2 = points[i]
+			var width: float = lerpf(spec[1], spec[2], float(i) / (count - 1)) * lerpf(0.45, 1.0, smoothstep(0.0, 16.0, i))
+			var side := _river_side(points, i) * width
+			var bank := minf(_landform_height(c.x, c.y), minf(_landform_height(c.x + side.x, c.y + side.y), _landform_height(c.x - side.x, c.y - side.y)))
+			if end == SEA and _lake_e(c) < 1.5: bank = LAKE + 0.6
+			run = minf(run, bank - 0.6)
+			widths.append(width)
+			levels.append(maxf(end, end + floorf((run - end) / step + 0.001) * step))
+		# Ford in the middle of the longest reach above the end water, clear of lake and sea.
+		var ford := -100.0
+		var longest := 0
+		var start := -1
+		for i in count + 1:
+			var usable := i < count and levels[i] > end + 0.01 and _lake_e(points[i]) > 1.3 and _coast_distance(points[i]) < -12.0
+			if usable and start >= 0 and is_equal_approx(levels[i], levels[start]): continue
+			if start >= 0 and i - start > longest:
+				longest = i - start
+				ford = start + longest * 0.5
+			start = i if usable else -1
+		var depths := PackedFloat32Array()
+		var foams := PackedFloat32Array()
+		var fades := PackedFloat32Array()
+		var foam := 0.0
+		for i in count:
+			var c: Vector2 = points[i]
+			depths.append(lerpf(2.4, 0.6, 1.0 - smoothstep(3.0, 6.0, absf(i - ford))))
+			if i > 0: foam = maxf(foam - 0.14, clampf((levels[i - 1] - levels[i]) / 3.0, 0.0, 1.0))
+			foams.append(foam)
+			# Fade in at the spring and out where the river runs into the lake or the sea.
+			var spring := 1.0 if end == SEA else smoothstep(0.0, 5.0, i)
+			fades.append(spring * smoothstep(0.75, 0.98, _lake_e(c)) * (1.0 - smoothstep(2.0, 14.0, _coast_distance(c))))
+		rivers.append({"name": spec[7], "points": points, "widths": widths, "levels": levels, "depths": depths,
+			"foams": foams, "fades": fades, "slope": spec[3], "valley": spec[4], "ford": ford})
+		var falls := 0
+		for i in range(1, count):
+			if levels[i] < levels[i - 1]: falls += 1
+		print("[JRPGWorld2] River ", spec[7], ": ", count, " m, ", falls, " falls, ", levels[0], " m -> ", levels[count - 1], " m, ford at ", str(points[int(ford)]) if ford >= 0.0 else "none")
+	river_dist.resize((SIZE + 1) * (SIZE + 1))
+	river_dist.fill(INF)
+	river_ref.resize((SIZE + 1) * (SIZE + 1))
+	river_ref.fill(-1)
+	for r in rivers.size():
+		var river := rivers[r]
+		var points: Array = river.points
+		var widths: PackedFloat32Array = river.widths
+		var valley: float = river.valley
+		for i in range(0, points.size() - 1, 2):
+			var j := mini(i + 2, points.size() - 1)
+			var a: Vector2 = points[i]
+			var b: Vector2 = points[j]
+			var reach := widths[i] + valley + 1.0
+			for z in range(maxi(0, floori(minf(a.y, b.y) - reach)), mini(SIZE, ceili(maxf(a.y, b.y) + reach)) + 1):
+				for x in range(maxi(0, floori(minf(a.x, b.x) - reach)), mini(SIZE, ceili(maxf(a.x, b.x) + reach)) + 1):
+					var p := Vector2(x, z)
+					var t := _segment_t(p, a, b)
+					var d := p.distance_to(a.lerp(b, t))
+					var k := z * (SIZE + 1) + x
+					if d < river_dist[k]:
+						river_dist[k] = d
+						river_ref[k] = (r << 16) | (i + roundi(t * (j - i)))
+
+## Unit vector across the river at sample i.
+func _river_side(points: Array, i: int) -> Vector2:
+	var tangent: Vector2 = (points[mini(i + 1, points.size() - 1)] - points[maxi(i - 1, 0)]).normalized()
+	return Vector2(-tangent.y, tangent.x)
+
+## Evenly spaced points along a dense polyline.
+func _resample(points: Array, spacing: float) -> Array:
+	var out: Array = [points[0]]
+	var carry := 0.0
+	for i in points.size() - 1:
+		var a: Vector2 = points[i]
+		var b: Vector2 = points[i + 1]
+		var length := a.distance_to(b)
+		var t := spacing - carry
+		while t <= length:
+			out.append(a.lerp(b, t / length))
+			t += spacing
+		carry = length - (t - spacing)
+	return out
+
+## The river sample nearest a grid point and its distance, or [] away from rivers.
+func _river_at(x: float, z: float) -> Array:
+	if river_ref.is_empty() or x < 0.0 or z < 0.0 or x > SIZE or z > SIZE: return []
+	var k := clampi(roundi(z), 0, SIZE) * (SIZE + 1) + clampi(roundi(x), 0, SIZE)
+	var ref := river_ref[k]
+	if ref < 0: return []
+	return [rivers[ref >> 16], ref & 0xffff, river_dist[k]]
+
+## Cuts the channel (a deep middle, wadeable margins) and its valley walls.
+func _apply_river(p: Vector2, h: float) -> float:
+	var hit := _river_at(p.x, p.y)
+	if hit.is_empty(): return h
+	var river: Dictionary = hit[0]
+	var i: int = hit[1]
+	var d: float = hit[2]
+	var width: float = (river.widths as PackedFloat32Array)[i]
+	var valley: float = river.valley
+	if d > width + valley: return h
+	var level: float = (river.levels as PackedFloat32Array)[i]
+	var target: float
+	if d < width:
+		target = level - 0.2 - ((river.depths as PackedFloat32Array)[i] - 0.2) * (1.0 - smoothstep(width * 0.2, width, d))
+	else:
+		target = level - 0.2 + (d - width) * float(river.slope)
+	return lerpf(minf(h, target), h, smoothstep(width + valley * 0.6, width + valley, d))
+
+## Water surface per grid point: the sea everywhere low, the lake in its basin, rivers in
+## their channels.
+func _bake_water() -> void:
+	water_cache.resize((SIZE + 1) * (SIZE + 1))
+	for z in SIZE + 1:
+		for x in SIZE + 1:
+			var level := SEA
+			if _lake_e(Vector2(x, z)) < 1.45: level = LAKE
+			var hit := _river_at(x, z)
+			if not hit.is_empty() and float(hit[2]) < (hit[0].widths as PackedFloat32Array)[hit[1]] + 2.0:
+				level = maxf(level, (hit[0].levels as PackedFloat32Array)[hit[1]])
+			water_cache[z * (SIZE + 1) + x] = level
+
+func _water_level(x: float, z: float) -> float:
+	if water_cache.is_empty() or x < 0.0 or z < 0.0 or x > SIZE or z > SIZE: return SEA
+	return water_cache[clampi(roundi(z), 0, SIZE) * (SIZE + 1) + clampi(roundi(x), 0, SIZE)]
+
+## How deep the water stands over the visible ground (negative on dry land).
+func _water_depth(x: float, z: float) -> float:
+	return _water_level(x, z) - _height(x, z)
 
 ## Smooth bilinear lookup of the cached height field.
 func _height(x: float, z: float) -> float:
@@ -480,7 +706,8 @@ func _cached(ix: int, iz: int) -> float:
 func _can_walk(p: Vector3, from: Vector3) -> bool:
 	if p.x < 2 or p.z < 2 or p.x >= SIZE - 2 or p.z >= SIZE - 2: return false
 	var h := _surface(p.x, p.z)
-	if h < LAKE + 0.2: return false
+	# Shallows are wadeable up to the waist; deeper water blocks.
+	if _water_level(p.x, p.z) - h > WADE_DEPTH: return false
 	var run := Vector2(p.x - from.x, p.z - from.z).length()
 	# Cliffs and steep mountainsides block; ordinary hills are freely walkable.
 	if run > 0.0001 and absf(h - _surface(from.x, from.z)) / run > 1.05: return false
@@ -565,11 +792,12 @@ func _build_world() -> void:
 	var started := Time.get_ticks_msec()
 	terrain_material = ShaderMaterial.new()
 	terrain_material.shader = TERRAIN_SHADER
-	terrain_material.set_shader_parameter("lake_level", LAKE)
 	lamp_material = Props.flat(Color("ffd58a"), 0.5, Color("ffb54d"))
 	_build_terrain()
 	_build_far_terrain()
 	_build_lake()
+	_build_sea()
+	_build_river_meshes()
 	var landmarks := Node3D.new()
 	landmarks.name = "Landmarks"
 	add_child(landmarks)
@@ -599,15 +827,22 @@ func _build_terrain() -> void:
 			var vertices := PackedVector3Array()
 			var normals := PackedVector3Array()
 			var colors := PackedColorArray()
+			var uvs := PackedVector2Array()
 			for z in range(cz, z1 + 1):
 				for x in range(cx, x1 + 1):
 					var h := _cached(x, z)
 					vertices.append(Vector3(x, h, z))
-					normals.append(Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1)).normalized())
+					var normal := Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1))
+					normals.append(normal.normalized())
+					# Height above the local water (sea, lake or river): sand and pebbles along
+					# every shore and riverbed, but bare rock on falls and sea cliffs.
+					var above := h - water_cache[z * (SIZE + 1) + x]
 					var road := 1.0 - smoothstep(-0.4, 1.0, _path_distance(x, z) + noise.get_noise_2d(x * 5.0, z * 5.0) * 0.8)
-					var shore := biome.weight(Biomes.Biome.LAKESHORE, x, z) * (1.0 - smoothstep(LAKE + 1.2, LAKE + 3.0, h)) * 0.85
-					var sand := maxf(1.0 - smoothstep(LAKE + 0.4, LAKE + 1.6, h), shore) * (1.0 - road)
+					var shore := biome.weight(Biomes.Biome.LAKESHORE, x, z) * (1.0 - smoothstep(1.2, 3.0, above)) * 0.85
+					var steep := smoothstep(1.4, 2.4, Vector2(normal.x, normal.z).length())
+					var sand := maxf(1.0 - smoothstep(0.4, 1.6, above), shore) * (1.0 - road) * (1.0 - steep)
 					colors.append(Color(road, sand, _plaza_weight(Vector2(x, z)), _field_weight(Vector2(x, z)) * (1.0 - road)))
+					uvs.append(Vector2(-above, 0.0))
 			var width := x1 - cx + 1
 			var indices := PackedInt32Array()
 			for z in z1 - cz:
@@ -616,7 +851,7 @@ func _build_terrain() -> void:
 					indices.append_array([i, i + 1, i + width, i + 1, i + width + 1, i + width])
 			var chunk := MeshInstance3D.new()
 			chunk.name = "Terrain_%d_%d" % [cx / CHUNK, cz / CHUNK]
-			chunk.mesh = _array_mesh(vertices, normals, colors, indices, terrain_material)
+			chunk.mesh = _array_mesh(vertices, normals, colors, indices, terrain_material, uvs)
 			root.add_child(chunk)
 
 ## Coarse hills and ranges beyond the playable square, so the horizon is never empty.
@@ -627,14 +862,18 @@ func _build_far_terrain() -> void:
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
+	var uvs := PackedVector2Array()
 	for j in count:
 		for i in count:
 			var x := float(lo + i * step)
 			var z := float(lo + j * step)
 			var inside := x >= 0 and x <= SIZE and z >= 0 and z <= SIZE
-			var h := _cached(int(x), int(z)) - 0.4 if inside else maxf(_expanded_height(x, z), LAKE + 2.0)
+			var h := _cached(int(x), int(z)) - 0.4 if inside else _expanded_height(x, z)
+			# Inland the far hills keep clear of the lake level; seaward they shelve under the sea.
+			if not inside and _coast_distance(Vector2(x, z)) < -40.0: h = maxf(h, LAKE + 2.0)
 			vertices.append(Vector3(x, h, z))
 			colors.append(Color(0, 0, 0, 0))
+			uvs.append(Vector2((_water_level(x, z) if inside else SEA) - h, 0.0))
 	for j in count:
 		for i in count:
 			var l := vertices[j * count + maxi(i - 1, 0)].y
@@ -652,14 +891,17 @@ func _build_far_terrain() -> void:
 			indices.append_array([k, k + 1, k + count, k + 1, k + count + 1, k + count])
 	var far := MeshInstance3D.new()
 	far.name = "FarTerrain"
-	far.mesh = _array_mesh(vertices, normals, colors, indices, terrain_material)
+	far.mesh = _array_mesh(vertices, normals, colors, indices, terrain_material, uvs)
 	far.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(far)
 
+## The lake surface over its basin. COLOR.r carries depth / 8 for the water shader, so the
+## shallows stay clear and the middle turns opaque blue; COLOR.g hands the surface over to a
+## river ribbon fading in over it (see _ribbon_fade).
 func _build_lake() -> void:
 	lake_material = ShaderMaterial.new()
 	lake_material.shader = LAKE_SHADER
-	var step := 4
+	var step := 2
 	var count := SIZE / step + 1
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -667,11 +909,14 @@ func _build_lake() -> void:
 	var depths := PackedFloat32Array()
 	for j in count:
 		for i in count:
-			var h := _cached(i * step, j * step)
-			depths.append(LAKE - h)
-			vertices.append(Vector3(i * step, LAKE, j * step))
+			var x := i * step
+			var z := j * step
+			var depth := LAKE - _cached(x, z)
+			if water_cache[z * (SIZE + 1) + x] != LAKE: depth = -10.0
+			depths.append(depth)
+			vertices.append(Vector3(x, LAKE, z))
 			normals.append(Vector3.UP)
-			colors.append(Color(clampf((LAKE - h) / 8.0, 0.0, 1.0), 0, 0))
+			colors.append(Color(clampf(depth / 8.0, 0.0, 1.0), _ribbon_fade(x, z), 0))
 	var indices := PackedInt32Array()
 	for j in count - 1:
 		for i in count - 1:
@@ -684,12 +929,138 @@ func _build_lake() -> void:
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(water)
 
-func _array_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array, material: Material) -> ArrayMesh:
+## 碧の海: a 2 m grid along the coast inside the map plus a coarse 8 m sheet out to the
+## horizon, both at SEA with baked depth for the shader.
+func _build_sea() -> void:
+	sea_material = ShaderMaterial.new()
+	sea_material.shader = LAKE_SHADER
+	sea_material.set_shader_parameter("shallow", Color(0.52, 0.88, 0.80))
+	sea_material.set_shader_parameter("mid", Color(0.22, 0.66, 0.76))
+	sea_material.set_shader_parameter("deep", Color(0.08, 0.42, 0.70))
+	sea_material.set_shader_parameter("abyss", Color(0.04, 0.26, 0.56))
+	sea_material.set_shader_parameter("band_depths", Vector3(0.8, 2.6, 7.0))
+	sea_material.set_shader_parameter("wave_size", 2.2)
+	sea_material.set_shader_parameter("surf", 1.0)
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	for grid: Array in [[0, 2, SIZE / 2 + 1], [-480, 8, (SIZE + 960) / 8 + 1]]:
+		var lo: int = grid[0]
+		var step: int = grid[1]
+		var count: int = grid[2]
+		var base := vertices.size()
+		var depths := PackedFloat32Array()
+		for j in count:
+			for i in count:
+				var x := lo + i * step
+				var z := lo + j * step
+				var inside := x >= 0 and x <= SIZE and z >= 0 and z <= SIZE
+				var depth := SEA - (_cached(x, z) if inside else _expanded_height(x, z))
+				depths.append(depth)
+				vertices.append(Vector3(x, SEA, z))
+				normals.append(Vector3.UP)
+				colors.append(Color(clampf(depth / 8.0, 0.0, 1.0), _ribbon_fade(x, z) if inside else 0.0, 0))
+		for j in count - 1:
+			for i in count - 1:
+				# The coarse sheet only covers what lies outside the playable square.
+				if step > 2 and lo + i * step >= 0 and lo + (i + 1) * step <= SIZE and lo + j * step >= 0 and lo + (j + 1) * step <= SIZE: continue
+				var k := j * count + i
+				if maxf(maxf(depths[k], depths[k + 1]), maxf(depths[k + count], depths[k + count + 1])) < -0.6: continue
+				indices.append_array([base + k, base + k + 1, base + k + count, base + k + 1, base + k + count + 1, base + k + count])
+	var water := MeshInstance3D.new()
+	water.name = "Sea"
+	water.mesh = _array_mesh(vertices, normals, colors, indices, sea_material)
+	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(water)
+
+## How far a river ribbon has faded in over this point (0 off the ribbon). Where a river
+## meets the lake or the sea both surfaces lie at the same level, so the still water fades
+## out by as much as the ribbon fades in instead of doubling up.
+func _ribbon_fade(x: float, z: float) -> float:
+	var hit := _river_at(x, z)
+	if hit.is_empty() or float(hit[2]) > (hit[0].widths as PackedFloat32Array)[hit[1]] + 1.6: return 0.0
+	return (hit[0].fades as PackedFloat32Array)[hit[1]]
+
+## Each river as a ribbon over its channel. Rows follow the 1 m samples; at a fall two
+## extra rows (lip and foot) hang a steep sheet just in front of the cut cliff. UV.x is
+## meters across, UV.y the flow distance (stretched down a fall, so its streaks race);
+## COLOR = depth / 8, fall, fade, foam.
+func _build_river_meshes() -> void:
+	river_material = ShaderMaterial.new()
+	river_material.shader = RIVER_SHADER
+	var root := Node3D.new()
+	root.name = "Rivers"
+	add_child(root)
+	var across := 10
+	for river in rivers:
+		var points: Array = river.points
+		var widths: PackedFloat32Array = river.widths
+		var levels: PackedFloat32Array = river.levels
+		var foams: PackedFloat32Array = river.foams
+		var fades: PackedFloat32Array = river.fades
+		# Rows: position along the samples, level, fall, foam, fade.
+		var rows: Array = []
+		for i in points.size():
+			# The carving cuts each fall's cliff halfway between two samples, jagged at the 1 m
+			# grid; the water shoots out over it to a lip on the next sample and drops from
+			# there, so the sheet always hangs in front of the rock.
+			var after_fall := i > 0 and levels[i] < levels[i - 1] - 0.01
+			rows.append([i + (0.35 if after_fall else 0.0), levels[i], 1.0 if after_fall else 0.0, foams[i], fades[i]])
+			if i + 1 < points.size() and levels[i + 1] < levels[i] - 0.01:
+				rows.append([i + 1.0, levels[i], 1.0, 0.3, fades[i]])
+		var vertices := PackedVector3Array()
+		var colors := PackedColorArray()
+		var uvs := PackedVector2Array()
+		var flow := 0.0
+		var previous := Vector3.ZERO
+		for r in rows.size():
+			var row: Array = rows[r]
+			var at: float = row[0]
+			var i := mini(floori(at), points.size() - 2)
+			var center: Vector2 = (points[i] as Vector2).lerp(points[i + 1], at - i)
+			var side := _river_side(points, i).lerp(_river_side(points, i + 1), at - i).normalized()
+			var half := lerpf(widths[i], widths[i + 1], at - i) + 1.6
+			var level: float = row[1]
+			var mid := Vector3(center.x, level, center.y)
+			if r > 0:
+				# Down a fall the flow coordinate advances slower than the sheet is long, so
+				# the same scroll rate reads as water racing down it.
+				flow += Vector2(mid.x - previous.x, mid.z - previous.z).length() + absf(level - previous.y) * 0.35
+			previous = mid
+			for k in across + 1:
+				var offset := (float(k) / across * 2.0 - 1.0) * half
+				var p := center + side * offset
+				vertices.append(Vector3(p.x, level, p.y))
+				var depth := level - _height(p.x, p.y)
+				colors.append(Color(clampf(depth / 8.0, 0.0, 1.0), row[2], row[4], row[3]))
+				uvs.append(Vector2(offset, flow))
+		var width := across + 1
+		var normals := PackedVector3Array()
+		for r in rows.size():
+			for k in width:
+				var along := vertices[mini(r + 1, rows.size() - 1) * width + k] - vertices[maxi(r - 1, 0) * width + k]
+				var side := vertices[r * width + mini(k + 1, across)] - vertices[r * width + maxi(k - 1, 0)]
+				normals.append(side.cross(along).normalized())
+		var indices := PackedInt32Array()
+		for r in rows.size() - 1:
+			if colors[r * width].b <= 0.0 and colors[(r + 1) * width].b <= 0.0: continue
+			for k in across:
+				var a := r * width + k
+				indices.append_array([a, a + width, a + 1, a + 1, a + width, a + width + 1])
+		var mesh := MeshInstance3D.new()
+		mesh.name = "River_%s" % river.name
+		mesh.mesh = _array_mesh(vertices, normals, colors, indices, river_material, uvs)
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(mesh)
+
+func _array_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array, material: Material, uvs := PackedVector2Array()) -> ArrayMesh:
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_COLOR] = colors
+	if not uvs.is_empty(): arrays[Mesh.ARRAY_TEX_UV] = uvs
 	arrays[Mesh.ARRAY_INDEX] = indices
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
@@ -1239,7 +1610,7 @@ func _build_trees_and_rocks() -> void:
 			var stretch := rng.randf()
 			x += spacing
 			var h := _height(p.x, p.y)
-			if h < LAKE + 1.0 or _path_distance(p.x, p.y) < 3.0: continue
+			if _water_depth(p.x, p.y) > -1.0 or _path_distance(p.x, p.y) < 3.0: continue
 			if _clear(p) or _near_ramp(p, 0.0): continue
 			var c := biome.cell(p.x, p.y)
 			if h < grid[c + Biomes.Param.MIN_HEIGHT] or h > grid[c + Biomes.Param.MAX_HEIGHT]: continue
@@ -1344,7 +1715,7 @@ func _build_bushes() -> void:
 			x += spacing
 			var h := _height(p.x, p.y)
 			var road := _path_distance(p.x, p.y)
-			if h < LAKE + 0.8 or road < 2.0 or _clear(p) or _near_ramp(p, 0.0): continue
+			if _water_depth(p.x, p.y) > -0.8 or road < 2.0 or _clear(p) or _near_ramp(p, 0.0): continue
 			var c := biome.cell(p.x, p.y)
 			if h > grid[c + Biomes.Param.MAX_HEIGHT] or _slope(p.x, p.y) > 0.6: continue
 			if _plaza_weight(p) > 0.3 or _field_weight(p) > 0.3: continue
@@ -1412,7 +1783,7 @@ func _build_grass() -> void:
 					# Thin biomes (forest floor, mountain) break into tufts; open land closes up.
 					if roll > density * 1.5: continue
 					var h := _height(px, pz)
-					if h < LAKE + 0.4 or h > top: continue
+					if h > top or _water_depth(px, pz) > -0.4: continue
 					var road := _path_distance(px, pz)
 					if road < -0.1: continue
 					var slope := _slope(px, pz)
@@ -1470,11 +1841,11 @@ func _field_materials() -> Array[ShaderMaterial]:
 	return materials
 
 func _build_labels(parent: Node3D) -> void:
-	for entry in [["ルミエール城", CRAG, 44.0], ["城下町", TOWN_PLAZA, 16.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0]]:
+	for entry in [["ルミエール城", CRAG, 44.0], ["城下町", TOWN_PLAZA, 16.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0], ["白瀬川", Vector2(265, 58), 10.0], ["碧瀬川", Vector2(340, 194), 8.0], ["碧の海", Vector2(430, 290), 8.0]]:
 		var label := Label3D.new()
 		label.text = entry[0]
 		var p: Vector2 = entry[1]
-		label.position = Vector3(p.x, maxf(_height(p.x, p.y), LAKE) + entry[2], p.y)
+		label.position = Vector3(p.x, maxf(_height(p.x, p.y), _water_level(p.x, p.y)) + entry[2], p.y)
 		label.font_size = 42
 		label.pixel_size = 0.03
 		label.visibility_range_begin = 45.0
@@ -1502,10 +1873,55 @@ func _spawn_characters() -> void:
 			player_roster_index = index
 	if character_text and player.model:
 		character_text.text = "操作キャラ：" + player.model.display_name
+	_spawn_sparring_partner(spawn)
+	player.attack_impact.connect(_on_player_attack_impact)
 	encounter_marker = Node3D.new()
 	encounter_marker.visible = false
 	add_child(encounter_marker)
 	encounter_position = Vector3(-1000, 0, -1000)
+
+## Character 001 stands just ahead of the explorer as a target that flinches when struck.
+func _spawn_sparring_partner(spawn: Vector2) -> void:
+	sparring_partner = SPARRING_SCENE.instantiate() as Node3D
+	sparring_partner.name = "SparringPartner"
+	add_child(sparring_partner)
+	var at := spawn + Vector2(player.world_facing.x, player.world_facing.z) * SPARRING_OFFSET
+	sparring_partner.position = Vector3(at.x, _surface(at.x, at.y) + 0.05, at.y)
+	_face_toward(sparring_partner, player.position)
+	var animation_player: AnimationPlayer = sparring_partner.animation_player
+	if animation_player:
+		if animation_player.has_animation("idle"):
+			animation_player.get_animation("idle").loop_mode = Animation.LOOP_LINEAR
+		if animation_player.has_animation("hit"):
+			animation_player.get_animation("hit").loop_mode = Animation.LOOP_NONE
+		animation_player.animation_finished.connect(func(clip: StringName) -> void:
+			if clip == &"hit": animation_player.play("idle", 0.2))
+	# In npcs it blocks the explorer's path and can be talked to like the roster.
+	npcs.append({"actor": sparring_partner, "data": {
+		"id": "sparring_" + sparring_partner.character_id, "name": sparring_partner.display_name,
+		"lines": Array(sparring_partner.dialogue)
+	}})
+
+## Roster visuals face +Z.
+func _face_toward(actor: Node3D, target: Vector3) -> void:
+	var to := Vector2(target.x - actor.position.x, target.z - actor.position.z)
+	if not to.is_zero_approx(): actor.rotation.y = atan2(to.x, to.y)
+
+func _on_player_attack_impact(_clip: String) -> void:
+	if sparring_partner == null: return
+	var to := sparring_partner.position - player.position
+	to.y = 0.0
+	var reach := BOW_REACH if player.sword_combat.is_ranged() else MELEE_REACH
+	if to.length() > reach: return
+	# A wide cone up close, a narrow one for arrows at range.
+	var cone := 0.9 if reach == BOW_REACH and to.length() > MELEE_REACH else 0.2
+	if to.length() > 0.3 and to.normalized().dot(player.world_facing.normalized()) < cone: return
+	var animation_player: AnimationPlayer = sparring_partner.animation_player
+	if animation_player == null or not animation_player.has_animation("hit"): return
+	_face_toward(sparring_partner, player.position)
+	# Restart on every blow so combos read as separate hits.
+	animation_player.play("hit", 0.05)
+	animation_player.seek(0.0, true)
 
 func _preset(index: int) -> void:
 	overview = true
@@ -1540,7 +1956,7 @@ func _preset(index: int) -> void:
 func _shot(shot_name: String) -> void:
 	var shot: Array = SHOTS[shot_name]
 	var from: Vector3 = shot[0]
-	from.y += maxf(_height(from.x, from.z), LAKE)
+	from.y += maxf(_height(from.x, from.z), _water_level(from.x, from.z))
 	var direction := ((shot[1] as Vector3) - from).normalized()
 	overview = true
 	distance = 20.0
@@ -1558,7 +1974,8 @@ func _dump_maps(directory: String) -> void:
 		for x in SIZE + 1:
 			var normal := Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1)).normalized()
 			var color := debug.get_pixel(mini(x >> 1, debug.get_width() - 1), mini(z >> 1, debug.get_height() - 1))
-			if _cached(x, z) < LAKE: color = Color("1d3f66")
+			var depth := water_cache[z * (SIZE + 1) + x] - _cached(x, z)
+			if depth > 0.0: color = Color("1d3f66").lerp(Color("5fb8c8"), 1.0 - smoothstep(0.0, WADE_DEPTH, depth))
 			color = color * lerpf(0.45, 1.15, maxf(normal.dot(light), 0.0))
 			if _sightline_mask(Vector2(x, z)) > 0.5: color = color.lerp(Color.WHITE, 0.25)
 			image.set_pixel(x, z, color)
@@ -1633,6 +2050,9 @@ func _region() -> String:
 	if TOWN_RECT.grow(1.0).has_point(p): return "城下町ルミエール"
 	if _mesa_mask(p, 0) > 0.5: return "風車の丘"
 	if _mesa_mask(p, 1) > 0.5: return "白霧の遺跡"
+	var hit := _river_at(p.x, p.y)
+	if not hit.is_empty() and float(hit[2]) < (hit[0].widths as PackedFloat32Array)[hit[1]] + 6.0: return hit[0].name
+	if _coast_distance(p) > -30.0: return "碧の海岸"
 	if p.y < 95.0: return "北嶺の麓"
 	if p.distance_to(SPAWN_HILL) < 40.0: return "見晴らしの丘"
 	if ((p - LAKE_CENTER) / LAKE_RADIUS).length() < 1.3: return "鏡の湖畔"
@@ -1659,7 +2079,7 @@ func _sync_conditions() -> void:
 	var snow := 0.8 if field_weather.weather_index == 3 else 0.0
 	var materials: Array[ShaderMaterial] = Props.shader_materials()
 	materials.append_array(Vegetation.shader_materials())
-	materials.append_array([terrain_material, lake_material])
+	materials.append_array([terrain_material, lake_material, sea_material, river_material])
 	for material in materials:
 		material.set_shader_parameter("wetness", wet)
 		material.set_shader_parameter("snow_cover", snow)

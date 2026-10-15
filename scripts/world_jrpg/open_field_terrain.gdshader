@@ -4,18 +4,20 @@ render_mode specular_schlick_ggx;
 // Vertex COLOR carries material weights: r = dirt path, g = shore sand, b = cobbled plaza,
 // a = crop field.
 // Biome tint and wetness come from biome_map; grass, slope dirt/rock (by slope/altitude),
-// snow and lakebed are resolved per pixel.
-uniform float lake_level = 10.0;
+// snow and lake/river/sea beds are resolved per pixel. UV.x is the water depth over the
+// vertex (negative above water).
 uniform float wetness = 0.0;
 uniform float snow_cover = 0.0;
 // Aerial perspective color for distant terrain (set per time of day / weather).
 uniform vec3 haze_color = vec3(0.60, 0.73, 0.88);
 varying vec3 world_position;
 varying vec3 world_normal;
+varying float water_depth;
 
 void vertex() {
     world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
     world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+    water_depth = UV.x;
 }
 
 void fragment() {
@@ -34,7 +36,7 @@ void fragment() {
     color = mix(color, stone, outcrop * 0.7);
     color = mix(color, dirt, smoothstep(0.15, 0.85, COLOR.r));
     // Shore sand, with pebbles where the lakeshore biome is wet.
-    float pebble = smoothstep(0.72, 0.8, of_noise(p * 6.0)) * biome.a;
+    float pebble = smoothstep(0.72, 0.8, of_noise(p * 6.0)) * max(biome.a, step(0.0, water_depth) * 0.5);
     vec3 sand = mix(vec3(0.87, 0.81, 0.63), vec3(0.62, 0.62, 0.60), pebble) * (0.94 + fine * 0.1);
     color = mix(color, sand, COLOR.g);
     vec2 cell = p * 1.3 + vec2(0.0, floor(p.x * 1.3) * 0.5);
@@ -67,7 +69,7 @@ void fragment() {
     float snow = smoothstep(150.0, 172.0, world_position.y + (of_noise(p * 0.07) - 0.5) * 30.0) * smoothstep(0.4, 0.7, n.y);
     snow = max(snow, snow_cover * smoothstep(0.5, 0.9, n.y));
     color = mix(color, vec3(0.93, 0.95, 0.98), snow);
-    color = mix(color, vec3(0.30, 0.45, 0.42), smoothstep(0.0, 5.0, lake_level - world_position.y));
+    color = mix(color, vec3(0.30, 0.45, 0.42), smoothstep(0.0, 5.0, water_depth));
     // Biome wetness: wetland and lakeshore ground is darker, cooler and glossier.
     float damp = biome.a * (1.0 - snow);
     color *= mix(vec3(1.0), vec3(0.82, 0.88, 0.90), damp);

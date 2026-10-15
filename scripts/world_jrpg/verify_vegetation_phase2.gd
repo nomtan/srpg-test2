@@ -302,7 +302,6 @@ func _render(directory: String) -> void:
 	ground.mesh = ground_mesh
 	var terrain := ShaderMaterial.new()
 	terrain.shader = TERRAIN_SHADER
-	terrain.set_shader_parameter("lake_level", -100.0)
 	ground.material_override = terrain
 	stage.add_child(ground)
 	camera = Camera3D.new()
