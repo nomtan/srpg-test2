@@ -5,5 +5,6 @@
 [resource]
 script = ExtResource("1")
 id = "charcter002"
-body_id = "body002"
+body_id = "body006"
 face_id = "face002"
+face_offset = Vector3(0, 0.01, -0.025)

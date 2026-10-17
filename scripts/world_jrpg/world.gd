@@ -558,7 +558,7 @@ func _setup_hud() -> void:
 	location_text = Label.new()
 	info.add_child(location_text)
 	var help := Label.new()
-	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
+	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話   C / Start : 座る（武器なし）\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
 	if not character_roster.is_empty():
 		help.text = help.text.replace("2D・3D切替", "操作キャラ切替")
 	help.add_theme_font_size_override("font_size", 16)
@@ -667,7 +667,10 @@ func _process(delta: float) -> void:
 		pitch = clampf(pitch + look.y * delta * 1.5, 0.2, 1.35)
 		distance = clampf(distance * exp(-GamepadInput.zoom() * delta), MIN_CAMERA_DISTANCE, SIZE * 1.8)
 		_update_camera()
-	if motion.length_squared() > 0 and not player.attacking and not player.guarding:
+	# Moving while seated stands up first; the explorer walks off once on its feet.
+	if motion.length_squared() > 0 and player.posture == "seated":
+		player.toggle_sit()
+	if motion.length_squared() > 0 and not player.attacking and not player.guarding and player.posture == "":
 		if overview:
 			distance = 27
 			_focus_player()
@@ -751,6 +754,7 @@ func _close_dialog() -> void:
 func _start_battle() -> void:
 	mode = "battle"
 	player.cancel_attack()
+	player.stand_now()
 	player.locomotion_speed = -1.0
 	encounter_marker.hide()
 	return_position = player.position
@@ -796,7 +800,7 @@ func _input(event: InputEvent) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if mode == "battle": return
-	event = GamepadInput.as_key(event, {JOY_BUTTON_A: KEY_E, JOY_BUTTON_B: KEY_ESCAPE, JOY_BUTTON_X: KEY_J, JOY_BUTTON_Y: KEY_K, JOY_BUTTON_LEFT_SHOULDER: KEY_M, JOY_BUTTON_RIGHT_STICK: KEY_R, JOY_BUTTON_BACK: KEY_H, JOY_BUTTON_DPAD_UP: KEY_1, JOY_BUTTON_DPAD_RIGHT: KEY_2, JOY_BUTTON_DPAD_DOWN: KEY_3, JOY_BUTTON_DPAD_LEFT: KEY_4})
+	event = GamepadInput.as_key(event, {JOY_BUTTON_A: KEY_E, JOY_BUTTON_B: KEY_ESCAPE, JOY_BUTTON_X: KEY_J, JOY_BUTTON_Y: KEY_K, JOY_BUTTON_LEFT_SHOULDER: KEY_M, JOY_BUTTON_RIGHT_STICK: KEY_R, JOY_BUTTON_BACK: KEY_H, JOY_BUTTON_DPAD_UP: KEY_1, JOY_BUTTON_DPAD_RIGHT: KEY_2, JOY_BUTTON_DPAD_DOWN: KEY_3, JOY_BUTTON_DPAD_LEFT: KEY_4, JOY_BUTTON_START: KEY_C})
 	if event is InputEventKey and event.pressed and not event.echo:
 		if mode == "dialog":
 			if event.keycode == KEY_ESCAPE: _close_dialog()
@@ -809,6 +813,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_J, KEY_K:
 				player.attack(event.keycode == KEY_K)
+				get_viewport().set_input_as_handled()
+			KEY_C:
+				player.toggle_sit()
 				get_viewport().set_input_as_handled()
 			KEY_E:
 				for npc in npcs:

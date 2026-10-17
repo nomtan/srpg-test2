@@ -28,7 +28,7 @@ Tripo Face (頭部 + 髪) → Blender正規化 → modular/face/NNN/model.glb �
 
 `assets/characters/_shared/rigs/humanoid_v1.glb` が正式な Reference Rig。65ボーンの名前、親子関係、全rest translation/rotation/scale、および `head`、root/hips を規格として固定する。リグ内のBody001由来メッシュは新しいBodyへのウェイト転送専用の donor であり、他のBodyの実行時メッシュには含めない。`create_reference_rig.py` はPhase 2のBody001からこの規格を固定した一回限りの移行スクリプトである。通常の新規Body出力はこの共有GLBを読み、Body001原本は読み込まない。
 
-Bodyは唯一のSkeleton、`idle` / `walk` / `attack` / `hit` の4クリップを持つ。Faceは静的メッシュで、Skeleton、skin、animationを含めない。Faceの頂点は共通Skeletonのrest空間に置く。Godotでは `head` ボーンの `BoneAttachment3D` に `FaceSocket` を置き、その下にFace全体を装着する。`get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。Body/Faceの組み合わせ別のランタイム補正はない。
+Bodyは唯一のSkeleton、`idle` / `walk` / `attack` / `hit` の4クリップを持つ。Faceは静的メッシュで、Skeleton、skin、animationを含めない。Faceの頂点は共通Skeletonのrest空間に置く。Godotでは `head` ボーンの `BoneAttachment3D` に `FaceSocket` を置き、その下にFace全体を装着する。`get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。Body/Faceの組み合わせ別のランタイム補正は原則持たない。例外として、Faceを本来合わせたBodyとは別のBodyに載せるときだけ、`CharacterDefinition.face_offset`（rest空間、+Zが前）でFaceを平行移動できる（例: charcter002はbody006+face002で `(0, 0.01, -0.025)`）。
 
 Blenderはメートル・Z-up、GodotはY-up。出力root、Armature、mesh objectのtransformはidentityとし、正規化は頂点へ焼き込む。
 
@@ -43,7 +43,7 @@ python tools/asset_gen/character_pipeline/scan_sources.py
 python tools/asset_gen/character_pipeline/validate_modular_parts.py --root artifacts/modular_direct
 ```
 
-`normalization.json` の任意項目 `source_file` で同じTripoフォルダ内の別原本を指定できる（`source_sha256` はそのファイルのハッシュ）。`baked_face_features: true` はテクスチャに目・眉・口が描き込まれたFaceを示し、GLB node extrasに出力され、`CharacterAssembler` が表情オーバーレイを非表示にする。このFaceはテクスチャに陰影も描き込まれているため、Tripoでの見え方に合わせてトゥーンの陰影帯と受ける影を付けず、テクスチャ色をそのまま表示する（shader `shade_strength = 0`）。Face002は `face+facial.glb` を原本とする。
+`normalization.json` の任意項目 `source_file` で同じTripoフォルダ内の別原本を指定できる（`source_sha256` はそのファイルのハッシュ）。`baked_face_features: true` はテクスチャに目・眉・口が描き込まれたFaceを示し、GLB node extrasに出力され、`CharacterAssembler` が表情オーバーレイを非表示にする。このFaceはテクスチャに陰影も描き込まれているため、Tripoでの見え方に合わせてトゥーンの陰影帯と受ける影を付けず、テクスチャ色をそのまま表示する（shader `shade_strength = 0`）。組み合わせるBodyも同じ表示にそろえ、FaceとBodyで光の当たり方が違って見えないようにする。Face002は `face+facial.glb` を原本とする。
 
 `DIRECT_MODULAR_EXPORT` をBlenderログで確認する。検証後に正式ディレクトリへ配置し、Godotでインポート、実行時検証、目視確認を行う。`validate_modular_parts.py` は共有Reference RigとBodyの全65ボーンrest、4クリップ、Faceのskin/animation不在とtransformを照合する。rest成分の許容差 `2.5e-5` はBlenderのglTF再入出力による浮動小数丸めを吸収するための値である。
 

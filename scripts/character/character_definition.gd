@@ -8,3 +8,5 @@ extends Resource
 @export var body_id: String = ""
 @export var face_id: String = ""
 @export var expression_profile_id: String = ""
+## Shifts the Face in the Body's rest space (+Z forward), for a Face on a Body it was not sized against.
+@export var face_offset := Vector3.ZERO

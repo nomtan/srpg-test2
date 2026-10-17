@@ -8,6 +8,7 @@ script = ExtResource("2")
 character_id = "charcter002"
 display_name = "Character 002"
 definition = ExtResource("1")
+metadata/weapon_enabled = false
 
 [node name="Model" type="Node3D" parent="."]
 scale = Vector3(1.35, 1.35, 1.35)

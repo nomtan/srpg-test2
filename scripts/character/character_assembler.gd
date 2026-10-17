@@ -68,12 +68,15 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	# Face mesh coordinates are in the Body skeleton's rest space. Cancel the
 	# imported head rest transform once, then let the socket supply each pose.
 	var rest_inverse := skeleton.get_bone_global_rest(skeleton.find_bone("head")).affine_inverse()
-	face.transform = rest_inverse
+	# face_offset moves the Face in that rest space, for a Face on a Body it was not sized against.
+	face.transform = rest_inverse * Transform3D(Basis.IDENTITY, definition.face_offset)
 	# Painted Tripo textures already carry their shading; extra toon bands and
 	# received shadows muddy them, so those Faces render flat. The Face sits under
 	# the Body skeleton now, so convert it first or the Body pass claims it.
-	_apply_toon(face, _has_baked_features(face))
-	_apply_toon(body)
+	# The Body follows its Face, so the two parts never read as differently lit.
+	var flat := _has_baked_features(face)
+	_apply_toon(face, flat)
+	_apply_toon(body, flat)
 	var expression_controller := ExpressionController.new()
 	expression_controller.name = "ExpressionController"
 	character.add_child(expression_controller)

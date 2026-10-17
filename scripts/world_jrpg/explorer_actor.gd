@@ -3,6 +3,8 @@ extends "res://scripts/world_jrpg/pixel_actor.gd"
 const MODEL = preload("res://scenes/characters/tripo_roster/charcter001.tscn")
 const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
 const RunCycle = preload("res://scripts/world_jrpg/run_cycle.gd")
+const GroundSit = preload("res://scripts/world_jrpg/ground_sit.gd")
+const GaitCycle = preload("res://scripts/world_jrpg/gait_cycle.gd")
 const WALK_CYCLE_SPEED := 4.5
 const RUN_CYCLE_SPEED := 12.8 # Full sprint uses 1.25x, avoiding frantic torso bob at 2x.
 # Still faster than a walk while slowing from a sprint: keep the run until then.
@@ -15,12 +17,17 @@ signal attack_impact(clip: String)
 var locomotion_speed := -1.0
 var model: Node3D
 var animation_player: AnimationPlayer
-# The Body's own run, or one built from its walk.
+# Unarmed models walk and run with the procedural gait; armed ones keep the Body's walk
+# and its own run, or one built from that walk.
+var walk_clip := "walk"
 var run_clip := "run"
 var use_3d := true
 var sword_combat: RefCounted
 var attacking := false
 var guarding := false
+# Unarmed models can sit on the ground: "" standing, "down" sitting down, "seated", "up" standing up.
+var can_sit := false
+var posture := ""
 var _impact_clip := ""
 var _impact_time := -1.0
 
@@ -33,8 +40,9 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	attacking = false
 	guarding = false
 	sword_combat = null
+	posture = ""
 	var phase := -1.0
-	if animation_player and animation_player.current_animation in ["walk", run_clip]:
+	if animation_player and animation_player.current_animation in [walk_clip, run_clip]:
 		phase = fposmod(animation_player.current_animation_position / animation_player.current_animation_length, 1.0)
 	var previous := model
 	if previous:
@@ -54,14 +62,23 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	for clip in ["idle", "walk", "run"]:
 		if animation_player and animation_player.has_animation(clip):
 			animation_player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
-	_add_run_cycle()
 	var equipment := SwordCombat.new()
 	if equipment.install(model, animation_player):
 		sword_combat = equipment
+	# Weapon holds are tuned against the Body's walk and would fight the seated pose,
+	# so only unarmed models take the procedural gait and sit.
+	var skeleton := model.find_child("Skeleton3D", true, false) as Skeleton3D
+	walk_clip = "walk"
+	if sword_combat == null and GaitCycle.install(animation_player, skeleton):
+		walk_clip = GaitCycle.WALK
+		run_clip = GaitCycle.RUN
+	else:
+		_add_run_cycle()
+	can_sit = sword_combat == null and GroundSit.install(animation_player, skeleton)
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
 	set_3d_enabled(use_3d)
-	if phase >= 0.0 and animation_player and animation_player.current_animation in ["walk", run_clip]:
+	if phase >= 0.0 and animation_player and animation_player.current_animation in [walk_clip, run_clip]:
 		animation_player.seek(phase * animation_player.current_animation_length, true)
 
 func _add_run_cycle() -> void:
@@ -82,6 +99,7 @@ func set_3d_enabled(enabled: bool) -> void:
 	if not enabled:
 		cancel_attack()
 		guarding = false
+		posture = ""
 	use_3d = enabled
 	if not model: return
 	model.visible = enabled
@@ -110,26 +128,26 @@ func _check_impact() -> void:
 
 func _update_model() -> void:
 	if not model or not animation_player: return
-	if attacking or guarding: return
+	if attacking or guarding or posture != "": return
 	# The source character faces +X; turn its visual without rotating gameplay axes.
 	if not world_facing.is_zero_approx():
 		model.rotation.y = -atan2(world_facing.z, world_facing.x)
-	var gaits := ["walk", run_clip]
+	var gaits := [walk_clip, run_clip]
 	# Easing out of a sprint keeps the run until the speed is back near a walk.
 	var run := walking and (running or locomotion_speed > RUN_EXIT_SPEED)
-	var clip := run_clip if run else ("walk" if walking else "idle")
+	var clip := run_clip if run else (walk_clip if walking else "idle")
 	# Models with only a walk cycle also support sprinting at the existing cadence.
 	if clip == run_clip and not animation_player.has_animation(run_clip):
-		clip = "walk"
-	var resting_walk := clip == "idle" and not animation_player.has_animation("idle") and animation_player.has_animation("walk")
+		clip = walk_clip
+	var resting_walk := clip == "idle" and not animation_player.has_animation("idle") and animation_player.has_animation(walk_clip)
 	if resting_walk:
-		clip = "walk"
+		clip = walk_clip
 	animation_player.speed_scale = 1.0
 	if walking and locomotion_speed >= 0.0:
 		var walk_scale := locomotion_speed / WALK_CYCLE_SPEED
 		if clip == run_clip:
 			# Never step slower than the walk did, so speeding up only quickens the cadence.
-			var walk_length := animation_player.get_animation("walk").length
+			var walk_length := animation_player.get_animation(walk_clip).length
 			animation_player.speed_scale = maxf(locomotion_speed / RUN_CYCLE_SPEED, minf(walk_scale, 1.0) * animation_player.get_animation(clip).length / walk_length)
 		elif run:
 			animation_player.speed_scale = locomotion_speed / RUN_CYCLE_SPEED
@@ -173,12 +191,41 @@ func set_guard(enabled: bool) -> void:
 	animation_player.speed_scale = 1.0
 	animation_player.play(sword_combat.guard_clip, 0.06)
 
+## Sits down, or stands back up when seated. A toggle mid-way reverses from the same pose.
+func toggle_sit() -> bool:
+	if not can_sit or not use_3d or attacking or guarding: return false
+	var sitting := posture in ["", "up"]
+	var resume := 0.0
+	if posture in ["down", "up"]:
+		resume = animation_player.current_animation_length - animation_player.current_animation_position
+	posture = "down" if sitting else "up"
+	walking = false
+	running = false
+	animation_player.speed_scale = 1.0
+	animation_player.play(GroundSit.SIT_DOWN if sitting else GroundSit.STAND_UP, 0.15 if resume == 0.0 else 0.0)
+	if resume > 0.0: animation_player.seek(resume, true)
+	return true
+
+## Drops straight back to standing (battle start, model switch).
+func stand_now() -> void:
+	if posture == "": return
+	posture = ""
+	_update_model()
+
 func cancel_attack() -> void:
 	if not attacking: return
 	attacking = false
 	_update_model()
 
 func _on_animation_finished(clip: StringName) -> void:
+	if clip == StringName(GroundSit.SIT_DOWN) and posture == "down":
+		posture = "seated"
+		animation_player.play(GroundSit.SEATED, 0.2)
+		return
+	if clip == StringName(GroundSit.STAND_UP) and posture == "up":
+		posture = ""
+		_update_model()
+		return
 	if sword_combat and sword_combat.is_attack_clip(clip):
 		attacking = false
 		_update_model()
