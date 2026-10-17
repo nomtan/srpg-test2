@@ -106,8 +106,22 @@ const LOD_MARGIN := 4.0
 ## (thinned, same-silhouette) LOD1 / LOD2 take over.
 const SEED_LOD1_FROM := 70.0
 const SEED_LOD2_FROM := 150.0
+## The seed GLBs ship one mesh at every LOD (the look is tuned on LOD0), so split_cards thins
+## the distance LODs here: per LOD, the share of bark triangles, core triangles and leaf cards
+## kept. Bark is mostly twigs hidden in the crown and goes thinnest tube first; kept cards
+## grow to hold the leaf cover.
+const SEED_LOD_KEEP := [[1.0, 1.0, 1.0], [0.6, 1.0, 1.0], [0.35, 0.5, 0.5]]
+## The sun's shadow distance (world.gd); LODs that begin past it never cast.
+const SHADOW_REACH := 120.0
 const FINE_CHUNK := 16.0
 const COARSE_CHUNK := 32.0
+## Seed trees switch to LOD1 far out (SEED_LOD1_FROM), so their near cells can be a whole
+## coarse cell: a cell holds only a few trees of each of the sixteen kinds, and every cell
+## and kind costs a draw per surface (and per shadow split).
+const SEED_FINE_CHUNK := 32.0
+## ...and their LOD2 cells span 64 m: from SEED_LOD2_FROM out, a tree's own distance stays
+## within ~45 m of its cell's.
+const SEED_COARSE_CHUNK := 64.0
 ## Trees keep shadows through LOD2 because the sun's shadow reaches 120 m; LOD3 is past it.
 const LOD_SHADOWS := [true, true, true, false]
 ## Bushes: single-level cells; past BUSH_LOD2_END the ground and trees carry the view.
@@ -184,18 +198,141 @@ static func split_cards(asset: String, level: int) -> Array:
 		var lods := lod_meshes(asset)
 		for l in lods.size():
 			var index: int = card_surfaces[asset][l]
+			var keep: Array = SEED_LOD_KEEP[mini(l, SEED_LOD_KEEP.size() - 1)] if _is_seed(asset) else [1.0, 1.0, 1.0]
+			# Seed LOD2 starts around the shadow reach and never casts (add_tree_chunk), so
+			# the crown core joins its cards (same material): one draw fewer per cell and kind.
+			var merge_core := _is_seed(asset) and l == 2 and SEED_LOD2_FROM >= SHADOW_REACH
 			var body := ArrayMesh.new()
 			var cards: ArrayMesh = null
+			var crown: Array = []
+			var crown_material: Material = null
 			for surface in lods[l].get_surface_count():
-				var target := body
-				if surface == index:
-					cards = ArrayMesh.new()
-					target = cards
-				target.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, lods[l].surface_get_arrays(surface))
-				target.surface_set_material(target.get_surface_count() - 1, lods[l].surface_get_material(surface))
+				var arrays := lods[l].surface_get_arrays(surface)
+				var material := lods[l].surface_get_material(surface)
+				if surface == index or (merge_core and material != SEED_BARK_MATERIAL):
+					arrays = _thin_cards(arrays, keep[2]) if surface == index else _decimate(arrays, keep[1])
+					crown = arrays if crown.is_empty() else _merge(crown, arrays)
+					crown_material = material
+					continue
+				arrays = _thin_bark(arrays, keep[0]) if material == SEED_BARK_MATERIAL else _decimate(arrays, keep[1])
+				body.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+				body.surface_set_material(body.get_surface_count() - 1, material)
+			if not crown.is_empty():
+				cards = ArrayMesh.new()
+				cards.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, crown)
+				cards.surface_set_material(0, crown_material)
 			parts.append([body, cards])
 		card_parts[asset] = parts
 	return card_parts[asset][level]
+
+## Two surfaces' arrays (same vertex format) as one.
+static func _merge(a: Array, b: Array) -> Array:
+	var result := []
+	result.resize(Mesh.ARRAY_MAX)
+	var offset := (a[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+	for k in Mesh.ARRAY_MAX:
+		assert((a[k] == null) == (b[k] == null), "Seed crown surfaces differ in vertex format")
+		if a[k] == null: continue
+		if k == Mesh.ARRAY_INDEX:
+			var indices: PackedInt32Array = (a[k] as PackedInt32Array).duplicate()
+			for i: int in b[k]: indices.append(i + offset)
+			result[k] = indices
+		else:
+			result[k] = a[k] + b[k]
+	return result
+
+## `arrays` simplified to about `keep` of its triangles (Godot's mesh LOD generator; the
+## vertices stay, only the index list shrinks). Stops at the coarsest level it can reach.
+static func _decimate(arrays: Array, keep: float) -> Array:
+	if keep >= 1.0: return arrays
+	var source: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var importer := ImporterMesh.new()
+	importer.add_surface(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	importer.generate_lods(25.0, 60.0, [])
+	var count := importer.get_surface_lod_count(0)
+	if count == 0: return arrays
+	var indices := importer.get_surface_lod_indices(0, count - 1)
+	for i in count:
+		indices = importer.get_surface_lod_indices(0, i)
+		if indices.size() <= source.size() * keep: break
+	var result := arrays.duplicate()
+	result[Mesh.ARRAY_INDEX] = indices
+	return result
+
+## Keeps the thickest bark tubes (trunk, then limbs, then twigs) up to about `keep` of the
+## triangles. A tube is one connected piece of the mesh and goes whole, so a trunk or limb
+## never breaks up the way a mesh simplifier thins it. Its girth is its widest ring: the
+## vertices sharing one UV.y (the bark texture runs along the tube).
+static func _thin_bark(arrays: Array, keep: float) -> Array:
+	if keep >= 1.0: return arrays
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var root := PackedInt32Array()
+	root.resize(vertices.size())
+	for i in root.size(): root[i] = i
+	for t in range(0, indices.size(), 3):
+		for k in [1, 2]:
+			var a := _find(root, indices[t])
+			var b := _find(root, indices[t + k])
+			if a != b: root[b] = a
+	var rings := {}
+	for i in vertices.size():
+		var key := Vector2i(_find(root, i), roundi(uvs[i].y * 4096.0))
+		if not rings.has(key): rings[key] = []
+		rings[key].append(vertices[i])
+	var girth := {}
+	for key: Vector2i in rings:
+		var ring: Array = rings[key]
+		var center := Vector3.ZERO
+		for v: Vector3 in ring: center += v
+		center /= ring.size()
+		var radius := 0.0
+		for v: Vector3 in ring: radius = maxf(radius, v.distance_to(center))
+		girth[key.x] = maxf(girth.get(key.x, 0.0), radius)
+	var triangles := {}
+	for t in range(0, indices.size(), 3):
+		var tube := _find(root, indices[t])
+		triangles[tube] = triangles.get(tube, 0) + 1
+	var tubes := girth.keys()
+	tubes.sort_custom(func(a: int, b: int) -> bool: return girth[a] > girth[b])
+	var kept := {}
+	var budget := indices.size() / 3.0 * keep
+	for tube: int in tubes:
+		if budget <= 0.0: break
+		kept[tube] = true
+		budget -= triangles.get(tube, 0)
+	var result_indices := PackedInt32Array()
+	for t in range(0, indices.size(), 3):
+		if kept.has(_find(root, indices[t])): result_indices.append_array(indices.slice(t, t + 3))
+	var result := arrays.duplicate()
+	result[Mesh.ARRAY_INDEX] = result_indices
+	return result
+
+static func _find(root: PackedInt32Array, i: int) -> int:
+	while root[i] != i:
+		root[i] = root[root[i]]
+		i = root[i]
+	return i
+
+## Keeps about `keep` of the leaf cards, each grown by 1 / sqrt(keep) so the crown keeps its
+## cover. All four corners of a card sit at its center, so hashing a triangle's first corner
+## keeps or drops both triangles of a card together.
+static func _thin_cards(arrays: Array, keep: float) -> Array:
+	if keep >= 1.0: return arrays
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var kept := PackedInt32Array()
+	for t in range(0, indices.size(), 3):
+		if posmod(hash(vertices[indices[t]]), 1024) < keep * 1024.0:
+			kept.append_array(indices.slice(t, t + 3))
+	var offsets: PackedVector2Array = (arrays[Mesh.ARRAY_TEX_UV2] as PackedVector2Array).duplicate()
+	var grow := 1.0 / sqrt(keep)
+	for i in offsets.size(): offsets[i] *= grow
+	var result := arrays.duplicate()
+	result[Mesh.ARRAY_INDEX] = kept
+	result[Mesh.ARRAY_TEX_UV2] = offsets
+	return result
 
 static func shader_materials() -> Array[ShaderMaterial]:
 	return [TOON_MATERIAL, SEED_MATERIAL, seed_conifer_material, SEED_BARK_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
@@ -256,6 +393,12 @@ static func _range(instance: GeometryInstance3D, begin: float, end: float) -> vo
 	instance.visibility_range_begin_margin = LOD_MARGIN if begin > 0.0 else 0.0
 	instance.visibility_range_end_margin = LOD_MARGIN if end > 0.0 else 0.0
 
+## The COARSE_CHUNK grid cell whose chunk holds `asset` at `p`: seed trees snap to their
+## SEED_COARSE_CHUNK cells.
+static func chunk_key(asset: String, p: Vector2) -> Vector2i:
+	var span := int(SEED_COARSE_CHUNK / COARSE_CHUNK) if _is_seed(asset) else 1
+	return Vector2i(floori(p.x / (COARSE_CHUNK * span)) * span, floori(p.y / (COARSE_CHUNK * span)) * span)
+
 ## Instances one tree asset over a COARSE_CHUNK cell with hierarchical LOD: the cell's
 ## LOD2 MultiMesh is the visibility parent of FINE_CHUNK LOD0/LOD1 MultiMeshes, which
 ## only draw once the camera is inside LOD2's begin distance. No tree is ever drawn
@@ -265,14 +408,15 @@ static func add_tree_chunk(parent: Node3D, asset: String, transforms: Array) -> 
 	var lods := lod_meshes(asset)
 	var lod1_from := SEED_LOD1_FROM if _is_seed(asset) else LOD1_FROM
 	var lod2_from := SEED_LOD2_FROM if _is_seed(asset) else LOD2_FROM
-	var far_parts := _tree_instances(parent, asset, 2, transforms, "%s_LOD2" % asset, LOD_SHADOWS[2])
+	var far_parts := _tree_instances(parent, asset, 2, transforms, "%s_LOD2" % asset, LOD_SHADOWS[2] and lod2_from < SHADOW_REACH)
 	for part in far_parts: _range(part, lod2_from, LOD3_FROM if lods.size() > 3 else 0.0)
 	var far := far_parts[0]
 	if lods.size() > 3:
 		for part in _tree_instances(parent, asset, 3, transforms, "%s_LOD3" % asset, LOD_SHADOWS[3]): _range(part, LOD3_FROM, 0.0)
 	var cells := {}
+	var fine := SEED_FINE_CHUNK if _is_seed(asset) else FINE_CHUNK
 	for t: Transform3D in transforms:
-		var key := Vector2i(floori(t.origin.x / FINE_CHUNK), floori(t.origin.z / FINE_CHUNK))
+		var key := Vector2i(floori(t.origin.x / fine), floori(t.origin.z / fine))
 		if not cells.has(key): cells[key] = []
 		cells[key].append(t)
 	for key: Vector2i in cells:

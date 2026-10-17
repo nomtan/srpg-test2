@@ -1670,9 +1670,9 @@ func _build_trees_and_rocks() -> void:
 			else:
 				continue
 			counts[kind] = counts.get(kind, 0) + 1
-			var key := Vector2i(floori(p.x / Vegetation.COARSE_CHUNK), floori(p.y / Vegetation.COARSE_CHUNK))
-			if not chunks.has(key): chunks[key] = {}
 			var mesh_key := kind if Vegetation.has_asset(kind) else "%s_%d" % [kind, variant]
+			var key := Vegetation.chunk_key(mesh_key, p)
+			if not chunks.has(key): chunks[key] = {}
 			if not chunks[key].has(mesh_key): chunks[key][mesh_key] = []
 			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.95, 1.05, stretch) if Vegetation.has_asset(kind) else lerpf(0.9, 1.15, stretch)
 			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * tall, size))
