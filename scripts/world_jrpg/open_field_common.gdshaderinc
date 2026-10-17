@@ -20,42 +20,34 @@ uniform int season = 1;
 float of_luma(vec3 c) { return dot(c, vec3(0.30, 0.59, 0.11)); }
 
 // Turf and grass blades: fresh yellow-green in spring, golden dry grass in autumn and
-// dormant straw in winter.
+// dull, nearly grey dormant grass in winter.
 vec3 of_season_grass(vec3 c, vec2 p) {
     if (season == 1) return c;
     float l = of_luma(c) / 0.55;
     float n = of_noise(p * 0.03 + 71.0);
     if (season == 0) return mix(c, mix(vec3(0.55, 0.77, 0.33), vec3(0.64, 0.80, 0.38), n) * l, 0.5);
     if (season == 2) return mix(c, mix(vec3(0.72, 0.64, 0.34), vec3(0.58, 0.52, 0.30), n) * l, 0.5 + 0.2 * n);
-    return mix(c, mix(vec3(0.64, 0.60, 0.48), vec3(0.54, 0.52, 0.45), n) * l, 0.78);
-}
-
-// Winter frost: scattered patches of old snow on open ground (0..1). Zero otherwise.
-float of_season_frost(vec2 p) {
-    if (season != 3) return 0.0;
-    return smoothstep(0.42, 0.68, of_noise(p * 0.035 + 61.0) * 0.75 + of_noise(p * 0.3) * 0.25) * 0.85;
+    return mix(c, mix(vec3(0.58, 0.57, 0.52), vec3(0.50, 0.50, 0.47), n) * l, 0.88);
 }
 
 // Broadleaf crowns. seed (0..1, per tree) staggers autumn into orange, red and yellow
-// trees with a few late greens; winter leaves hang dry and brown.
+// trees (no green left); winter keeps the autumn hues, heavily faded.
 vec3 of_season_leaf(vec3 c, float seed) {
     if (season == 1) return c;
     float l = of_luma(c) / 0.5;
     // Spring: fresh green, with one tree in seven in pink blossom.
     if (season == 0) return seed < 0.14 ? mix(c, vec3(1.0, 0.74, 0.84) * mix(l, 1.0, 0.5), 0.85) : mix(c, vec3(0.58, 0.82, 0.36) * l, 0.45);
-    if (season == 2) {
-        vec3 hue = seed < 0.4 ? vec3(0.95, 0.52, 0.17) : (seed < 0.72 ? vec3(0.84, 0.27, 0.16) : vec3(0.96, 0.78, 0.24));
-        return mix(c, hue * l * 0.9, seed > 0.92 ? 0.35 : 0.88);
-    }
-    return mix(c, vec3(0.66, 0.52, 0.38) * l, 0.8);
+    vec3 hue = seed < 0.4 ? vec3(0.95, 0.52, 0.17) : (seed < 0.72 ? vec3(0.84, 0.27, 0.16) : vec3(0.96, 0.78, 0.24));
+    vec3 autumn = hue * l * 0.9;
+    if (season == 2) return autumn;
+    return mix(autumn, vec3(of_luma(autumn)), 0.75) * 0.9;
 }
 
-// Conifers keep their needles: only a little lighter in spring and darker, colder in
-// winter.
-vec3 of_season_evergreen(vec3 c) {
+// Conifers: a little lighter in spring; in autumn and winter they follow the broadleaves
+// (no green crowns left in autumn, faded autumn hues in winter).
+vec3 of_season_evergreen(vec3 c, float seed) {
     if (season == 0) return c * vec3(1.04, 1.07, 0.98);
-    if (season == 2) return c * vec3(1.0, 0.96, 0.9);
-    if (season == 3) return mix(c, vec3(0.20, 0.32, 0.30) * of_luma(c) / 0.4, 0.3);
+    if (season >= 2) return of_season_leaf(c, seed);
     return c;
 }
 

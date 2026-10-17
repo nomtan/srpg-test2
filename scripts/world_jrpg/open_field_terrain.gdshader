@@ -70,8 +70,6 @@ void fragment() {
     // Snow weather blankets the ground fully (no meadow green left under the snowed grass);
     // only steep faces stay bare rock.
     snow = max(snow, clamp(snow_cover * 1.25, 0.0, 1.0) * smoothstep(0.35, 0.75, n.y));
-    // Winter leaves old snow lying in patches even on clear days (not on paths or plazas).
-    snow = max(snow, of_season_frost(p) * smoothstep(0.6, 0.85, n.y) * open_ground);
     color = mix(color, vec3(0.93, 0.95, 0.98), snow);
     color = mix(color, vec3(0.30, 0.45, 0.42), smoothstep(0.0, 5.0, water_depth));
     // Biome wetness: wetland and lakeshore ground is darker, cooler and glossier.

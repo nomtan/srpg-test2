@@ -103,8 +103,7 @@ void fragment() {
     color *= tree_tint;
     // Needle palettes are the blue-green ones (tree_needle_cards.tres); they stay evergreen.
     if (of_is_blossom(base_color)) color = of_season_blossom(color, tree_seed);
-    else color = base_color.b > base_color.g * 0.6 ? of_season_evergreen(color) : of_season_leaf(color, tree_seed);
-    if (season == 3) color = mix(color, vec3(0.92, 0.95, 0.98), 0.4 * smoothstep(0.55, 0.85, world_normal.y));
+    else color = base_color.b > base_color.g * 0.6 ? of_season_evergreen(color, tree_seed) : of_season_leaf(color, tree_seed);
     if (debug_color.x >= 0.0) color = debug_color * mix(0.5, 1.0, tone);
     color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * smoothstep(0.2, 0.7, world_normal.y) * 0.8);
     color *= 1.0 - wetness * 0.2;

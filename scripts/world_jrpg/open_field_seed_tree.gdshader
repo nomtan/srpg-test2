@@ -78,9 +78,7 @@ void fragment() {
     float n = of_noise(vec2(world_pos.x + world_pos.z, world_pos.y) * 2.3);
     color *= mix(mix(0.85, 1.05, n), 1.0, card);
     color *= tree_tint;
-    color = evergreen > 0.5 ? of_season_evergreen(color) : of_season_leaf(color, tree_seed);
-    // Winter: old snow rests on the upper side of the crown.
-    if (season == 3) color = mix(color, snow_light, 0.4 * smoothstep(0.5, 0.85, normalize(world_normal).y));
+    color = evergreen > 0.5 ? of_season_evergreen(color, tree_seed) : of_season_leaf(color, tree_seed);
     if (debug_color.x >= 0.0) color = debug_color;
     // Snow: the whole crown turns snow-white, keeping its painted light (each lump's bright
     // cap, the shaded underside) as cool blue-grey to white, with a trace of the foliage.

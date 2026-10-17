@@ -41,9 +41,7 @@ void fragment() {
     vec3 color = COLOR.rgb * tree_tint;
     // Vertex alpha: 1 broadleaf / blossom foliage, 0.8 conifer needles, 0 bark.
     if (COLOR.a > 0.9) color = of_is_blossom(COLOR.rgb) ? of_season_blossom(color, tree_seed) : of_season_leaf(color, tree_seed);
-    else if (COLOR.a > 0.5) color = of_season_evergreen(color);
-    // Winter: old snow lies on the tops of the crowns.
-    if (season == 3) color = mix(color, vec3(0.92, 0.95, 0.98), 0.45 * smoothstep(0.55, 0.85, world_normal.y) * step(0.5, COLOR.a));
+    else if (COLOR.a > 0.5) color = of_season_evergreen(color, tree_seed);
     if (debug_color.x >= 0.0 && COLOR.a > 0.5) color = debug_color;
     color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * smoothstep(0.2, 0.7, world_normal.y) * 0.8);
     color *= 1.0 - wetness * 0.2;
