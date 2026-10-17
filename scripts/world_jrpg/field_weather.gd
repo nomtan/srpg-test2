@@ -103,12 +103,13 @@ func apply_conditions(time: int, weather: int) -> void:
 	var top := Color(p.top)
 	var horizon := Color(p.horizon)
 	if storm:
-		top = top.lerp(Color("536170") if not night else Color("182030"), 0.75)
+		top = top.lerp(Color("b3bcc5") if not night else Color("182030"), 0.85 if not night else 0.75)
 		horizon = horizon.lerp(Color("9aa7ad") if not night else Color("30394c"), 0.75)
 	sky_material.set_shader_parameter("zenith", top)
 	sky_material.set_shader_parameter("horizon", horizon)
 	sky_material.set_shader_parameter("cloud_lit", Color("7486a5") if night else Color(p.sun).lerp(Color.WHITE, 0.7))
-	sky_material.set_shader_parameter("cloud_shade", Color("192438") if night else Color("626f7c"))
+	# Daytime clouds stay white: only a faint cool tint on the shaded side.
+	sky_material.set_shader_parameter("cloud_shade", Color("192438") if night else (Color("c3cad2") if storm else Color("e6ebf1")))
 	sky_material.set_shader_parameter("sun_direction", sun.global_basis.z)
 	sky_material.set_shader_parameter("coverage", [0.4, 0.95, 0.83, 0.9][weather_index])
 	sky_material.set_shader_parameter("night", 1.0 if night else 0.0)
