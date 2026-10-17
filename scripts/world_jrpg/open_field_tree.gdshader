@@ -26,6 +26,10 @@ uniform float translucency = 0.35;
 uniform float fill = 0.14;
 uniform float wetness = 0.0;
 uniform float snow_cover = 0.0;
+// Snowed foliage: shaded side -> sunlit side, and how much foliage green shows through.
+uniform vec3 snow_shade : source_color = vec3(0.66, 0.74, 0.84);
+uniform vec3 snow_light : source_color = vec3(0.97, 0.98, 1.0);
+uniform float snow_foliage = 0.12;
 varying vec3 origin;
 varying vec3 world_normal;
 varying vec3 world_pos;
@@ -59,7 +63,11 @@ void fragment() {
         float h = of_hash(origin.xz);
         color *= mix(vec3(0.94, 1.0, 1.03), vec3(1.06, 1.03, 0.9), h) * (0.95 + 0.1 * of_hash(origin.xz + 3.1));
         if (biome_debug > 0.5) color = of_biome_debug(origin.xz) * mix(0.5, 1.0, tone);
-        color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * smoothstep(0.2, 0.7, world_normal.y) * 0.8);
+        // Snow: the whole bush / crown turns snow-white, its painted tone kept as cool
+        // blue-grey shade to white light, with a trace of the foliage.
+        vec3 snowy = mix(snow_shade, snow_light, smoothstep(0.15, 0.85, tone));
+        snowy = mix(snowy, color, snow_foliage);
+        color = mix(color, snowy, clamp(snow_cover * 1.25, 0.0, 1.0));
     } else {
         // Bark: vertical streaks over a root-dark to limb-light gradient.
         float streak = of_noise(vec2(atan(world_normal.z, world_normal.x) * 3.0, world_pos.y * 0.4 + origin.x));

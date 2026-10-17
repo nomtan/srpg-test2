@@ -22,6 +22,10 @@ const BOW_REACH := 30.0
 ## Every tree is drawn as an illustration-style leaf-card tree (Vegetation.CARD_SWAP);
 ## off restores the solid Phase 2 trees and the procedural blossom tree.
 @export var card_trees := true
+## Broadleaves and oaks are the seed-driven illustration trees (Vegetation.SEED_TREES, one
+## of twelve at random), conifers the seed conifers (Vegetation.SEED_CONIFERS); blossom still
+## follows toon_trees / card_trees.
+@export var seed_trees := false
 const LAKE := 10.0
 const LAKE_CENTER := Vector2(205, 150)
 const LAKE_RADIUS := Vector2(100, 64)
@@ -1636,7 +1640,7 @@ func _build_trees_and_rocks() -> void:
 				if pick * (broadleaf + conifer) < conifer:
 					# The broad, drooping spruce (B) takes over toward the highlands.
 					kind = "conifer_b" if shape < 0.35 + 0.3 * smoothstep(30.0, 50.0, h) else "conifer_a"
-					kind = _tree_asset(kind)
+					kind = _tree_asset(kind, fmod(pick * 389.0, 1.0))
 					size = variation
 				else:
 					# Blossom trees are rare accents in the open meadows and on the shore.
@@ -1652,7 +1656,7 @@ func _build_trees_and_rocks() -> void:
 						var oak := fmod(pick * 53.0, 1.0) < 0.1 + 0.45 * clampf(open_land, 0.0, 1.0)
 						kind = ("oak_b" if shape < 0.3 else "oak_a") if oak else ["broadleaf_a", "broadleaf_b", "broadleaf_c"][int(shape * 3.0)]
 						trunk = 0.65 if oak else 0.45
-						kind = _tree_asset(kind)
+						kind = _tree_asset(kind, fmod(pick * 389.0, 1.0))
 						size = variation
 				obstacles.append(Rect2(p - Vector2(trunk, trunk) * size, Vector2(trunk, trunk) * 2.0 * size))
 				cover_cells[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
@@ -1688,8 +1692,13 @@ func _build_trees_and_rocks() -> void:
 			_multimesh(chunk, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), chunks[key][mesh_key], material, mesh_key)
 	print("[JRPGWorld2] Vegetation: ", counts)
 
-## The tree asset drawn for a Phase 2 tree kind under the toon / card / solid styles.
-func _tree_asset(kind: String) -> String:
+## The tree asset drawn for a Phase 2 tree kind under the seed / toon / card / solid styles.
+## `roll` (0-1) picks one of the seed trees at random.
+func _tree_asset(kind: String, roll := 0.0) -> String:
+	if seed_trees and kind in Vegetation.SEED_REPLACES:
+		return Vegetation.SEED_TREES[mini(int(roll * Vegetation.SEED_TREES.size()), Vegetation.SEED_TREES.size() - 1)]
+	if seed_trees and kind in Vegetation.SEED_CONIFER_REPLACES:
+		return Vegetation.SEED_CONIFERS[mini(int(roll * Vegetation.SEED_CONIFERS.size()), Vegetation.SEED_CONIFERS.size() - 1)]
 	if toon_trees: return Vegetation.TOON_SWAP[kind]
 	if card_trees: return Vegetation.CARD_SWAP[kind]
 	return kind

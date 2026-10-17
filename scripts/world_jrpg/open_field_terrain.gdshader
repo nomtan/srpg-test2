@@ -67,7 +67,9 @@ void fragment() {
     float alpine = smoothstep(88.0, 112.0, world_position.y + (of_noise(p * 0.05) - 0.5) * 20.0);
     color = mix(color, rock, max(steep, alpine * (1.0 - smoothstep(0.9, 0.98, n.y) * 0.4)));
     float snow = smoothstep(150.0, 172.0, world_position.y + (of_noise(p * 0.07) - 0.5) * 30.0) * smoothstep(0.4, 0.7, n.y);
-    snow = max(snow, snow_cover * smoothstep(0.5, 0.9, n.y));
+    // Snow weather blankets the ground fully (no meadow green left under the snowed grass);
+    // only steep faces stay bare rock.
+    snow = max(snow, clamp(snow_cover * 1.25, 0.0, 1.0) * smoothstep(0.35, 0.75, n.y));
     color = mix(color, vec3(0.93, 0.95, 0.98), snow);
     color = mix(color, vec3(0.30, 0.45, 0.42), smoothstep(0.0, 5.0, water_depth));
     // Biome wetness: wetland and lakeshore ground is darker, cooler and glossier.

@@ -13,6 +13,7 @@ const FLOWER_MATERIAL = preload("res://assets/environment/vegetation/materials/f
 ## The procedural grass carpet's material (open_field_meadow.gd).
 const MEADOW_MATERIAL = preload("res://assets/environment/vegetation/materials/meadow_grass.tres")
 const TOON_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_toon.tres")
+const SEED_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_seed.tres")
 const ToonTrees = preload("res://scripts/world_jrpg/open_field_toon_trees.gd")
 const ROOT := "res://assets/environment/vegetation/"
 const SCENES := {
@@ -31,6 +32,22 @@ const SCENES := {
 	"card_spruce": ROOT + "trees/card/card_spruce.glb",
 	"card_fir": ROOT + "trees/card/card_fir.glb",
 	"card_blossom": ROOT + "trees/card/card_blossom.glb",
+	"seed_tree_a": ROOT + "trees/seed/seed_tree_a.glb",
+	"seed_tree_b": ROOT + "trees/seed/seed_tree_b.glb",
+	"seed_tree_c": ROOT + "trees/seed/seed_tree_c.glb",
+	"seed_tree_d": ROOT + "trees/seed/seed_tree_d.glb",
+	"seed_tree_e": ROOT + "trees/seed/seed_tree_e.glb",
+	"seed_tree_f": ROOT + "trees/seed/seed_tree_f.glb",
+	"seed_tree_g": ROOT + "trees/seed/seed_tree_g.glb",
+	"seed_tree_h": ROOT + "trees/seed/seed_tree_h.glb",
+	"seed_tree_i": ROOT + "trees/seed/seed_tree_i.glb",
+	"seed_tree_j": ROOT + "trees/seed/seed_tree_j.glb",
+	"seed_tree_k": ROOT + "trees/seed/seed_tree_k.glb",
+	"seed_tree_l": ROOT + "trees/seed/seed_tree_l.glb",
+	"seed_conifer_a": ROOT + "trees/seed/seed_conifer_a.glb",
+	"seed_conifer_b": ROOT + "trees/seed/seed_conifer_b.glb",
+	"seed_conifer_c": ROOT + "trees/seed/seed_conifer_c.glb",
+	"seed_conifer_d": ROOT + "trees/seed/seed_conifer_d.glb",
 	"bush_a": ROOT + "bushes/bush_a.glb",
 	"bush_b": ROOT + "bushes/bush_b.glb",
 	"bush_c": ROOT + "bushes/bush_c.glb",
@@ -54,13 +71,27 @@ const TOON_TREES := ["toon_round", "toon_tall", "toon_umbrella", "toon_oak", "to
 const TOON_SWAP := {"broadleaf_a": "toon_round", "broadleaf_b": "toon_tall", "broadleaf_c": "toon_lean",
 	"oak_a": "toon_oak", "oak_b": "toon_umbrella", "conifer_a": "toon_spruce", "conifer_b": "toon_fir",
 	"blossom": "toon_blossom"}
+## Seed-driven illustration broadleaves (tools/vegetation/build_seed_trees.py): billboard leaf
+## cards over a lump core, softly lit with the crown's proxy normals
+## (open_field_seed_tree.gdshader); the trunk uses the toon shader. Conifers and blossom keep
+## their toon / card stand-ins. Twelve variants, each with its own crown and branch structure
+## (k and l on conical trunks that widen down to the ground), picked at random per tree.
+const SEED_TREES := ["seed_tree_a", "seed_tree_b", "seed_tree_c", "seed_tree_d", "seed_tree_e",
+	"seed_tree_f", "seed_tree_g", "seed_tree_h", "seed_tree_i", "seed_tree_j", "seed_tree_k", "seed_tree_l"]
+## The Phase 2 tree kinds the seed trees stand in for.
+const SEED_REPLACES := ["broadleaf_a", "broadleaf_b", "broadleaf_c", "oak_a", "oak_b"]
+## Seed-driven illustration conifers (narrow, pointed leaf-card crowns on a straight leader),
+## standing in for the conifer kinds.
+const SEED_CONIFERS := ["seed_conifer_a", "seed_conifer_b", "seed_conifer_c", "seed_conifer_d"]
+const SEED_CONIFER_REPLACES := ["conifer_a", "conifer_b"]
 const BUSHES := ["bush_a", "bush_b", "bush_c"]
 const GRASSES := ["grass_short", "grass_normal", "grass_tall", "grass_wild"]
 const FLOWERS := ["flower_grass_a", "flower_grass_b"]
 ## Blender material slot name -> shared runtime material.
 const SLOT_MATERIALS := {"Trunk": TRUNK_MATERIAL, "Leaves": FOLIAGE_MATERIAL, "LeafCards": LEAF_CARD_MATERIAL,
 	"LeafCore": LEAF_CARD_MATERIAL, "NeedleCards": NEEDLE_CARD_MATERIAL, "NeedleCore": NEEDLE_CARD_MATERIAL,
-	"BlossomCards": BLOSSOM_CARD_MATERIAL, "BlossomCore": BLOSSOM_CARD_MATERIAL, "Grass": GRASS_MATERIAL, "Flower": FLOWER_MATERIAL}
+	"BlossomCards": BLOSSOM_CARD_MATERIAL, "BlossomCore": BLOSSOM_CARD_MATERIAL, "Grass": GRASS_MATERIAL, "Flower": FLOWER_MATERIAL, "Toon": TOON_MATERIAL,
+	"SeedCards": SEED_MATERIAL, "SeedCore": SEED_MATERIAL}
 ## Tree LOD bands, measured by Godot from the camera to each MultiMesh's AABB center.
 ## LOD0/LOD1 live in FINE_CHUNK cells under a COARSE_CHUNK LOD2/LOD3 cell (see
 ## add_tree_chunk), so a tree's own distance stays within ~11 m / ~23 m of its cell's.
@@ -68,6 +99,10 @@ const LOD1_FROM := 34.0
 const LOD2_FROM := 80.0
 const LOD3_FROM := 160.0
 const LOD_MARGIN := 4.0
+## The seed trees are the hero broadleaves: they keep full detail further out before the
+## (thinned, same-silhouette) LOD1 / LOD2 take over.
+const SEED_LOD1_FROM := 70.0
+const SEED_LOD2_FROM := 150.0
 const FINE_CHUNK := 16.0
 const COARSE_CHUNK := 32.0
 ## Trees keep shadows through LOD2 because the sun's shadow reaches 120 m; LOD3 is past it.
@@ -91,6 +126,14 @@ static var card_parts: Dictionary = {}
 ## True for every asset lod_meshes can build (Blender GLBs and the procedural toon trees).
 static func has_asset(asset: String) -> bool:
 	return SCENES.has(asset) or asset in TOON_TREES
+
+## Trees whose leaf cards are split off into a non-casting MultiMesh (split_cards).
+static func _has_cards(asset: String) -> bool:
+	return asset in CARD_TREES or _is_seed(asset)
+
+## Seed-driven illustration trees (broadleaves and conifers).
+static func _is_seed(asset: String) -> bool:
+	return asset in SEED_TREES or asset in SEED_CONIFERS
 
 ## LOD meshes of one asset, finest first, with the shared materials assigned.
 static func lod_meshes(asset: String) -> Array[Mesh]:
@@ -119,7 +162,7 @@ static func lod_meshes(asset: String) -> Array[Mesh]:
 				assert(SLOT_MATERIALS.has(key), "Unknown vegetation material slot '%s' in %s" % [key, asset])
 				mesh.surface_set_material(surface, SLOT_MATERIALS[key])
 		meshes[asset] = list
-		if asset in CARD_TREES: card_surfaces[asset] = cards
+		if _has_cards(asset): card_surfaces[asset] = cards
 	return meshes[asset]
 
 ## A leaf-card tree LOD split into the shadow-casting body (trunk, limbs, crown cores)
@@ -145,7 +188,7 @@ static func split_cards(asset: String, level: int) -> Array:
 	return card_parts[asset][level]
 
 static func shader_materials() -> Array[ShaderMaterial]:
-	return [TOON_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
+	return [TOON_MATERIAL, SEED_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
 
 ## The card (and core) material of a leaf-card tree: leaf, needle or blossom palette.
 static func card_material(asset: String) -> Material:
@@ -185,7 +228,7 @@ static func _instances(parent: Node3D, mesh: Mesh, transforms: Array, node_name:
 ## non-casting MultiMesh. The first entry is the body.
 static func _tree_instances(parent: Node3D, asset: String, level: int, transforms: Array, node_name: String, shadows: bool) -> Array[GeometryInstance3D]:
 	var list: Array[GeometryInstance3D] = []
-	if asset not in CARD_TREES:
+	if not _has_cards(asset):
 		list.append(_instances(parent, lod_meshes(asset)[level], transforms, node_name, shadows))
 		return list
 	var parts := split_cards(asset, level)
@@ -210,8 +253,10 @@ static func _range(instance: GeometryInstance3D, begin: float, end: float) -> vo
 static func add_tree_chunk(parent: Node3D, asset: String, transforms: Array) -> void:
 	if transforms.is_empty(): return
 	var lods := lod_meshes(asset)
+	var lod1_from := SEED_LOD1_FROM if _is_seed(asset) else LOD1_FROM
+	var lod2_from := SEED_LOD2_FROM if _is_seed(asset) else LOD2_FROM
 	var far_parts := _tree_instances(parent, asset, 2, transforms, "%s_LOD2" % asset, LOD_SHADOWS[2])
-	for part in far_parts: _range(part, LOD2_FROM, LOD3_FROM if lods.size() > 3 else 0.0)
+	for part in far_parts: _range(part, lod2_from, LOD3_FROM if lods.size() > 3 else 0.0)
 	var far := far_parts[0]
 	if lods.size() > 3:
 		for part in _tree_instances(parent, asset, 3, transforms, "%s_LOD3" % asset, LOD_SHADOWS[3]): _range(part, LOD3_FROM, 0.0)
@@ -223,7 +268,7 @@ static func add_tree_chunk(parent: Node3D, asset: String, transforms: Array) -> 
 	for key: Vector2i in cells:
 		for level in 2:
 			for near in _tree_instances(parent, asset, level, cells[key], "%s_LOD%d_%d_%d" % [asset, level, key.x, key.y], LOD_SHADOWS[level]):
-				_range(near, 0.0 if level == 0 else LOD1_FROM, LOD1_FROM if level == 0 else 0.0)
+				_range(near, 0.0 if level == 0 else lod1_from, lod1_from if level == 0 else 0.0)
 				near.visibility_parent = near.get_path_to(far)
 
 ## Instances one bush asset over a cell: LOD0 (with shadow) near, LOD1 / LOD2 beyond, and

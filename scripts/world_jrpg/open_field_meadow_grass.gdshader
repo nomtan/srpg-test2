@@ -89,7 +89,8 @@ void fragment() {
     color = mix(color, color * vec3(1.22, 1.18, 1.0), gust * t * near * 0.7);
     color *= mix(vec3(1.0), vec3(0.85, 0.9, 0.9), biome.a * 0.6);
     if (biome_debug > 0.5) color = of_biome_debug(origin.xz) * mix(0.55, 1.0, tone);
-    color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * tone * 0.7);
+    // Snow: whole blades go snow-white, cool blue-grey at the root to white at the tip.
+    color = mix(color, mix(vec3(0.70, 0.77, 0.86), vec3(0.95, 0.97, 1.0), 0.35 + 0.65 * tone), clamp(snow_cover * 1.25, 0.0, 1.0));
     color *= 1.0 - wetness * 0.18;
     ALBEDO = of_to_linear(color);
     // Back faces keep the ground normal too (Godot flips NORMAL on them).
