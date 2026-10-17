@@ -64,6 +64,8 @@ void vertex() {
     // the ground's color when the blades go.
     near = smoothstep(0.0, 0.6, fade);
     VERTEX.y = origin.y + (VERTEX.y - origin.y) * fade - (1.0 - fade) * 0.05;
+    // Out-of-season flowers fold into the ground.
+    if (flower > 0.5 && of_season_bloom(origin.xz) < 0.5) VERTEX = origin - vec3(0.0, 0.1, 0.0);
 }
 
 void fragment() {
@@ -71,13 +73,15 @@ void fragment() {
     // Variants cluster in patches (noise) with a little per-clump jitter (hash).
     float pick = fract(of_noise(origin.xz * 0.21 + 7.0) * 1.7 + of_hash(origin.xz) * 0.45);
     vec3 variant = pick < 0.25 ? light_green : (pick < 0.5 ? ground : (pick < 0.75 ? yellow_green : dark_green));
-    vec3 tip = mix(ground * tip_lift + vec3(0.03, 0.04, 0.0), variant, variant_amount);
+    vec3 tip = mix(ground * tip_lift + vec3(0.03, 0.04, 0.0), of_season_grass(variant, origin.xz), variant_amount);
     float t = smoothstep(0.05, 1.0, COLOR.r);
     vec3 color = mix(ground * mix(1.0, root_shade, near), tip, t * near);
     if (flower > 0.5) {
         bool first = of_noise(origin.xz * 0.09 + 41.0) + of_hash(origin.xz) * 0.12 < 0.55;
         vec3 warm = first ? petal_white : petal_yellow;
         vec3 cool = first ? petal_violet : petal_blue;
+        // Spring meadows turn pink.
+        if (season == 0) cool = mix(cool, vec3(0.96, 0.62, 0.76), 0.65);
         vec3 petal = mix(cool, warm, COLOR.a) * mix(0.78, 1.04, COLOR.r);
         color = COLOR.r < 0.15 ? petal_center : petal;
     }
@@ -87,7 +91,7 @@ void fragment() {
     color *= mix(vec3(1.0), vec3(0.85, 0.9, 0.9), biome.a * 0.6);
     if (biome_debug > 0.5) color = of_biome_debug(origin.xz) * mix(0.55, 1.0, COLOR.r);
     // Snow: whole blades go snow-white, cool blue-grey at the root to white at the tip.
-    color = mix(color, mix(vec3(0.70, 0.77, 0.86), vec3(0.95, 0.97, 1.0), 0.35 + 0.65 * COLOR.r), clamp(snow_cover * 1.25, 0.0, 1.0));
+    color = mix(color, mix(vec3(0.70, 0.77, 0.86), vec3(0.95, 0.97, 1.0), 0.35 + 0.65 * COLOR.r), clamp(max(snow_cover * 1.25, of_season_frost(origin.xz) * 0.8), 0.0, 1.0));
     color *= 1.0 - wetness * 0.18;
     ALBEDO = of_to_linear(color);
     // Same surface response as the terrain, so blade and ground light identically.

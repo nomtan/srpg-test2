@@ -231,6 +231,8 @@ func _ready() -> void:
 			field_weather.apply_conditions(maxi(0, ["morning", "day", "evening", "night"].find(arg.get_slice("=", 1))), field_weather.weather_index)
 		if arg.begins_with("--weather="):
 			field_weather.apply_conditions(field_weather.time_index, maxi(0, ["clear", "rain", "cloudy", "snow"].find(arg.get_slice("=", 1))))
+		if arg.begins_with("--season="):
+			field_weather.apply_conditions(field_weather.time_index, field_weather.weather_index, maxi(0, ["spring", "summer", "autumn", "winter"].find(arg.get_slice("=", 1))))
 	if "--dump-maps" in args:
 		for arg in args:
 			if arg.begins_with("--capture-dir="): _dump_maps(arg.get_slice("=", 1))
@@ -246,7 +248,7 @@ func _ready() -> void:
 			if arg.begins_with("--view="): capture_name = arg.get_slice("=", 1)
 			if arg.begins_with("--capture-dir="): directory = arg.get_slice("=", 1)
 		for arg in args:
-			if arg.begins_with("--time=") or arg.begins_with("--weather="): capture_name += "_" + arg.get_slice("=", 1)
+			if arg.begins_with("--time=") or arg.begins_with("--weather=") or arg.begins_with("--season="): capture_name += "_" + arg.get_slice("=", 1)
 		if biome_debug: capture_name += "_biome"
 		get_viewport().get_texture().get_image().save_png(directory.path_join("open_field_%s.png" % capture_name))
 		get_tree().quit()
@@ -2009,7 +2011,7 @@ func _setup_hud() -> void:
 	terrain_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	terrain_panel.offset_left = -284
 	terrain_panel.offset_right = -20
-	terrain_panel.offset_top = 420
+	terrain_panel.offset_top = 535
 	terrain_text = Label.new()
 	terrain_text.add_theme_font_size_override("font_size", 15)
 	terrain_panel.add_child(terrain_text)
@@ -2078,10 +2080,10 @@ func _process(delta: float) -> void:
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
 		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"
 
-## Mirrors FieldWeather's time/weather onto the open-field materials.
+## Mirrors FieldWeather's time/weather/season onto the open-field materials.
 func _sync_conditions() -> void:
 	if field_weather == null: return
-	var key: int = field_weather.time_index * 4 + field_weather.weather_index
+	var key: int = (field_weather.season_index * 4 + field_weather.time_index) * 4 + field_weather.weather_index
 	if key == conditions_key: return
 	conditions_key = key
 	var wet := 1.0 if field_weather.weather_index == 1 else 0.0
@@ -2092,6 +2094,7 @@ func _sync_conditions() -> void:
 	for material in materials:
 		material.set_shader_parameter("wetness", wet)
 		material.set_shader_parameter("snow_cover", snow)
+		material.set_shader_parameter("season", field_weather.season_index)
 	# Wind for the Phase 2 vegetation: livelier in rain and cloud, calmer in snow.
 	var wind := [1.0, 1.7, 1.3, 0.6][field_weather.weather_index] as float
 	for material in Vegetation.shader_materials():

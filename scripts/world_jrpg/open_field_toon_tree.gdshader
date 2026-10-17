@@ -20,6 +20,7 @@ uniform float rim = 0.3;
 uniform float wetness = 0.0;
 uniform float snow_cover = 0.0;
 varying vec3 tree_tint;
+varying float tree_seed;
 varying vec3 world_normal;
 varying vec3 debug_color;
 
@@ -28,15 +29,21 @@ void vertex() {
     vec4 biome = of_biome(origin.xz);
     vec3 harmony = clamp(biome.rgb / vec3(0.48, 0.64, 0.29), vec3(0.7), vec3(1.3));
     float h = of_hash(origin.xz);
+    tree_seed = of_hash(origin.xz + 11.7);
     // Per-tree palette shift (biome harmony and variation), foliage only.
     vec3 tint = mix(vec3(1.0), harmony, biome_harmony) * mix(vec3(0.95, 1.0, 1.03), vec3(1.05, 1.02, 0.92), h) * (0.95 + 0.1 * of_hash(origin.xz + 3.1));
-    tree_tint = mix(vec3(1.0), tint, COLOR.a);
+    tree_tint = mix(vec3(1.0), tint, step(0.5, COLOR.a));
     debug_color = biome_debug > 0.5 ? of_biome_debug(origin.xz) : vec3(-1.0);
     world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
 void fragment() {
     vec3 color = COLOR.rgb * tree_tint;
+    // Vertex alpha: 1 broadleaf / blossom foliage, 0.8 conifer needles, 0 bark.
+    if (COLOR.a > 0.9) color = of_is_blossom(COLOR.rgb) ? of_season_blossom(color, tree_seed) : of_season_leaf(color, tree_seed);
+    else if (COLOR.a > 0.5) color = of_season_evergreen(color);
+    // Winter: old snow lies on the tops of the crowns.
+    if (season == 3) color = mix(color, vec3(0.92, 0.95, 0.98), 0.45 * smoothstep(0.55, 0.85, world_normal.y) * step(0.5, COLOR.a));
     if (debug_color.x >= 0.0 && COLOR.a > 0.5) color = debug_color;
     color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * smoothstep(0.2, 0.7, world_normal.y) * 0.8);
     color *= 1.0 - wetness * 0.2;

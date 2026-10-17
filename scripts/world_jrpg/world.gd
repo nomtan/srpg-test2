@@ -94,6 +94,8 @@ func _ready() -> void:
 			field_weather.apply_conditions(maxi(0, ["morning", "day", "evening", "night"].find(arg.get_slice("=", 1))), field_weather.weather_index)
 		if arg.begins_with("--weather="):
 			field_weather.apply_conditions(field_weather.time_index, maxi(0, ["clear", "rain", "cloudy", "snow"].find(arg.get_slice("=", 1))))
+		if arg.begins_with("--season="):
+			field_weather.apply_conditions(field_weather.time_index, field_weather.weather_index, maxi(0, ["spring", "summer", "autumn", "winter"].find(arg.get_slice("=", 1))))
 	if "--sample-capture" in OS.get_cmdline_user_args():
 		await get_tree().create_timer(2.0).timeout
 		await RenderingServer.frame_post_draw
@@ -572,7 +574,7 @@ func _setup_hud() -> void:
 	# Sits under FieldWeather's top-right panel, matching its width.
 	position_panel.offset_left = -224
 	position_panel.offset_right = -20
-	position_panel.offset_top = 286
+	position_panel.offset_top = 401
 	position_text = Label.new()
 	position_text.add_theme_font_size_override("font_size", 18)
 	position_panel.add_child(position_text)

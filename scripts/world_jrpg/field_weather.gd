@@ -5,6 +5,15 @@ const SKY_SHADER = preload("res://scripts/world_jrpg/atmosphere.gdshader")
 const PRECIP_SHADER = preload("res://scripts/world_jrpg/precipitation.gdshader")
 const TIMES := ["朝", "昼", "夕方", "夜"]
 const WEATHER := ["晴れ", "雨", "曇り", "雪"]
+const SEASONS := ["春", "夏", "秋", "冬"]
+## Per season: sun/ambient tint (lerped in by `amount`), sun energy scale, and the drifting
+## petals or leaves shown on dry days ("" for none).
+const SEASON_LOOKS := [
+	{"sun":"ffe6ee", "ambient":"c4d6c8", "amount":0.25, "energy":1.0, "drift":"f6c3d6"},
+	{"sun":"ffffff", "ambient":"ffffff", "amount":0.0, "energy":1.0, "drift":""},
+	{"sun":"ffc27a", "ambient":"d8b48c", "amount":0.3, "energy":0.95, "drift":"d9792f"},
+	{"sun":"cfe0ff", "ambient":"b4c6e6", "amount":0.35, "energy":0.85, "drift":""}
+]
 const PROFILES := [
 	{"sun":"ffe4b5", "energy":0.9, "angle":Vector3(-20,-100,0), "ambient":"a8bed0", "fill":0.4, "top":"6f9cbd", "horizon":"efd8b3"},
 	{"sun":"fff5dc", "energy":1.15, "angle":Vector3(-65,-45,0), "ambient":"bccddd", "fill":0.43, "top":"467da9", "horizon":"c7deea"},
@@ -15,11 +24,15 @@ var world: Node3D
 var sun: DirectionalLight3D
 var sky_material: ShaderMaterial
 var particles: CPUParticles3D
+## Spring petals / autumn leaves drifting on dry days.
+var drift: CPUParticles3D
 var controls: CanvasLayer
 var time_index := 2
 var weather_index := 0
+var season_index := 1
 var time_buttons: Array[Button] = []
 var weather_buttons: Array[Button] = []
+var season_buttons: Array[Button] = []
 var base_fog := 0.0018
 var clock := 0.0
 
@@ -40,6 +53,27 @@ func setup(map: Node3D, light: DirectionalLight3D) -> void:
 	particles.local_coords = false
 	particles.preprocess = 2.0
 	world.add_child(particles)
+	drift = CPUParticles3D.new()
+	drift.name = "SeasonDrift"
+	drift.emitting = false
+	drift.amount = 220
+	drift.lifetime = 7.0
+	drift.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	drift.emission_box_extents = Vector3(17, 8, 17)
+	drift.direction = Vector3(1, -0.3, 0.4)
+	drift.spread = 40.0
+	drift.initial_velocity_min = 0.6
+	drift.initial_velocity_max = 1.4
+	drift.gravity = Vector3(0.4, -0.5, 0.2)
+	drift.local_coords = false
+	drift.preprocess = 4.0
+	var drift_mesh := QuadMesh.new()
+	drift_mesh.size = Vector2(0.14, 0.14)
+	var drift_material := ShaderMaterial.new()
+	drift_material.shader = PRECIP_SHADER
+	drift_mesh.material = drift_material
+	drift.mesh = drift_mesh
+	world.add_child(drift)
 	_create_controls()
 	apply_conditions(time_index, weather_index)
 
@@ -64,9 +98,9 @@ func _create_controls() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	panel.add_child(box)
-	for section in 2:
+	for section in 3:
 		var label := Label.new()
-		label.text = "時間帯" if section == 0 else "天気"
+		label.text = ["時間帯", "天気", "季節"][section]
 		label.modulate = Color("ead4a8")
 		box.add_child(label)
 		var grid := GridContainer.new()
@@ -75,7 +109,7 @@ func _create_controls() -> void:
 		var group := ButtonGroup.new()
 		for index in 4:
 			var button := Button.new()
-			button.text = TIMES[index] if section == 0 else WEATHER[index]
+			button.text = [TIMES, WEATHER, SEASONS][section][index]
 			button.toggle_mode = true
 			button.button_group = group
 			button.custom_minimum_size = Vector2(82, 34)
@@ -84,21 +118,27 @@ func _create_controls() -> void:
 			if section == 0:
 				time_buttons.append(button)
 				button.pressed.connect(func(): apply_conditions(index, weather_index))
-			else:
+			elif section == 1:
 				weather_buttons.append(button)
 				button.pressed.connect(func(): apply_conditions(time_index, index))
+			else:
+				season_buttons.append(button)
+				button.pressed.connect(func(): apply_conditions(time_index, weather_index, index))
 
-func apply_conditions(time: int, weather: int) -> void:
+## `season` -1 keeps the current season.
+func apply_conditions(time: int, weather: int, season := -1) -> void:
 	time_index = clampi(time, 0, 3)
 	weather_index = clampi(weather, 0, 3)
+	if season >= 0: season_index = clampi(season, 0, 3)
 	var p: Dictionary = PROFILES[time_index]
+	var look: Dictionary = SEASON_LOOKS[season_index]
 	var storm := weather_index != 0
 	var night := time_index == 3
 	sun.rotation_degrees = p.angle
-	sun.light_color = Color(p.sun)
-	sun.light_energy = float(p.energy) * (0.28 if storm else 1.0)
+	sun.light_color = Color(p.sun).lerp(Color(look.sun), float(look.amount))
+	sun.light_energy = float(p.energy) * float(look.energy) * (0.28 if storm else 1.0)
 	var env: Environment = world.world_environment
-	env.ambient_light_color = Color(p.ambient)
+	env.ambient_light_color = Color(p.ambient).lerp(Color(look.ambient), float(look.amount) * 0.6)
 	env.ambient_light_energy = float(p.fill) * (0.85 if storm else 1.0)
 	var top := Color(p.top)
 	var horizon := Color(p.horizon)
@@ -138,9 +178,17 @@ func apply_conditions(time: int, weather: int) -> void:
 		particles.mesh = mesh
 		particles.restart()
 		particles.emitting = true
+	# Petals and leaves only drift in dry weather.
+	var drift_color: String = look.drift
+	drift.emitting = drift_color != "" and weather_index in [0, 2]
+	drift.visible = drift.emitting
+	if drift.emitting:
+		(drift.mesh.material as ShaderMaterial).set_shader_parameter("tint", Color(drift_color, 0.95))
+		drift.restart()
 	for i in 4:
 		time_buttons[i].set_pressed_no_signal(i == time_index)
 		weather_buttons[i].set_pressed_no_signal(i == weather_index)
+		season_buttons[i].set_pressed_no_signal(i == season_index)
 	_update_field()
 
 func _update_field() -> void:
@@ -150,6 +198,7 @@ func _update_field() -> void:
 	forward.y = 0
 	particles.global_position = world.camera.global_position + forward.normalized() * 12 + Vector3(0, 4, 0)
 	particles.rotation.y = world.camera.rotation.y
+	drift.global_position = particles.global_position
 
 func _process(delta: float) -> void:
 	clock += delta

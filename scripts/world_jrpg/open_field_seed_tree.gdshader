@@ -36,9 +36,12 @@ uniform float snow_cover = 0.0;
 uniform vec3 snow_shade : source_color = vec3(0.66, 0.74, 0.84);
 uniform vec3 snow_light : source_color = vec3(0.97, 0.98, 1.0);
 uniform float snow_foliage = 0.12;
+// 1 on the seed conifers' copy of this material: needles stay green through the seasons.
+uniform float evergreen = 0.0;
 varying vec3 world_normal;
 varying vec3 world_pos;
 varying vec3 tree_tint;
+varying float tree_seed;
 varying vec3 debug_color;
 
 void vertex() {
@@ -46,6 +49,7 @@ void vertex() {
     vec4 biome = of_biome(origin.xz);
     vec3 harmony = clamp(biome.rgb / vec3(0.48, 0.64, 0.29), vec3(0.75), vec3(1.25));
     float h = of_hash(origin.xz);
+    tree_seed = of_hash(origin.xz + 11.7);
     tree_tint = mix(vec3(1.0), harmony, biome_harmony) * mix(vec3(0.96, 1.0, 1.03), vec3(1.04, 1.02, 0.94), h) * (0.96 + 0.08 * of_hash(origin.xz + 3.1));
     debug_color = biome_debug > 0.5 ? of_biome_debug(origin.xz) : vec3(-1.0);
     if (COLOR.a > 0.5) {
@@ -74,6 +78,9 @@ void fragment() {
     float n = of_noise(vec2(world_pos.x + world_pos.z, world_pos.y) * 2.3);
     color *= mix(mix(0.85, 1.05, n), 1.0, card);
     color *= tree_tint;
+    color = evergreen > 0.5 ? of_season_evergreen(color) : of_season_leaf(color, tree_seed);
+    // Winter: old snow rests on the upper side of the crown.
+    if (season == 3) color = mix(color, snow_light, 0.4 * smoothstep(0.5, 0.85, normalize(world_normal).y));
     if (debug_color.x >= 0.0) color = debug_color;
     // Snow: the whole crown turns snow-white, keeping its painted light (each lump's bright
     // cap, the shaded underside) as cool blue-grey to white, with a trace of the foliage.

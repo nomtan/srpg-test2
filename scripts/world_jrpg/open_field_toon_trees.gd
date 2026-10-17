@@ -14,6 +14,8 @@ const PALETTES := {
 	"needle": [Color("23584a"), Color("5f9e5c")],
 	"blossom": [Color("d67fa6"), Color("ffd3e2")],
 }
+## Vertex alpha of conifer needles: foliage (> 0.5) that stays green through the seasons.
+const NEEDLE_ALPHA := 0.8
 
 ## LOD meshes of a toon tree asset, finest first, all using `material`.
 static func build(asset: String, material: Material) -> Array[Mesh]:
@@ -156,11 +158,11 @@ static func _cones(st: SurfaceTool, rng: RandomNumberGenerator, lod: int, tiers:
 		var twist := rng.randf() * TAU
 		var slope := atan2(r, h)
 		var tip_color: Color = colors[1].lerp(colors[0], 0.15)
-		tip_color.a = 1.0
+		tip_color.a = NEEDLE_ALPHA
 		var rim_color: Color = colors[0].lerp(colors[1], 0.35 + 0.1 * index)
-		rim_color.a = 1.0
+		rim_color.a = NEEDLE_ALPHA
 		var under: Color = colors[0].darkened(0.25)
-		under.a = 1.0
+		under.a = NEEDLE_ALPHA
 		var ring: Array[Vector3] = []
 		var normals: Array[Vector3] = []
 		for i in sides * 2:

@@ -23,9 +23,11 @@ void fragment() {
     vec3 color;
     if (UV.y > 0.5) {
         color = COLOR.rgb * (0.9 + 0.2 * of_hash(origin.xz));
+        // Green authored parts are leaves; flower heads and bark keep their color.
+        if (COLOR.g > COLOR.r && COLOR.g > COLOR.b) color = of_season_leaf(color, of_hash(origin.xz + 11.7));
     } else {
         vec4 biome = of_biome(world_position.xz);
-        color = of_grass_tinted(world_position.xz, biome.rgb) * mix(0.62, 1.2, COLOR.r);
+        color = of_season_grass(of_grass_tinted(world_position.xz, biome.rgb), world_position.xz) * mix(0.62, 1.2, COLOR.r);
         color *= mix(vec3(1.0), vec3(0.85, 0.9, 0.9), biome.a * 0.6);
         if (biome_debug > 0.5) color = of_biome_debug(world_position.xz) * mix(0.55, 1.0, COLOR.r);
     }

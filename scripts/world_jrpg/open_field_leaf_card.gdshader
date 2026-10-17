@@ -49,6 +49,7 @@ varying vec3 world_pos;
 // Per-tree palette multiplier (biome harmony and variation), constant over the instance,
 // so it is evaluated per vertex instead of per fragment.
 varying vec3 tree_tint;
+varying float tree_seed;
 varying vec3 debug_color;
 
 void vertex() {
@@ -56,6 +57,7 @@ void vertex() {
     vec4 biome = of_biome(origin.xz);
     vec3 harmony = clamp(biome.rgb / vec3(0.48, 0.64, 0.29), vec3(0.65), vec3(1.35));
     float h = of_hash(origin.xz);
+    tree_seed = of_hash(origin.xz + 11.7);
     tree_tint = mix(vec3(1.0), harmony, biome_harmony) * mix(vec3(0.94, 1.0, 1.03), vec3(1.06, 1.03, 0.9), h) * (0.95 + 0.1 * of_hash(origin.xz + 3.1));
     debug_color = biome_debug > 0.5 ? of_biome_debug(origin.xz) : vec3(-1.0);
     float scale = length(MODEL_MATRIX[0].xyz);
@@ -99,6 +101,10 @@ void fragment() {
     vec4 shade = textureLod(leaf_texture, core_uv, 2.0);
     color *= mix(mix(0.8, 1.06, shade.a * shade.r), 1.0, card);
     color *= tree_tint;
+    // Needle palettes are the blue-green ones (tree_needle_cards.tres); they stay evergreen.
+    if (of_is_blossom(base_color)) color = of_season_blossom(color, tree_seed);
+    else color = base_color.b > base_color.g * 0.6 ? of_season_evergreen(color) : of_season_leaf(color, tree_seed);
+    if (season == 3) color = mix(color, vec3(0.92, 0.95, 0.98), 0.4 * smoothstep(0.55, 0.85, world_normal.y));
     if (debug_color.x >= 0.0) color = debug_color * mix(0.5, 1.0, tone);
     color = mix(color, vec3(0.92, 0.95, 0.98), snow_cover * smoothstep(0.2, 0.7, world_normal.y) * 0.8);
     color *= 1.0 - wetness * 0.2;

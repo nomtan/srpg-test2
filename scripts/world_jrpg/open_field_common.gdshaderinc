@@ -10,6 +10,72 @@ float of_noise(vec2 p) {
 
 vec3 of_to_linear(vec3 c) { return pow(max(c, vec3(0.0)), vec3(2.2)); }
 
+// --- Seasons ----------------------------------------------------------------
+// season: 0 spring, 1 summer (the painted base palette, left untouched), 2 autumn,
+// 3 winter. FieldWeather picks it; JRPGWorldSample2 pushes it onto every material.
+// Each helper keeps the input's value (luma) and swaps its hue, so the painted light and
+// shade survive the recolor.
+uniform int season = 1;
+
+float of_luma(vec3 c) { return dot(c, vec3(0.30, 0.59, 0.11)); }
+
+// Turf and grass blades: fresh yellow-green in spring, golden dry grass in autumn and
+// dormant straw in winter.
+vec3 of_season_grass(vec3 c, vec2 p) {
+    if (season == 1) return c;
+    float l = of_luma(c) / 0.55;
+    float n = of_noise(p * 0.03 + 71.0);
+    if (season == 0) return mix(c, mix(vec3(0.55, 0.77, 0.33), vec3(0.64, 0.80, 0.38), n) * l, 0.5);
+    if (season == 2) return mix(c, mix(vec3(0.72, 0.64, 0.34), vec3(0.58, 0.52, 0.30), n) * l, 0.5 + 0.2 * n);
+    return mix(c, mix(vec3(0.64, 0.60, 0.48), vec3(0.54, 0.52, 0.45), n) * l, 0.78);
+}
+
+// Winter frost: scattered patches of old snow on open ground (0..1). Zero otherwise.
+float of_season_frost(vec2 p) {
+    if (season != 3) return 0.0;
+    return smoothstep(0.42, 0.68, of_noise(p * 0.035 + 61.0) * 0.75 + of_noise(p * 0.3) * 0.25) * 0.85;
+}
+
+// Broadleaf crowns. seed (0..1, per tree) staggers autumn into orange, red and yellow
+// trees with a few late greens; winter leaves hang dry and brown.
+vec3 of_season_leaf(vec3 c, float seed) {
+    if (season == 1) return c;
+    float l = of_luma(c) / 0.5;
+    // Spring: fresh green, with one tree in seven in pink blossom.
+    if (season == 0) return seed < 0.14 ? mix(c, vec3(1.0, 0.74, 0.84) * mix(l, 1.0, 0.5), 0.85) : mix(c, vec3(0.58, 0.82, 0.36) * l, 0.45);
+    if (season == 2) {
+        vec3 hue = seed < 0.4 ? vec3(0.95, 0.52, 0.17) : (seed < 0.72 ? vec3(0.84, 0.27, 0.16) : vec3(0.96, 0.78, 0.24));
+        return mix(c, hue * l * 0.9, seed > 0.92 ? 0.35 : 0.88);
+    }
+    return mix(c, vec3(0.66, 0.52, 0.38) * l, 0.8);
+}
+
+// Conifers keep their needles: only a little lighter in spring and darker, colder in
+// winter.
+vec3 of_season_evergreen(vec3 c) {
+    if (season == 0) return c * vec3(1.04, 1.07, 0.98);
+    if (season == 2) return c * vec3(1.0, 0.96, 0.9);
+    if (season == 3) return mix(c, vec3(0.20, 0.32, 0.30) * of_luma(c) / 0.4, 0.3);
+    return c;
+}
+
+// Blossom trees flower only in spring; the rest of the year they are ordinary broadleaves.
+vec3 of_season_blossom(vec3 c, float seed) {
+    if (season == 0) return c;
+    vec3 leaf = vec3(0.40, 0.66, 0.36) * of_luma(c) / 0.75;
+    return season == 1 ? leaf : of_season_leaf(leaf, seed);
+}
+
+// Pink/red-dominant colors are blossom petals rather than leaves.
+bool of_is_blossom(vec3 c) { return c.r > c.g + 0.08; }
+
+// Meadow flowers: everywhere in spring and summer, thinning in autumn, gone in winter.
+float of_season_bloom(vec2 p) {
+    if (season == 3) return 0.0;
+    if (season == 2) return step(of_hash(p + 5.3), 0.3);
+    return 1.0;
+}
+
 // Painterly meadow tint in sRGB. Terrain, grass blades and moss all sample it,
 // so the instanced grass melts into the ground beneath it.
 vec3 of_grass(vec2 p) {
@@ -81,5 +147,6 @@ vec3 of_meadow(vec2 p, vec3 tint) {
     // Forest floor: darker loam and leaf litter under the canopy, broken into patches.
     vec2 surface = of_biome_surface(p);
     float litter = surface.g * smoothstep(0.3, 0.7, of_noise(p * 0.25 + 19.0) * 0.6 + of_noise(p * 1.1) * 0.4 + surface.g * 0.3);
-    return mix(color, mix(vec3(0.33, 0.36, 0.20), vec3(0.42, 0.35, 0.22), of_noise(p * 0.5 + 4.0)) * (0.9 + fine * 0.2), litter * 0.6);
+    color = mix(color, mix(vec3(0.33, 0.36, 0.20), vec3(0.42, 0.35, 0.22), of_noise(p * 0.5 + 4.0)) * (0.9 + fine * 0.2), litter * 0.6);
+    return of_season_grass(color, p);
 }

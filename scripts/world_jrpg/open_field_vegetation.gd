@@ -15,6 +15,8 @@ const MEADOW_MATERIAL = preload("res://assets/environment/vegetation/materials/m
 const TOON_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_toon.tres")
 const SEED_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_seed.tres")
 const SEED_BARK_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_seed_bark.tres")
+## Seed conifers share the seed-tree look but keep their needles through the seasons.
+static var seed_conifer_material: ShaderMaterial = _evergreen(SEED_MATERIAL)
 const ToonTrees = preload("res://scripts/world_jrpg/open_field_toon_trees.gd")
 const ROOT := "res://assets/environment/vegetation/"
 const SCENES := {
@@ -136,6 +138,11 @@ static func _has_cards(asset: String) -> bool:
 static func _is_seed(asset: String) -> bool:
 	return asset in SEED_TREES or asset in SEED_CONIFERS
 
+static func _evergreen(source: ShaderMaterial) -> ShaderMaterial:
+	var material: ShaderMaterial = source.duplicate()
+	material.set_shader_parameter("evergreen", 1.0)
+	return material
+
 ## LOD meshes of one asset, finest first, with the shared materials assigned.
 static func lod_meshes(asset: String) -> Array[Mesh]:
 	if not meshes.has(asset) and asset in TOON_TREES:
@@ -161,7 +168,9 @@ static func lod_meshes(asset: String) -> Array[Mesh]:
 				var key := slot.resource_name if slot else ""
 				if key.ends_with("Cards"): cards[-1] = surface
 				assert(SLOT_MATERIALS.has(key), "Unknown vegetation material slot '%s' in %s" % [key, asset])
-				mesh.surface_set_material(surface, SLOT_MATERIALS[key])
+				var material: Material = SLOT_MATERIALS[key]
+				if material == SEED_MATERIAL and asset in SEED_CONIFERS: material = seed_conifer_material
+				mesh.surface_set_material(surface, material)
 		meshes[asset] = list
 		if _has_cards(asset): card_surfaces[asset] = cards
 	return meshes[asset]
@@ -189,7 +198,7 @@ static func split_cards(asset: String, level: int) -> Array:
 	return card_parts[asset][level]
 
 static func shader_materials() -> Array[ShaderMaterial]:
-	return [TOON_MATERIAL, SEED_MATERIAL, SEED_BARK_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
+	return [TOON_MATERIAL, SEED_MATERIAL, seed_conifer_material, SEED_BARK_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
 
 ## The card (and core) material of a leaf-card tree: leaf, needle or blossom palette.
 static func card_material(asset: String) -> Material:
