@@ -47,9 +47,10 @@ CARD_SIZE = 0.5
 # Every LOD is the light, far weight (fewer, larger cards on a coarse hull); the twigs stay so
 # no lump ever floats free of the limbs up close.
 LODS = [(0.15, 2.2, 1, 0), (0.15, 2.2, 1, 0), (0.15, 2.2, 1, 0)]
-# Foliage ramp (sRGB): deep blue-green underside -> green -> yellow-green -> pale sunlit cap.
-LEAF_RAMP = [(0.0, (0.19, 0.37, 0.40)), (0.3, (0.23, 0.46, 0.39)), (0.55, (0.42, 0.60, 0.28)),
-             (0.8, (0.60, 0.72, 0.32)), (1.0, (0.80, 0.85, 0.45))]
+# Foliage ramp (sRGB): deep blue-green underside -> green; the sunlit caps stay a deep green,
+# only a little lighter than the body of the crown.
+LEAF_RAMP = [(0.0, (0.19, 0.37, 0.40)), (0.3, (0.23, 0.46, 0.39)), (0.55, (0.34, 0.54, 0.29)),
+             (0.8, (0.40, 0.59, 0.28)), (1.0, (0.47, 0.64, 0.30))]
 # Multiplier over the ramp for every tree: the cooler, deeper green first tuned on the conifers.
 FOLIAGE_TINT = (0.72, 0.86, 0.92)
 # How much each lump's own height (vs the whole crown's) drives the ramp, and the floor of
