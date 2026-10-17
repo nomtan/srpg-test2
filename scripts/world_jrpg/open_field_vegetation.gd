@@ -14,6 +14,7 @@ const FLOWER_MATERIAL = preload("res://assets/environment/vegetation/materials/f
 const MEADOW_MATERIAL = preload("res://assets/environment/vegetation/materials/meadow_grass.tres")
 const TOON_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_toon.tres")
 const SEED_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_seed.tres")
+const SEED_BARK_MATERIAL = preload("res://assets/environment/vegetation/materials/tree_seed_bark.tres")
 const ToonTrees = preload("res://scripts/world_jrpg/open_field_toon_trees.gd")
 const ROOT := "res://assets/environment/vegetation/"
 const SCENES := {
@@ -91,7 +92,7 @@ const FLOWERS := ["flower_grass_a", "flower_grass_b"]
 const SLOT_MATERIALS := {"Trunk": TRUNK_MATERIAL, "Leaves": FOLIAGE_MATERIAL, "LeafCards": LEAF_CARD_MATERIAL,
 	"LeafCore": LEAF_CARD_MATERIAL, "NeedleCards": NEEDLE_CARD_MATERIAL, "NeedleCore": NEEDLE_CARD_MATERIAL,
 	"BlossomCards": BLOSSOM_CARD_MATERIAL, "BlossomCore": BLOSSOM_CARD_MATERIAL, "Grass": GRASS_MATERIAL, "Flower": FLOWER_MATERIAL, "Toon": TOON_MATERIAL,
-	"SeedCards": SEED_MATERIAL, "SeedCore": SEED_MATERIAL}
+	"SeedCards": SEED_MATERIAL, "SeedCore": SEED_MATERIAL, "SeedBark": SEED_BARK_MATERIAL}
 ## Tree LOD bands, measured by Godot from the camera to each MultiMesh's AABB center.
 ## LOD0/LOD1 live in FINE_CHUNK cells under a COARSE_CHUNK LOD2/LOD3 cell (see
 ## add_tree_chunk), so a tree's own distance stays within ~11 m / ~23 m of its cell's.
@@ -188,7 +189,7 @@ static func split_cards(asset: String, level: int) -> Array:
 	return card_parts[asset][level]
 
 static func shader_materials() -> Array[ShaderMaterial]:
-	return [TOON_MATERIAL, SEED_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
+	return [TOON_MATERIAL, SEED_MATERIAL, SEED_BARK_MATERIAL, TRUNK_MATERIAL, FOLIAGE_MATERIAL, LEAF_CARD_MATERIAL, NEEDLE_CARD_MATERIAL, BLOSSOM_CARD_MATERIAL, GRASS_MATERIAL, FLOWER_MATERIAL, MEADOW_MATERIAL]
 
 ## The card (and core) material of a leaf-card tree: leaf, needle or blossom palette.
 static func card_material(asset: String) -> Material:

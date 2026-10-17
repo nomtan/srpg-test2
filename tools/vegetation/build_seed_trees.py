@@ -7,8 +7,9 @@ Run inside Blender with stylized_tree_seed.blend open:
 Each variant (VARIANT_COUNT, drawn by _variants) is its own Geometry Nodes seed and crown shape
 of the "Canopy" object plus its own procedural branch structure, baked into three LOD meshes (<asset>_LOD0..2) with three material
 slots read by scripts/world_jrpg/open_field_seed_tree.gdshader ("SeedCards", "SeedCore") and
-open_field_toon_tree.gdshader ("Toon", trunk and branches). Every branch ends inside a crown
-lump, so the limbs visibly carry the foliage.
+open_field_seed_bark.gdshader ("SeedBark", trunk and branches, textured with seed_bark.png). Every branch ends inside a crown
+lump, so the limbs visibly carry the foliage; on some broadleaf trees a few short leafy side
+shoots (_side_shoots) also break up the bare limbs below the crown.
   - SeedCards: camera-facing leaf cards. Every corner sits at the card center; UV2 is the
     corner's offset in the view plane (m), UV the leaf-cluster texture.
   - SeedCore: the crown's lump hull under the cards, filling the gaps with deep foliage.
@@ -26,6 +27,10 @@ REPO = os.path.abspath(os.path.join(os.path.dirname(bpy.data.filepath), "..", ".
 VEG = os.path.join(REPO, "assets", "environment", "vegetation")
 OUT_DIR = os.path.join(VEG, "trees", "seed")
 TEXTURE = os.path.join(VEG, "textures", "seed_leaf_cluster.png")
+BARK_TEXTURE = os.path.join(VEG, "textures", "seed_bark.png")
+# Bark texture tiling: metres of trunk per texture repeat (along) and per repeat around.
+BARK_TILE_ALONG = 1.6
+BARK_TILE_AROUND = 0.9
 EXPORT_SCALE = 2.0
 # Ten variants, each with its own crown seed, crown shape, branch structure and a slight leaf
 # hue, all drawn from one fixed RNG so a rebuild reproduces them.
@@ -61,9 +66,20 @@ CORE_DARKEN = 0.92
 # The core sits this far (Blender m) inside the lump surface, cards this far (x card size) outside.
 CORE_INSET = 0.2
 CARD_LIFT = 0.15
-# Bark: warm tan at the foot, cool purple up the fork where the crown shades it.
-TRUNK_FOOT = (0.80, 0.66, 0.50)
-TRUNK_FORK = (0.46, 0.40, 0.56)
+# Bark (sRGB, multiplied by the bark texture): a dull mid brown at the foot darkening to a
+# deep umber up the limbs, the JRPGWorldSample tree browns.
+TRUNK_FOOT = (0.47, 0.38, 0.28)
+TRUNK_FORK = (0.28, 0.24, 0.17)
+# Leafy side shoots on the bare limbs / upper trunk below the crown (broadleaf only): how many
+# per tree (drawn at random, so some trees keep bare limbs), their lump radius (Blender m) and
+# the chance a shoot carries a second, smaller lump beside the first.
+SHOOT_COUNTS = ([0, 1, 2, 3, 4], [2, 4, 4, 3, 1])
+SHOOT_RADIUS = (0.2, 0.36)
+SHOOT_PAIR = 0.45
+# Shoot cards are smaller than the crown's (and more of them), so a shoot reads as a small leafy
+# spray, not a crown-sized ball.
+SHOOT_CARD_SCALE = 0.5
+SHOOT_MIN_CARDS = 80
 
 
 def _variants():
@@ -211,6 +227,39 @@ def make_leaf_texture(path, size=512, leaves=230, seed=11):
         bpy.data.images.remove(img)
     img = bpy.data.images.new("seed_leaf_cluster", size, size, alpha=True)
     px = np.dstack([rgb, rgb, rgb, alpha])[::-1].reshape(-1)  # Blender rows are bottom-up
+    img.pixels.foreach_set(px.astype(np.float32))
+    img.filepath_raw = path
+    img.file_format = "PNG"
+    img.save()
+    return img
+
+
+def make_bark_texture(path, width=256, height=512, seed=23):
+    """Tileable bark: thin, irregular vertical fissures between bark plates, with fine
+    grain. Grey value only (the vertex color carries the brown). Built from FFT-filtered
+    white noise, which is periodic by construction, so it repeats seamlessly around and
+    along a branch."""
+    rng = np.random.default_rng(seed)
+
+    def noise(soft_x, soft_y):
+        # Larger softness smooths more along that axis; soft_y >> soft_x gives vertical streaks.
+        f = np.fft.fft2(rng.standard_normal((height, width)))
+        fy = np.fft.fftfreq(height)[:, None] * height
+        fx = np.fft.fftfreq(width)[None, :] * width
+        n = np.real(np.fft.ifft2(f * np.exp(-(fx * soft_x / width) ** 2 - (fy * soft_y / height) ** 2)))
+        return n / (n.std() + 1e-6)
+
+    cracks = noise(10.0, 140.0)
+    fissure = np.clip(np.abs(cracks) / 0.5, 0.0, 1.0) ** 0.7   # 0 on the crack lines
+    plates = noise(24.0, 80.0)
+    grain = noise(3.0, 40.0)
+    value = (0.42 + 0.58 * fissure) * (0.88 + 0.08 * plates) + 0.05 * grain
+    value = np.clip(value, 0.0, 1.0).astype(np.float32)
+    img = bpy.data.images.get("seed_bark")
+    if img:
+        bpy.data.images.remove(img)
+    img = bpy.data.images.new("seed_bark", width, height, alpha=False)
+    px = np.dstack([value, value, value, np.ones_like(value)])[::-1].reshape(-1)
     img.pixels.foreach_set(px.astype(np.float32))
     img.filepath_raw = path
     img.file_format = "PNG"
@@ -434,26 +483,123 @@ def _branch_structure(style, lumps, rnd):
     return out
 
 
+def _side_shoots(structure, lumps, rnd):
+    """A few short leafy shoots off the bare limbs / upper trunk below the crown, so a fork is
+    not all bare wood: [(center, radius)] of their lumps; their twigs join structure's twigs.
+    Each shoot leaves its branch sideways and curves up into a small lump that stays clear of
+    the crown, the trunk and the other shoots."""
+    trunks, limbs, twigs = structure
+    count = rnd.choices(*SHOOT_COUNTS)[0]
+    crown_bottom = min(c.z - r for c, r in lumps)
+    lo, hi = max(1.6, crown_bottom * 0.5), crown_bottom - 0.3
+    # Candidate attachment points along the bare wood: (point, tangent, branch radius).
+    spots = []
+    for pts, radii in trunks + limbs:
+        for i in range(1, len(pts) - 1):
+            if lo < pts[i].z < hi:
+                spots.append((pts[i], (pts[i + 1] - pts[i - 1]).normalized(), radii[i]))
+    axis = Vector((sum(p.x for p in trunks[0][0]), sum(p.y for p in trunks[0][0]), 0)) / len(trunks[0][0])
+    up = Vector((0, 0, 1))
+    out = []
+    for _ in range(count * 6):
+        if len(out) >= count or not spots:
+            break
+        p, tangent, pr = rnd.choice(spots)
+        # Away from the tree's axis (any side on the trunk itself), never along the branch.
+        away = Vector((p.x - axis.x, p.y - axis.y, 0))
+        a = (math.atan2(away.y, away.x) if away.length > 0.15 else rnd.random() * math.tau) + rnd.gauss(0, 0.6)
+        d = Vector((math.cos(a), math.sin(a), 0))
+        d = (d - tangent * d.dot(tangent)).normalized()
+        r = rnd.uniform(*SHOOT_RADIUS)
+        reach = pr + r + rnd.uniform(0.15, 0.45)
+        c = p + d * reach + up * reach * rnd.uniform(0.35, 0.8)
+        if c.z + r > crown_bottom + 0.1 or any((c - o).length < (r + orr) * 1.6 for o, orr in out) \
+                or any((c - l).length < r + lr for l, lr in lumps):
+            continue
+        ctrl = p + d * reach * 0.6 + up * reach * 0.1
+        twigs.append((_bezier(p - d * pr * 0.5, ctrl, c, 4), [min(pr * 0.55, 0.04) + (0.012 - min(pr * 0.55, 0.04)) * i / 4
+                                                                  for i in range(5)]))
+        out.append((c, r))
+        if rnd.random() < SHOOT_PAIR:
+            # A smaller lump beside the first: the shoot reads as a leafy spray, not a ball.
+            r2 = r * rnd.uniform(0.6, 0.8)
+            e = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.uniform(-0.2, 0.6))).normalized()
+            c2 = c + e * (r + r2) * 0.75
+            if c2.z + r2 <= crown_bottom + 0.1:
+                twigs.append((_bezier(c, (c + c2) / 2, c2, 2), [0.015, 0.012, 0.01]))
+                out.append((c2, r2))
+    return out
+
+
+def _shoot_foliage(shoots, lumps, density, card_size, subdivisions_list, hue, leaf_tint, rnd):
+    """Cards and per-subdivision hulls for the side-shoot lumps, painted like the crown's own
+    lumps: each lump's sunlit cap over the crown's top-to-bottom gradient (here its shaded
+    underside, since the shoots hang below it)."""
+    import bmesh
+    z0 = min(c.z - r for c, r in lumps)
+    z1 = max(c.z + r for c, r in lumps)
+
+    def paint(dz, z, k, core):
+        t = LUMP_WEIGHT * _smoothstep(-0.15, 0.9, dz) + (1 - LUMP_WEIGHT) * max(0.0, (z - z0) / (z1 - z0))
+        c = _ramp(RAMP_FLOOR + (1 - RAMP_FLOOR) * t * (0.85 if core else 1.0))
+        c = tuple(ch * (a + (b - a) * k) for ch, a, b in zip(c, (0.94, 1.0, 1.06), (1.06, 1.02, 0.92)))
+        c = (c[0] * (1 + 0.06 * hue), c[1], c[2] * (1 - 0.06 * hue))
+        if leaf_tint:
+            c = tuple(ch * m for ch, m in zip(c, leaf_tint))
+        if core:
+            c = tuple(ch * CORE_DARKEN for ch in c)
+        return (*c, 0.0 if core else 1.0)
+
+    cards, hulls = [], {s: [] for s in subdivisions_list}
+    quad = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
+    for c, r in shoots:
+        k = rnd.uniform(0.3, 0.65)
+        # Enough cards that the sparsest LOD still keeps a dozen on a small lump.
+        for _ in range(max(SHOOT_MIN_CARDS, int(density * 4 * math.pi * r * r * 0.85))):
+            n = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 1))).normalized()
+            center = c + n * r * rnd.uniform(0.85, 1.15)
+            cards.append((center, n, card_size * SHOOT_CARD_SCALE * rnd.uniform(0.7, 1.3), paint(n.z, center.z, k, False), quad,
+                          rnd.random() * math.tau, rnd.random()))
+        core_r = max(r - CORE_INSET, r * 0.55)
+        for s in subdivisions_list:
+            bm = bmesh.new()
+            bmesh.ops.create_icosphere(bm, subdivisions=s, radius=1.0)
+            for f in bm.faces:
+                verts = []
+                for v in f.verts:
+                    n = v.co.normalized()
+                    co = c + n * core_r
+                    verts.append((co, n, paint(n.z, co.z, k, True)))
+                hulls[s].append(verts if f.normal.dot(f.calc_center_median()) >= 0.0 else verts[::-1])
+            bm.free()
+    return cards, hulls
+
+
 def _tube(part, points, radii, sides, color_at):
-    """A tapered tube along `points`; its start is pushed back into the parent so joints overlap."""
+    """A tapered tube along `points`; its start is pushed back into the parent so joints overlap.
+    UV wraps the bark texture: u around (a whole number of repeats for the branch's girth,
+    with a duplicated seam column), v along the branch's length."""
     d0 = (points[1] - points[0]).normalized()
     points = [points[0] - d0 * radii[0] * 0.8] + points[1:]
     normal = d0.orthogonal().normalized()
-    rings = []
+    repeats = max(1, round(math.tau * max(radii) * EXPORT_SCALE / BARK_TILE_AROUND))
+    rings, along = [], 0.0
     for i, p in enumerate(points):
+        if i:
+            along += (p - points[i - 1]).length * EXPORT_SCALE
         d = (points[min(i + 1, len(points) - 1)] - points[max(i - 1, 0)]).normalized()
         normal = (normal - d * normal.dot(d)).normalized()  # parallel transport
         binormal = d.cross(normal)
         ring = []
-        for k in range(sides):
+        for k in range(sides + 1):
             a = k / sides * math.tau
             n = normal * math.cos(a) + binormal * math.sin(a)
             co = p + n * radii[i]
-            ring.append(part.vertex(co * EXPORT_SCALE, n, color_at(co)))
+            ring.append(part.vertex(co * EXPORT_SCALE, n, color_at(co), (k / sides * repeats, along / BARK_TILE_ALONG)))
         rings.append(ring)
     for r0, r1 in zip(rings, rings[1:]):
         for k in range(sides):
-            part.faces.append((r0[k], r0[(k + 1) % sides], r1[(k + 1) % sides], r1[k]))
+            part.faces.append((r0[k], r0[k + 1], r1[k + 1], r1[k]))
             part.slots.append(2)
 
 
@@ -497,6 +643,7 @@ def _build_mesh(name, part, materials):
 def build():
     os.makedirs(OUT_DIR, exist_ok=True)
     make_leaf_texture(TEXTURE)
+    make_bark_texture(BARK_TEXTURE)
     canopy = bpy.data.objects["Canopy"]
     mod = canopy.modifiers["StylizedCanopy"]
     ids = _inputs(mod)
@@ -510,7 +657,7 @@ def build():
     keep_inset = inset.default_value
     inset.default_value = -CORE_INSET
     card = _leaf_card()
-    materials = [bpy.data.materials.get(n) or bpy.data.materials.new(n) for n in ("SeedCards", "SeedCore", "Toon")]
+    materials = [bpy.data.materials.get(n) or bpy.data.materials.new(n) for n in ("SeedCards", "SeedCore", "SeedBark")]
     export_col = bpy.data.collections.get("SeedTreeExport") or bpy.data.collections.new("SeedTreeExport")
     if export_col.name not in bpy.context.scene.collection.children:
         bpy.context.scene.collection.children.link(export_col)
@@ -531,11 +678,20 @@ def build():
             cards, _, lumps = _crown(canopy, seed, style.get("card_density", CARD_DENSITY), style.get("card_size", CARD_SIZE),
                                      LODS[0][2], card, hue, tint)
             structure = _branch_structure(style, lumps, random.Random(seed * 31 + 7))
+            shoot_hulls = {}
+            if not style.get("conifer"):
+                shoot_rnd = random.Random(seed * 53 + 11)
+                shoots = _side_shoots(structure, lumps, shoot_rnd)
+                shoot_cards, shoot_hulls = _shoot_foliage(shoots, lumps, style.get("card_density", CARD_DENSITY),
+                                                          style.get("card_size", CARD_SIZE), {l[2] for l in LODS},
+                                                          hue, tint, shoot_rnd)
+                cards = cards + shoot_cards
             hulls = {}
             for lod, (share, size_scale, subdivisions, detail) in enumerate(LODS):
                 if subdivisions not in hulls:
                     # Same seed, so the same lumps; only the hull's tessellation differs.
-                    hulls[subdivisions] = _crown(canopy, seed, 0.0, CARD_SIZE, subdivisions, card, hue, tint)[1]
+                    hulls[subdivisions] = _crown(canopy, seed, 0.0, CARD_SIZE, subdivisions, card, hue, tint)[1] \
+                                          + shoot_hulls.get(subdivisions, [])
                 part = Part()
                 _branches(part, structure, style, detail)
                 _add_crown(part, cards, hulls[subdivisions], share, size_scale)
