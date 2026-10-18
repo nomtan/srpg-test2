@@ -32,7 +32,8 @@ const BW_GUARD := "bow/guard"
 const KT_IAI := "katana/iai"
 const KT_KESA := "katana/kesa"
 const KT_GUARD := "katana/guard"
-# Equipment per character; anyone not listed carries the one-handed sword and shield.
+# Equipment per character; anyone not listed carries the one-handed sword and shield. A model's "loadout"
+# meta overrides it ("none" for bare hands), even on a model marked weapon_enabled = false.
 const LOADOUTS := {"charcter001": "greatsword", "charcter002": "dual_daggers", "charcter003": "staff", "charcter005": "greataxe",
 	"charcter006": "bow", "character007": "katana"}
 # The sword stands tip-down along +Y; its handle is just above the guard.
@@ -425,6 +426,8 @@ var _idle_global: Dictionary = {}
 # Per shared clip: the bones it leaves unkeyed, as [bone index, keeps rotation, keeps position].
 var _unkeyed: Dictionary = {}
 var has_shield := false
+# The installed equipment: a LOADOUTS value or "sword_shield".
+var loadout := ""
 var two_handed := false
 # Clips for the equipped weapon; the guard clip is empty when the loadout cannot guard.
 var slash_clip := SLASH
@@ -467,7 +470,12 @@ var _sheath_drawn := Transform3D.IDENTITY
 static var _toon_materials: Dictionary = {}
 
 func install(model: Node3D, player: AnimationPlayer) -> bool:
-	if not model.get_meta("weapon_enabled", true):
+	loadout = model.get_meta("loadout", "")
+	if loadout.is_empty():
+		if not model.get_meta("weapon_enabled", true):
+			return false
+		loadout = LOADOUTS.get(model.get("character_id"), "sword_shield")
+	if loadout == "none":
 		return false
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null or player == null or not player.has_animation("idle"):
@@ -497,9 +505,9 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		leg_length = maxf((_idle_global[legs.hips] as Transform3D).origin.y - (_idle_global[legs["foot.R"]] as Transform3D).origin.y, 0.01)
 	var path := player.get_node(player.root_node).get_path_to(skeleton)
 	var library := AnimationLibrary.new()
-	match LOADOUTS.get(model.get("character_id"), "sword_shield"):
+	match loadout:
 		"greatsword", "greataxe":
-			var axe: bool = LOADOUTS.get(model.get("character_id")) == "greataxe"
+			var axe := loadout == "greataxe"
 			_attach_greatsword(axe)
 			_add_slashes(model, player, GA_SLASH_FX if axe else GS_SLASH_FX, GS_FX)
 			library.add_animation("sweep", _make_clip(path, "大剣・横薙ぎ", GS_SWEEP_KEYS))

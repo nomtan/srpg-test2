@@ -15,27 +15,31 @@ const SAMPLES := 32
 # Lengths are in leg lengths (hips to ankle), angles in degrees.
 # length: cycle seconds. duty: share of the cycle each foot is on the ground. reach/back: foot ahead of and
 # behind the hips at heel strike and toe-off. lift: swing foot clearance, peaking earlier as lift_skew drops.
+# width: share of the idle stance width kept, so the feet fall nearer the line of travel.
 # heel_strike/toe_off: toes raised at contact and heel raised at push-off. drop/bob: hips sink and their
 # two-beat bob (walk: highest over the stance foot; run: lowest there, highest in flight). sway: hips over the
 # stance foot. pelvis_yaw/pelvis_roll: pelvis turn with the swinging leg and dip on its side. chest_yaw:
-# shoulders' counter-turn. lean: forward lean of the torso. arm_out: arms' spread from the sides.
+# shoulders' counter-turn. lean: forward lean of the torso. arm_out: arms' spread from the sides. The arm angles
+# are measured from the leaning, turning chest, not from the vertical.
 # arm_swing/arm_offset: upper-arm swing and its forward bias. elbow/elbow_swing: elbow bend and extra bend on the
 # forward swing. cross: the forward hand's drift toward the body's midline. run: flight instead of double support.
 const WALK_STYLE := {
-	"length": 0.9, "duty": 0.6, "reach": 0.36, "back": 0.38, "lift": 0.16, "lift_skew": 0.85,
+	"length": 0.9, "duty": 0.6, "reach": 0.36, "back": 0.38, "lift": 0.16, "lift_skew": 0.85, "width": 0.5,
 	"heel_strike": 12.0, "toe_off": 26.0, "drop": 0.08, "bob": 0.025, "sway": 0.025,
 	"pelvis_yaw": 6.0, "pelvis_roll": 4.0, "chest_yaw": 7.0, "lean": 3.0,
 	"arm_out": 14.0, "arm_swing": 27.0, "arm_offset": 4.0, "elbow": 14.0, "elbow_swing": 16.0, "cross": 0.05,
 	"run": false,
 }
 const RUN_STYLE := {
-	"length": 0.62, "duty": 0.36, "reach": 0.3, "back": 0.45, "lift": 0.5, "lift_skew": 0.6,
+	"length": 0.62, "duty": 0.36, "reach": 0.22, "back": 0.52, "lift": 0.5, "lift_skew": 0.6, "width": 0.35,
 	"heel_strike": 5.0, "toe_off": 35.0, "drop": 0.13, "bob": 0.04, "sway": 0.01,
-	"pelvis_yaw": 7.0, "pelvis_roll": 3.0, "chest_yaw": 11.0, "lean": 12.0,
-	"arm_out": 14.0, "arm_swing": 30.0, "arm_offset": 4.0, "elbow": 78.0, "elbow_swing": 0.0, "cross": 0.2,
+	"pelvis_yaw": 7.0, "pelvis_roll": 3.0, "chest_yaw": 11.0, "lean": 22.0,
+	"arm_out": 8.0, "arm_swing": 32.0, "arm_offset": -4.0, "elbow": 90.0, "elbow_swing": 0.0, "cross": 0.35,
 	"run": true,
 }
 const HAND_TIPS := {"L": "mixamorig_LeftHandMiddle1", "R": "mixamorig_RightHandMiddle1"}
+# Reflects skeleton space across the body's midline (X).
+const MIRROR := Basis(Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1))
 # Toes stay flat on the ground while the heel rises, then follow the foot over this share of the swing.
 const TOE_RELEASE := 0.2
 
@@ -90,7 +94,7 @@ func _pose(style: Dictionary, phase: float) -> Dictionary:
 		_place_leg(pose, style, side, fposmod(phase + (0.0 if side == "L" else 0.5), 1.0))
 	for side: String in ARM_CHAINS:
 		# Each arm swings forward with the opposite leg.
-		_swing_arm(pose, style, side, cos(TAU * phase) * (1.0 if side == "R" else -1.0))
+		_swing_arm(pose, style, side, cos(TAU * phase) * (1.0 if side == "R" else -1.0), _turn(style.lean, chest_yaw, 0.0))
 	return pose
 
 
@@ -117,7 +121,8 @@ func _place_leg(pose: Dictionary, style: Dictionary, side: String, p: float) -> 
 		lift = style.lift * sin(PI * pow(s, style.lift_skew))
 		pitch = style.toe_off * (1.0 - smoothstep(0.0, 0.45, s)) - style.heel_strike * smoothstep(0.6, 1.0, s)
 		toe_flat = 1.0 - smoothstep(0.0, TOE_RELEASE, s)
-	var shift := Vector3(0, lift, travel) * leg_length
+	var narrow: float = (_idle_global[HIPS].origin.x - foot_idle.origin.x) * (1.0 - style.width)
+	var shift := Vector3(narrow, lift * leg_length, travel * leg_length)
 	var ankle := foot_idle.origin + shift
 	var rotation := Basis(Vector3.RIGHT, deg_to_rad(pitch))
 	var pivot := toe_idle.origin + shift if pitch > 0.0 else Vector3(ankle.x, ankle.y - foot_idle.origin.y, ankle.z - 0.25 * (toe_idle.origin.z - foot_idle.origin.z))
@@ -130,7 +135,7 @@ func _place_leg(pose: Dictionary, style: Dictionary, side: String, p: float) -> 
 
 
 ## One arm; swing is +1 fully forward and -1 fully back.
-func _swing_arm(pose: Dictionary, style: Dictionary, side: String, swing: float) -> void:
+func _swing_arm(pose: Dictionary, style: Dictionary, side: String, swing: float, chest: Basis) -> void:
 	var chain: Array = ARM_CHAINS[side]
 	var outward := 1.0 if side == "L" else -1.0
 	var spread := deg_to_rad(style.arm_out)
@@ -139,13 +144,37 @@ func _swing_arm(pose: Dictionary, style: Dictionary, side: String, swing: float)
 	var upper_angle: float = style.arm_offset + style.arm_swing * swing
 	var elbow: float = style.elbow + style.elbow_swing * forward
 	# Turning about -X swings a hanging arm forward.
-	var upper := Basis(Vector3.RIGHT, -deg_to_rad(upper_angle)) * hang
-	var fore := Basis(Vector3.RIGHT, -deg_to_rad(upper_angle + elbow)) * hang
-	fore += Vector3(-outward * style.cross * forward, 0, 0)
-	_aim(pose, chain[0], chain[1], upper)
-	_aim(pose, chain[1], chain[2], fore)
+	var upper := chest * Basis(Vector3.RIGHT, -deg_to_rad(upper_angle)) * hang
+	var fore := chest * (Basis(Vector3.RIGHT, -deg_to_rad(upper_angle + elbow)) * hang + Vector3(-outward * style.cross * forward, 0, 0))
 	# A straight wrist, the hand in line with the forearm.
-	_aim(pose, chain[2], HAND_TIPS[side], fore)
+	var directions: Array[Vector3] = [upper, fore, fore]
+	var correction := Basis.IDENTITY
+	for index in directions.size():
+		if side == "L":
+			_aim(pose, chain[index], (chain + [HAND_TIPS.L])[index + 1], directions[index])
+		else:
+			correction = _mirror_left(pose, index, directions[index], correction)
+
+
+## Gives a right-arm bone the mirror image of the turn its left counterpart takes to point along the mirrored
+## direction. The right arm's rest and idle are twisted unlike the left's, so aiming it directly turns the hand.
+## Its rest is also bent unlike the left's, so the upper arm and forearm are then swung the least way onto
+## direction; the hand takes the forearm's correction. Returns the correction for the next bone.
+func _mirror_left(pose: Dictionary, index: int, direction: Vector3, correction: Basis) -> Basis:
+	var left: Array = ARM_CHAINS.L + [HAND_TIPS.L]
+	var bone: String = ARM_CHAINS.R[index]
+	var idle: Transform3D = _idle_global[left[index]]
+	var from := ((_idle_global[left[index + 1]] as Transform3D).origin - idle.origin).normalized()
+	var turned := Basis(Quaternion(from, (MIRROR * direction).normalized())) * idle.basis
+	var deform := MIRROR * (turned * skeleton.get_bone_global_rest(skeleton.find_bone(left[index])).basis.inverse()) * MIRROR
+	var rest := skeleton.get_bone_global_rest(skeleton.find_bone(bone))
+	if index < 2:
+		var child := skeleton.get_bone_global_rest(skeleton.find_bone(ARM_CHAINS.R[index + 1]))
+		correction = Basis(Quaternion((deform * (child.origin - rest.origin)).normalized(), direction.normalized()))
+	var joint := _global(pose, skeleton.find_bone(bone))
+	joint.basis = correction * deform * rest.basis
+	_set_global(pose, bone, joint)
+	return correction
 
 
 ## Lean (forward pitch), yaw and roll in degrees as a skeleton-space rotation.

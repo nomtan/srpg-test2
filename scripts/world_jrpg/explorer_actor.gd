@@ -10,6 +10,7 @@ const RUN_CYCLE_SPEED := 12.8 # Full sprint uses 1.25x, avoiding frantic torso b
 # Still faster than a walk while slowing from a sprint: keep the run until then.
 const RUN_EXIT_SPEED := 5.5
 const GAIT_BLEND := 0.25
+const SIT_SWITCH_BLEND := 0.6
 ## The attack clip just reached its contact moment (the arrow's release for the bow).
 signal attack_impact(clip: String)
 @export var model_scene: PackedScene = MODEL
@@ -26,8 +27,13 @@ var sword_combat: RefCounted
 var attacking := false
 var guarding := false
 # Unarmed models can sit on the ground: "" standing, "down" sitting down, "seated", "up" standing up.
+# Equipment chosen for the current model (a SwordCombat loadout or "none"); "" keeps the character's own.
+var weapon := ""
+var _roster_layout := false
 var can_sit := false
 var posture := ""
+# Which GroundSit pose ("knees" or "stretch") the current sit uses.
+var sit_pose := "knees"
 var _impact_clip := ""
 var _impact_time := -1.0
 
@@ -37,6 +43,9 @@ func _ready() -> void:
 
 func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	if scene == null: return
+	# A different character starts with its own equipment.
+	if scene != model_scene: weapon = ""
+	_roster_layout = roster_layout
 	attacking = false
 	guarding = false
 	sword_combat = null
@@ -57,6 +66,7 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 		visual.rotation.y = PI / 2.0
 		var label := model.get_node_or_null("NameLabel") as Label3D
 		if label: label.hide()
+	if not weapon.is_empty(): model.set_meta("loadout", weapon)
 	add_child(model)
 	animation_player = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	for clip in ["idle", "walk", "run"]:
@@ -80,6 +90,15 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	set_3d_enabled(use_3d)
 	if phase >= 0.0 and animation_player and animation_player.current_animation in [walk_clip, run_clip]:
 		animation_player.seek(phase * animation_player.current_animation_length, true)
+
+## Re-equips the current model with a SwordCombat loadout, or "none" for bare hands.
+func set_weapon(loadout: String) -> void:
+	weapon = loadout
+	set_model_scene(model_scene, _roster_layout)
+
+## The equipment the current model carries ("none" when unarmed).
+func current_weapon() -> String:
+	return sword_combat.loadout if sword_combat else "none"
 
 func _add_run_cycle() -> void:
 	run_clip = "run"
@@ -191,10 +210,13 @@ func set_guard(enabled: bool) -> void:
 	animation_player.speed_scale = 1.0
 	animation_player.play(sword_combat.guard_clip, 0.06)
 
-## Sits down, or stands back up when seated. A toggle mid-way reverses from the same pose.
-func toggle_sit() -> bool:
+## Sits down in pose (a GroundSit.POSES key), or stands back up when seated in any pose. A toggle
+## mid-way reverses from the same pose.
+func toggle_sit(pose := "knees") -> bool:
 	if not can_sit or not use_3d or attacking or guarding: return false
 	var sitting := posture in ["", "up"]
+	# Reversing a stand-up keeps the pose it is rising from.
+	if posture == "": sit_pose = pose
 	var resume := 0.0
 	if posture in ["down", "up"]:
 		resume = animation_player.current_animation_length - animation_player.current_animation_position
@@ -202,8 +224,17 @@ func toggle_sit() -> bool:
 	walking = false
 	running = false
 	animation_player.speed_scale = 1.0
-	animation_player.play(GroundSit.SIT_DOWN if sitting else GroundSit.STAND_UP, 0.15 if resume == 0.0 else 0.0)
+	var clips: Array = GroundSit.POSES[sit_pose]
+	animation_player.play(clips[0] if sitting else clips[2], 0.15 if resume == 0.0 else 0.0)
 	if resume > 0.0: animation_player.seek(resume, true)
+	return true
+
+## While seated, eases straight into the next GroundSit pose without standing up.
+func switch_sit_pose() -> bool:
+	if posture != "seated": return false
+	var poses: Array = GroundSit.POSES.keys()
+	sit_pose = poses[(poses.find(sit_pose) + 1) % poses.size()]
+	animation_player.play(GroundSit.POSES[sit_pose][1], SIT_SWITCH_BLEND)
 	return true
 
 ## Drops straight back to standing (battle start, model switch).
@@ -218,11 +249,12 @@ func cancel_attack() -> void:
 	_update_model()
 
 func _on_animation_finished(clip: StringName) -> void:
-	if clip == StringName(GroundSit.SIT_DOWN) and posture == "down":
+	var clips: Array = GroundSit.POSES[sit_pose]
+	if clip == StringName(clips[0]) and posture == "down":
 		posture = "seated"
-		animation_player.play(GroundSit.SEATED, 0.2)
+		animation_player.play(clips[1], 0.2)
 		return
-	if clip == StringName(GroundSit.STAND_UP) and posture == "up":
+	if clip == StringName(clips[2]) and posture == "up":
 		posture = ""
 		_update_model()
 		return

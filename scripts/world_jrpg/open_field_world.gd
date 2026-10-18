@@ -1884,6 +1884,7 @@ func _spawn_characters() -> void:
 			player_roster_index = index
 	if character_text and player.model:
 		character_text.text = "操作キャラ：" + player.model.display_name
+	_sync_weapon_buttons()
 	_spawn_sparring_partner(spawn)
 	player.attack_impact.connect(_on_player_attack_impact)
 	encounter_marker = Node3D.new()
@@ -2011,7 +2012,7 @@ func _setup_hud() -> void:
 	terrain_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	terrain_panel.offset_left = -284
 	terrain_panel.offset_right = -20
-	terrain_panel.offset_top = 535
+	terrain_panel.offset_top = 780
 	terrain_text = Label.new()
 	terrain_text.add_theme_font_size_override("font_size", 15)
 	terrain_panel.add_child(terrain_text)

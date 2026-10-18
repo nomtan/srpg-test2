@@ -40,6 +40,10 @@ const RUN_DECELERATION := 30.0
 var player_roster_index := -1
 var move_speed := 0.0
 var character_text: Label
+## Weapon panel choices: SwordCombat loadout and label.
+const WEAPONS := [["none", "武器なし"], ["sword_shield", "片手剣+盾"], ["greatsword", "両手剣"], ["dual_daggers", "短剣"],
+	["staff", "杖"], ["bow", "弓"], ["katana", "刀"], ["greataxe", "両手斧"]]
+var weapon_buttons: Dictionary = {}
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
 var player: Node3D
@@ -433,6 +437,7 @@ func _spawn_characters() -> void:
 	add_child(player)
 	player.position = player_spawn_position
 	_spawn_tripo_roster()
+	_sync_weapon_buttons()
 	for data: Dictionary in story.npcs:
 		var actor := Actor.new()
 		actor.palette_name = data.palette
@@ -558,7 +563,7 @@ func _setup_hud() -> void:
 	location_text = Label.new()
 	info.add_child(location_text)
 	var help := Label.new()
-	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話   C / Start : 座る（武器なし）\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
+	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話   C / Start : 座る（座ったまま押すと座り方を切替）　X : 片足を伸ばして座る（武器なし）\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
 	if not character_roster.is_empty():
 		help.text = help.text.replace("2D・3D切替", "操作キャラ切替")
 	help.add_theme_font_size_override("font_size", 16)
@@ -578,6 +583,7 @@ func _setup_hud() -> void:
 	position_text = Label.new()
 	position_text.add_theme_font_size_override("font_size", 18)
 	position_panel.add_child(position_text)
+	_setup_weapon_panel()
 	dialog_panel = _panel(Vector2.ZERO)
 	dialog_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	dialog_panel.offset_left = 48
@@ -589,6 +595,49 @@ func _setup_hud() -> void:
 	dialog_text.add_theme_font_size_override("font_size", 22)
 	dialog_panel.add_child(dialog_text)
 	dialog_panel.hide()
+
+## Equipment buttons under the position panel, styled like FieldWeather's.
+func _setup_weapon_panel() -> void:
+	var panel := _panel(Vector2.ZERO)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = -224
+	panel.offset_right = -20
+	panel.offset_top = 540
+	(panel.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(14)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	var label := Label.new()
+	label.text = "装備"
+	label.modulate = Color("ead4a8")
+	box.add_child(label)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	box.add_child(grid)
+	var group := ButtonGroup.new()
+	for weapon: Array in WEAPONS:
+		var button := Button.new()
+		button.text = weapon[1]
+		button.toggle_mode = true
+		button.button_group = group
+		button.custom_minimum_size = Vector2(82, 34)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_weapon_selected.bind(weapon[0]))
+		grid.add_child(button)
+		weapon_buttons[weapon[0]] = button
+
+func _on_weapon_selected(loadout: String) -> void:
+	if mode == "explore" and player and player.has_method("set_weapon"):
+		player.set_weapon(loadout)
+	_sync_weapon_buttons()
+
+## Lights the button for what the explorer carries now (it changes with the character too).
+func _sync_weapon_buttons() -> void:
+	if weapon_buttons.is_empty() or player == null or not player.has_method("current_weapon"): return
+	var current: String = player.current_weapon()
+	# set_pressed_no_signal bypasses the ButtonGroup, so every button is set.
+	for loadout: String in weapon_buttons:
+		weapon_buttons[loadout].set_pressed_no_signal(loadout == current)
 
 func _spawn_tripo_roster() -> void:
 	var initial_character_id: String = player.model.character_id if player.model else ""
@@ -793,6 +842,7 @@ func _input(event: InputEvent) -> void:
 			player.use_3d = true
 			player.set_model_scene(character_roster[player_roster_index], true)
 			character_text.text = "操作キャラ：" + player.model.display_name
+			_sync_weapon_buttons()
 		else:
 			use_3d_player = not use_3d_player
 			player.set_3d_enabled(use_3d_player)
@@ -814,8 +864,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_J, KEY_K:
 				player.attack(event.keycode == KEY_K)
 				get_viewport().set_input_as_handled()
-			KEY_C:
-				player.toggle_sit()
+			KEY_C, KEY_X:
+				# Seated, either key changes the sitting pose; moving stands up.
+				if not player.switch_sit_pose():
+					player.toggle_sit("knees" if event.keycode == KEY_C else "stretch")
 				get_viewport().set_input_as_handled()
 			KEY_E:
 				for npc in npcs:
