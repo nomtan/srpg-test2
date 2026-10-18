@@ -197,6 +197,18 @@ func attack(overhead := false) -> bool:
 	animation_player.play(sword_combat.overhead_clip if overhead else sword_combat.next_slash_clip(), 0.07)
 	return true
 
+## The equipped weapon's skill (sword and shield only); false when there is none or the actor is busy.
+func skill() -> bool:
+	if attacking or guarding or not use_3d or sword_combat == null or sword_combat.skill_clip.is_empty(): return false
+	_update_model()
+	attacking = true
+	_impact_clip = ""
+	walking = false
+	running = false
+	animation_player.speed_scale = 1.0
+	animation_player.play(sword_combat.skill_clip, 0.07)
+	return true
+
 ## Guard (shield or greatsword) while held; the guard clip ends on the held pose until released.
 func set_guard(enabled: bool) -> void:
 	if enabled == guarding: return

@@ -10,3 +10,5 @@ extends Resource
 @export var expression_profile_id: String = ""
 ## Shifts the Face in the Body's rest space (+Z forward), for a Face on a Body it was not sized against.
 @export var face_offset := Vector3.ZERO
+## Uniform size of the Face about the head joint (the neck connection), for the same case as face_offset.
+@export var face_scale := 1.0

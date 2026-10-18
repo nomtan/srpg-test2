@@ -67,9 +67,13 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	socket.add_child(face)
 	# Face mesh coordinates are in the Body skeleton's rest space. Cancel the
 	# imported head rest transform once, then let the socket supply each pose.
-	var rest_inverse := skeleton.get_bone_global_rest(skeleton.find_bone("head")).affine_inverse()
-	# face_offset moves the Face in that rest space, for a Face on a Body it was not sized against.
-	face.transform = rest_inverse * Transform3D(Basis.IDENTITY, definition.face_offset)
+	var head_rest := skeleton.get_bone_global_rest(skeleton.find_bone("head"))
+	var rest_inverse := head_rest.affine_inverse()
+	# face_offset moves and face_scale sizes the Face in that rest space, for a Face on a Body it was not
+	# sized against. The scale pivots on the head joint so the Face stays seated on the neck.
+	var neck := head_rest.origin
+	var sized := Transform3D(Basis.from_scale(Vector3.ONE * definition.face_scale), neck - neck * definition.face_scale)
+	face.transform = rest_inverse * Transform3D(Basis.IDENTITY, definition.face_offset) * sized
 	# Painted Tripo textures already carry their shading; extra toon bands and
 	# received shadows muddy them, so those Faces render flat. The Face sits under
 	# the Body skeleton now, so convert it first or the Body pass claims it.

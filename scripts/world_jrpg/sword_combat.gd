@@ -14,11 +14,13 @@ const KATANA_SHEATHED = preload("res://assets/weapons/katana/001/saya.model.glb"
 const KATANA_SCABBARD = preload("res://assets/weapons/katana/001/scabbard.glb")
 const SlashPlayer = preload("res://scripts/world_jrpg/sword_slash_player.gd")
 const BowShotFx = preload("res://scripts/world_jrpg/bow_shot_fx.gd")
+const SkillFx = preload("res://scripts/world_jrpg/sword_skill_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
 const CHARACTER_TOON = preload("res://assets/characters/_shared/materials/character_toon.gdshader")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
 const GUARD := "sword/guard"
+const SKILL := "sword/skill"
 const GS_SWEEP := "greatsword/sweep"
 const GS_SMASH := "greatsword/smash"
 const GS_GUARD := "greatsword/guard"
@@ -135,6 +137,11 @@ const SLASH_FX := {
 	SLASH: [preload("res://assets/fx/sword_slash/sword_slash.tres")],
 	OVERHEAD: [preload("res://assets/fx/sword_slash/sword_overhead.tres")],
 }
+
+# Skill (sword and shield only): spinning cuts, a vertical crescent cut and a leaping plunge; see _skill_keys().
+# The crescent cut is the clip's impact; sword_skill_fx.gd adds the plunge's hit-stop and the flame effects.
+const SKILL_IMPACT := 1.86
+const SKILL_TRAIL_COLORS := [Color(0.86, 0.97, 1.0), Color(0.35, 0.7, 1.0), Color(0.08, 0.25, 0.95)]
 
 # Greatsword, held in both hands. The source stands tip-down along +Y with the handle between the guard and pommel.
 const GS_SCALE := 1.5
@@ -433,6 +440,8 @@ var two_handed := false
 var slash_clip := SLASH
 var overhead_clip := OVERHEAD
 var guard_clip := ""
+# Skill clip; empty when the loadout has none.
+var skill_clip := ""
 # Second one-handed slash for the other hand; attacks alternate between the two when set.
 var alt_slash_clip := ""
 var _alt_next := false
@@ -590,11 +599,20 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			_attach_shield()
 			has_shield = true
 			guard_clip = GUARD
-	_add_slashes(model, player, SLASH_FX, FX)
+	if has_shield:
+		_add_slashes(model, player, SLASH_FX.merged({SKILL: _skill_trails()}), FX.merged({SKILL: {"impact": SKILL_IMPACT}}))
+	else:
+		_add_slashes(model, player, SLASH_FX, FX)
 	library.add_animation("slash", _make_clip(path, "横薙ぎ", SLASH_KEYS))
 	library.add_animation("overhead", _make_clip(path, "上段斬り", OVERHEAD_KEYS))
 	if has_shield:
 		library.add_animation("guard", _make_clip(path, "防御", GUARD_KEYS))
+		library.add_animation("skill", _make_clip(path, "蒼炎三段", _skill_keys()))
+		skill_clip = SKILL
+		var skill_fx := SkillFx.new()
+		skill_fx.name = "SwordSkillFx"
+		skill_fx.setup(player, skeleton, SKILL)
+		model.add_child(skill_fx)
 	player.add_animation_library("sword", library)
 	return true
 
@@ -645,7 +663,7 @@ func is_ranged() -> bool:
 	return bow_model != null
 
 func is_attack_clip(clip: String) -> bool:
-	return not clip.is_empty() and clip in [slash_clip, alt_slash_clip, overhead_clip]
+	return not clip.is_empty() and clip in [slash_clip, alt_slash_clip, overhead_clip, skill_clip]
 
 func _attach_daggers() -> void:
 	for side in ["R", "L"]:
@@ -956,11 +974,108 @@ func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 		tracks[bone] = [rotation_track, position_track]
 	for key: Dictionary in keys:
 		var pose := _pose(key)
+		if key.has("spin"): _spin_pose(pose, key.spin)
 		for bone: String in tracks:
 			var transform: Transform3D = pose[bone]
 			animation.rotation_track_insert_key(tracks[bone][0], key.t, transform.basis.get_rotation_quaternion())
 			animation.position_track_insert_key(tracks[bone][1], key.t, transform.origin)
 	return animation
+
+## Turns the whole pose about the pelvis by degrees (feet included), for spins past what the torso twist allows.
+func _spin_pose(pose: Dictionary, degrees: float) -> void:
+	var pivot: Vector3 = (_idle_global[legs.hips] as Transform3D).origin if not legs.is_empty() else Vector3.ZERO
+	pivot.y = 0.0
+	var turn := Basis(Vector3.UP, deg_to_rad(degrees))
+	var around := Transform3D(turn, pivot - turn * pivot)
+	for index in skeleton.get_bone_count():
+		if skeleton.get_bone_parent(index) < 0:
+			var bone := skeleton.get_bone_name(index)
+			pose[bone] = around * (pose[bone] as Transform3D)
+
+## The skill: two spinning cuts and a low wide spin, a dash into an overhead crescent cut with a deep lunge,
+## then a leaping spin that plunges the blade into the ground. "spin" turns the whole body (see _spin_pose).
+func _skill_keys() -> Array:
+	var keys: Array = [{"t": 0.0}]
+	var windup := {"yaw": -45.0, "pitch": 10.0, "hip_yaw": -20.0, "hip": Vector3(0,-.16,-.02), "step": Vector3(-.06,0,.18), "back": Vector3(.04,0,-.14),
+		"arm": [Vector3(-.7,.2,-.6), Vector3(-.3,.1,-.95)], "blade": Vector3(.2,.05,-1), "off": [Vector3(.6,-.4,.6), Vector3(.3,-.2,.9)]}
+	# Blade held level out to the right and a little forward, so it leads the turn; off arm out the other way.
+	var cut := {"yaw": 10.0, "pitch": 12.0, "hip": Vector3(0,-.2,0), "stance": .1, "step": Vector3(-.04,0,.1), "back": Vector3(.04,0,-.1), "look": 0.0,
+		"arm": [Vector3(-.9,.1,.35), Vector3(-.85,.05,.5)], "blade": Vector3(-.9,.05,.45), "off": [Vector3(.8,-.3,-.4), Vector3(.6,-.4,-.6)]}
+	var low_cut := cut.merged({"pitch": 20.0, "hip": Vector3(0,-.3,0), "stance": .14,
+		"arm": [Vector3(-.9,-.15,.35), Vector3(-.85,-.3,.45)], "blade": Vector3(-.85,-.3,.45)}, true)
+	keys.append(windup.merged({"t": 0.08}))
+	_add_spin(keys, cut, 0.12, 0.72, 720.0)
+	keys.append(windup.merged({"t": 0.84, "yaw": -50.0, "hip": Vector3(0,-.24,-.02),
+		"arm": [Vector3(-.7,0,-.6), Vector3(-.3,-.2,-.95)], "blade": Vector3(.2,-.25,-1)}, true))
+	_add_spin(keys, low_cut, 0.92, 1.22, 360.0)
+	keys.append({"t": 1.34, "yaw": 10.0, "hip": Vector3(0,-.12,0), "step": Vector3(-.04,0,.1), "back": Vector3(.04,0,-.1),
+		"arm": [Vector3(-.5,-.4,.6), Vector3(-.2,-.3,.95)], "blade": Vector3(-.2,.1,1)})
+	# Overhead crescent: the sword cut's windup with a deeper lunge into the impact.
+	var raised_off := [Vector3(.5,.1,.3), Vector3(.25,.6,.45)]
+	keys.append({"t": 1.5, "yaw": -14.0, "pitch": -16.0, "hip_yaw": -8.0, "hip": Vector3(0,.02,-.04), "back": Vector3(0,0,-.04),
+		"arm": [Vector3(-.3,.95,-.05), Vector3(.1,.8,-.55)], "blade": Vector3(0,.15,-1), "off": raised_off})
+	keys.append({"t": 1.68, "yaw": -10.0, "pitch": -22.0, "hip_yaw": -6.0, "hip": Vector3(0,.05,-.02), "back": Vector3(0,.04,-.06), "step": Vector3(0,.06,.04),
+		"arm": [Vector3(-.3,.95,-.15), Vector3(.12,.7,-.7)], "blade": Vector3(0,-.25,-1), "off": raised_off})
+	keys.append({"t": 1.77, "yaw": -6.0, "pitch": -8.0, "hip_yaw": -3.0, "hip": Vector3(-.01,-.02,.08), "step": Vector3(-.02,.06,.25), "back": Vector3(0,0,-.1),
+		"arm": [Vector3(-.3,.95,.2), Vector3(.12,.85,.3)], "blade": Vector3(0,.95,-.3), "off": [Vector3(.5,.05,.4), Vector3(.25,.4,.6)]})
+	keys.append({"t": 1.81, "yaw": -2.0, "pitch": 6.0, "hip": Vector3(-.02,-.12,.2), "step": Vector3(-.05,.03,.45), "back": Vector3(0,0,-.18),
+		"arm": [Vector3(-.3,.55,.8), Vector3(.12,.45,1)], "blade": Vector3(0,1,.35), "off": [Vector3(.45,-.35,.45), Vector3(.25,-.15,.8)]})
+	var lunge := {"yaw": 6.0, "pitch": 26.0, "hip_yaw": 4.0, "hip": Vector3(-.03,-.32,.3), "step": Vector3(-.06,0,.6), "back": Vector3(0,0,-.28),
+		"arm": [Vector3(-.25,-.35,1), Vector3(.1,-.45,1)], "blade": Vector3(0,-.9,.55), "off": [Vector3(.35,-.9,-.15), Vector3(.25,-.85,-.05)]}
+	keys.append(lunge.merged({"t": SKILL_IMPACT}))
+	keys.append(lunge.merged({"t": 2.12, "pitch": 24.0, "blade": Vector3(.05,-.95,.5)}, true))
+	keys.append({"t": 2.4, "yaw": 5.0, "pitch": 8.0, "hip": Vector3(-.02,-.12,.1), "step": Vector3(-.03,0,.2), "back": Vector3(0,0,-.1),
+		"arm": [Vector3(-.55,-.6,.3), Vector3(-.1,-.6,.55)], "blade": Vector3(.12,-.1,1)})
+	# Leap: crouch, spring up spinning with the blade raised, plunge it into the ground on landing.
+	keys.append({"t": 2.55, "yaw": -20.0, "pitch": 18.0, "hip": Vector3(0,-.32,0), "step": Vector3(-.04,0,.12), "back": Vector3(.04,0,-.12),
+		"arm": [Vector3(-.6,-.3,-.5), Vector3(-.3,-.5,-.8)], "blade": Vector3(.1,-.4,-1), "off": [Vector3(.6,-.5,.3), Vector3(.4,-.4,.6)]})
+	var leap := {"pitch": -5.0, "hip": Vector3(0,.55,0), "step": Vector3(-.04,.5,.05), "back": Vector3(.04,.45,-.08), "look": 0.0,
+		"arm": [Vector3(-.25,.97,0), Vector3(-.05,1,.1)], "blade": Vector3(0,1,.1), "off": [Vector3(.7,.3,.1), Vector3(.6,.6,.2)]}
+	_add_spin(keys, leap, 2.64, 2.9, 360.0)
+	var plunge := {"pitch": 30.0, "hip": Vector3(0,-.34,.08), "step": Vector3(-.06,0,.3), "back": Vector3(.04,0,-.25),
+		"arm": [Vector3(-.2,-.45,.9), Vector3(0,-.9,.45)], "blade": Vector3(0,-1,.15), "off": [Vector3(.5,-.5,.6), Vector3(.15,-.7,.7)]}
+	keys.append(plunge.merged({"t": SkillFx.FINISH}))
+	keys.append(plunge.merged({"t": 3.25, "pitch": 26.0, "hip": Vector3(0,-.3,.06)}, true))
+	keys.append({"t": 3.55, "yaw": 5.0, "pitch": 8.0, "hip": Vector3(0,-.1,.04), "step": Vector3(-.03,0,.12), "back": Vector3(0,0,-.08),
+		"arm": [Vector3(-.55,-.6,.3), Vector3(-.1,-.6,.55)], "blade": Vector3(.12,-.1,1)})
+	keys.append({"t": 3.75})
+	return keys
+
+## Keys of pose turning a full degrees between start and end, at most 45 degrees apart so each step interpolates the short way.
+func _add_spin(keys: Array, pose: Dictionary, start: float, end: float, degrees: float) -> void:
+	var steps := ceili(degrees / 45.0)
+	for index in steps + 1:
+		var along := float(index) / steps
+		keys.append(pose.merged({"t": lerpf(start, end, along), "spin": degrees * along}))
+
+## Blue blade trails over the skill's cuts (spins, the crescent and the plunge), in the slash player's format.
+func _skill_trails() -> Array:
+	var spin := Vector3(0, 180, 0)
+	# Arc plane standing along character forward: starts overhead and sweeps forward and down.
+	var vertical := Basis(Vector3(0,1,0), Vector3(1,0,0), Vector3(0,0,-1)).get_euler() * 180.0 / PI
+	return [
+		_skill_trail(0.12, Vector3(0,.45,0), spin, 1.2, 0.7, 340.0, 0.2, 0.15),
+		_skill_trail(0.42, Vector3(0,.45,0), spin, 1.2, 0.7, 340.0, 0.2, 0.15),
+		_skill_trail(0.96, Vector3(0,.3,0), spin + Vector3(8,0,0), 1.3, 0.75, 340.0, 0.24, 0.18),
+		_skill_trail(1.76, Vector3(-.15,.7,.1), vertical, 1.25, 0.75, 200.0, 0.09, 0.25),
+		_skill_trail(2.88, Vector3(-.1,.5,.15), vertical, 1.0, 0.6, 140.0, 0.08, 0.2),
+	]
+
+func _skill_trail(start: float, offset: Vector3, degrees: Vector3, radius: float, width: float, sweep: float, swing: float, afterglow: float) -> SwordSlashProfile:
+	var profile := SwordSlashProfile.new()
+	profile.start_time = start
+	profile.swing_time = swing
+	profile.afterglow_time = afterglow
+	profile.offset = offset
+	profile.rotation_degrees = degrees
+	profile.radius = radius
+	profile.width = width
+	profile.sweep_degrees = sweep
+	profile.core_color = SKILL_TRAIL_COLORS[0]
+	profile.glow_color = SKILL_TRAIL_COLORS[1]
+	profile.fade_color = SKILL_TRAIL_COLORS[2]
+	profile.intensity = 1.8
+	return profile
 
 func _pose(key: Dictionary) -> Dictionary:
 	# "ready" keys take the equipped loadout's ready stance (the greatsword's for the greatsword clips).
