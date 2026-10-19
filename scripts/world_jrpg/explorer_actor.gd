@@ -29,6 +29,8 @@ var guarding := false
 # Unarmed models can sit on the ground: "" standing, "down" sitting down, "seated", "up" standing up.
 # Equipment chosen for the current model (a SwordCombat loadout or "none"); "" keeps the character's own.
 var weapon := ""
+# Body part worn instead of the character's own (a CharacterDefinition body_id); "" keeps it.
+var body := ""
 var _roster_layout := false
 var can_sit := false
 var posture := ""
@@ -43,8 +45,10 @@ func _ready() -> void:
 
 func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	if scene == null: return
-	# A different character starts with its own equipment.
-	if scene != model_scene: weapon = ""
+	# A different character starts with its own equipment and Body.
+	if scene != model_scene:
+		weapon = ""
+		body = ""
 	_roster_layout = roster_layout
 	attacking = false
 	guarding = false
@@ -67,6 +71,12 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 		var label := model.get_node_or_null("NameLabel") as Label3D
 		if label: label.hide()
 	if not weapon.is_empty(): model.set_meta("loadout", weapon)
+	# The roster scene assembles its Body/Face on _ready, so swap the Body in a private copy
+	# of its definition before it enters the tree (the shared .tres stays untouched).
+	if not body.is_empty() and model.get("definition") is CharacterDefinition:
+		var definition := (model.get("definition") as CharacterDefinition).duplicate() as CharacterDefinition
+		definition.body_id = body
+		model.set("definition", definition)
 	add_child(model)
 	animation_player = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	for clip in ["idle", "walk", "run"]:
@@ -95,6 +105,16 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 func set_weapon(loadout: String) -> void:
 	weapon = loadout
 	set_model_scene(model_scene, _roster_layout)
+
+## Rebuilds the current character on another Body (a CharacterDefinition body_id).
+func set_body(body_id: String) -> void:
+	body = body_id
+	set_model_scene(model_scene, _roster_layout)
+
+## The Body the current model wears ("" for a model without a CharacterDefinition).
+func current_body() -> String:
+	var definition = model.get("definition") if model else null
+	return definition.body_id if definition is CharacterDefinition else ""
 
 ## The equipment the current model carries ("none" when unarmed).
 func current_weapon() -> String:

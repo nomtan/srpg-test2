@@ -44,6 +44,9 @@ var character_text: Label
 const WEAPONS := [["none", "武器なし"], ["sword_shield", "片手剣+盾"], ["greatsword", "両手剣"], ["dual_daggers", "短剣"],
 	["staff", "杖"], ["bow", "弓"], ["katana", "刀"], ["greataxe", "両手斧"]]
 var weapon_buttons: Dictionary = {}
+## Body panel choices: CharacterDefinition body IDs (assets/characters/modular/body).
+const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006"]
+var body_buttons: Dictionary = {}
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
 var player: Node3D
@@ -625,19 +628,63 @@ func _setup_weapon_panel() -> void:
 		button.pressed.connect(_on_weapon_selected.bind(weapon[0]))
 		grid.add_child(button)
 		weapon_buttons[weapon[0]] = button
+	_setup_body_panel(panel)
+
+## Body buttons under the equipment panel, in the same style; they follow its height.
+func _setup_body_panel(above: PanelContainer) -> void:
+	var panel := _panel(Vector2.ZERO)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = -224
+	panel.offset_right = -20
+	(panel.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(14)
+	var place := func() -> void: panel.offset_top = above.offset_top + above.size.y + 12
+	above.resized.connect(place)
+	place.call()
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	var label := Label.new()
+	label.text = "ボディ"
+	label.modulate = Color("ead4a8")
+	box.add_child(label)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	box.add_child(grid)
+	var group := ButtonGroup.new()
+	for body_id: String in BODIES:
+		var button := Button.new()
+		button.text = body_id.trim_prefix("body")
+		button.toggle_mode = true
+		button.button_group = group
+		button.custom_minimum_size = Vector2(52, 34)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_body_selected.bind(body_id))
+		grid.add_child(button)
+		body_buttons[body_id] = button
+
+func _on_body_selected(body_id: String) -> void:
+	if mode == "explore" and player and player.has_method("set_body"):
+		player.set_body(body_id)
+	_sync_weapon_buttons()
 
 func _on_weapon_selected(loadout: String) -> void:
 	if mode == "explore" and player and player.has_method("set_weapon"):
 		player.set_weapon(loadout)
 	_sync_weapon_buttons()
 
-## Lights the button for what the explorer carries now (it changes with the character too).
+## Lights the buttons for what the explorer carries and wears now (they change with the
+## character too).
 func _sync_weapon_buttons() -> void:
-	if weapon_buttons.is_empty() or player == null or not player.has_method("current_weapon"): return
-	var current: String = player.current_weapon()
+	if player == null: return
 	# set_pressed_no_signal bypasses the ButtonGroup, so every button is set.
-	for loadout: String in weapon_buttons:
-		weapon_buttons[loadout].set_pressed_no_signal(loadout == current)
+	if player.has_method("current_weapon"):
+		var current: String = player.current_weapon()
+		for loadout: String in weapon_buttons:
+			weapon_buttons[loadout].set_pressed_no_signal(loadout == current)
+	if player.has_method("current_body"):
+		var body_id: String = player.current_body()
+		for id: String in body_buttons:
+			body_buttons[id].set_pressed_no_signal(id == body_id)
 
 func _spawn_tripo_roster() -> void:
 	var initial_character_id: String = player.model.character_id if player.model else ""
