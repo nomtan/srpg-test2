@@ -36,6 +36,12 @@ uniform float thin_keep = 0.3;
 // Blades sink into the ground between these distances, ahead of the far range end.
 uniform float fade_start = 56.0;
 uniform float fade_end = 72.0;
+// Past these distances the per-patch spatial push and the side flutter ease out to the
+// mean push, leaving only the gust bands (the waves still read from afar).
+uniform float wind_lod_start = 30.0;
+uniform float wind_lod_end = 40.0;
+// 0 holds the carpet still and skips the wind (JRPGWorldSample2.grass_sway).
+uniform float sway = 1.0;
 uniform float wetness = 0.0;
 uniform float snow_cover = 0.0;
 varying vec3 origin;
@@ -49,7 +55,6 @@ void vertex() {
     float patch_height = MODEL_MATRIX[1].y;
     // Height above this vertex's own blade root, in meters.
     float lift = UV.y * patch_height;
-    ground = of_meadow(VERTEX.xz, of_biome(VERTEX.xz).rgb);
     vec3 ground_normal = INSTANCE_CUSTOM.xyz;
     NORMAL = dot(ground_normal, ground_normal) > 0.25 ? normalize(ground_normal) : vec3(0.0, 1.0, 0.0);
     float dist = distance(origin, CAMERA_POSITION_WORLD);
@@ -58,18 +63,36 @@ void vertex() {
     float shrink = clamp((keep - COLOR.a) / 0.08, 0.0, 1.0);
     float fade = 1.0 - smoothstep(fade_start, fade_end, dist);
     float scale = shrink * fade;
-    float w = COLOR.g;
-    vec2 dir = of_wind_dir();
-    float push = of_wind_push(origin.xz, TIME);
-    gust = of_wind_gust(origin.xz, TIME);
-    float wobble = sin(TIME * 3.1 + COLOR.b * 6.283 + origin.x * 0.9 + origin.z * 0.6) * flutter * wind_strength;
-    vec2 offset = (dir * push * bend + vec2(-dir.y, dir.x) * wobble) * w * patch_height;
-    VERTEX.xz += offset * scale;
-    // Bent blades dip, so tips swing on an arc instead of stretching.
-    float dip = dot(offset, offset) * 1.4 * w / max(patch_height, 0.05);
-    VERTEX.y -= lift * (1.0 - scale) + min(dip, lift * 0.6) * scale + (1.0 - fade) * 0.05;
     near = smoothstep(0.0, 0.6, fade);
     tone = COLOR.r;
+    // A folded blade is a zero-area sliver under the ground: skip the turf color and the
+    // wind, which dominate the vertex cost (most near blades past thin_end are folded).
+    ground = vec3(0.0);
+    gust = 0.0;
+    if (scale <= 0.0) {
+        VERTEX.y -= lift + 0.05;
+    } else {
+        ground = of_meadow(VERTEX.xz, of_biome(VERTEX.xz).rgb);
+        float dip = 0.0;
+        if (sway > 0.5) {
+            float w = COLOR.g;
+            vec2 dir = of_wind_dir();
+            gust = of_wind_gust(origin.xz, TIME);
+            float detail = 1.0 - smoothstep(wind_lod_start, wind_lod_end, dist);
+            // Far patches: of_wind_push with its spatial noise at its mean.
+            float push = (0.4 + gust * 0.85) * wind_strength;
+            float wobble = 0.0;
+            if (detail > 0.0) {
+                push = mix(push, of_wind_push(origin.xz, TIME), detail);
+                wobble = sin(TIME * 3.1 + COLOR.b * 6.283 + origin.x * 0.9 + origin.z * 0.6) * flutter * wind_strength * detail;
+            }
+            vec2 offset = (dir * push * bend + vec2(-dir.y, dir.x) * wobble) * w * patch_height;
+            VERTEX.xz += offset * scale;
+            // Bent blades dip, so tips swing on an arc instead of stretching.
+            dip = dot(offset, offset) * 1.4 * w / max(patch_height, 0.05);
+        }
+        VERTEX.y -= lift * (1.0 - scale) + min(dip, lift * 0.6) * scale + (1.0 - fade) * 0.05;
+    }
 }
 
 void fragment() {

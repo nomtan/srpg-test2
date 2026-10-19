@@ -891,7 +891,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_2: _preset(2)
 			KEY_3: _preset(3)
 			KEY_4: _preset(4)
-			KEY_H: hud.visible = not hud.visible
+			KEY_H:
+				hud.visible = not hud.visible
+				field_weather.controls.visible = hud.visible
 	elif mode == "explore" and event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		yaw -= event.relative.x * 0.005
 		pitch = clampf(pitch + event.relative.y * 0.005, 0.2, 1.35)

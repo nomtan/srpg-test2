@@ -38,6 +38,8 @@ uniform float fade_start = 52.0;
 uniform float fade_end = 68.0;
 uniform float wetness = 0.0;
 uniform float snow_cover = 0.0;
+// 0 holds the clusters still and skips the wind (JRPGWorldSample2.grass_sway).
+uniform float sway = 1.0;
 varying vec3 origin;
 varying vec3 ground;
 varying float near;
@@ -50,15 +52,18 @@ void vertex() {
     ground = of_meadow(VERTEX.xz, of_biome(VERTEX.xz).rgb);
     vec3 ground_normal = INSTANCE_CUSTOM.xyz;
     NORMAL = dot(ground_normal, ground_normal) > 0.25 ? normalize(ground_normal) : vec3(0.0, 1.0, 0.0);
-    float w = COLOR.g;
-    vec2 dir = of_wind_dir();
-    float push = of_wind_push(origin.xz, TIME);
-    gust = of_wind_gust(origin.xz, TIME);
-    float wobble = sin(TIME * 3.3 + COLOR.b * 6.283 + origin.x * 0.9 + origin.z * 0.6) * flutter * wind_strength;
-    vec2 offset = (dir * push * bend + vec2(-dir.y, dir.x) * wobble) * w;
-    // Bent blades also dip, so tips swing on an arc instead of stretching.
-    VERTEX.xz += offset;
-    VERTEX.y -= dot(offset, offset) * 1.6 * w;
+    gust = 0.0;
+    if (sway > 0.5) {
+        float w = COLOR.g;
+        vec2 dir = of_wind_dir();
+        float push = of_wind_push(origin.xz, TIME);
+        gust = of_wind_gust(origin.xz, TIME);
+        float wobble = sin(TIME * 3.3 + COLOR.b * 6.283 + origin.x * 0.9 + origin.z * 0.6) * flutter * wind_strength;
+        vec2 offset = (dir * push * bend + vec2(-dir.y, dir.x) * wobble) * w;
+        // Bent blades also dip, so tips swing on an arc instead of stretching.
+        VERTEX.xz += offset;
+        VERTEX.y -= dot(offset, offset) * 1.6 * w;
+    }
     float fade = 1.0 - smoothstep(fade_start, fade_end, distance(origin, CAMERA_POSITION_WORLD));
     // The tip ramp flattens out ahead of the sink, so the carpet's far edge is already
     // the ground's color when the blades go.

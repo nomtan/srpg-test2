@@ -26,6 +26,9 @@ const BOW_REACH := 30.0
 ## of twelve at random), conifers the seed conifers (Vegetation.SEED_CONIFERS); blossom still
 ## follows toon_trees / card_trees.
 @export var seed_trees := false
+## Grass carpet and flower clusters bend in the wind. Off holds them still (and skips the
+## wind math on the GPU); on restores the sway and the gust bands rolling over the meadow.
+@export var grass_sway := false
 const LAKE := 10.0
 const LAKE_CENTER := Vector2(205, 150)
 const LAKE_RADIUS := Vector2(100, 64)
@@ -201,6 +204,10 @@ func _ready() -> void:
 	_cache_heights()
 	_build_world()
 	_setup_view()
+	# The forest and town are draw-heavy: two shadow splits over a shorter reach, matched to
+	# the tree LODs that still cast.
+	field_weather.sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	field_weather.sun.directional_shadow_max_distance = Vegetation.SHADOW_REACH
 	_setup_hud()
 	_spawn_characters()
 	_focus_player()
@@ -2100,6 +2107,8 @@ func _sync_conditions() -> void:
 	var wind := [1.0, 1.7, 1.3, 0.6][field_weather.weather_index] as float
 	for material in Vegetation.shader_materials():
 		material.set_shader_parameter("wind_strength", wind)
+	for material in [Vegetation.GRASS_MATERIAL, Vegetation.FLOWER_MATERIAL, Vegetation.MEADOW_MATERIAL]:
+		material.set_shader_parameter("sway", 1.0 if grass_sway else 0.0)
 	# Aerial perspective: distant land fades toward a cool, time-of-day haze.
 	var haze := [Color(0.74, 0.79, 0.86), Color(0.60, 0.73, 0.88), Color(0.78, 0.68, 0.68), Color(0.10, 0.14, 0.24)][field_weather.time_index] as Color
 	if field_weather.weather_index != 0: haze = haze.lerp(Color(0.62, 0.66, 0.70) if field_weather.time_index != 3 else Color(0.12, 0.14, 0.2), 0.6)

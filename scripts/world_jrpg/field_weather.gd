@@ -1,5 +1,6 @@
 extends Node
-## Weather is independent of exploration/battle HUD visibility and combat state.
+## Weather is independent of exploration/battle HUD visibility and combat state;
+## only the manual HUD toggle (Select / H) hides the controls panel too.
 const Batch = preload("res://scripts/world_jrpg/voxel_batch.gd")
 const SKY_SHADER = preload("res://scripts/world_jrpg/atmosphere.gdshader")
 const PRECIP_SHADER = preload("res://scripts/world_jrpg/precipitation.gdshader")

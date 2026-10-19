@@ -98,21 +98,22 @@ const SLOT_MATERIALS := {"Trunk": TRUNK_MATERIAL, "Leaves": FOLIAGE_MATERIAL, "L
 ## Tree LOD bands, measured by Godot from the camera to each MultiMesh's AABB center.
 ## LOD0/LOD1 live in FINE_CHUNK cells under a COARSE_CHUNK LOD2/LOD3 cell (see
 ## add_tree_chunk), so a tree's own distance stays within ~11 m / ~23 m of its cell's.
-const LOD1_FROM := 34.0
-const LOD2_FROM := 80.0
-const LOD3_FROM := 160.0
+const LOD1_FROM := 26.0
+const LOD2_FROM := 60.0
+const LOD3_FROM := 120.0
 const LOD_MARGIN := 4.0
 ## The seed trees are the hero broadleaves: they keep full detail further out before the
 ## (thinned, same-silhouette) LOD1 / LOD2 take over.
-const SEED_LOD1_FROM := 70.0
-const SEED_LOD2_FROM := 150.0
+const SEED_LOD1_FROM := 45.0
+const SEED_LOD2_FROM := 100.0
 ## The seed GLBs ship one mesh at every LOD (the look is tuned on LOD0), so split_cards thins
 ## the distance LODs here: per LOD, the share of bark triangles, core triangles and leaf cards
 ## kept. Bark is mostly twigs hidden in the crown and goes thinnest tube first; kept cards
 ## grow to hold the leaf cover.
 const SEED_LOD_KEEP := [[1.0, 1.0, 1.0], [0.6, 1.0, 1.0], [0.35, 0.5, 0.5]]
-## The sun's shadow distance (world.gd); LODs that begin past it never cast.
-const SHADOW_REACH := 120.0
+## The sun's shadow distance (JRPGWorldSample2 sets the sun to it); LODs that begin past it
+## never cast.
+const SHADOW_REACH := 80.0
 const FINE_CHUNK := 16.0
 const COARSE_CHUNK := 32.0
 ## Seed trees switch to LOD1 far out (SEED_LOD1_FROM), so their near cells can be a whole
@@ -122,7 +123,7 @@ const SEED_FINE_CHUNK := 32.0
 ## ...and their LOD2 cells span 64 m: from SEED_LOD2_FROM out, a tree's own distance stays
 ## within ~45 m of its cell's.
 const SEED_COARSE_CHUNK := 64.0
-## Trees keep shadows through LOD2 because the sun's shadow reaches 120 m; LOD3 is past it.
+## Trees keep shadows through LOD2 while it begins inside SHADOW_REACH; LOD3 is past it.
 const LOD_SHADOWS := [true, true, true, false]
 ## Bushes: single-level cells; past BUSH_LOD2_END the ground and trees carry the view.
 const BUSH_LOD1_FROM := 26.0

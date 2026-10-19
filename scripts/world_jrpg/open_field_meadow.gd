@@ -17,7 +17,7 @@ const RADIUS := 0.68
 ## the shader thins near blades to the mid density and sinks the mid ones into the ground
 ## ahead of each boundary.
 const CELL := 10.0
-const NEAR_END := 34.0
+const NEAR_END := 30.0
 const FAR_END := 76.0
 const MARGIN := 4.0
 ## Wind lean and the outward splay reach past the mesh AABB.
