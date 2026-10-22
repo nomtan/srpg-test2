@@ -1,0 +1,27 @@
+{
+  "standard": "ashen_character_v1",
+  "version": 1,
+  "asset_type": "face",
+  "id": "009",
+  "rig_profile": "humanoid_v1",
+  "coordinate_space": "humanoid_v1_rest",
+  "expression_profile": "default",
+  "source_sha256": "415e33de67d3dad9e9ee38e3b70065efa42849e1ecaaa2835687e031a7f655f0",
+  "baked_face_features": true,
+  "scale": 0.4471922770233139,
+  "position": [
+    -9.454166283830992e-05,
+    -0.036715310639356735,
+    0.8965632960504175
+  ],
+  "size_reference": "eye_jaw_face002_v1",
+  "head_metrics": {
+    "method": "eye_jaw_face002_v1",
+    "eye_distance_source": 0.2963480345194722,
+    "eye_height_source": 0.10425000000000001,
+    "jaw_width_source": 0.484,
+    "chin_height_source": 0.013500000000000012,
+    "front_y_source": -0.3446885943412781
+  },
+  "fit_reference": "charcter002 runtime fit baked: face_scale 1.05 about head joint, face_offset (0, 0.01, -0.025)"
+}

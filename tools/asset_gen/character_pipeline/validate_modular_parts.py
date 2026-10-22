@@ -183,8 +183,13 @@ def _validate_face_size(report: ValidationReport, path: Path, asset: str, bounds
     if metrics.get("method") != size["metric"]:
         report.add("FAIL", "face.size.reference", f"normalization.json needs head_metrics measured with {size['metric']}", asset)
         return
-    jaw = metrics["jaw_width_source"] * metadata["scale"]
-    report.require(abs(jaw - size["jaw_width_m"]) < size["tolerance_m"], "face.size.reference", f"jaw width {jaw:.4f}m matches {size['jaw_width_m']}m", asset)
+    # Eye spacing, iris height and jaw width are averaged against Face002 so neither hair
+    # over the cheeks nor a stylized eye decides the size alone.
+    scale = metadata["scale"]
+    ratio = (metrics["eye_distance_source"] * scale / size["eye_distance_m"]
+             + metrics["eye_height_source"] * scale / size["eye_height_m"]
+             + metrics["jaw_width_source"] * scale / size["jaw_width_m"]) / 3
+    report.require(abs(ratio - 1.0) < size["tolerance_ratio"], "face.size.reference", f"eye/jaw size ratio {ratio:.4f} matches Face002", asset)
 
 
 def _validate_face(report: ValidationReport, path: Path, metrics: dict[str, Any], standard: dict[str, Any]) -> None:

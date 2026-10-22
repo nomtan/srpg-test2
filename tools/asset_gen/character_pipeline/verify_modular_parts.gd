@@ -96,7 +96,7 @@ func _verify_combinations(body_ids: Array, face_ids: Array, legacy_characters: A
 			check(expression_controller != null, definition.id + " has ExpressionController")
 			if expression_controller != null:
 				var face_material := (meshes[1] as MeshInstance3D).get_active_material(0)
-				check(face_material.get_shader_parameter("expression_parts_enabled") == (CharacterAssembler.SHOW_FACE_FEATURES and face_id != "face004"), definition.id + " preserves legacy helmet expression policy")
+				check(face_material.get_shader_parameter("expression_parts_enabled") == (CharacterAssembler.SHOW_FACE_FEATURES and face_id != "face005" and not CharacterAssembler._has_baked_features(face)), definition.id + " preserves helmet / baked-feature expression policy")
 				for expression in ["normal", "angry", "smile"]:
 					check(character.set_expression(expression), definition.id + " accepts " + expression)
 				check(character.set_eyes("blink"), definition.id + " blinks")
@@ -140,7 +140,8 @@ func _verify_combinations(body_ids: Array, face_ids: Array, legacy_characters: A
 								old_local_center = pivot + (old_local_center - pivot) * factor
 							var old_center := old_skin_transform * old_local_center
 							var new_center := mounted_mesh.global_transform * mounted_mesh.mesh.get_aabb().get_center()
-							check(old_center.distance_to(new_center) < 0.0001, definition.id + " matches authorized Face size transform in " + clip)
+							# Baked-feature Faces come from re-made Tripo sources, so the legacy head geometry no longer applies.
+							if not metadata.get("baked_face_features", false): check(old_center.distance_to(new_center) < 0.0001, definition.id + " matches authorized Face size transform in " + clip)
 			if old_model:
 				old_model.free()
 			character.free()

@@ -47,6 +47,9 @@ var weapon_buttons: Dictionary = {}
 ## Body panel choices: CharacterDefinition body IDs (assets/characters/modular/body).
 const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006"]
 var body_buttons: Dictionary = {}
+## Face panel choices: CharacterDefinition face IDs (assets/characters/modular/face).
+const FACES := ["face001", "face002", "face003", "face004", "face005", "face006", "face007", "face008", "face009", "face010"]
+var face_buttons: Dictionary = {}
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
 var player: Node3D
@@ -661,10 +664,51 @@ func _setup_body_panel(above: PanelContainer) -> void:
 		button.pressed.connect(_on_body_selected.bind(body_id))
 		grid.add_child(button)
 		body_buttons[body_id] = button
+	_setup_face_panel(panel)
+
+## Face buttons under the Body panel, in the same style; they follow its height.
+func _setup_face_panel(above: PanelContainer) -> void:
+	var panel := _panel(Vector2.ZERO)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = -224
+	panel.offset_right = -20
+	(panel.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(14)
+	var place := func() -> void: panel.offset_top = above.offset_top + above.size.y + 12
+	above.resized.connect(place)
+	above.item_rect_changed.connect(place)
+	place.call()
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	var label := Label.new()
+	label.text = "フェイス"
+	label.modulate = Color("ead4a8")
+	box.add_child(label)
+	# Five narrow columns keep ten Faces in two rows so the panel fits a 1080p screen.
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 3)
+	box.add_child(grid)
+	var group := ButtonGroup.new()
+	for face_id: String in FACES:
+		var button := Button.new()
+		button.text = face_id.trim_prefix("face")
+		button.toggle_mode = true
+		button.button_group = group
+		button.custom_minimum_size = Vector2(32, 34)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_face_selected.bind(face_id))
+		grid.add_child(button)
+		face_buttons[face_id] = button
 
 func _on_body_selected(body_id: String) -> void:
 	if mode == "explore" and player and player.has_method("set_body"):
 		player.set_body(body_id)
+	_sync_weapon_buttons()
+
+func _on_face_selected(face_id: String) -> void:
+	if mode == "explore" and player and player.has_method("set_face"):
+		player.set_face(face_id)
 	_sync_weapon_buttons()
 
 func _on_weapon_selected(loadout: String) -> void:
@@ -685,6 +729,10 @@ func _sync_weapon_buttons() -> void:
 		var body_id: String = player.current_body()
 		for id: String in body_buttons:
 			body_buttons[id].set_pressed_no_signal(id == body_id)
+	if player.has_method("current_face"):
+		var face_id: String = player.current_face()
+		for id: String in face_buttons:
+			face_buttons[id].set_pressed_no_signal(id == face_id)
 
 func _spawn_tripo_roster() -> void:
 	var initial_character_id: String = player.model.character_id if player.model else ""

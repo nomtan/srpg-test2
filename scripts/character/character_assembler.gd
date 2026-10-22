@@ -84,9 +84,9 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	var expression_controller := ExpressionController.new()
 	expression_controller.name = "ExpressionController"
 	character.add_child(expression_controller)
-	# Face004 is a closed helmet, so facial features should not appear on its visor.
+	# Face005 is a closed helmet, so facial features should not appear on its visor.
 	# Faces whose texture already paints the features skip the overlay too.
-	var show_features := SHOW_FACE_FEATURES and definition.face_id != "face004" and not _has_baked_features(face)
+	var show_features := SHOW_FACE_FEATURES and definition.face_id != "face005" and not _has_baked_features(face)
 	if not expression_controller.bind_face(face, definition.expression_profile_id, show_features):
 		character.free()
 		return null

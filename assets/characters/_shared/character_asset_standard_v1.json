@@ -122,7 +122,7 @@
     "center_z": {
       "recommended_min": 0.04,
       "recommended_max": 0.08,
-      "hard_min": 0.0,
+      "hard_min": -0.03,
       "hard_max": 0.12
     }
   },
@@ -137,7 +137,10 @@
       "004",
       "005",
       "006",
-      "007"
+      "007",
+      "008",
+      "009",
+      "010"
     ]
   },
   "expression_atlas": {
@@ -173,16 +176,19 @@
     }
   },
   "face_size": {
-    "metric": "jaw_width_chin_plus_4cm_v1",
-    "reference": "median_face001_002_003_005_006",
-    "jaw_width_m": 0.2035,
-    "tolerance_m": 0.001,
+    "metric": "eye_jaw_face002_v1",
+    "reference": "face002_face_facial_with_charcter002_fit",
+    "eye_distance_m": 0.13455847056499062,
+    "eye_height_m": 0.04362680950854226,
+    "jaw_width_m": 0.22867247165776178,
+    "tolerance_ratio": 0.005,
     "preserve_aspect_ratio": true,
     "exceptions": {
-      "004": {
-        "reason": "closed helmet: no visible jaw; keeps the previous Head+Hair width",
-        "width_m": 0.41952547430992126
+      "005": {
+        "reason": "closed helmet: no visible face; keeps the previous helmet Head+Hair width",
+        "width_m": 0.44050174802541736
       }
-    }
+    },
+    "tolerance_m": 0.001
   }
 }

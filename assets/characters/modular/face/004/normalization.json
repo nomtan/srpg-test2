@@ -5,22 +5,23 @@
   "id": "004",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "expression_profile": "legacy_size007_004",
-  "source_sha256": "041d11949bc2827a26ba3e24d197d4f016803fccf497010f3a2a595a455f4310",
+  "expression_profile": "default",
+  "source_sha256": "2298460bd508503fb46dc0c07a51fcf4c7f31ad2e2478ab7fb42878a52c4ea94",
+  "baked_face_features": true,
+  "scale": 0.44109812827423267,
   "position": [
-    0,
-    -0.055,
-    0.89
+    -9.454166283830992e-05,
+    -0.03102415922704884,
+    0.8990716067640384
   ],
-  "scale": 0.43165385975603804,
-  "size_baseline": {
-    "scale": 0.54,
-    "position": [
-      0,
-      -0.055,
-      0.89
-    ]
+  "size_reference": "eye_jaw_face002_v1",
+  "head_metrics": {
+    "method": "eye_jaw_face002_v1",
+    "eye_distance_source": 0.29792350409362217,
+    "eye_height_source": 0.10225000000000001,
+    "jaw_width_source": 0.513,
+    "chin_height_source": 0.008000000000000007,
+    "front_y_source": -0.36235299706459045
   },
-  "face_width_m": 0.41952547430992126,
-  "size_reference": "face007"
+  "fit_reference": "charcter002 runtime fit baked: face_scale 1.05 about head joint, face_offset (0, 0.01, -0.025)"
 }

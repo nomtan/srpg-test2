@@ -2,7 +2,7 @@
 
 > Phase 5の新規Face描画契約と現在の未完了事項は [Face Expression Rendering v2](face-expression-rendering-v2.md) を参照。旧Face001〜006の描画とAPIは維持する。
 
-> 現行Faceのサイズは[顎幅基準](face-size-jaw.md)（Face004のみ例外）。旧[Face007基準のサイズ](face-size007.md)は廃止。下記のPhase3測定・default profile説明は当時の記録。
+> 現行Face 001〜010は目・鼻・口を描き込んだTripo原本（`baked_face_features: true`）で、表情オーバーレイは使わず陰影なしで描画する。サイズは[目・顎のFace002基準](face-size-jaw.md#目顎のface002基準eye_jaw_face002_v1)（兜のFace005のみ例外）。旧[Face007基準のサイズ](face-size007.md)と顎幅単独基準は廃止。下記のPhase3測定・default profile説明は当時の記録。
 
 > Phase 4 以降の正式規格は [Ashen Vow Character Asset Standard v1](character-asset-standard-v1.md) と [Golden Path](character-asset-golden-path.md) を優先する。本書は Phase 3 の実装経緯と互換仕様を記録する。
 
@@ -28,7 +28,7 @@ Tripo Face (頭部 + 髪) → Blender正規化 → modular/face/NNN/model.glb �
 
 `assets/characters/_shared/rigs/humanoid_v1.glb` が正式な Reference Rig。65ボーンの名前、親子関係、全rest translation/rotation/scale、および `head`、root/hips を規格として固定する。リグ内のBody001由来メッシュは新しいBodyへのウェイト転送専用の donor であり、他のBodyの実行時メッシュには含めない。`create_reference_rig.py` はPhase 2のBody001からこの規格を固定した一回限りの移行スクリプトである。通常の新規Body出力はこの共有GLBを読み、Body001原本は読み込まない。
 
-Bodyは唯一のSkeleton、`idle` / `walk` / `attack` / `hit` の4クリップを持つ。Faceは静的メッシュで、Skeleton、skin、animationを含めない。Faceの頂点は共通Skeletonのrest空間に置く。Godotでは `head` ボーンの `BoneAttachment3D` に `FaceSocket` を置き、その下にFace全体を装着する。`get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。Body/Faceの組み合わせ別のランタイム補正は原則持たない。例外として、Faceを本来合わせたBodyとは別のBodyに載せるときだけ、`CharacterDefinition.face_offset`（rest空間、+Zが前）でFaceを平行移動できる（例: charcter002はbody006+face002で `(0, 0.01, -0.025)`）。同じ場合に限り `CharacterDefinition.face_scale` でFaceを `head` ボーンの関節（首の接続位置）を中心に等方拡縮できる（charcter002は `1.05`）。
+Bodyは唯一のSkeleton、`idle` / `walk` / `attack` / `hit` の4クリップを持つ。Faceは静的メッシュで、Skeleton、skin、animationを含めない。Faceの頂点は共通Skeletonのrest空間に置く。Godotでは `head` ボーンの `BoneAttachment3D` に `FaceSocket` を置き、その下にFace全体を装着する。`get_bone_global_rest(head_index).affine_inverse()` を一度だけ適用する。Body/Faceの組み合わせ別のランタイム補正は原則持たない。例外として、Faceを本来合わせたBodyとは別のBodyに載せるときだけ、`CharacterDefinition.face_offset`（rest空間、+Zが前）でFaceを平行移動できる。同じ場合に限り `CharacterDefinition.face_scale` でFaceを `head` ボーンの関節（首の接続位置）を中心に等方拡縮できる。charcter002で使っていた `face_offset (0, 0.01, -0.025)` / `face_scale 1.05` は、現在は全Faceの `normalization.json` に焼き込み済みで、定義側の補正は持たない。
 
 Blenderはメートル・Z-up、GodotはY-up。出力root、Armature、mesh objectのtransformはidentityとし、正規化は頂点へ焼き込む。
 

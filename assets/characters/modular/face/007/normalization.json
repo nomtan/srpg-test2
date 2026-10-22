@@ -5,33 +5,23 @@
   "id": "007",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "source_sha256": "91e00b84a196c3eb3517ad4ef110524e8e67ec1426699b3fdff0f427c1e6cf04",
-  "expression_profile": "legacy_size007_007",
-  "expression_rendering": "legacy_projection",
+  "expression_profile": "default",
+  "source_sha256": "6ea29f1f24700b29e9f8f66b72e541eb2e2acae84d8995ce4d027c580ec5a5e6",
+  "baked_face_features": true,
+  "scale": 0.4281230100144346,
   "position": [
-    0,
-    -0.01,
-    0.86
+    -9.454166283830992e-05,
+    -0.012235243816296086,
+    0.8970347926600446
   ],
-  "scale": 0.49893303064699207,
-  "size_reference": "jaw_width_chin_plus_4cm_v1",
-  "fit_note": "Face007 is deeper than Face001-006; moved 4.5cm back and 3cm down (at scale .54) so ears/chin sit over the neck like the reference set",
+  "size_reference": "eye_jaw_face002_v1",
   "head_metrics": {
-    "method": "jaw_width_chin_plus_4cm_v1",
-    "jaw_width_source": 0.4078703703703703,
-    "chin_height_source": 0.08055555555555573
+    "method": "eye_jaw_face002_v1",
+    "eye_distance_source": 0.31372781109425124,
+    "eye_height_source": 0.1065,
+    "jaw_width_source": 0.511,
+    "chin_height_source": 0.013000000000000012,
+    "front_y_source": -0.4172215461730957
   },
-  "size_baseline": {
-    "scale": 0.54,
-    "position": [
-      0,
-      -0.01,
-      0.86
-    ],
-    "profile_origin": [
-      0,
-      -0.055,
-      0.89
-    ]
-  }
+  "fit_reference": "charcter002 runtime fit baked: face_scale 1.05 about head joint, face_offset (0, 0.01, -0.025)"
 }

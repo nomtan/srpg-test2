@@ -31,6 +31,8 @@ var guarding := false
 var weapon := ""
 # Body part worn instead of the character's own (a CharacterDefinition body_id); "" keeps it.
 var body := ""
+# Face part worn instead of the character's own (a CharacterDefinition face_id); "" keeps it.
+var face := ""
 var _roster_layout := false
 var can_sit := false
 var posture := ""
@@ -49,6 +51,7 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	if scene != model_scene:
 		weapon = ""
 		body = ""
+		face = ""
 	_roster_layout = roster_layout
 	attacking = false
 	guarding = false
@@ -71,11 +74,16 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 		var label := model.get_node_or_null("NameLabel") as Label3D
 		if label: label.hide()
 	if not weapon.is_empty(): model.set_meta("loadout", weapon)
-	# The roster scene assembles its Body/Face on _ready, so swap the Body in a private copy
+	# The roster scene assembles its Body/Face on _ready, so swap the Body / Face in a private copy
 	# of its definition before it enters the tree (the shared .tres stays untouched).
-	if not body.is_empty() and model.get("definition") is CharacterDefinition:
+	if (not body.is_empty() or not face.is_empty()) and model.get("definition") is CharacterDefinition:
 		var definition := (model.get("definition") as CharacterDefinition).duplicate() as CharacterDefinition
-		definition.body_id = body
+		if not body.is_empty(): definition.body_id = body
+		# face_offset / face_scale fit the character's own Face only; another Face sits at its normalized place.
+		if not face.is_empty() and face != definition.face_id:
+			definition.face_id = face
+			definition.face_offset = Vector3.ZERO
+			definition.face_scale = 1.0
 		model.set("definition", definition)
 	add_child(model)
 	animation_player = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
@@ -115,6 +123,16 @@ func set_body(body_id: String) -> void:
 func current_body() -> String:
 	var definition = model.get("definition") if model else null
 	return definition.body_id if definition is CharacterDefinition else ""
+
+## Rebuilds the current character with another Face (a CharacterDefinition face_id).
+func set_face(face_id: String) -> void:
+	face = face_id
+	set_model_scene(model_scene, _roster_layout)
+
+## The Face the current model wears ("" for a model without a CharacterDefinition).
+func current_face() -> String:
+	var definition = model.get("definition") if model else null
+	return definition.face_id if definition is CharacterDefinition else ""
 
 ## The equipment the current model carries ("none" when unarmed).
 func current_weapon() -> String:

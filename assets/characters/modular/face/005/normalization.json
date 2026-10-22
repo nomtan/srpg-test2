@@ -5,26 +5,15 @@
   "id": "005",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "expression_profile": "legacy_size007_005",
-  "source_sha256": "4a01820faf70ae6c5cdc2f5fb483990448a716493bf7156f74b3701c9ff10b74",
+  "expression_profile": "default",
+  "source_sha256": "9f64acc2c7d3cb9abaeaa4067012aa1d01a53c381e45ca3f7c0f5d0efb6d3846",
+  "baked_face_features": true,
+  "scale": 0.4517966646414537,
   "position": [
-    0,
-    -0.055,
-    0.89
+    -9.454166283830992e-05,
+    -0.030008490324020386,
+    0.8989742673635484
   ],
-  "scale": 0.44434659671288734,
-  "size_baseline": {
-    "scale": 0.54,
-    "position": [
-      0,
-      -0.055,
-      0.89
-    ]
-  },
-  "size_reference": "jaw_width_chin_plus_4cm_v1",
-  "head_metrics": {
-    "method": "jaw_width_chin_plus_4cm_v1",
-    "jaw_width_source": 0.4579758267654532,
-    "chin_height_source": 0.018039708551117042
-  }
+  "size_reference": "helmet_width_exception",
+  "fit_reference": "charcter002 runtime fit baked: face_scale 1.05 about head joint, face_offset (0, 0.01, -0.025)"
 }

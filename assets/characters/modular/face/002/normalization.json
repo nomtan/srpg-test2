@@ -10,11 +10,11 @@
   "source_sha256": "1631195da0a7fcbee3a778f05b094229f3a81654eac3e086a85ee8d1c38c89f4",
   "baked_face_features": true,
   "position": [
-    0,
-    -0.055,
-    0.89
+    -9.454166283830992e-05,
+    -0.030008490324020386,
+    0.8989742673635484
   ],
-  "scale": 0.4316814793671466,
+  "scale": 0.453265553335504,
   "size_baseline": {
     "scale": 0.536,
     "position": [
@@ -23,10 +23,14 @@
       0.89
     ]
   },
-  "size_reference": "jaw_width_chin_plus_4cm_v1",
+  "size_reference": "eye_jaw_face002_v1",
   "head_metrics": {
-    "method": "jaw_width_chin_plus_4cm_v1",
-    "jaw_width_source": 0.47141239484801367,
-    "chin_height_source": 0.018971474426810513
-  }
+    "method": "eye_jaw_face002_v1",
+    "eye_distance_source": 0.2968645412712212,
+    "eye_height_source": 0.09625,
+    "jaw_width_source": 0.5045000000000001,
+    "chin_height_source": 0.008000000000000007,
+    "front_y_source": -0.35486680269241333
+  },
+  "fit_reference": "charcter002 runtime fit baked: face_scale 1.05 about head joint, face_offset (0, 0.01, -0.025)"
 }
