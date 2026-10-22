@@ -136,6 +136,41 @@ def decimate(obj, ratio):
     bpy.ops.object.modifier_apply(modifier=modifier.name)
 
 
+def column_top(obj):
+    """Top of the torso column; shoulder plumes or weapons beside it do not set the height."""
+    return max((obj.matrix_world @ v.co).z for v in obj.data.vertices if abs((obj.matrix_world @ v.co).x) < 0.12)
+
+
+def section_center_y(obj, z_range, x_range, max_depth):
+    """Front/back center of a horizontal slab, or None when a robe or cape makes it unreadable."""
+    ys = [p.y for p in (obj.matrix_world @ v.co for v in obj.data.vertices)
+          if z_range[0] < p.z < z_range[1] and x_range[0] <= abs(p.x) < x_range[1]]
+    if not ys or max(ys) - min(ys) > max_depth:
+        return None
+    return (min(ys) + max(ys)) / 2
+
+
+# Slabs the rest fit reads after height normalization: neck under the collar, and the ankles.
+FIT_SECTIONS = (((0.86, 0.90), (0.0, 0.10), 0.30), ((0.07, 0.10), (0.04, 0.26), 0.26))
+
+
+def rest_fit_offset_y(donor, body):
+    """Front/back shift that puts the neck and ankles where Body001's sit on humanoid_v1.
+
+    Height normalization only centers X and grounds the soles, so a Tripo body
+    modeled further back left the leg bones off the legs and the Face off the neck.
+    """
+    offsets = []
+    for z_range, x_range, max_depth in FIT_SECTIONS:
+        target = section_center_y(donor, z_range, x_range, max_depth)
+        current = section_center_y(body, z_range, x_range, max_depth)
+        if target is not None and current is not None:
+            offsets.append(target - current)
+    if not offsets:
+        raise ValueError("Body rest fit found no readable neck or ankle section")
+    return sum(offsets) / len(offsets)
+
+
 def prepare_body(part_id, settings):
     if settings.get("rig_profile") != "humanoid_v1":
         raise ValueError("Body requires rig_profile humanoid_v1")
@@ -164,12 +199,18 @@ def prepare_body(part_id, settings):
             raise ValueError("Body source must be a mesh")
         if settings.get("decimate_ratio"):
             decimate(body, settings["decimate_ratio"])
-        lo, hi = bounds(body)
-        donor_lo, donor_hi = bounds(donor)
-        scale = (donor_hi.z - donor_lo.z) / (hi.z - lo.z)
-        center = Vector(((lo.x + hi.x) / 2, 0, lo.z))
-        body.data.transform(Matrix.Scale(scale, 4) @ Matrix.Translation(-center) @ body.matrix_world)
+        body.data.transform(body.matrix_world)
         body.matrix_world = Matrix.Identity(4)
+        lo, hi = bounds(body)
+        donor_lo = bounds(donor)[0]
+        if settings.get("rest_fit") == "landmarks_v1":
+            scale = (column_top(donor) - donor_lo.z) / (column_top(body) - lo.z)
+        else:
+            scale = (bounds(donor)[1].z - donor_lo.z) / (hi.z - lo.z)
+        center = Vector(((lo.x + hi.x) / 2, 0, lo.z))
+        body.data.transform(Matrix.Scale(scale, 4) @ Matrix.Translation(-center))
+        if settings.get("rest_fit") == "landmarks_v1":
+            body.data.transform(Matrix.Translation((0, rest_fit_offset_y(donor, body), 0)))
         if settings.get("arm_alignment") == "match_rig_source":
             align_arms(donor, body, rig)
         transfer_weights(donor, body, rig)

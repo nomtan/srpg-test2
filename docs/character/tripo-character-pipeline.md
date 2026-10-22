@@ -45,6 +45,8 @@ python tools/asset_gen/character_pipeline/validate_modular_parts.py --root artif
 
 `normalization.json` の任意項目 `source_file` で同じTripoフォルダ内の別原本を指定できる（`source_sha256` はそのファイルのハッシュ）。`baked_face_features: true` はテクスチャに目・眉・口が描き込まれたFaceを示し、GLB node extrasに出力され、`CharacterAssembler` が表情オーバーレイを非表示にする。このFaceはテクスチャに陰影も描き込まれているため、Tripoでの見え方に合わせてトゥーンの陰影帯と受ける影を付けず、テクスチャ色をそのまま表示する（shader `shade_strength = 0`）。組み合わせるBodyも同じ表示にそろえ、FaceとBodyで光の当たり方が違って見えないようにする。Face002は `face+facial.glb` を原本とする。
 
+Body 002〜010 の `normalization.json` は `rest_fit: "landmarks_v1"` を持ち、Body001（donor）を基準にrest空間へ合わせる。縮尺は全高ではなく胴体中央（|x|<0.12m）の最上点で決め、肩の羽飾りなど横に飛び出た部品で縮まないようにする（旧方式ではBody009が約5%小さかった）。続けて首元（z 0.86〜0.90m）と足首（z 0.07〜0.10m）の断面中心が001と同じ前後位置に来るようYを平行移動する（ローブやマントで断面の奥行きが読めない区間は使わない）。旧方式はX中心と足裏しか合わせず、003/005/008などが共通スケルトンより4〜7cm後ろにずれ、脚ボーンが脚の中心から外れて歩行が崩れ、Faceが首から前に浮いていた。Body 008〜010の原本は65骨リグ付き・約3.4万頂点のため `source_rig: discard` と `decimate_ratio: 0.21` を使う。
+
 `DIRECT_MODULAR_EXPORT` をBlenderログで確認する。検証後に正式ディレクトリへ配置し、Godotでインポート、実行時検証、目視確認を行う。`validate_modular_parts.py` は共有Reference RigとBodyの全65ボーンrest、4クリップ、Faceのskin/animation不在とtransformを照合する。rest成分の許容差 `2.5e-5` はBlenderのglTF再入出力による浮動小数丸めを吸収するための値である。
 
 ## 表情

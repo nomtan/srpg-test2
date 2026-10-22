@@ -45,7 +45,7 @@ const WEAPONS := [["none", "武器なし"], ["sword_shield", "片手剣+盾"], [
 	["staff", "杖"], ["bow", "弓"], ["katana", "刀"], ["greataxe", "両手斧"]]
 var weapon_buttons: Dictionary = {}
 ## Body panel choices: CharacterDefinition body IDs (assets/characters/modular/body).
-const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006"]
+const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006", "body007", "body008", "body009", "body010"]
 var body_buttons: Dictionary = {}
 ## Face panel choices: CharacterDefinition face IDs (assets/characters/modular/face).
 const FACES := ["face001", "face002", "face003", "face004", "face005", "face006", "face007", "face008", "face009", "face010"]
@@ -650,8 +650,10 @@ func _setup_body_panel(above: PanelContainer) -> void:
 	label.text = "ボディ"
 	label.modulate = Color("ead4a8")
 	box.add_child(label)
+	# Same five narrow columns as the Face panel: ten Bodies in two rows.
 	var grid := GridContainer.new()
-	grid.columns = 3
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 3)
 	box.add_child(grid)
 	var group := ButtonGroup.new()
 	for body_id: String in BODIES:
@@ -659,7 +661,7 @@ func _setup_body_panel(above: PanelContainer) -> void:
 		button.text = body_id.trim_prefix("body")
 		button.toggle_mode = true
 		button.button_group = group
-		button.custom_minimum_size = Vector2(52, 34)
+		button.custom_minimum_size = Vector2(32, 34)
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(_on_body_selected.bind(body_id))
 		grid.add_child(button)

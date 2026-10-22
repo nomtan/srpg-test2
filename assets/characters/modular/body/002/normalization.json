@@ -6,5 +6,6 @@
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
   "source_sha256": "4acd3cf1172b81fbf1fd5899c79a94e1eff322e2a6871051a8fc0161b7b2d358",
-  "arm_alignment": "match_rig_source"
+  "arm_alignment": "match_rig_source",
+  "rest_fit": "landmarks_v1"
 }
