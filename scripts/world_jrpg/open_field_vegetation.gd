@@ -426,6 +426,12 @@ static func add_tree_chunk(parent: Node3D, asset: String, transforms: Array) -> 
 				_range(near, 0.0 if level == 0 else lod1_from, lod1_from if level == 0 else 0.0)
 				near.visibility_parent = near.get_path_to(far)
 
+## The farthest LOD of one tree asset alone, without shadows (they end at SHADOW_REACH
+## anyway): the open field's far forest, beyond the tiles that carry the full hierarchy.
+static func add_far_trees(parent: Node3D, asset: String, transforms: Array) -> void:
+	if transforms.is_empty(): return
+	_tree_instances(parent, asset, lod_meshes(asset).size() - 1, transforms, "%s_far" % asset, false)
+
 ## Instances one bush asset over a cell: LOD0 (with shadow) near, LOD1 / LOD2 beyond, and
 ## nothing past BUSH_LOD2_END.
 static func add_bush_chunk(parent: Node3D, asset: String, transforms: Array) -> void:

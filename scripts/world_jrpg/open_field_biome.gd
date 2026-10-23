@@ -3,9 +3,11 @@ extends RefCounted
 ##
 ## The world reports a handful of designed landform signals per point (how much it is
 ## town, ruins, farmland, lakeshore, forest, ...); compose() turns them into blended
-## biome weights that always sum to 1. bake() samples those weights on a 2 m grid and
-## precomputes every BiomeData parameter, so terrain, vegetation and shaders read one
-## shared source instead of hard-coding biome rules of their own.
+## biome weights that always sum to 1. Those weights and every BiomeData parameter are
+## precomputed on a 2 m grid, so terrain, vegetation and shaders read one shared source
+## instead of hard-coding biome rules of their own. bake() fills the grid over a whole
+## map at once; the streaming open field instead bakes one Patch per tile (bake_patch)
+## and writes it into the shared shader maps (init_maps / write_patch / flush_maps).
 enum Biome { PLAINS, FOREST, DEEP_FOREST, HIGHLAND, MOUNTAIN, LAKESHORE, WETLAND, FARMLAND, SETTLEMENT, RUINS }
 ## Landform signals in the order the world's signal callable returns them (each 0..1).
 enum Landform { SETTLEMENT, RUINS, FARMLAND, SHORE, WETLAND, MOUNTAIN, FOREST, DEEP, HIGHLAND }
@@ -77,12 +79,86 @@ var size := 0
 var weight_grid := PackedFloat32Array()
 var param_grid := PackedFloat32Array()
 var tint := PackedColorArray()
+## Every biome's PARAMS values in a row (COUNT x PARAMS.size()) and its ground tint with
+## the wetness in alpha, for blending.
+var table_values := PackedFloat32Array()
+var tint_values := PackedColorArray()
+## Streaming shader maps (see init_maps): images over the whole field and the textures the
+## shaders sample.
+var tint_image: Image
+var surface_image: Image
+var debug_image: Image
+var tint_map: ImageTexture
+var surface_map: ImageTexture
+var debug_map: ImageTexture
+var maps_dirty := false
+
+## One streaming tile's window of the biome grid: points (i0 .. i0 + span - 1,
+## j0 .. j0 + span - 1), `spacing` m apart. A point's values depend only on its position,
+## so patches that overlap agree exactly. Lookups mirror the whole-map ones below.
+class Patch:
+	var i0 := 0
+	var j0 := 0
+	var span := 0
+	var spacing := 2.0
+	var weights := PackedFloat32Array()
+	var params := PackedFloat32Array()
+	var tint := PackedColorArray()
+
+	func _nearest(x: float, z: float) -> int:
+		return clampi(roundi(z / spacing) - j0, 0, span - 1) * span + clampi(roundi(x / spacing) - i0, 0, span - 1)
+
+	## Offset of the nearest grid point in params; add a Param index to read a value.
+	func cell(x: float, z: float) -> int:
+		return _nearest(x, z) * PARAMS.size()
+
+	func weight(id: int, x: float, z: float) -> float:
+		return weights[_nearest(x, z) * COUNT + id]
+
+	func param_smooth(index: int, x: float, z: float) -> float:
+		return _smooth(params, PARAMS.size(), index, x, z)
+
+	func _smooth(grid: PackedFloat32Array, stride: int, offset: int, x: float, z: float) -> float:
+		var fx := clampf(x / spacing - i0, 0.0, span - 1.001)
+		var fz := clampf(z / spacing - j0, 0.0, span - 1.001)
+		var i := int(fx)
+		var j := int(fz)
+		var k := j * span + i
+		var top := lerpf(grid[k * stride + offset], grid[(k + 1) * stride + offset], fx - i)
+		var bottom := lerpf(grid[(k + span) * stride + offset], grid[(k + span + 1) * stride + offset], fx - i)
+		return lerpf(top, bottom, fz - j)
+
+	func weights_at(x: float, z: float) -> Dictionary:
+		var result := {}
+		for id in COUNT:
+			var w := _smooth(weights, COUNT, id, x, z)
+			if w > 0.01: result[id] = w
+		return result
+
+	func biome_at(x: float, z: float) -> int:
+		var best := Biome.PLAINS
+		var best_weight := -1.0
+		for id in COUNT:
+			var w := _smooth(weights, COUNT, id, x, z)
+			if w > best_weight:
+				best = id
+				best_weight = w
+		return best
 
 func _init() -> void:
 	for id in COUNT: table.append(BiomeData.new(id, DATA[id]))
+	for id in COUNT:
+		for name: String in PARAMS: table_values.append(table[id].get(name))
+		var d := table[id]
+		tint_values.append(Color(d.ground_tint.r, d.ground_tint.g, d.ground_tint.b, d.wetness))
 
 func data(biome: int) -> BiomeData:
 	return table[biome]
+
+## Overlay biomes and the landform signal each takes, in claiming order (flat pairs: worker
+## threads baking patches would contend for the reference counts of nested arrays).
+const OVERLAYS := [Biome.SETTLEMENT, Landform.SETTLEMENT, Biome.RUINS, Landform.RUINS, Biome.FARMLAND, Landform.FARMLAND,
+	Biome.LAKESHORE, Landform.SHORE, Biome.WETLAND, Landform.WETLAND, Biome.MOUNTAIN, Landform.MOUNTAIN]
 
 ## Turns landform signals into weights that sum to 1. Overlays claim their share first
 ## (settlement, ruins, farmland, shore, wetland, mountain); forest, highland and plains
@@ -91,10 +167,9 @@ static func compose(s: PackedFloat32Array) -> PackedFloat32Array:
 	var w := PackedFloat32Array()
 	w.resize(COUNT)
 	var rest := 1.0
-	for pair in [[Biome.SETTLEMENT, Landform.SETTLEMENT], [Biome.RUINS, Landform.RUINS], [Biome.FARMLAND, Landform.FARMLAND],
-			[Biome.LAKESHORE, Landform.SHORE], [Biome.WETLAND, Landform.WETLAND], [Biome.MOUNTAIN, Landform.MOUNTAIN]]:
-		var share := clampf(s[pair[1]], 0.0, 1.0) * rest
-		w[pair[0]] = share
+	for o in range(0, OVERLAYS.size(), 2):
+		var share := clampf(s[OVERLAYS[o + 1]], 0.0, 1.0) * rest
+		w[OVERLAYS[o]] = share
 		rest -= share
 	var forest := clampf(s[Landform.FOREST], 0.0, 1.0)
 	var deep := forest * clampf(s[Landform.DEEP], 0.0, 1.0)
@@ -111,9 +186,6 @@ func bake(world_size: int, signal_at: Callable) -> void:
 	size = int(world_size / spacing) + 1
 	var count := size * size
 	var param_count := PARAMS.size()
-	var table_values := PackedFloat32Array()
-	for id in COUNT:
-		for name: String in PARAMS: table_values.append(table[id].get(name))
 	weight_grid.resize(count * COUNT)
 	param_grid.resize(count * param_count)
 	param_grid.fill(0.0)
@@ -131,6 +203,89 @@ func bake(world_size: int, signal_at: Callable) -> void:
 				for p in param_count:
 					param_grid[k * param_count + p] += table_values[id * param_count + p] * w[id]
 			tint[k] = color
+
+## Bakes the grid points (i0 .. i0 + span - 1, j0 .. j0 + span - 1) from
+## signal_at(x, z) -> PackedFloat32Array, exactly as bake() would. Reads only the biome
+## table, so tiles bake their patches on worker threads.
+func bake_patch(i0: int, j0: int, span: int, signal_at: Callable) -> Patch:
+	var patch := Patch.new()
+	patch.i0 = i0
+	patch.j0 = j0
+	patch.span = span
+	patch.spacing = spacing
+	var param_count := PARAMS.size()
+	patch.weights.resize(span * span * COUNT)
+	patch.params.resize(span * span * param_count)
+	patch.tint.resize(span * span)
+	for j in span:
+		for i in span:
+			var w := compose(signal_at.call((i0 + i) * spacing, (j0 + j) * spacing))
+			var k := j * span + i
+			var color := Color(0, 0, 0, 0)
+			for id in COUNT:
+				patch.weights[k * COUNT + id] = w[id]
+				if w[id] <= 0.0: continue
+				color += tint_values[id] * w[id]
+				for p in param_count:
+					patch.params[k * param_count + p] += table_values[id * param_count + p] * w[id]
+			patch.tint[k] = color
+	return patch
+
+## Streaming maps over [0, world_size]²: plains until the tiles' patches arrive.
+func init_maps(world_size: int) -> void:
+	size = int(world_size / spacing) + 1
+	var plains := table[Biome.PLAINS]
+	tint_image = Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+	tint_image.fill(Color(plains.ground_tint.r, plains.ground_tint.g, plains.ground_tint.b, plains.wetness))
+	surface_image = Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+	surface_image.fill(Color(plains.rockiness, plains.litter, 0.0, 1.0))
+	debug_image = Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+	debug_image.fill(DEBUG_COLORS[Biome.PLAINS])
+	tint_map = ImageTexture.create_from_image(tint_image)
+	surface_map = ImageTexture.create_from_image(surface_image)
+	debug_map = ImageTexture.create_from_image(debug_image)
+
+## A patch's texels for the streaming maps — tint, surface (rockiness, litter) and debug
+## colors — for its inner points (the outermost ring belongs to the neighbors). Built on
+## the tile's worker thread; write_patch only copies them in.
+func patch_images(patch: Patch) -> Array[Image]:
+	var count := PARAMS.size()
+	var inner := patch.span - 2
+	var tint_texels := Image.create_empty(inner, inner, false, Image.FORMAT_RGBA8)
+	var surface_texels := Image.create_empty(inner, inner, false, Image.FORMAT_RGBA8)
+	var debug_texels := Image.create_empty(inner, inner, false, Image.FORMAT_RGBA8)
+	for j in inner:
+		for i in inner:
+			var k := (j + 1) * patch.span + i + 1
+			tint_texels.set_pixel(i, j, patch.tint[k])
+			surface_texels.set_pixel(i, j, Color(patch.params[k * count + Param.ROCKINESS], patch.params[k * count + Param.LITTER], 0.0, 1.0))
+			var color := Color(0, 0, 0, 1)
+			for id in COUNT:
+				var w := patch.weights[k * COUNT + id]
+				if w > 0.0:
+					color.r += DEBUG_COLORS[id].r * w
+					color.g += DEBUG_COLORS[id].g * w
+					color.b += DEBUG_COLORS[id].b * w
+			debug_texels.set_pixel(i, j, color)
+	return [tint_texels, surface_texels, debug_texels]
+
+## Copies a patch's texels (patch_images) into the streaming maps; the next flush_maps
+## uploads them.
+func write_patch(patch: Patch, texels: Array[Image]) -> void:
+	var at := Vector2i(patch.i0 + 1, patch.j0 + 1)
+	var rect := Rect2i(Vector2i.ZERO, texels[0].get_size())
+	tint_image.blit_rect(texels[0], rect, at)
+	surface_image.blit_rect(texels[1], rect, at)
+	debug_image.blit_rect(texels[2], rect, at)
+	maps_dirty = true
+
+## Uploads the streaming maps if a patch arrived since the last flush.
+func flush_maps() -> void:
+	if not maps_dirty: return
+	maps_dirty = false
+	tint_map.update(tint_image)
+	surface_map.update(surface_image)
+	debug_map.update(debug_image)
 
 func _index(x: float, z: float) -> int:
 	return clampi(roundi(z / spacing), 0, size - 1) * size + clampi(roundi(x / spacing), 0, size - 1)

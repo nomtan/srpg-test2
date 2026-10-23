@@ -2,11 +2,14 @@ extends "res://scripts/world_jrpg/world.gd"
 ## JRPGWorldSample2: JRPGWorldSample's explorer, camera, HUD, weather and input on a
 ## smooth open-field map (crag castle and its walled town, windmill hill, ruins, snow peaks).
 ## Only the map is replaced; one explorer (switchable through character_roster) roams it
-## with no NPCs or encounters.
+## with no NPCs or encounters. The field streams in 32 m tiles around the explorer (see
+## "Streaming tiles" and open_field_chunks.gd); landmarks, water and the far terrain ring
+## are built once.
 const Props = preload("res://scripts/world_jrpg/open_field_props.gd")
 const Biomes = preload("res://scripts/world_jrpg/open_field_biome.gd")
 const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
 const Meadow = preload("res://scripts/world_jrpg/open_field_meadow.gd")
+const Chunks = preload("res://scripts/world_jrpg/open_field_chunks.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
 const RIVER_SHADER = preload("res://scripts/world_jrpg/open_field_river.gdshader")
@@ -29,6 +32,33 @@ const BOW_REACH := 30.0
 ## Grass carpet and flower clusters bend in the wind. Off holds them still (and skips the
 ## wind math on the GPU); on restores the sway and the gust bands rolling over the meadow.
 @export var grass_sway := false
+## Streaming (see "Streaming tiles" and open_field_chunks.gd): the field is generated in
+## CHUNK tiles around the explorer instead of all at once.
+@export_group("Streaming")
+## Side (m) of the square field that is streamed and walkable. The designed landforms
+## fill the first SIZE (400) m; a larger field carries on into the hills, coast and sea
+## beyond them at full detail. Rounded up to whole FAR_STEP cells.
+@export var field_size := SIZE
+## Load distances (m from the explorer, from where it will be stream_lookahead seconds
+## ahead, and from the camera, to a tile's square) for the grass and flowers; the trees,
+## rocks and bushes; the 1 m terrain; the cached height / biome / water data; the tree
+## plan behind the far forest. The grass, bush and tree-LOD draw ranges end inside them,
+## so what is drawn matches the whole-field build. A tile is released only release_margin
+## beyond its load distance.
+@export var grass_radius := 96.0
+@export var detail_radius := 128.0
+@export var terrain_radius := 224.0
+@export var data_radius := 256.0
+@export var far_radius := 512.0
+@export var release_margin := 32.0
+@export var stream_lookahead := 1.2
+## Main-thread time per frame for turning finished tiles into nodes (at least one step).
+@export var stream_budget_ms := 3.0
+## Worker tasks generating tiles at once (0 = a quarter of the CPU threads, 1 to 4).
+@export var stream_jobs := 0
+## Everything within this distance of the explorer is loaded before play starts.
+@export var startup_radius := 128.0
+@export_group("")
 const LAKE := 10.0
 const LAKE_CENTER := Vector2(205, 150)
 const LAKE_RADIUS := Vector2(100, 64)
@@ -166,7 +196,8 @@ const SHOTS := {
 }
 
 var biome := Biomes.new()
-## Height without the visual micro relief; the source for gameplay and the battle grid.
+## Whole-map height without the visual micro relief (the castle city's dense mode; the
+## streamed field keeps it per tile); the source for gameplay and the battle grid.
 var gameplay_cache := PackedFloat32Array()
 var biome_debug_map: ImageTexture
 var biome_debug := false
@@ -178,12 +209,10 @@ var terrain_material: ShaderMaterial
 var lake_material: ShaderMaterial
 var sea_material: ShaderMaterial
 var river_material: ShaderMaterial
-## Baked rivers (see _build_rivers), and per grid point the distance to the nearest river
-## centerline and which river sample that is (river index << 16 | sample index).
+## Baked rivers (see _build_rivers).
 var rivers: Array[Dictionary] = []
-var river_dist := PackedFloat32Array()
-var river_ref := PackedInt32Array()
-## Water surface height per grid point: sea, lake or river level.
+## Whole-map water surface per grid point (the castle city's dense mode; the streamed field
+## keeps it per tile).
 var water_cache := PackedFloat32Array()
 ## The sea side of COAST, closed far out of sight; decides which side of the coast a point is.
 var sea_polygon := PackedVector2Array(COAST + [Vector2(130, 1600), Vector2(1800, 1600), Vector2(1800, -1200), Vector2(700, -1200)])
@@ -194,14 +223,66 @@ var conditions_key := -1
 var meshes: Dictionary = {}
 ## Visual vegetation as SRPG cover, per CELL_SIZE cell: "TREE" under a trunk (also an
 ## obstacle), "LIGHT" under a bush (walkable). Grass and flowers never affect the grid.
+## The streamed field keeps it per tile (see _cover_at).
 var cover_cells: Dictionary = {}
 var sparring_partner: Node3D
+## Streaming state: the field side in use, the tile streamer, the rivers and roads split
+## into per-tile buckets, the far terrain blocks and which tiles they leave out.
+var streamed := false
+var extent := SIZE
+var chunks: Chunks
+## The landmarks' obstacles are indexed, so tiles may place their trees (see _clear).
+var obstacles_ready := false
+## Per tile key, the river / road segment rows whose box reaches the tile's window.
+var river_buckets: Dictionary = {}
+var path_buckets: Dictionary = {}
+var far_blocks: Dictionary = {}
+## Tiles whose 1 m terrain / whose trees are attached: the far blocks leave them out.
+var far_excluded: Dictionary = {}
+var forest_excluded: Dictionary = {}
+## Tiles whose biome patch is in the shader maps.
+var patched: Dictionary = {}
+var terrain_root: Node3D
+var field_root: Node3D
+var meadow_root: Node3D
+var far_root: Node3D
+var biome_flush_wait := 0.0
+## The design tables flattened into packed rows for the per-point functions: worker
+## threads reading the nested constant arrays would all contend for the same reference
+## counts. Rows: MESAS (center, half extents, top), RAMPS (start, end, half width, mesa),
+## RIDGES (start, end, half width, crest), PEAKS (position, height, radius), WOODS (start,
+## end, radius), SIGHTLINES (from, to, half widths), PLAZAS (center, radius), FIELDS
+## (center, half extents), and the spots kept open (center, radius): CLEARINGS and SHOTS.
+var mesa_rows := _rows(MESAS)
+var ramp_rows := _rows(RAMPS)
+var ridge_rows := _rows(RIDGES)
+var peak_rows := _rows(PEAKS)
+var wood_rows := _rows(WOODS)
+var sightline_rows := _rows(SIGHTLINES)
+var plaza_rows := _rows(PLAZAS)
+var field_rows := _rows(FIELDS)
+var open_rows := _open_rows()
+## Rivers flattened for the carving: per sample (all rivers in a row) its river, half
+## width, water level, channel depth and ribbon fade; per river its first sample, valley
+## width and wall slope. Segment rows: box lo x, lo z, hi x, hi z, a, b, first and last
+## sample. Road segment rows: box lo x, lo z, hi x, hi z, a, b, half width.
+var river_of := PackedInt32Array()
+var river_width := PackedFloat32Array()
+var river_level := PackedFloat32Array()
+var river_depth := PackedFloat32Array()
+var river_fade := PackedFloat32Array()
+var river_first := PackedInt32Array()
+var river_valley := PackedFloat32Array()
+var river_slope := PackedFloat32Array()
+var river_rows := PackedFloat64Array()
+var path_rows := PackedFloat64Array()
 
 func _ready() -> void:
 	noise.seed = world_seed
 	noise.frequency = 0.025
 	noise.fractal_octaves = 3
-	_cache_heights()
+	var args := OS.get_cmdline_user_args()
+	_start_streaming(args)
 	_build_world()
 	_setup_view()
 	# The forest and town are draw-heavy: two shadow splits over a shorter reach, matched to
@@ -210,13 +291,13 @@ func _ready() -> void:
 	field_weather.sun.directional_shadow_max_distance = Vegetation.SHADOW_REACH
 	_setup_hud()
 	_spawn_characters()
+	_warm_around_player()
 	_focus_player()
 	# Look over the explorer's shoulder toward the lake castle.
 	yaw = -0.3
 	pitch = 0.3
 	distance = 16.0
 	_update_camera()
-	var args := OS.get_cmdline_user_args()
 	for arg in args:
 		if arg == "--view=overview": _preset(1)
 		if arg == "--view=village": _preset(2)
@@ -226,7 +307,9 @@ func _ready() -> void:
 		if arg.begins_with("--spawn="):
 			# --spawn=x,z puts the explorer there (e.g. to check wading in the shallows).
 			var at := arg.get_slice("=", 1).split_floats(",")
-			player.position = Vector3(at[0], _surface(at[0], at[1]) + 0.05, at[1])
+			player.position = Vector3(at[0], 0.0, at[1])
+			_warm_around_player()
+			player.position.y = _surface(at[0], at[1]) + 0.05
 			_focus_player()
 			_update_camera()
 		if arg == "--debug-biome": _set_biome_debug(true)
@@ -248,6 +331,8 @@ func _ready() -> void:
 		# (which would snap the camera back to it); only explore mode reads movement.
 		mode = "capture"
 		await get_tree().create_timer(2.0).timeout
+		# A capture shows the field as it settles: everything queued is in place first.
+		while chunks.pending() > 0: await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var capture_name := "hill"
 		var directory := "user://"
@@ -260,6 +345,69 @@ func _ready() -> void:
 		get_viewport().get_texture().get_image().save_png(directory.path_join("open_field_%s.png" % capture_name))
 		get_tree().quit()
 
+## Lays out the fixed rivers and roads and sets the streamer up. Command-line overrides:
+## --field-size=<m>, --stream=<grass>,<detail>,<terrain>,<data>,<far> (radii), --stream-margin=<m>,
+## --stream-jobs=<n>, --stream-budget=<ms>, --startup-radius=<m>.
+func _start_streaming(args: PackedStringArray) -> void:
+	var started := Time.get_ticks_msec()
+	for arg in args:
+		var value := arg.get_slice("=", 1)
+		if arg.begins_with("--field-size="): field_size = int(value)
+		if arg.begins_with("--stream="):
+			var radii := value.split_floats(",")
+			grass_radius = radii[0]
+			detail_radius = radii[1]
+			terrain_radius = radii[2]
+			data_radius = radii[3]
+			far_radius = radii[4]
+		if arg.begins_with("--stream-margin="): release_margin = float(value)
+		if arg.begins_with("--stream-jobs="): stream_jobs = int(value)
+		if arg.begins_with("--stream-budget="): stream_budget_ms = float(value)
+		if arg.begins_with("--startup-radius="): startup_radius = float(value)
+	streamed = true
+	extent = ceili(maxf(field_size, CHUNK) / FAR_STEP) * FAR_STEP
+	_build_paths()
+	_build_rivers()
+	biome.init_maps(extent)
+	chunks = Chunks.new(self, extent, CHUNK)
+	chunks.grass_radius = grass_radius
+	chunks.detail_radius = detail_radius
+	chunks.terrain_radius = terrain_radius
+	chunks.data_radius = data_radius
+	chunks.plan_radius = far_radius
+	chunks.release_margin = release_margin
+	chunks.lookahead = stream_lookahead
+	chunks.frame_budget_ms = stream_budget_ms
+	if stream_jobs > 0: chunks.max_jobs = stream_jobs
+	print("[JRPGWorld2] Streaming a %d m field in %d x %d tiles (grass %d / detail %d / terrain %d / data %d / far %d m, %d jobs); layout in %d ms" % [
+		extent, chunks.tiles_per_side, chunks.tiles_per_side, grass_radius, detail_radius, terrain_radius, data_radius, far_radius, chunks.max_jobs, Time.get_ticks_msec() - started])
+
+static func _rows(table: Array) -> PackedFloat32Array:
+	var rows := PackedFloat32Array()
+	for row: Array in table:
+		for value: Variant in row:
+			if value is Vector2: rows.append_array([value.x, value.y])
+			else: rows.append(float(value))
+	return rows
+
+static func _open_rows() -> PackedFloat32Array:
+	var rows := _rows(CLEARINGS)
+	# Named viewpoints (SHOTS) stand in small clearings so their vistas stay open.
+	for shot: Array in SHOTS.values():
+		var from: Vector3 = shot[0]
+		rows.append_array([from.x, from.z, 7.0])
+	return rows
+
+## Waits for every running tile task, so none outlives the world it reads.
+func _exit_tree() -> void:
+	if chunks: chunks.shutdown()
+
+## Loads every tile within startup_radius of the explorer before play goes on.
+func _warm_around_player() -> void:
+	var started := Time.get_ticks_msec()
+	chunks.warm(Vector2(player.position.x, player.position.z), startup_radius)
+	print("[JRPGWorld2] Tiles around the explorer ready in ", Time.get_ticks_msec() - started, " ms: ", chunks.stats())
+
 # --- Height field -----------------------------------------------------------
 
 func _expanded_height(x: float, z: float) -> float:
@@ -269,12 +417,12 @@ func _expanded_height(x: float, z: float) -> float:
 func _landform_height(x: float, z: float) -> float:
 	var p := Vector2(x, z)
 	var h := _base(p)
-	for i in MESAS.size():
+	for i in mesa_rows.size() / 5:
 		var m := _mesa_mask(p, i)
 		if m > 0.0:
-			h = maxf(h, lerpf(h, MESAS[i][2] + noise.get_noise_2d(x * 3.0, z * 3.0) * 0.6, m))
-	for ramp: Array in RAMPS:
-		h = _apply_ramp(p, h, ramp)
+			h = maxf(h, lerpf(h, mesa_rows[i * 5 + 4] + noise.get_noise_2d(x * 3.0, z * 3.0) * 0.6, m))
+	for i in ramp_rows.size() / 6:
+		h = _apply_ramp(p, h, i)
 	return h
 
 ## Ground with the lake carved out and the town slope laid in, before mesas and ramps.
@@ -299,8 +447,8 @@ func _town_height(p: Vector2) -> float:
 func _ground(p: Vector2) -> float:
 	var h := 16.0 + noise.get_noise_2d(p.x * 0.22, p.y * 0.22) * 5.0 + noise.get_noise_2d(p.x * 1.4 + 500.0, p.y * 1.4 - 300.0) * 1.2
 	h += SPAWN_HILL_RISE * _dome(p.distance_to(SPAWN_HILL) / SPAWN_HILL_RADIUS)
-	for ridge: Array in RIDGES:
-		h += _ridge(p, ridge)
+	for i in ridge_rows.size() / 6:
+		h += _ridge(p, i)
 	h += _plateau(p) * PLATEAU[2]
 	h -= 3.5 * _dome(p.distance_to(WETLAND) / 34.0)
 	# Forested foothills north of the lake, folded into east-west ridges.
@@ -350,14 +498,17 @@ func _rect_sdf(p: Vector2, center: Vector2, half: Vector2) -> float:
 
 ## A long rounded ridge whose crest tapers off toward both ends and is notched by
 ## ridged noise, so it reads as one landform with a broken skyline.
-func _ridge(p: Vector2, ridge: Array) -> float:
-	var t := _segment_t(p, ridge[0], ridge[1])
-	var d := p.distance_to((ridge[0] as Vector2).lerp(ridge[1], t))
-	var half: float = ridge[2]
+func _ridge(p: Vector2, index: int) -> float:
+	var k := index * 6
+	var a := Vector2(ridge_rows[k], ridge_rows[k + 1])
+	var b := Vector2(ridge_rows[k + 2], ridge_rows[k + 3])
+	var t := _segment_t(p, a, b)
+	var d := p.distance_to(a.lerp(b, t))
+	var half := ridge_rows[k + 4]
 	if d >= half: return 0.0
 	var taper := smoothstep(0.0, 0.3, t) * (1.0 - smoothstep(0.7, 1.0, t))
 	var notch := 0.85 + 0.3 * (1.0 - absf(noise.get_noise_2d(p.x * 0.8 + 200.0, p.y * 0.8)))
-	return ridge[3] * taper * notch * _dome(d / half)
+	return ridge_rows[k + 5] * taper * notch * _dome(d / half)
 
 ## 0..1 plateau mask: a flat top whose escarpment edge wanders with noise.
 func _plateau(p: Vector2) -> float:
@@ -370,48 +521,18 @@ func _plateau(p: Vector2) -> float:
 ## by ridged noise, so the far skyline has a recognizable silhouette.
 func _peaks(p: Vector2) -> float:
 	var m := 0.0
-	for peak: Array in PEAKS:
-		var t: float = 1.0 - p.distance_to(peak[0]) / peak[2]
-		if t > 0.0: m = maxf(m, peak[1] * pow(t, 1.25))
+	for k in range(0, peak_rows.size(), 4):
+		var t := 1.0 - p.distance_to(Vector2(peak_rows[k], peak_rows[k + 1])) / peak_rows[k + 3]
+		if t > 0.0: m = maxf(m, peak_rows[k + 2] * pow(t, 1.25))
 	if m <= 0.0: return 0.0
 	var crag := 1.0 - absf(noise.get_noise_2d(p.x * 0.45 + 40.0, p.y * 0.45 - 90.0))
 	return m * (0.8 + 0.32 * crag)
 
-## Visual-only micro relief (about ±0.05–0.18 m), scaled by the biome's ground roughness
-## and calmed on roads, plazas and fields. It never reaches the gameplay height.
-func _micro(x: float, z: float) -> float:
-	var p := Vector2(x, z)
-	var calm := (1.0 - _plaza_weight(p)) * smoothstep(-0.5, 2.0, _path_distance(x, z)) * (1.0 - _field_weight(p) * 0.8)
-	if calm <= 0.0: return 0.0
-	var amplitude := biome.param_smooth(Biomes.Param.GROUND_ROUGHNESS, x, z) * MICRO_RELIEF * calm
-	return (noise.get_noise_2d(x * 7.0 + 1300.0, z * 7.0 - 800.0) * 1.5 + noise.get_noise_2d(x * 19.0, z * 19.0 + 77.0) * 0.5) * amplitude
-
-## Gameplay heights first, then biomes (which read them), then the visual heights that
-## the terrain mesh, props and the explorer stand on.
-func _cache_heights() -> void:
-	var started := Time.get_ticks_msec()
-	_build_paths()
-	_build_rivers()
-	var row := SIZE + 2
-	gameplay_cache.resize(row * row)
-	for z in range(-1, SIZE + 1):
-		for x in range(-1, SIZE + 1):
-			gameplay_cache[(z + 1) * row + x + 1] = _expanded_height(x, z)
-	_bake_water()
-	biome.bake(SIZE, _biome_signals)
-	height_cache.resize(row * row)
-	for z in range(-1, SIZE + 1):
-		for x in range(-1, SIZE + 1):
-			var i := (z + 1) * row + x + 1
-			var inside := x >= 0 and z >= 0 and x <= SIZE and z <= SIZE
-			height_cache[i] = gameplay_cache[i] + (_micro(x, z) if inside else 0.0)
-	print("[JRPGWorld2] Heights and biomes baked in ", Time.get_ticks_msec() - started, " ms")
-
 ## Landform signals for the biome system (see Biomes.Landform). Noise warps every boundary
 ## so no biome edge runs straight.
-func _biome_signals(x: float, z: float) -> PackedFloat32Array:
+## `h` is the gameplay height at the point.
+func _biome_signals(x: float, z: float, h: float) -> PackedFloat32Array:
 	var p := Vector2(x, z)
-	var h := get_gameplay_height(x, z)
 	var warp := noise.get_noise_2d(x * 1.6 + 611.0, z * 1.6 - 207.0) + noise.get_noise_2d(x * 4.0 - 90.0, z * 4.0 + 33.0) * 0.35
 	var s := PackedFloat32Array()
 	s.resize(Biomes.LANDFORM_COUNT)
@@ -427,9 +548,10 @@ func _biome_signals(x: float, z: float) -> PackedFloat32Array:
 	s[Biomes.Landform.WETLAND] = 1.0 - smoothstep(22.0, 36.0, p.distance_to(WETLAND) + warp * 8.0)
 	s[Biomes.Landform.MOUNTAIN] = smoothstep(44.0, 58.0, h + warp * 8.0)
 	var forest := 0.0
-	for wood: Array in WOODS:
-		var radius: float = wood[2]
-		forest = maxf(forest, 1.0 - smoothstep(radius * 0.55, radius, _segment_distance(p, wood[0], wood[1]) + warp * 14.0))
+	for k in range(0, wood_rows.size(), 5):
+		var radius := wood_rows[k + 4]
+		var d := _segment_distance(p, Vector2(wood_rows[k], wood_rows[k + 1]), Vector2(wood_rows[k + 2], wood_rows[k + 3]))
+		forest = maxf(forest, 1.0 - smoothstep(radius * 0.55, radius, d + warp * 14.0))
 	s[Biomes.Landform.FOREST] = forest
 	s[Biomes.Landform.DEEP] = 1.0 - smoothstep(10.0, 30.0, _segment_distance(p, DEEP_CORE[0], DEEP_CORE[1]) + warp * 10.0)
 	s[Biomes.Landform.HIGHLAND] = maxf(_plateau(p), smoothstep(38.0, 48.0, h + warp * 6.0))
@@ -438,12 +560,12 @@ func _biome_signals(x: float, z: float) -> PackedFloat32Array:
 ## 0..1: how far inside a designed view corridor (SIGHTLINES) this point is.
 func _sightline_mask(p: Vector2) -> float:
 	var mask := 0.0
-	for line: Array in SIGHTLINES:
-		var a: Vector2 = line[0]
-		var b: Vector2 = line[1]
+	for k in range(0, sightline_rows.size(), 6):
+		var a := Vector2(sightline_rows[k], sightline_rows[k + 1])
+		var b := Vector2(sightline_rows[k + 2], sightline_rows[k + 3])
 		var t := (p - a).dot(b - a) / (b - a).length_squared()
 		if t < 0.0 or t > 1.0: continue
-		var width := lerpf(line[2], line[3], t)
+		var width := lerpf(sightline_rows[k + 4], sightline_rows[k + 5], t)
 		mask = maxf(mask, 1.0 - smoothstep(width * 0.6, width, p.distance_to(a.lerp(b, t))))
 	return mask
 
@@ -457,8 +579,12 @@ func _density_rhythm(p: Vector2) -> float:
 # Gameplay height = macro + meso terrain; visual height = gameplay + micro relief.
 # A future battle grid reads gameplay heights in 1 m cells (CELL_SIZE) and can snap
 # them to logical steps (HEIGHT_STEP); exploration keeps using the smooth visual surface.
+# Every query loads the tile it reads first if the streamer has not (see _data_tile).
 
 func get_gameplay_height(x: float, z: float) -> float:
+	if streamed:
+		if x < -1.0 or z < -1.0 or x >= extent or z >= extent: return _expanded_height(x, z)
+		return _t_gameplay(_data_tile(x, z), x, z)
 	if gameplay_cache.is_empty() or x < -1.0 or z < -1.0 or x >= SIZE or z >= SIZE:
 		return _expanded_height(x, z)
 	var ix := floori(x)
@@ -477,10 +603,12 @@ func get_logical_height(x: float, z: float) -> float:
 	return snappedf(get_gameplay_height(x, z), HEIGHT_STEP)
 
 func get_biome_at(x: float, z: float) -> int:
+	if streamed: return (_data_tile(x, z).biome as Biomes.Patch).biome_at(x, z)
 	return biome.biome_at(x, z)
 
 ## {Biome: weight} at this point, e.g. {PLAINS: 0.65, FOREST: 0.35}.
 func get_biome_weights(x: float, z: float) -> Dictionary:
+	if streamed: return (_data_tile(x, z).biome as Biomes.Patch).weights_at(x, z)
 	return biome.weights_at(x, z)
 
 ## Gradient (rise / run) of the gameplay height, free of micro relief.
@@ -490,11 +618,14 @@ func get_slope_at(x: float, z: float) -> float:
 ## Static walkability with the same limits as _can_walk: map bounds, water deeper than
 ## the waist, cliff steepness and building/tree/rock obstacles.
 func is_walkable_at(x: float, z: float) -> bool:
-	if x < 2 or z < 2 or x >= SIZE - 2 or z >= SIZE - 2: return false
+	if x < 2 or z < 2 or x >= extent - 2 or z >= extent - 2: return false
 	if _water_depth(x, z) > WADE_DEPTH or _slope(x, z) > 1.05: return false
-	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(x / CHUNK), floori(z / CHUNK)), []):
-		if rect.has_point(Vector2(x, z)): return false
-	return true
+	if streamed:
+		var key := chunks.key_at(x, z)
+		for dz in range(-1, 2):
+			for dx in range(-1, 2):
+				if chunks.in_field(key + Vector2i(dx, dz)): chunks.ensure_plan(key + Vector2i(dx, dz))
+	return not _obstacle_at(Vector2(x, z))
 
 func world_position_to_cell(p: Vector3) -> Vector2i:
 	return Vector2i(floori(p.x / CELL_SIZE), floori(p.z / CELL_SIZE))
@@ -512,27 +643,42 @@ func get_cell_info(cell: Vector2i) -> Dictionary:
 		"coord": cell, "world_position": center,
 		"height": get_gameplay_height(center.x, center.z), "logical_height": get_logical_height(center.x, center.z),
 		"biome": get_biome_at(center.x, center.z), "slope": get_slope_at(center.x, center.z),
-		"walkable": is_walkable_at(center.x, center.z), "cover": cover_cells.get(cell, "NONE"),
+		"walkable": is_walkable_at(center.x, center.z), "cover": _cover_at(cell),
 		"water_depth": maxf(_water_depth(center.x, center.z), 0.0),
 	}
 
+## SRPG cover in a cell: "TREE" under a trunk, "LIGHT" under a bush, else "NONE".
+func _cover_at(cell: Vector2i) -> String:
+	if not streamed: return cover_cells.get(cell, "NONE")
+	var t := chunks.ensure_bushes(chunks.key_at((cell.x + 0.5) * CELL_SIZE, (cell.y + 0.5) * CELL_SIZE))
+	return t.cover.get(cell, t.bush_cover.get(cell, "NONE"))
+
+## Keeps every tile overlapping `rect` (world XZ) at full detail and never releases it
+## until release_battle_area(id): a battle field stays put while units move over it.
+func pin_battle_area(rect: Rect2) -> int:
+	return chunks.pin_rect(rect)
+
+func release_battle_area(id: int) -> void:
+	chunks.unpin(id)
+
 ## 1 on the mesa top, 0 outside, across a ~4 m cliff band with a wobbly outline.
 func _mesa_mask(p: Vector2, index: int) -> float:
-	var mesa: Array = MESAS[index]
-	var q: Vector2 = (p - mesa[0]).abs() - mesa[1] + Vector2(14, 14)
+	var k := index * 5
+	var q := (p - Vector2(mesa_rows[k], mesa_rows[k + 1])).abs() - Vector2(mesa_rows[k + 2], mesa_rows[k + 3]) + Vector2(14, 14)
 	var sdf := Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - 14.0
 	if sdf > 9.0: return 0.0
 	sdf += noise.get_noise_2d(p.x * 2.2 + index * 300.0, p.y * 2.2) * 6.0
 	return 1.0 - smoothstep(-2.0, 2.0, sdf)
 
-func _apply_ramp(p: Vector2, h: float, ramp: Array) -> float:
-	var a: Vector2 = ramp[0]
-	var ab: Vector2 = ramp[1] - a
-	var width: float = ramp[2]
+func _apply_ramp(p: Vector2, h: float, index: int) -> float:
+	var k := index * 6
+	var a := Vector2(ramp_rows[k], ramp_rows[k + 1])
+	var ab := Vector2(ramp_rows[k + 2], ramp_rows[k + 3]) - a
+	var width := ramp_rows[k + 4]
 	var t := clampf((p - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
 	var d := p.distance_to(a + ab * t)
 	if d > width + 5.0: return h
-	var ramp_height := lerpf(_base(a), MESAS[ramp[3]][2], smoothstep(0.0, 1.0, t))
+	var ramp_height := lerpf(_base(a), mesa_rows[int(ramp_rows[k + 5]) * 5 + 4], smoothstep(0.0, 1.0, t))
 	return lerpf(h, ramp_height, 1.0 - smoothstep(width, width + 5.0, d))
 
 ## Elliptical lake distance: < 1 is open water, the shore lies around 1.0-1.3.
@@ -550,7 +696,7 @@ func _apply_lake(p: Vector2, h: float) -> float:
 ## minimum of the banks below the source, snapped down to whole fall steps, so every reach
 ## sits a little below its banks and drops to the next one in a waterfall. A ford (shallow
 ## across the whole bed) sits in the middle of the longest reach. The samples are then
-## rasterized into river_dist / river_ref for the valley carving.
+## split into segments for the valley carving (_index_rivers).
 func _build_rivers() -> void:
 	for spec: Array in RIVERS:
 		var points := _resample(_smooth(spec[0]), 1.0)
@@ -599,29 +745,50 @@ func _build_rivers() -> void:
 		for i in range(1, count):
 			if levels[i] < levels[i - 1]: falls += 1
 		print("[JRPGWorld2] River ", spec[7], ": ", count, " m, ", falls, " falls, ", levels[0], " m -> ", levels[count - 1], " m, ford at ", str(points[int(ford)]) if ford >= 0.0 else "none")
-	river_dist.resize((SIZE + 1) * (SIZE + 1))
-	river_dist.fill(INF)
-	river_ref.resize((SIZE + 1) * (SIZE + 1))
-	river_ref.fill(-1)
+	_index_rivers()
+
+## Flattens the rivers (see river_of) and splits them into the two-sample segments the
+## carving measures from, each with the box of grid points it may claim (the reach of its
+## channel and valley), bucketed per tile.
+func _index_rivers() -> void:
 	for r in rivers.size():
 		var river := rivers[r]
 		var points: Array = river.points
 		var widths: PackedFloat32Array = river.widths
 		var valley: float = river.valley
+		var first := river_of.size()
+		river_first.append(first)
+		river_valley.append(valley)
+		river_slope.append(river.slope)
+		for i in points.size():
+			river_of.append(r)
+			river_width.append(widths[i])
+			river_level.append((river.levels as PackedFloat32Array)[i])
+			river_depth.append((river.depths as PackedFloat32Array)[i])
+			river_fade.append((river.fades as PackedFloat32Array)[i])
 		for i in range(0, points.size() - 1, 2):
 			var j := mini(i + 2, points.size() - 1)
 			var a: Vector2 = points[i]
 			var b: Vector2 = points[j]
 			var reach := widths[i] + valley + 1.0
-			for z in range(maxi(0, floori(minf(a.y, b.y) - reach)), mini(SIZE, ceili(maxf(a.y, b.y) + reach)) + 1):
-				for x in range(maxi(0, floori(minf(a.x, b.x) - reach)), mini(SIZE, ceili(maxf(a.x, b.x) + reach)) + 1):
-					var p := Vector2(x, z)
-					var t := _segment_t(p, a, b)
-					var d := p.distance_to(a.lerp(b, t))
-					var k := z * (SIZE + 1) + x
-					if d < river_dist[k]:
-						river_dist[k] = d
-						river_ref[k] = (r << 16) | (i + roundi(t * (j - i)))
+			var lo := Vector2i(maxi(0, floori(minf(a.x, b.x) - reach)), maxi(0, floori(minf(a.y, b.y) - reach)))
+			var hi := Vector2i(mini(extent, ceili(maxf(a.x, b.x) + reach)), mini(extent, ceili(maxf(a.y, b.y) + reach)))
+			_bucket(river_buckets, river_rows.size() / RIVER_ROW, lo, hi)
+			river_rows.append_array([lo.x, lo.y, hi.x, hi.y, a.x, a.y, b.x, b.y, first + i, first + j])
+
+## Files segment `index` under every tile whose window (the tile plus APRON) its box
+## (lo..hi) reaches, so a tile finds every segment for its points in its own bucket.
+func _bucket(buckets: Dictionary, index: int, lo: Vector2i, hi: Vector2i) -> void:
+	for kz in range(ceili((lo.y - CHUNK - APRON) / float(CHUNK)), floori((hi.y + APRON) / float(CHUNK)) + 1):
+		for kx in range(ceili((lo.x - CHUNK - APRON) / float(CHUNK)), floori((hi.x + APRON) / float(CHUNK)) + 1):
+			var key := Vector2i(kx, kz)
+			if not buckets.has(key): buckets[key] = PackedInt32Array()
+			var list: PackedInt32Array = buckets[key]
+			list.append(index)
+			buckets[key] = list
+
+func _bucket_at(buckets: Dictionary, x: int, z: int) -> PackedInt32Array:
+	return buckets.get(Vector2i(floori(x / float(CHUNK)), floori(z / float(CHUNK))), PackedInt32Array())
 
 ## Unit vector across the river at sample i.
 func _river_side(points: Array, i: int) -> Vector2:
@@ -643,46 +810,70 @@ func _resample(points: Array, spacing: float) -> Array:
 		carry = length - (t - spacing)
 	return out
 
-## The river sample nearest a grid point and its distance, or [] away from rivers.
+## The river sample nearest the grid point (x, z) and its distance as (sample, distance),
+## sample -1 away from rivers: of the segments in `bucket` whose box holds the point, the
+## first (in river and sample order) at the smallest distance. A pure function of the
+## point; `bucket` is any tile bucket whose window holds it (see _bucket).
+func _river_hit(x: int, z: int, bucket: PackedInt32Array) -> Vector2:
+	if not streamed or x < 0 or z < 0 or x > extent or z > extent: return Vector2(-1, INF)
+	var best := INF
+	var sample := -1
+	var p := Vector2(x, z)
+	for s in bucket:
+		var k := s * RIVER_ROW
+		if x < river_rows[k] or z < river_rows[k + 1] or x > river_rows[k + 2] or z > river_rows[k + 3]: continue
+		var a := Vector2(river_rows[k + 4], river_rows[k + 5])
+		var b := Vector2(river_rows[k + 6], river_rows[k + 7])
+		var t := _segment_t(p, a, b)
+		var d := p.distance_to(a.lerp(b, t))
+		if d < best:
+			best = d
+			sample = int(river_rows[k + 8]) + roundi(t * (river_rows[k + 9] - river_rows[k + 8]))
+	return Vector2(sample, best)
+
+## The river sample nearest the grid point at (x, z) as [river, sample, distance], or []
+## away from rivers.
 func _river_at(x: float, z: float) -> Array:
-	if river_ref.is_empty() or x < 0.0 or z < 0.0 or x > SIZE or z > SIZE: return []
-	var k := clampi(roundi(z), 0, SIZE) * (SIZE + 1) + clampi(roundi(x), 0, SIZE)
-	var ref := river_ref[k]
-	if ref < 0: return []
-	return [rivers[ref >> 16], ref & 0xffff, river_dist[k]]
+	var hit := _river_hit(roundi(x), roundi(z), _bucket_at(river_buckets, roundi(x), roundi(z)))
+	if hit.x < 0.0: return []
+	var r := river_of[int(hit.x)]
+	return [rivers[r], int(hit.x) - river_first[r], hit.y]
 
 ## Cuts the channel (a deep middle, wadeable margins) and its valley walls.
 func _apply_river(p: Vector2, h: float) -> float:
-	var hit := _river_at(p.x, p.y)
-	if hit.is_empty(): return h
-	var river: Dictionary = hit[0]
-	var i: int = hit[1]
-	var d: float = hit[2]
-	var width: float = (river.widths as PackedFloat32Array)[i]
-	var valley: float = river.valley
+	var x := roundi(p.x)
+	var z := roundi(p.y)
+	return _carve_river(h, _river_hit(x, z, _bucket_at(river_buckets, x, z)))
+
+## _apply_river with the river lookup (_river_hit) already made.
+func _carve_river(h: float, hit: Vector2) -> float:
+	if hit.x < 0.0: return h
+	var s := int(hit.x)
+	var d := hit.y
+	var width := river_width[s]
+	var valley := river_valley[river_of[s]]
 	if d > width + valley: return h
-	var level: float = (river.levels as PackedFloat32Array)[i]
+	var level := river_level[s]
 	var target: float
 	if d < width:
-		target = level - 0.2 - ((river.depths as PackedFloat32Array)[i] - 0.2) * (1.0 - smoothstep(width * 0.2, width, d))
+		target = level - 0.2 - (river_depth[s] - 0.2) * (1.0 - smoothstep(width * 0.2, width, d))
 	else:
-		target = level - 0.2 + (d - width) * float(river.slope)
+		target = level - 0.2 + (d - width) * river_slope[river_of[s]]
 	return lerpf(minf(h, target), h, smoothstep(width + valley * 0.6, width + valley, d))
 
-## Water surface per grid point: the sea everywhere low, the lake in its basin, rivers in
-## their channels.
-func _bake_water() -> void:
-	water_cache.resize((SIZE + 1) * (SIZE + 1))
-	for z in SIZE + 1:
-		for x in SIZE + 1:
-			var level := SEA
-			if _lake_e(Vector2(x, z)) < 1.45: level = LAKE
-			var hit := _river_at(x, z)
-			if not hit.is_empty() and float(hit[2]) < (hit[0].widths as PackedFloat32Array)[hit[1]] + 2.0:
-				level = maxf(level, (hit[0].levels as PackedFloat32Array)[hit[1]])
-			water_cache[z * (SIZE + 1) + x] = level
+## Water surface at a grid point: the sea everywhere low, the lake in its basin, rivers in
+## their channels. `hit` is _river_hit at the same point.
+func _water_from(x: int, z: int, hit: Vector2) -> float:
+	var level := SEA
+	if _lake_e(Vector2(x, z)) < 1.45: level = LAKE
+	if hit.x >= 0.0 and hit.y < river_width[int(hit.x)] + 2.0:
+		level = maxf(level, river_level[int(hit.x)])
+	return level
 
 func _water_level(x: float, z: float) -> float:
+	if streamed:
+		if x < 0.0 or z < 0.0 or x > extent or z > extent: return SEA
+		return _t_water_level(_data_tile(x, z), x, z)
 	if water_cache.is_empty() or x < 0.0 or z < 0.0 or x > SIZE or z > SIZE: return SEA
 	return water_cache[clampi(roundi(z), 0, SIZE) * (SIZE + 1) + clampi(roundi(x), 0, SIZE)]
 
@@ -692,6 +883,9 @@ func _water_depth(x: float, z: float) -> float:
 
 ## Smooth bilinear lookup of the cached height field.
 func _height(x: float, z: float) -> float:
+	if streamed:
+		if x < -1.0 or z < -1.0 or x >= extent or z >= extent: return _expanded_height(x, z)
+		return _t_height(_data_tile(x, z), x, z)
 	if height_cache.is_empty() or x < -1.0 or z < -1.0 or x >= SIZE or z >= SIZE:
 		return _expanded_height(x, z)
 	var ix := floori(x)
@@ -701,6 +895,14 @@ func _height(x: float, z: float) -> float:
 	var fx := x - ix
 	var top := lerpf(height_cache[i], height_cache[i + 1], fx)
 	return lerpf(top, lerpf(height_cache[i + row], height_cache[i + row + 1], fx), z - iz)
+
+## A height for the camera clearance: exact where the tile is cached, the gameplay height
+## elsewhere, never loading a tile for it.
+func _height_estimate(x: float, z: float) -> float:
+	if not streamed: return _height(x, z)
+	var t: Chunks.Tile = chunks.tiles.get(chunks.key_at(x, z))
+	if t != null and t.has_data and x >= -1.0 and z >= -1.0 and x < extent and z < extent: return _t_height(t, x, z)
+	return _expanded_height(x, z)
 
 func _surface(x: float, z: float) -> float:
 	return _height(x, z)
@@ -713,28 +915,45 @@ func _ground_normal(x: float, z: float) -> Vector3:
 	return Vector3(_height(x - 0.5, z) - _height(x + 0.5, z), 1.0, _height(x, z - 0.5) - _height(x, z + 0.5)).normalized()
 
 func _cached(ix: int, iz: int) -> float:
+	if streamed:
+		if ix < -1 or iz < -1 or ix > extent or iz > extent: return _expanded_height(ix, iz)
+		var t := _data_tile(ix, iz)
+		return t.vh[_t_index(t, ix, iz)]
 	if ix < -1 or iz < -1 or ix > SIZE or iz > SIZE: return _expanded_height(ix, iz)
 	return height_cache[(iz + 1) * (SIZE + 2) + ix + 1]
 
 func _can_walk(p: Vector3, from: Vector3) -> bool:
-	if p.x < 2 or p.z < 2 or p.x >= SIZE - 2 or p.z >= SIZE - 2: return false
+	if p.x < 2 or p.z < 2 or p.x >= extent - 2 or p.z >= extent - 2: return false
+	if streamed and not chunks.walk_ready(p.x, p.z):
+		# Never onto ground whose heights or obstacles are not generated yet: the streamer
+		# puts the nearest tiles first, so the explorer waits at most a moment at the edge.
+		chunks.counters.stalls += 1
+		return false
 	var h := _surface(p.x, p.z)
 	# Shallows are wadeable up to the waist; deeper water blocks.
 	if _water_level(p.x, p.z) - h > WADE_DEPTH: return false
 	var run := Vector2(p.x - from.x, p.z - from.z).length()
 	# Cliffs and steep mountainsides block; ordinary hills are freely walkable.
 	if run > 0.0001 and absf(h - _surface(from.x, from.z)) / run > 1.05: return false
-	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(p.x / CHUNK), floori(p.z / CHUNK)), []):
-		if rect.has_point(Vector2(p.x, p.z)): return false
+	if _obstacle_at(Vector2(p.x, p.z)): return false
 	for npc in npcs:
 		if p.distance_to(npc.actor.position) < 0.7: return false
 	return true
 
+## Building, wall, trunk and boulder bounds at p.
+func _obstacle_at(p: Vector2) -> bool:
+	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(p.x / CHUNK), floori(p.y / CHUNK)), []):
+		if rect.has_point(p): return true
+	if streamed:
+		for rect in chunks.rects_near(p.x, p.y):
+			if rect.has_point(p): return true
+	return false
+
 # --- Roads ------------------------------------------------------------------
 
+## Smooths the roads and splits them into segments, each with the box of grid points whose
+## road distance it may lower (6 m around it), bucketed per tile for _path_query.
 func _build_paths() -> void:
-	path_field.resize((SIZE + 1) * (SIZE + 1))
-	path_field.fill(50.0)
 	for path: Array in PATHS:
 		var half: float = path[0]
 		var dense := _smooth(path[1])
@@ -744,13 +963,10 @@ func _build_paths() -> void:
 			var b: Vector2 = dense[i + 1]
 			var lo := Vector2(minf(a.x, b.x), minf(a.y, b.y)) - Vector2(6, 6)
 			var hi := Vector2(maxf(a.x, b.x), maxf(a.y, b.y)) + Vector2(6, 6)
-			for z in range(maxi(0, floori(lo.y)), mini(SIZE, ceili(hi.y)) + 1):
-				for x in range(maxi(0, floori(lo.x)), mini(SIZE, ceili(hi.x)) + 1):
-					var p := Vector2(x, z)
-					var ab := b - a
-					var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
-					var index := z * (SIZE + 1) + x
-					path_field[index] = minf(path_field[index], p.distance_to(a + ab * t) - half)
+			var box_lo := Vector2i(maxi(0, floori(lo.x)), maxi(0, floori(lo.y)))
+			var box_hi := Vector2i(mini(extent, ceili(hi.x)), mini(extent, ceili(hi.y)))
+			_bucket(path_buckets, path_rows.size() / PATH_ROW, box_lo, box_hi)
+			path_rows.append_array([box_lo.x, box_lo.y, box_hi.x, box_hi.y, a.x, a.y, b.x, b.y, half])
 
 func _smooth(points: Array) -> Array:
 	var dense: Array = []
@@ -766,47 +982,68 @@ func _smooth(points: Array) -> Array:
 	dense.append(points[-1])
 	return dense
 
+## Signed distance from a grid point to the nearest road edge (negative on the road);
+## 50 m wherever no road segment reaches. `bucket` as for _river_hit.
+func _path_query(x: int, z: int, bucket: PackedInt32Array) -> float:
+	var best := 50.0
+	var p := Vector2(x, z)
+	for s in bucket:
+		var k := s * PATH_ROW
+		if x < path_rows[k] or z < path_rows[k + 1] or x > path_rows[k + 2] or z > path_rows[k + 3]: continue
+		var a := Vector2(path_rows[k + 4], path_rows[k + 5])
+		var ab := Vector2(path_rows[k + 6], path_rows[k + 7]) - a
+		var t := clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		best = minf(best, p.distance_to(a + ab * t) - path_rows[k + 8])
+	return best
+
 ## Signed distance to the nearest road edge (negative on the road).
 func _path_distance(x: float, z: float) -> float:
+	if streamed: return _t_path(_data_tile(x, z), x, z)
 	var ix := clampi(roundi(x), 0, SIZE)
 	var iz := clampi(roundi(z), 0, SIZE)
 	return path_field[iz * (SIZE + 1) + ix]
 
 func _plaza_weight(p: Vector2) -> float:
 	var weight := 0.0
-	for plaza: Array in PLAZAS:
-		var r: float = plaza[1]
-		if p.distance_to(plaza[0]) > r + 4.0: continue
-		var d := p.distance_to(plaza[0]) + noise.get_noise_2d(p.x * 4.0, p.y * 4.0) * 2.0
+	for k in range(0, plaza_rows.size(), 3):
+		var center := Vector2(plaza_rows[k], plaza_rows[k + 1])
+		var r := plaza_rows[k + 2]
+		if p.distance_to(center) > r + 4.0: continue
+		var d := p.distance_to(center) + noise.get_noise_2d(p.x * 4.0, p.y * 4.0) * 2.0
 		weight = maxf(weight, 1.0 - smoothstep(r - 1.5, r + 1.0, d))
 	return weight
 
 func _field_weight(p: Vector2) -> float:
 	var weight := 0.0
-	for field: Array in FIELDS:
-		var q: Vector2 = (p - field[0]).abs() - field[1]
+	for k in range(0, field_rows.size(), 4):
+		var q := (p - Vector2(field_rows[k], field_rows[k + 1])).abs() - Vector2(field_rows[k + 2], field_rows[k + 3])
 		weight = maxf(weight, 1.0 - smoothstep(-0.8, 0.6, maxf(q.x, q.y)))
 	return weight
 
-func _clear(p: Vector2, margin := 0.0) -> bool:
-	for zone: Array in CLEARINGS:
-		if p.distance_to(zone[0]) < zone[1] + margin: return true
-	# Named viewpoints (SHOTS) stand in small clearings so their vistas stay open.
-	for shot: Array in SHOTS.values():
-		var from: Vector3 = shot[0]
-		if p.distance_to(Vector2(from.x, from.z)) < 7.0 + margin: return true
-	for rect: Rect2 in obstacle_chunks.get(Vector2i(floori(p.x / CHUNK), floori(p.y / CHUNK)), []):
+## Ground kept open: clearings and viewpoints (open_rows), and a metre around `rects`
+## (the landmarks' obstacles of p's tile, and for bushes the trunks around it).
+func _clear(p: Vector2, rects: Array, margin := 0.0) -> bool:
+	for k in range(0, open_rows.size(), 3):
+		if p.distance_to(Vector2(open_rows[k], open_rows[k + 1])) < open_rows[k + 2] + margin: return true
+	for rect: Rect2 in rects:
 		if rect.grow(1.0 + margin).has_point(p): return true
 	return false
 
 # --- World ------------------------------------------------------------------
 
+## Areas whose landmarks are built on the visual heights at start-up: castle, town, farms
+## and roadside; the windmill village; the ruins. Their tiles load first, in parallel.
+const LANDMARK_AREAS := [Rect2(140, 100, 125, 215), Rect2(285, 225, 80, 65), Rect2(40, 195, 65, 50)]
+
+## The fixed world: far terrain, water, landmarks, cliffs and labels. Terrain detail,
+## trees, bushes and grass stream in per tile (see "Streaming tiles").
 func _build_world() -> void:
 	var started := Time.get_ticks_msec()
 	terrain_material = ShaderMaterial.new()
 	terrain_material.shader = TERRAIN_SHADER
 	lamp_material = Props.flat(Color("ffd58a"), 0.5, Color("ffb54d"))
-	_build_terrain()
+	chunks.prefetch(_landmark_tiles())
+	var prefetched := Time.get_ticks_msec()
 	_build_far_terrain()
 	_build_lake()
 	_build_sea()
@@ -820,73 +1057,122 @@ func _build_world() -> void:
 	_build_ruins(landmarks)
 	_build_roadside(landmarks)
 	_index_obstacles()
+	# Trees and bushes keep clear of the landmarks' obstacles, so they wait for them.
+	obstacles_ready = true
 	_build_cliffs()
-	_build_trees_and_rocks()
-	_index_obstacles()
-	_build_bushes()
-	_build_grass()
+	terrain_root = Node3D.new()
+	terrain_root.name = "Terrain"
+	add_child(terrain_root)
+	field_root = Node3D.new()
+	field_root.name = "Field"
+	add_child(field_root)
+	meadow_root = Node3D.new()
+	meadow_root.name = "Meadow"
+	add_child(meadow_root)
 	_build_labels(landmarks)
 	_apply_biome_maps()
-	print("[JRPGWorld2] Built ", SIZE, " x ", SIZE, " open field in ", Time.get_ticks_msec() - started, " ms; seed=", world_seed)
+	_preload_vegetation()
+	print("[JRPGWorld2] Built the fixed world in ", Time.get_ticks_msec() - started, " ms (landmark tiles ", prefetched - started, " ms); seed=", world_seed)
 
-func _build_terrain() -> void:
-	var root := Node3D.new()
-	root.name = "Terrain"
-	add_child(root)
-	for cz in range(0, SIZE, CHUNK):
-		for cx in range(0, SIZE, CHUNK):
-			var x1 := mini(cx + CHUNK, SIZE)
-			var z1 := mini(cz + CHUNK, SIZE)
-			var vertices := PackedVector3Array()
-			var normals := PackedVector3Array()
-			var colors := PackedColorArray()
-			var uvs := PackedVector2Array()
-			for z in range(cz, z1 + 1):
-				for x in range(cx, x1 + 1):
-					var h := _cached(x, z)
-					vertices.append(Vector3(x, h, z))
-					var normal := Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1))
-					normals.append(normal.normalized())
-					# Height above the local water (sea, lake or river): sand and pebbles along
-					# every shore and riverbed, but bare rock on falls and sea cliffs.
-					var above := h - water_cache[z * (SIZE + 1) + x]
-					var road := 1.0 - smoothstep(-0.4, 1.0, _path_distance(x, z) + noise.get_noise_2d(x * 5.0, z * 5.0) * 0.8)
-					var shore := biome.weight(Biomes.Biome.LAKESHORE, x, z) * (1.0 - smoothstep(1.2, 3.0, above)) * 0.85
-					var steep := smoothstep(1.4, 2.4, Vector2(normal.x, normal.z).length())
-					var sand := maxf(1.0 - smoothstep(0.4, 1.6, above), shore) * (1.0 - road) * (1.0 - steep)
-					colors.append(Color(road, sand, _plaza_weight(Vector2(x, z)), _field_weight(Vector2(x, z)) * (1.0 - road)))
-					uvs.append(Vector2(-above, 0.0))
-			var width := x1 - cx + 1
-			var indices := PackedInt32Array()
-			for z in z1 - cz:
-				for x in x1 - cx:
-					var i := z * width + x
-					indices.append_array([i, i + 1, i + width, i + 1, i + width + 1, i + width])
-			var chunk := MeshInstance3D.new()
-			chunk.name = "Terrain_%d_%d" % [cx / CHUNK, cz / CHUNK]
-			chunk.mesh = _array_mesh(vertices, normals, colors, indices, terrain_material, uvs)
-			root.add_child(chunk)
+## Loads every vegetation mesh the tiles can ask for (and splits the leaf cards) now, so
+## a kind met for the first time while streaming never stalls a frame.
+func _preload_vegetation() -> void:
+	var dummy := Node3D.new()
+	var assets := {}
+	for kind in Vegetation.TREES + ["blossom"]:
+		for roll in 16: assets[_tree_asset(kind, roll / 16.0) if kind != "blossom" or toon_trees or card_trees else ""] = true
+	assets.erase("")
+	var one := [Transform3D()]
+	for asset: String in assets:
+		Vegetation.add_tree_chunk(dummy, asset, one)
+		Vegetation.add_far_trees(dummy, asset, one)
+	for asset in Vegetation.BUSHES: Vegetation.add_bush_chunk(dummy, asset, one)
+	for asset in Vegetation.FLOWERS: Vegetation.add_grass_chunk(dummy, asset, one, [Vector3.UP])
+	Meadow.add_cell(dummy, one, [Vector3.UP], "Grass")
+	for v in 4: Props.mesh("rock", v)
+	dummy.free()
 
-## Coarse hills and ranges beyond the playable square, so the horizon is never empty.
+func _landmark_tiles() -> Array[Vector2i]:
+	var areas: Array = LANDMARK_AREAS.duplicate()
+	for entry: Array in LABELS: areas.append(Rect2(entry[1], Vector2.ONE))
+	var keys: Array[Vector2i] = []
+	for area: Rect2 in areas:
+		for kz in range(floori(area.position.y / CHUNK), floori(area.end.y / CHUNK) + 1):
+			for kx in range(floori(area.position.x / CHUNK), floori(area.end.x / CHUNK) + 1):
+				var key := Vector2i(kx, kz)
+				if chunks.in_field(key) and not key in keys: keys.append(key)
+	return keys
+
+## Runs body(index) for every index below count on the worker pool and waits for all.
+func _parallel(count: int, body: Callable) -> void:
+	if count <= 0: return
+	WorkerThreadPool.wait_for_group_task_completion(WorkerThreadPool.add_group_task(body, count, Chunks.MAX_THREADS, true, "JRPGWorld2"))
+
+## Far terrain at FAR_STEP: a fixed ring of hills and ranges around the field, and inside
+## it one mesh per FAR_BLOCK x FAR_BLOCK tiles covering every tile whose 1 m terrain is not
+## attached, with skirts against the attached ones (_rebuild_far_terrain).
 func _build_far_terrain() -> void:
-	var step := 8
+	far_root = Node3D.new()
+	far_root.name = "FarField"
+	add_child(far_root)
+	_build_far_ring()
+	var side := ceili(float(chunks.tiles_per_side) / FAR_BLOCK)
+	var blocks: Array[Dictionary] = []
+	for bz in side:
+		for bx in side: blocks.append({"key": Vector2i(bx, bz)})
+	_parallel(blocks.size(), func(i: int) -> void: _far_block_arrays(blocks[i]))
+	for block in blocks:
+		var key: Vector2i = block.key
+		var terrain := MeshInstance3D.new()
+		terrain.name = "FarTerrain_%d_%d" % [key.x, key.y]
+		terrain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		far_root.add_child(terrain)
+		var forest := Node3D.new()
+		forest.name = "FarForest_%d_%d" % [key.x, key.y]
+		far_root.add_child(forest)
+		block.terrain = terrain
+		block.forest = forest
+		block.terrain_dirty = true
+		block.forest_dirty = false
+		far_blocks[key] = block
+	_update_far()
+
+## Coarse hills and ranges beyond the field, so the horizon is never empty. Like the
+## blocks it samples the gameplay heights; it reaches one FAR_STEP into the field, 0.4 m
+## low, under the blocks' edges.
+func _build_far_ring() -> void:
+	var step := FAR_STEP
 	var lo := -480
-	var count := (SIZE + 960) / step + 1
+	var count := (extent + 960) / step + 1
+	var rows: Array[Dictionary] = []
+	for j in count: rows.append({})
+	_parallel(count, func(j: int) -> void:
+		var heights := PackedFloat32Array()
+		var depths := PackedFloat32Array()
+		heights.resize(count)
+		depths.resize(count)
+		var z := float(lo + j * step)
+		for i in count:
+			var x := float(lo + i * step)
+			var inside := x >= 0 and x <= extent and z >= 0 and z <= extent
+			# Deep inside, the blocks cover the field; the ring's normals need two steps in.
+			if inside and x > 2 * step and z > 2 * step and x < extent - 2 * step and z < extent - 2 * step: continue
+			var h := _expanded_height(x, z) - 0.4 if inside else _expanded_height(x, z)
+			# Inland the far hills keep clear of the lake level; seaward they shelve under the sea.
+			if not inside and _coast_distance(Vector2(x, z)) < -40.0: h = maxf(h, LAKE + 2.0)
+			heights[i] = h
+			depths[i] = (_water_from(int(x), int(z), _river_hit(int(x), int(z), _bucket_at(river_buckets, int(x), int(z)))) if inside else SEA) - h
+		rows[j].heights = heights
+		rows[j].depths = depths)
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
 	var uvs := PackedVector2Array()
 	for j in count:
 		for i in count:
-			var x := float(lo + i * step)
-			var z := float(lo + j * step)
-			var inside := x >= 0 and x <= SIZE and z >= 0 and z <= SIZE
-			var h := _cached(int(x), int(z)) - 0.4 if inside else _expanded_height(x, z)
-			# Inland the far hills keep clear of the lake level; seaward they shelve under the sea.
-			if not inside and _coast_distance(Vector2(x, z)) < -40.0: h = maxf(h, LAKE + 2.0)
-			vertices.append(Vector3(x, h, z))
+			vertices.append(Vector3(lo + i * step, (rows[j].heights as PackedFloat32Array)[i], lo + j * step))
 			colors.append(Color(0, 0, 0, 0))
-			uvs.append(Vector2((_water_level(x, z) if inside else SEA) - h, 0.0))
+			uvs.append(Vector2((rows[j].depths as PackedFloat32Array)[i], 0.0))
 	for j in count:
 		for i in count:
 			var l := vertices[j * count + maxi(i - 1, 0)].y
@@ -899,14 +1185,178 @@ func _build_far_terrain() -> void:
 		for i in count - 1:
 			var x := lo + i * step
 			var z := lo + j * step
-			if x >= step and x + step <= SIZE - step and z >= step and z + step <= SIZE - step: continue
+			if x >= step and x + step <= extent - step and z >= step and z + step <= extent - step: continue
 			var k := j * count + i
 			indices.append_array([k, k + 1, k + count, k + 1, k + count + 1, k + count])
 	var far := MeshInstance3D.new()
 	far.name = "FarTerrain"
 	far.mesh = _array_mesh(vertices, normals, colors, indices, terrain_material, uvs)
 	far.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(far)
+	far_root.add_child(far)
+
+## Worker task: one far block's vertex data at FAR_STEP (gameplay heights, the terrain
+## shader's road / sand / plaza / field weights, water depth), plus a copy of every vertex
+## FAR_SKIRT lower for the skirts.
+func _far_block_arrays(block: Dictionary) -> void:
+	var key: Vector2i = block.key
+	var x0 := key.x * FAR_BLOCK * CHUNK
+	var z0 := key.y * FAR_BLOCK * CHUNK
+	var nx := (mini(x0 + FAR_BLOCK * CHUNK, extent) - x0) / FAR_STEP + 1
+	var nz := (mini(z0 + FAR_BLOCK * CHUNK, extent) - z0) / FAR_STEP + 1
+	var row := nx + 2
+	var heights := PackedFloat32Array()
+	heights.resize(row * (nz + 2))
+	for j in nz + 2:
+		for i in row: heights[j * row + i] = _expanded_height(x0 + (i - 1) * FAR_STEP, z0 + (j - 1) * FAR_STEP)
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	var uvs := PackedVector2Array()
+	for j in nz:
+		for i in nx:
+			var x := x0 + i * FAR_STEP
+			var z := z0 + j * FAR_STEP
+			var k := (j + 1) * row + i + 1
+			var h := heights[k]
+			vertices.append(Vector3(x, h, z))
+			var normal := Vector3(heights[k - 1] - heights[k + 1], 2.0 * FAR_STEP, heights[k - row] - heights[k + row])
+			normals.append(normal.normalized())
+			var above := h - _water_from(x, z, _river_hit(x, z, _bucket_at(river_buckets, x, z)))
+			var road := 1.0 - smoothstep(-0.4, 1.0, _path_query(x, z, _bucket_at(path_buckets, x, z)) + noise.get_noise_2d(x * 5.0, z * 5.0) * 0.8)
+			var shore := Biomes.compose(_biome_signals(x, z, h))[Biomes.Biome.LAKESHORE] * (1.0 - smoothstep(1.2, 3.0, above)) * 0.85
+			# Same steepness measure as the 1 m tiles (height change over 2 m).
+			var steep := smoothstep(1.4, 2.4, Vector2(normal.x, normal.z).length() / FAR_STEP)
+			var sand := maxf(1.0 - smoothstep(0.4, 1.6, above), shore) * (1.0 - road) * (1.0 - steep)
+			colors.append(Color(road, sand, _plaza_weight(Vector2(x, z)), _field_weight(Vector2(x, z)) * (1.0 - road)))
+			uvs.append(Vector2(-above, 0.0))
+	for v in nx * nz:
+		vertices.append(vertices[v] - Vector3(0, FAR_SKIRT, 0))
+		normals.append(normals[v])
+		colors.append(colors[v])
+		uvs.append(uvs[v])
+	block.nx = nx
+	block.nz = nz
+	block.vertices = vertices
+	block.normals = normals
+	block.colors = colors
+	block.uvs = uvs
+
+## The far block's mesh over its tiles without attached terrain; along an edge shared
+## with an attached tile a two-sided skirt hangs down, closing the crack between the
+## coarse and the 1 m surface.
+func _rebuild_far_terrain(block: Dictionary) -> void:
+	block.terrain_dirty = false
+	var nx: int = block.nx
+	var nz: int = block.nz
+	var per := CHUNK / FAR_STEP
+	var indices := PackedInt32Array()
+	var bkey: Vector2i = block.key
+	for tz in FAR_BLOCK:
+		for tx in FAR_BLOCK:
+			var key := bkey * FAR_BLOCK + Vector2i(tx, tz)
+			if not chunks.in_field(key) or far_excluded.has(key): continue
+			var i0 := tx * per
+			var j0 := tz * per
+			var i1 := mini(i0 + per, nx - 1)
+			var j1 := mini(j0 + per, nz - 1)
+			for j in range(j0, j1):
+				for i in range(i0, i1):
+					var k := j * nx + i
+					indices.append_array([k, k + 1, k + nx, k + 1, k + nx + 1, k + nx])
+			if far_excluded.has(key + Vector2i(-1, 0)): _far_skirt(indices, nx * nz, j0 * nx + i0, j1 * nx + i0, nx)
+			if far_excluded.has(key + Vector2i(1, 0)): _far_skirt(indices, nx * nz, j0 * nx + i1, j1 * nx + i1, nx)
+			if far_excluded.has(key + Vector2i(0, -1)): _far_skirt(indices, nx * nz, j0 * nx + i0, j0 * nx + i1, 1)
+			if far_excluded.has(key + Vector2i(0, 1)): _far_skirt(indices, nx * nz, j1 * nx + i0, j1 * nx + i1, 1)
+	var terrain: MeshInstance3D = block.terrain
+	terrain.mesh = null if indices.is_empty() else _array_mesh(block.vertices, block.normals, block.colors, indices, terrain_material, block.uvs)
+
+## A two-sided vertical strip from grid vertex `from` to `to` (advancing by `stride`) down
+## to the skirt copies `skirt` vertices later.
+func _far_skirt(indices: PackedInt32Array, skirt: int, from: int, to: int, stride: int) -> void:
+	var a := from
+	while a < to:
+		var b := a + stride
+		indices.append_array([a, b, a + skirt, b, b + skirt, a + skirt, a, a + skirt, b, b, a + skirt, b + skirt])
+		a = b
+
+## The far block's lightweight forest: the farthest tree LOD (and the rocks) of every
+## planned tile whose own trees are not attached, without shadows.
+func _rebuild_far_forest(block: Dictionary) -> void:
+	block.forest_dirty = false
+	var root: Node3D = block.forest
+	for child in root.get_children(): child.free()
+	var groups := {}
+	var bkey: Vector2i = block.key
+	for tz in FAR_BLOCK:
+		for tx in FAR_BLOCK:
+			var key := bkey * FAR_BLOCK + Vector2i(tx, tz)
+			var t: Chunks.Tile = chunks.tiles.get(key)
+			if t == null or not t.planned or forest_excluded.has(key): continue
+			for entry: Array in t.trees: (groups.get_or_add(entry[0], []) as Array).append(entry[1])
+	for mesh_key: String in groups:
+		if Vegetation.has_asset(mesh_key):
+			Vegetation.add_far_trees(root, mesh_key, groups[mesh_key])
+			continue
+		var kind := mesh_key.get_slice("_", 0)
+		_multimesh(root, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), groups[mesh_key], _plant_material(kind), mesh_key, false)
+
+func _plant_material(kind: String) -> Material:
+	return Props.rock_material(Color("8d939c"), 0.75) if kind == "rock" else Props.foliage_material()
+
+func _far_block_of(key: Vector2i) -> Dictionary:
+	return far_blocks.get(Vector2i(floori(key.x / float(FAR_BLOCK)), floori(key.y / float(FAR_BLOCK))), {})
+
+## Flags the far block holding tile `key` for a rebuild: its terrain (and the neighbor
+## blocks', whose skirts may face the tile) and / or its forest.
+func _mark_far(key: Vector2i, terrain: bool, forest: bool) -> void:
+	var block := _far_block_of(key)
+	if block.is_empty(): return
+	if forest: block.forest_dirty = true
+	if not terrain: return
+	block.terrain_dirty = true
+	for offset: Vector2i in [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]:
+		var other := _far_block_of(key + offset)
+		if not other.is_empty(): other.terrain_dirty = true
+
+## Rebuilds the far blocks flagged since the last frame: every terrain (an index rebuild),
+## and one forest per frame unless `all`.
+func _update_far(all := false) -> void:
+	var forests := 1
+	for block: Dictionary in far_blocks.values():
+		if block.terrain_dirty: _rebuild_far_terrain(block)
+		if block.forest_dirty and (all or forests > 0):
+			_rebuild_far_forest(block)
+			forests -= 1
+
+## Depth below `level` and river-ribbon fade on the grid lo + (i, j) * step, worked out on
+## the worker pool from the gameplay heights: the lake and sea surfaces' vertex data.
+## `lake` keeps only the points under the lake; otherwise ground far inland is skipped.
+func _water_grid(lo: Vector2i, step: int, count: Vector2i, level: float, lake: bool) -> Array:
+	var rows: Array[Dictionary] = []
+	for j in count.y: rows.append({})
+	_parallel(count.y, func(j: int) -> void:
+		var row_depths := PackedFloat32Array()
+		var row_fades := PackedFloat32Array()
+		var z := lo.y + j * step
+		for i in count.x:
+			var x := lo.x + i * step
+			var inside := x >= 0 and z >= 0 and x <= extent and z <= extent
+			var depth := -10.0
+			var hit := _river_hit(x, z, _bucket_at(river_buckets, x, z))
+			if lake:
+				if inside and _water_from(x, z, hit) == LAKE: depth = level - _carve_river(_landform_height(x, z), hit)
+			elif _coast_distance(Vector2(x, z)) > -45.0:
+				depth = level - _carve_river(_landform_height(x, z), hit)
+			row_depths.append(depth)
+			row_fades.append(_ribbon_fade(x, z) if inside else 0.0)
+		rows[j].depths = row_depths
+		rows[j].fades = row_fades)
+	var depths := PackedFloat32Array()
+	var fades := PackedFloat32Array()
+	for row in rows:
+		depths.append_array(row.depths)
+		fades.append_array(row.fades)
+	return [depths, fades]
 
 ## The lake surface over its basin. COLOR.r carries depth / 8 for the water shader, so the
 ## shallows stay clear and the middle turns opaque blue; COLOR.g hands the surface over to a
@@ -915,35 +1365,51 @@ func _build_lake() -> void:
 	lake_material = ShaderMaterial.new()
 	lake_material.shader = LAKE_SHADER
 	var step := 2
-	var count := SIZE / step + 1
+	var lo := Vector2i.ZERO
+	var size := Vector2i(SIZE / step + 1, SIZE / step + 1)
+	var depths := PackedFloat32Array()
+	var fades := PackedFloat32Array()
+	if streamed:
+		# Only the basin: the shore lies inside 1.45 lake radii, wobble included.
+		var reach := LAKE_RADIUS * 1.75
+		lo = Vector2i(maxi(0, floori((LAKE_CENTER.x - reach.x) / step)), maxi(0, floori((LAKE_CENTER.y - reach.y) / step))) * step
+		var hi := Vector2i(mini(extent / step, ceili((LAKE_CENTER.x + reach.x) / step)), mini(extent / step, ceili((LAKE_CENTER.y + reach.y) / step))) * step
+		size = (hi - lo) / step + Vector2i.ONE
+		var grid := _water_grid(lo, step, size, LAKE, true)
+		depths = grid[0]
+		fades = grid[1]
+	else:
+		for j in size.y:
+			for i in size.x:
+				var x := i * step
+				var z := j * step
+				var depth := LAKE - _cached(x, z)
+				if water_cache[z * (SIZE + 1) + x] != LAKE: depth = -10.0
+				depths.append(depth)
+				fades.append(_ribbon_fade(x, z))
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
-	var depths := PackedFloat32Array()
-	for j in count:
-		for i in count:
-			var x := i * step
-			var z := j * step
-			var depth := LAKE - _cached(x, z)
-			if water_cache[z * (SIZE + 1) + x] != LAKE: depth = -10.0
-			depths.append(depth)
-			vertices.append(Vector3(x, LAKE, z))
+	for j in size.y:
+		for i in size.x:
+			var k := j * size.x + i
+			vertices.append(Vector3(lo.x + i * step, LAKE, lo.y + j * step))
 			normals.append(Vector3.UP)
-			colors.append(Color(clampf(depth / 8.0, 0.0, 1.0), _ribbon_fade(x, z), 0))
+			colors.append(Color(clampf(depths[k] / 8.0, 0.0, 1.0), fades[k], 0))
 	var indices := PackedInt32Array()
-	for j in count - 1:
-		for i in count - 1:
-			var k := j * count + i
-			if maxf(maxf(depths[k], depths[k + 1]), maxf(depths[k + count], depths[k + count + 1])) < -1.5: continue
-			indices.append_array([k, k + 1, k + count, k + 1, k + count + 1, k + count])
+	for j in size.y - 1:
+		for i in size.x - 1:
+			var k := j * size.x + i
+			if maxf(maxf(depths[k], depths[k + 1]), maxf(depths[k + size.x], depths[k + size.x + 1])) < -1.5: continue
+			indices.append_array([k, k + 1, k + size.x, k + 1, k + size.x + 1, k + size.x])
 	var water := MeshInstance3D.new()
 	water.name = "Lake"
 	water.mesh = _array_mesh(vertices, normals, colors, indices, lake_material)
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(water)
 
-## 碧の海: a 2 m grid along the coast inside the map plus a coarse 8 m sheet out to the
-## horizon, both at SEA with baked depth for the shader.
+## 碧の海: a 2 m grid along the coast of the designed square plus a coarse 8 m sheet over
+## everything else out to the horizon, both at SEA with baked depth for the shader.
 func _build_sea() -> void:
 	sea_material = ShaderMaterial.new()
 	sea_material.shader = LAKE_SHADER
@@ -954,30 +1420,29 @@ func _build_sea() -> void:
 	sea_material.set_shader_parameter("band_depths", Vector3(0.8, 2.6, 7.0))
 	sea_material.set_shader_parameter("wave_size", 2.2)
 	sea_material.set_shader_parameter("surf", 1.0)
+	var inner := mini(extent, SIZE)
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colors := PackedColorArray()
 	var indices := PackedInt32Array()
-	for grid: Array in [[0, 2, SIZE / 2 + 1], [-480, 8, (SIZE + 960) / 8 + 1]]:
+	for grid: Array in [[0, 2, inner / 2 + 1], [-480, 8, (extent + 960) / 8 + 1]]:
 		var lo: int = grid[0]
 		var step: int = grid[1]
 		var count: int = grid[2]
 		var base := vertices.size()
-		var depths := PackedFloat32Array()
+		var data := _water_grid(Vector2i(lo, lo), step, Vector2i(count, count), SEA, false)
+		var depths: PackedFloat32Array = data[0]
+		var fades: PackedFloat32Array = data[1]
 		for j in count:
 			for i in count:
-				var x := lo + i * step
-				var z := lo + j * step
-				var inside := x >= 0 and x <= SIZE and z >= 0 and z <= SIZE
-				var depth := SEA - (_cached(x, z) if inside else _expanded_height(x, z))
-				depths.append(depth)
-				vertices.append(Vector3(x, SEA, z))
+				var k := j * count + i
+				vertices.append(Vector3(lo + i * step, SEA, lo + j * step))
 				normals.append(Vector3.UP)
-				colors.append(Color(clampf(depth / 8.0, 0.0, 1.0), _ribbon_fade(x, z) if inside else 0.0, 0))
+				colors.append(Color(clampf(depths[k] / 8.0, 0.0, 1.0), fades[k], 0))
 		for j in count - 1:
 			for i in count - 1:
-				# The coarse sheet only covers what lies outside the playable square.
-				if step > 2 and lo + i * step >= 0 and lo + (i + 1) * step <= SIZE and lo + j * step >= 0 and lo + (j + 1) * step <= SIZE: continue
+				# The coarse sheet only covers what lies outside the fine grid.
+				if step > 2 and lo + i * step >= 0 and lo + (i + 1) * step <= inner and lo + j * step >= 0 and lo + (j + 1) * step <= inner: continue
 				var k := j * count + i
 				if maxf(maxf(depths[k], depths[k + 1]), maxf(depths[k + count], depths[k + count + 1])) < -0.6: continue
 				indices.append_array([base + k, base + k + 1, base + k + count, base + k + 1, base + k + count + 1, base + k + count])
@@ -991,9 +1456,9 @@ func _build_sea() -> void:
 ## meets the lake or the sea both surfaces lie at the same level, so the still water fades
 ## out by as much as the ribbon fades in instead of doubling up.
 func _ribbon_fade(x: float, z: float) -> float:
-	var hit := _river_at(x, z)
-	if hit.is_empty() or float(hit[2]) > (hit[0].widths as PackedFloat32Array)[hit[1]] + 1.6: return 0.0
-	return (hit[0].fades as PackedFloat32Array)[hit[1]]
+	var hit := _river_hit(roundi(x), roundi(z), _bucket_at(river_buckets, roundi(x), roundi(z)))
+	if hit.x < 0.0 or hit.y > river_width[int(hit.x)] + 1.6: return 0.0
+	return river_fade[int(hit.x)]
 
 ## Each river as a ribbon over its channel. Rows follow the 1 m samples; at a fall two
 ## extra rows (lip and foot) hang a steep sheet just in front of the cut cliff. UV.x is
@@ -1045,7 +1510,7 @@ func _build_river_meshes() -> void:
 				var offset := (float(k) / across * 2.0 - 1.0) * half
 				var p := center + side * offset
 				vertices.append(Vector3(p.x, level, p.y))
-				var depth := level - _height(p.x, p.y)
+				var depth := level - _expanded_height(p.x, p.y)
 				colors.append(Color(clampf(depth / 8.0, 0.0, 1.0), row[2], row[4], row[3]))
 				uvs.append(Vector2(offset, flow))
 		var width := across + 1
@@ -1180,8 +1645,8 @@ func _manor(parent: Node3D, at: Vector2, yaw_angle: float) -> void:
 	# The mesh is centred on its origin; lift its base (y = -0.65) onto the plinth.
 	manor.position.y = 0.65 * MANOR_SCALE
 	root.add_child(manor)
-	var extent := (half + Vector2(0.2, 0.2)).rotated(-yaw_angle).abs()
-	_block(at, extent)
+	var reach := (half + Vector2(0.2, 0.2)).rotated(-yaw_angle).abs()
+	_block(at, reach)
 
 func _lamp(parent: Node3D, at: Vector2, height := NAN) -> void:
 	var root := _anchor(parent, at, 0.0, height)
@@ -1591,29 +2056,153 @@ func _build_cliffs() -> void:
 		_multimesh(root, Props.mesh("rock", v), transforms[v], Props.rock_material(Color("8a929e"), 0.8), "CliffRock_%d" % v)
 
 func _near_ramp(p: Vector2, margin: float) -> bool:
-	for ramp: Array in RAMPS:
-		var a: Vector2 = ramp[0]
-		var ab: Vector2 = ramp[1] - a
+	for k in range(0, ramp_rows.size(), 6):
+		var a := Vector2(ramp_rows[k], ramp_rows[k + 1])
+		var ab := Vector2(ramp_rows[k + 2], ramp_rows[k + 3]) - a
 		var t := clampf((p - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
-		if p.distance_to(a + ab * t) < ramp[2] + 5.0 + margin: return true
+		if p.distance_to(a + ab * t) < ramp_rows[k + 4] + 5.0 + margin: return true
 	return false
+
+# --- Streaming tiles ----------------------------------------------------------
+# Each CHUNK tile caches APRON extra grid points on every side, so every lookup its own
+# generation makes (bilinear heights, ±0.5 m slopes, ±1 m normals, 2 m biome cells) is
+# served from its own window. Every value depends only on its position and the world
+# seed: neighbors' overlapping windows agree exactly, so tile edges meet without seams,
+# and a tile comes back the same whenever and in whatever order it is generated. The
+# *_task functions run on worker threads and read only the fixed layout (landforms,
+# rivers, roads, landmark obstacles) and the tiles handed to them; the main thread turns
+# their results into nodes (_detail_steps, _grass_steps).
+
+const APRON := 2
+const SPAN := CHUNK + 2 * APRON + 1
+const BIOME_SPAN := CHUNK / 2 + 3
+## Far terrain grid (m) and tiles per far block side.
+const FAR_STEP := 8
+const FAR_BLOCK := 4
+## Skirts hang this far below the tile / far block edges, closing any crack between them.
+const TILE_SKIRT := 3.0
+const FAR_SKIRT := 8.0
+## Grass sub-cells per tile (about Meadow.CELL wide).
+const GRASS_CELLS := [0, 11, 22, CHUNK]
+## Bush spots: eleven per tile side (about the 3 m of the whole-field layout), their chance
+## scaled to keep the same density.
+const BUSH_SPACING := CHUNK / 11.0
+## Floats per river / road segment row.
+const RIVER_ROW := 10
+const PATH_ROW := 9
+
+## The tile at (x, z) with its dense data (loaded on the spot if the streamer has not).
+func _data_tile(x: float, z: float) -> Chunks.Tile:
+	return chunks.ensure_data(chunks.key_at(x, z))
+
+func _t_index(t: Chunks.Tile, ix: int, iz: int) -> int:
+	return (iz - t.z0 + APRON) * SPAN + ix - t.x0 + APRON
+
+func _t_bilinear(t: Chunks.Tile, grid: PackedFloat32Array, x: float, z: float) -> float:
+	var ix := floori(x)
+	var iz := floori(z)
+	var i := _t_index(t, ix, iz)
+	var fx := x - ix
+	var top := lerpf(grid[i], grid[i + 1], fx)
+	return lerpf(top, lerpf(grid[i + SPAN], grid[i + SPAN + 1], fx), z - iz)
+
+func _t_height(t: Chunks.Tile, x: float, z: float) -> float:
+	return _t_bilinear(t, t.vh, x, z)
+
+func _t_gameplay(t: Chunks.Tile, x: float, z: float) -> float:
+	return _t_bilinear(t, t.gh, x, z)
+
+func _t_slope(t: Chunks.Tile, x: float, z: float) -> float:
+	return Vector2(_t_height(t, x + 0.5, z) - _t_height(t, x - 0.5, z), _t_height(t, x, z + 0.5) - _t_height(t, x, z - 0.5)).length()
+
+func _t_gameplay_slope(t: Chunks.Tile, x: float, z: float) -> float:
+	return Vector2(_t_gameplay(t, x + 0.5, z) - _t_gameplay(t, x - 0.5, z), _t_gameplay(t, x, z + 0.5) - _t_gameplay(t, x, z - 0.5)).length()
+
+func _t_normal(t: Chunks.Tile, x: float, z: float) -> Vector3:
+	return Vector3(_t_height(t, x - 0.5, z) - _t_height(t, x + 0.5, z), 1.0, _t_height(t, x, z - 0.5) - _t_height(t, x, z + 0.5)).normalized()
+
+func _t_water_level(t: Chunks.Tile, x: float, z: float) -> float:
+	if x < 0.0 or z < 0.0 or x > extent or z > extent: return SEA
+	return t.water[_t_index(t, clampi(roundi(x), 0, extent), clampi(roundi(z), 0, extent))]
+
+func _t_water_depth(t: Chunks.Tile, x: float, z: float) -> float:
+	return _t_water_level(t, x, z) - _t_height(t, x, z)
+
+func _t_path(t: Chunks.Tile, x: float, z: float) -> float:
+	return t.path[_t_index(t, clampi(roundi(x), 0, extent), clampi(roundi(z), 0, extent))]
+
+## Visual-only micro relief (about ±0.05–0.18 m), scaled by the biome's ground roughness
+## and calmed on roads, plazas and fields. It never reaches the gameplay height.
+func _t_micro(t: Chunks.Tile, x: int, z: int) -> float:
+	if x < 0 or z < 0 or x > extent or z > extent: return 0.0
+	var p := Vector2(x, z)
+	var calm := (1.0 - _plaza_weight(p)) * smoothstep(-0.5, 2.0, _t_path(t, x, z)) * (1.0 - _field_weight(p) * 0.8)
+	if calm <= 0.0: return 0.0
+	var amplitude := (t.biome as Biomes.Patch).param_smooth(Biomes.Param.GROUND_ROUGHNESS, x, z) * MICRO_RELIEF * calm
+	return (noise.get_noise_2d(x * 7.0 + 1300.0, z * 7.0 - 800.0) * 1.5 + noise.get_noise_2d(x * 19.0, z * 19.0 + 77.0) * 0.5) * amplitude
+
+## Worker task: the tile's windows — gameplay heights (landforms carved by the rivers),
+## water levels and road distances, then the biome patch (which reads the gameplay
+## heights), then the visual heights — and with `plan` its trees and rocks.
+func _tile_data_task(t: Chunks.Tile, plan: bool, result: Dictionary) -> void:
+	var gh := PackedFloat32Array()
+	var water := PackedFloat32Array()
+	var path := PackedFloat32Array()
+	gh.resize(SPAN * SPAN)
+	water.resize(SPAN * SPAN)
+	path.resize(SPAN * SPAN)
+	var rivers_here: PackedInt32Array = river_buckets.get(t.key, PackedInt32Array())
+	var roads_here: PackedInt32Array = path_buckets.get(t.key, PackedInt32Array())
+	for j in SPAN:
+		var z := t.z0 - APRON + j
+		for i in SPAN:
+			var x := t.x0 - APRON + i
+			var k := j * SPAN + i
+			var hit := _river_hit(x, z, rivers_here)
+			gh[k] = _carve_river(_landform_height(x, z), hit)
+			water[k] = _water_from(x, z, hit) if x >= 0 and z >= 0 and x <= extent and z <= extent else SEA
+			path[k] = _path_query(x, z, roads_here)
+	t.gh = gh
+	t.water = water
+	t.path = path
+	t.biome = biome.bake_patch(t.x0 / 2 - 1, t.z0 / 2 - 1, BIOME_SPAN, func(x: float, z: float) -> PackedFloat32Array:
+		return _biome_signals(x, z, gh[(roundi(z) - t.z0 + APRON) * SPAN + roundi(x) - t.x0 + APRON]))
+	var vh := gh.duplicate()
+	for j in SPAN:
+		for i in SPAN: vh[j * SPAN + i] += _t_micro(t, t.x0 - APRON + i, t.z0 - APRON + j)
+	t.vh = vh
+	result.texels = biome.patch_images(t.biome)
+	result.data = true
+	if plan:
+		_plan_trees(t)
+		result.planned = true
+
+## Worker task: trees and rocks for a tile whose data came before the landmarks did.
+func _tile_plan_task(t: Chunks.Tile, result: Dictionary) -> void:
+	_plan_trees(t)
+	result.planned = true
 
 ## Trees and boulders from the biome table: density, broadleaf/conifer mix and size come
 ## from the blended BiomeData; density rhythm clumps them into groves and glades, and the
 ## designed sightlines stay open. Trees are the Blender-built Phase 2 set with
 ## hierarchical LOD (Vegetation.add_tree_chunk): broadleaf A/B/C in the woods, oaks
 ## favoured on open land, conifer A/B. Blossom trees and boulders are still procedural.
-func _build_trees_and_rocks() -> void:
+## Spots lie on a 4 m lattice; every tile draws from its own seeded generator.
+func _plan_trees(t: Chunks.Tile) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = world_seed + 5
-	var chunks: Dictionary = {}
+	rng.seed = hash([world_seed + 5, t.key.x, t.key.y])
 	var spacing := 4.0
-	var grid := biome.param_grid
-	var counts := {}
-	var z := 0.0
-	while z < SIZE:
-		var x := 0.0
-		while x < SIZE:
+	var b: Biomes.Patch = t.biome
+	var grid := b.params
+	var trees: Array = []
+	var rects: Array[Rect2] = []
+	var cover := {}
+	var landmarks: Array = obstacle_chunks.get(t.key, [])
+	var x_end := float(mini(t.x0 + CHUNK, extent))
+	var z := float(t.z0)
+	while z < mini(t.z0 + CHUNK, extent):
+		var x := float(t.x0)
+		while x < x_end:
 			# Every random number is drawn up front so a skipped spot never shifts the rest.
 			var p := Vector2(x + rng.randf() * spacing, z + rng.randf() * spacing)
 			var roll := rng.randf()
@@ -1622,17 +2211,17 @@ func _build_trees_and_rocks() -> void:
 			var angle := rng.randf() * TAU
 			var stretch := rng.randf()
 			x += spacing
-			var h := _height(p.x, p.y)
-			if _water_depth(p.x, p.y) > -1.0 or _path_distance(p.x, p.y) < 3.0: continue
-			if _clear(p) or _near_ramp(p, 0.0): continue
-			var c := biome.cell(p.x, p.y)
+			var h := _t_height(t, p.x, p.y)
+			if _t_water_depth(t, p.x, p.y) > -1.0 or _t_path(t, p.x, p.y) < 3.0: continue
+			if _clear(p, landmarks) or _near_ramp(p, 0.0): continue
+			var c := b.cell(p.x, p.y)
 			if h < grid[c + Biomes.Param.MIN_HEIGHT] or h > grid[c + Biomes.Param.MAX_HEIGHT]: continue
-			var slope := get_slope_at(p.x, p.y)
+			var slope := _t_gameplay_slope(t, p.x, p.y)
 			var open := 1.0 - _sightline_mask(p)
 			var tree_chance := grid[c + Biomes.Param.TREE_DENSITY] * _density_rhythm(p)
 			# Small broadleaf groves dot the plains.
 			var grove := smoothstep(0.28, 0.42, noise.get_noise_2d(p.x * 1.5 + 911.0, p.y * 1.5 - 45.0))
-			tree_chance += biome.weight(Biomes.Biome.PLAINS, p.x, p.y) * grove * 0.4
+			tree_chance += b.weight(Biomes.Biome.PLAINS, p.x, p.y) * grove * 0.4
 			tree_chance *= open * (1.0 - smoothstep(grid[c + Biomes.Param.MAX_SLOPE] - 0.1, grid[c + Biomes.Param.MAX_SLOPE], slope))
 			var rock_chance := (grid[c + Biomes.Param.ROCK_DENSITY] + 0.05 * smoothstep(0.35, 0.75, slope)) * lerpf(0.4, 1.0, open)
 			var kind := ""
@@ -1653,8 +2242,8 @@ func _build_trees_and_rocks() -> void:
 					size = variation
 				else:
 					# Blossom trees are rare accents in the open meadows and on the shore.
-					var meadow := biome.weight(Biomes.Biome.PLAINS, p.x, p.y) + biome.weight(Biomes.Biome.LAKESHORE, p.x, p.y)
-					var open_land := meadow + biome.weight(Biomes.Biome.FARMLAND, p.x, p.y) + biome.weight(Biomes.Biome.HIGHLAND, p.x, p.y)
+					var meadow := b.weight(Biomes.Biome.PLAINS, p.x, p.y) + b.weight(Biomes.Biome.LAKESHORE, p.x, p.y)
+					var open_land := meadow + b.weight(Biomes.Biome.FARMLAND, p.x, p.y) + b.weight(Biomes.Biome.HIGHLAND, p.x, p.y)
 					if fmod(pick * 97.0, 1.0) < 0.06 * meadow:
 						kind = _tree_asset("blossom") if toon_trees or card_trees else "broadleaf"
 						variant = 2
@@ -1667,39 +2256,24 @@ func _build_trees_and_rocks() -> void:
 						trunk = 0.65 if oak else 0.45
 						kind = _tree_asset(kind, fmod(pick * 389.0, 1.0))
 						size = variation
-				obstacles.append(Rect2(p - Vector2(trunk, trunk) * size, Vector2(trunk, trunk) * 2.0 * size))
-				cover_cells[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
+				# Padded by 0.3 m like every indexed obstacle (_index_obstacles).
+				rects.append(Rect2(p - Vector2(trunk, trunk) * size, Vector2(trunk, trunk) * 2.0 * size).grow(0.3))
+				cover[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
 			elif roll < tree_chance + rock_chance:
 				kind = "rock"
 				variant = int(pick * 40.0) % 4
 				size *= 1.1 if pick < 0.7 else 2.2
-				obstacles.append(Rect2(p - Vector2(0.7, 0.7) * size, Vector2(1.4, 1.4) * size))
+				rects.append(Rect2(p - Vector2(0.7, 0.7) * size, Vector2(1.4, 1.4) * size).grow(0.3))
 			else:
 				continue
-			counts[kind] = counts.get(kind, 0) + 1
 			var mesh_key := kind if Vegetation.has_asset(kind) else "%s_%d" % [kind, variant]
-			var key := Vegetation.chunk_key(mesh_key, p)
-			if not chunks.has(key): chunks[key] = {}
-			if not chunks[key].has(mesh_key): chunks[key][mesh_key] = []
 			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.95, 1.05, stretch) if Vegetation.has_asset(kind) else lerpf(0.9, 1.15, stretch)
 			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * tall, size))
-			chunks[key][mesh_key].append(Transform3D(basis, Vector3(p.x, h - (0.35 * size if kind == "rock" else 0.1), p.y)))
+			trees.append([mesh_key, Transform3D(basis, Vector3(p.x, h - (0.35 * size if kind == "rock" else 0.1), p.y))])
 		z += spacing
-	var root := Node3D.new()
-	root.name = "Forest"
-	add_child(root)
-	for key: Vector2i in chunks:
-		var chunk := Node3D.new()
-		chunk.name = "Forest_%d_%d" % [key.x, key.y]
-		root.add_child(chunk)
-		for mesh_key: String in chunks[key]:
-			if Vegetation.has_asset(mesh_key):
-				Vegetation.add_tree_chunk(chunk, mesh_key, chunks[key][mesh_key])
-				continue
-			var kind := mesh_key.get_slice("_", 0)
-			var material: Material = Props.rock_material(Color("8d939c"), 0.75) if kind == "rock" else Props.foliage_material()
-			_multimesh(chunk, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), chunks[key][mesh_key], material, mesh_key)
-	print("[JRPGWorld2] Vegetation: ", counts)
+	t.trees = trees
+	t.rects = rects
+	t.cover = cover
 
 ## The tree asset drawn for a Phase 2 tree kind under the seed / toon / card / solid styles.
 ## `roll` (0-1) picks one of the seed trees at random.
@@ -1713,98 +2287,210 @@ func _tree_asset(kind: String, roll := 0.0) -> String:
 	return kind
 
 ## Bushes along forest edges, in the understory and on road verges (Blender-built
-## bush A / B / C). Walkable light cover: no obstacle, recorded in cover_cells.
-func _build_bushes() -> void:
+## bush A / B / C), clear of the trunks in `rects` (this tile's and its neighbors').
+## Walkable light cover: no obstacle, recorded as "LIGHT" cover.
+func _tile_bush_task(t: Chunks.Tile, rects: Array[Rect2], result: Dictionary) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = world_seed + 7
-	var grid := biome.param_grid
-	var chunks: Dictionary = {}
-	var counts := {}
-	var spacing := 3.0
-	var z := 0.0
-	while z < SIZE:
-		var x := 0.0
-		while x < SIZE:
+	rng.seed = hash([world_seed + 7, t.key.x, t.key.y])
+	var b: Biomes.Patch = t.biome
+	var grid := b.params
+	var spacing := BUSH_SPACING
+	var density := pow(spacing / 3.0, 2.0)
+	var bushes: Array = []
+	var cover := {}
+	var near: Array = obstacle_chunks.get(t.key, []).duplicate()
+	near.append_array(rects)
+	var x_end := float(mini(t.x0 + CHUNK, extent))
+	var z_end := float(mini(t.z0 + CHUNK, extent))
+	for row in 11:
+		var z := t.z0 + row * spacing
+		if z >= z_end: break
+		for column in 11:
+			var x := t.x0 + column * spacing
+			if x >= x_end: break
 			var p := Vector2(x + rng.randf() * spacing, z + rng.randf() * spacing)
 			var roll := rng.randf()
 			var pick := rng.randf()
 			var size := rng.randf_range(0.85, 1.15)
 			var angle := rng.randf() * TAU
-			x += spacing
-			var h := _height(p.x, p.y)
-			var road := _path_distance(p.x, p.y)
-			if _water_depth(p.x, p.y) > -0.8 or road < 2.0 or _clear(p) or _near_ramp(p, 0.0): continue
-			var c := biome.cell(p.x, p.y)
-			if h > grid[c + Biomes.Param.MAX_HEIGHT] or _slope(p.x, p.y) > 0.6: continue
+			var h := _t_height(t, p.x, p.y)
+			var road := _t_path(t, p.x, p.y)
+			if _t_water_depth(t, p.x, p.y) > -0.8 or road < 2.0 or _clear(p, near) or _near_ramp(p, 0.0): continue
+			var c := b.cell(p.x, p.y)
+			if h > grid[c + Biomes.Param.MAX_HEIGHT] or _t_slope(t, p.x, p.y) > 0.6: continue
 			if _plaza_weight(p) > 0.3 or _field_weight(p) > 0.3: continue
 			# Densest where the woods thin out (forest edge), some understory inside, a few
 			# on the road verges; sightlines thin them but low shrubs rarely block a view.
 			var trees := grid[c + Biomes.Param.TREE_DENSITY] * _density_rhythm(p)
 			var edge := smoothstep(0.04, 0.22, trees) * (1.0 - smoothstep(0.7, 1.1, trees))
-			var verge := (1.0 - smoothstep(4.0, 7.0, road)) * (1.0 - biome.weight(Biomes.Biome.SETTLEMENT, p.x, p.y))
-			var chance := (0.4 * edge + 0.12 * smoothstep(0.5, 1.0, trees) + 0.1 * verge) * lerpf(0.5, 1.0, 1.0 - _sightline_mask(p))
+			var verge := (1.0 - smoothstep(4.0, 7.0, road)) * (1.0 - b.weight(Biomes.Biome.SETTLEMENT, p.x, p.y))
+			var chance := (0.4 * edge + 0.12 * smoothstep(0.5, 1.0, trees) + 0.1 * verge) * lerpf(0.5, 1.0, 1.0 - _sightline_mask(p)) * density
 			if roll >= chance: continue
-			var deep := biome.weight(Biomes.Biome.DEEP_FOREST, p.x, p.y) + biome.weight(Biomes.Biome.FOREST, p.x, p.y) * 0.5
+			var deep := b.weight(Biomes.Biome.DEEP_FOREST, p.x, p.y) + b.weight(Biomes.Biome.FOREST, p.x, p.y) * 0.5
 			var asset := "bush_c" if pick < 0.2 + 0.4 * deep else ("bush_b" if pick < 0.55 + 0.3 * verge else "bush_a")
-			counts[asset] = counts.get(asset, 0) + 1
-			var key := Vector2i(floori(p.x / Vegetation.COARSE_CHUNK), floori(p.y / Vegetation.COARSE_CHUNK))
-			if not chunks.has(key): chunks[key] = {}
-			if not chunks[key].has(asset): chunks[key][asset] = []
-			chunks[key][asset].append(Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * size), Vector3(p.x, h - 0.05, p.y)))
+			bushes.append([asset, Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * size), Vector3(p.x, h - 0.05, p.y))])
 			var cell := world_position_to_cell(Vector3(p.x, 0, p.y))
-			if not cover_cells.has(cell): cover_cells[cell] = "LIGHT"
-		z += spacing
-	var root := Node3D.new()
-	root.name = "Bushes"
-	add_child(root)
-	for key: Vector2i in chunks:
-		var chunk := Node3D.new()
-		chunk.name = "Bushes_%d_%d" % [key.x, key.y]
-		root.add_child(chunk)
-		for asset: String in chunks[key]:
-			Vegetation.add_bush_chunk(chunk, asset, chunks[key][asset])
-	print("[JRPGWorld2] Bushes: ", counts)
+			if not t.cover.has(cell): cover[cell] = "LIGHT"
+	result.bushes = bushes
+	result.bush_cover = cover
 
-## Ghibli grass carpet and wildflowers. Every 1 m cell of open ground takes one
+## Worker task: the tile's 1 m terrain mesh arrays, for _terrain_steps.
+func _tile_terrain_task(t: Chunks.Tile, result: Dictionary) -> void:
+	result.terrain = _terrain_arrays(t)
+
+## Worker task: the tile's bushes (if not placed yet) and its trees and bushes grouped per
+## asset, ready for the main thread's _detail_steps.
+func _tile_detail_task(t: Chunks.Tile, rects: Array[Rect2], result: Dictionary) -> void:
+	var bushes: Array = t.bushes
+	if not t.bushes_planned:
+		_tile_bush_task(t, rects, result)
+		bushes = result.bushes
+	var trees := {}
+	for entry: Array in t.trees: (trees.get_or_add(entry[0], []) as Array).append(entry[1])
+	result.trees = trees
+	var groups := {}
+	for entry: Array in bushes: (groups.get_or_add(entry[0], []) as Array).append(entry[1])
+	result.bush_groups = groups
+
+## The tile's 1 m terrain mesh, vertex for vertex as the whole-field build made it, plus a
+## skirt: the edge loop copied TILE_SKIRT lower and closed with two-sided strips.
+func _terrain_arrays(t: Chunks.Tile) -> Array:
+	var b: Biomes.Patch = t.biome
+	var x1 := mini(t.x0 + CHUNK, extent)
+	var z1 := mini(t.z0 + CHUNK, extent)
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	var uvs := PackedVector2Array()
+	for z in range(t.z0, z1 + 1):
+		for x in range(t.x0, x1 + 1):
+			var k := _t_index(t, x, z)
+			var h := t.vh[k]
+			vertices.append(Vector3(x, h, z))
+			var normal := Vector3(t.vh[k - 1] - t.vh[k + 1], 2.0, t.vh[k - SPAN] - t.vh[k + SPAN])
+			normals.append(normal.normalized())
+			# Height above the local water (sea, lake or river): sand and pebbles along
+			# every shore and riverbed, but bare rock on falls and sea cliffs.
+			var above := h - t.water[k]
+			var road := 1.0 - smoothstep(-0.4, 1.0, t.path[k] + noise.get_noise_2d(x * 5.0, z * 5.0) * 0.8)
+			var shore := b.weight(Biomes.Biome.LAKESHORE, x, z) * (1.0 - smoothstep(1.2, 3.0, above)) * 0.85
+			var steep := smoothstep(1.4, 2.4, Vector2(normal.x, normal.z).length())
+			var sand := maxf(1.0 - smoothstep(0.4, 1.6, above), shore) * (1.0 - road) * (1.0 - steep)
+			colors.append(Color(road, sand, _plaza_weight(Vector2(x, z)), _field_weight(Vector2(x, z)) * (1.0 - road)))
+			uvs.append(Vector2(-above, 0.0))
+	var width := x1 - t.x0 + 1
+	var depth := z1 - t.z0 + 1
+	var indices := PackedInt32Array()
+	for z in depth - 1:
+		for x in width - 1:
+			var i := z * width + x
+			indices.append_array([i, i + 1, i + width, i + 1, i + width + 1, i + width])
+	var ring: Array[int] = []
+	for x in width: ring.append(x)
+	for z in range(1, depth): ring.append(z * width + width - 1)
+	for x in range(width - 2, -1, -1): ring.append((depth - 1) * width + x)
+	for z in range(depth - 2, 0, -1): ring.append(z * width)
+	var base := vertices.size()
+	for v in ring:
+		vertices.append(vertices[v] - Vector3(0, TILE_SKIRT, 0))
+		normals.append(normals[v])
+		colors.append(colors[v])
+		uvs.append(uvs[v])
+	for s in ring.size():
+		var a := ring[s]
+		var c := ring[(s + 1) % ring.size()]
+		var la := base + s
+		var lc := base + (s + 1) % ring.size()
+		indices.append_array([a, c, la, c, lc, la, a, la, c, c, la, lc])
+	return [vertices, normals, colors, uvs, indices]
+
+## Main-thread step for a finished terrain task: the mesh goes in and the far block
+## leaves the tile out.
+func _terrain_steps(t: Chunks.Tile, result: Dictionary) -> Array[Callable]:
+	return [_attach_terrain.bind(t, result)]
+
+func _attach_terrain(t: Chunks.Tile, result: Dictionary) -> void:
+	var arrays: Array = result.terrain
+	var terrain := MeshInstance3D.new()
+	terrain.name = "Terrain_%d_%d" % [t.key.x, t.key.y]
+	terrain.mesh = _array_mesh(arrays[0], arrays[1], arrays[2], arrays[4], terrain_material, arrays[3])
+	terrain_root.add_child(terrain)
+	t.terrain = terrain
+	far_excluded[t.key] = true
+	_mark_far(t.key, true, false)
+
+## Main-thread steps for a finished detail task, one per frame budget slot: the trees and
+## rocks (then the far forest leaves the tile out), then the bushes.
+func _detail_steps(t: Chunks.Tile, result: Dictionary) -> Array[Callable]:
+	return [_attach_trees.bind(t, result), _attach_bushes.bind(t, result)]
+
+func _attach_trees(t: Chunks.Tile, result: Dictionary) -> void:
+	t.detail = Node3D.new()
+	t.detail.name = "Tile_%d_%d" % [t.key.x, t.key.y]
+	field_root.add_child(t.detail)
+	var forest := Node3D.new()
+	forest.name = "Forest"
+	t.detail.add_child(forest)
+	var groups: Dictionary = result.trees
+	for mesh_key: String in groups:
+		if Vegetation.has_asset(mesh_key):
+			Vegetation.add_tree_chunk(forest, mesh_key, groups[mesh_key])
+			continue
+		var kind := mesh_key.get_slice("_", 0)
+		_multimesh(forest, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), groups[mesh_key], _plant_material(kind), mesh_key)
+	forest_excluded[t.key] = true
+	_mark_far(t.key, false, true)
+
+func _attach_bushes(t: Chunks.Tile, result: Dictionary) -> void:
+	var bushes := Node3D.new()
+	bushes.name = "Bushes"
+	t.detail.add_child(bushes)
+	var groups: Dictionary = result.bush_groups
+	for asset: String in groups:
+		Vegetation.add_bush_chunk(bushes, asset, groups[asset])
+
+## Worker task: the Ghibli grass carpet and wildflowers of a tile, per GRASS_CELLS
+## sub-cell (each with its own seeded generator). Every 1 m cell of open ground takes one
 ## procedural blade patch (open_field_meadow.gd) sheared onto the slope and lit with the
 ## terrain normal, so the carpet closes over the ground and shades with the hills. Blade
 ## height follows the ground: short on verges, slopes, lawns and thin ground, knee-high
 ## where it is wet or wild. Blender-built flower clusters gather in drifts of one kind
 ## (star flowers A, cool spikes B where it is wetter), standing a little above the grass.
-func _build_grass() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = world_seed + 91
-	var root := Node3D.new()
-	root.name = "Meadow"
-	add_child(root)
-	var grid := biome.param_grid
-	var cell := int(Meadow.CELL)
-	var patches := 0
-	var counts := {}
-	for cz in range(0, SIZE, cell):
-		for cx in range(0, SIZE, cell):
+func _tile_grass_task(t: Chunks.Tile, result: Dictionary) -> void:
+	var b: Biomes.Patch = t.biome
+	var grid := b.params
+	var cells: Array = []
+	for sz in GRASS_CELLS.size() - 1:
+		for sx in GRASS_CELLS.size() - 1:
+			var cx0: int = t.x0 + GRASS_CELLS[sx]
+			var cz0: int = t.z0 + GRASS_CELLS[sz]
+			var cx1 := mini(t.x0 + GRASS_CELLS[sx + 1], extent)
+			var cz1 := mini(t.z0 + GRASS_CELLS[sz + 1], extent)
+			if cx0 >= cx1 or cz0 >= cz1: continue
+			var rng := RandomNumberGenerator.new()
+			rng.seed = hash([world_seed + 91, cx0, cz0])
 			var carpet: Array = []
 			var carpet_normals: Array = []
 			var groups := {}
 			var normals := {}
-			for z in range(cz, cz + cell):
-				for x in range(cx, cx + cell):
-					var c := biome.cell(x + 0.5, z + 0.5)
+			for z in range(cz0, cz1):
+				for x in range(cx0, cx1):
+					var c := b.cell(x + 0.5, z + 0.5)
 					var density := grid[c + Biomes.Param.GRASS_DENSITY]
 					var wet := grid[c + Biomes.Param.WETNESS]
 					var top := grid[c + Biomes.Param.MAX_HEIGHT]
 					var px := x + 0.5 + rng.randf_range(-0.3, 0.3)
 					var pz := z + 0.5 + rng.randf_range(-0.3, 0.3)
-					var yaw := rng.randf() * TAU
+					var yaw_angle := rng.randf() * TAU
 					var jitter := rng.randf_range(0.85, 1.15)
 					var roll := rng.randf()
 					# Thin biomes (forest floor, mountain) break into tufts; open land closes up.
 					if roll > density * 1.5: continue
-					var h := _height(px, pz)
-					if h > top or _water_depth(px, pz) > -0.4: continue
-					var road := _path_distance(px, pz)
+					var h := _t_height(t, px, pz)
+					if h > top or _t_water_depth(t, px, pz) > -0.4: continue
+					var road := _t_path(t, px, pz)
 					if road < -0.1: continue
-					var slope := _slope(px, pz)
+					var slope := _t_slope(t, px, pz)
 					if slope > 0.7 or _plaza_weight(Vector2(px, pz)) > 0.3 or _field_weight(Vector2(px, pz)) > 0.3: continue
 					# Height: lawns and verges short, the open meadow mid, wet or wild drifts tall.
 					var lawn := smoothstep(0.15, 0.45, noise.get_noise_2d(px * 1.9 + 520.0, pz * 1.9 + 210.0))
@@ -1812,8 +2498,8 @@ func _build_grass() -> void:
 					var tall := lerpf(0.42, 0.72, wild)
 					tall = lerpf(tall, 0.24, maxf(lawn, 1.0 - smoothstep(0.2, 0.45, density)))
 					tall *= lerpf(0.45, 1.0, smoothstep(0.0, 2.5, road)) * lerpf(1.0, 0.6, smoothstep(0.35, 0.7, slope))
-					var n := _ground_normal(px, pz)
-					carpet.append(Meadow.patch_transform(Vector3(px, h - 0.04, pz), n, tall * jitter, yaw))
+					var n := _t_normal(t, px, pz)
+					carpet.append(Meadow.patch_transform(Vector3(px, h - 0.04, pz), n, tall * jitter, yaw_angle))
 					carpet_normals.append(n)
 					# Wildflower drifts on top of the carpet.
 					var drift := lerpf(0.15, 3.0, smoothstep(0.05, 0.4, noise.get_noise_2d(px * 2.2 + 70.0, pz * 2.2 - 31.0)))
@@ -1826,30 +2512,80 @@ func _build_grass() -> void:
 					if not groups.has(asset):
 						groups[asset] = []
 						normals[asset] = []
-					groups[asset].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(1.25, 1.6)), Vector3(fx, _height(fx, fz) - 0.03, fz)))
-					normals[asset].append(_ground_normal(fx, fz))
-			var detail := Node3D.new()
-			detail.name = "Meadow_%d_%d" % [cx, cz]
-			root.add_child(detail)
-			patches += carpet.size()
-			Meadow.add_cell(detail, carpet, carpet_normals, "Grass")
-			for asset: String in groups:
-				counts[asset] = counts.get(asset, 0) + groups[asset].size()
-				Vegetation.add_grass_chunk(detail, asset, groups[asset], normals[asset])
-	print("[JRPGWorld2] Grass patches: ", patches, " flowers: ", counts)
+					groups[asset].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(1.25, 1.6)), Vector3(fx, _t_height(t, fx, fz) - 0.03, fz)))
+					normals[asset].append(_t_normal(t, fx, fz))
+			cells.append(["Meadow_%d_%d" % [cx0, cz0], carpet, carpet_normals, groups, normals])
+	result.cells = cells
+	result.signature = hash(cells)
 
-## Hands the baked biome tint/debug maps to every open-field shader material.
+## Main-thread steps for a finished grass task: one per sub-cell.
+func _grass_steps(t: Chunks.Tile, result: Dictionary) -> Array[Callable]:
+	var list: Array[Callable] = []
+	for cell: Array in result.cells: list.append(_attach_grass_cell.bind(t, cell))
+	chunks.record_grass(t, result.signature)
+	return list
+
+func _attach_grass_cell(t: Chunks.Tile, cell: Array) -> void:
+	if t.grass == null:
+		t.grass = Node3D.new()
+		t.grass.name = "Meadow_%d_%d" % [t.key.x, t.key.y]
+		meadow_root.add_child(t.grass)
+	var detail := Node3D.new()
+	detail.name = cell[0]
+	t.grass.add_child(detail)
+	Meadow.add_cell(detail, cell[1], cell[2], "Grass")
+	var groups: Dictionary = cell[3]
+	var normals: Dictionary = cell[4]
+	for asset: String in groups:
+		Vegetation.add_grass_chunk(detail, asset, groups[asset], normals[asset])
+
+## A finished data task: the tile's biome patch goes into the shader maps (once) and its
+## plan into the far forest.
+func _attach_data(t: Chunks.Tile, result: Dictionary) -> void:
+	if result.get("data", false) and not patched.has(t.key):
+		patched[t.key] = true
+		biome.write_patch(t.biome, result.texels)
+	if result.get("planned", false): _mark_far(t.key, false, true)
+
+func _release_grass(t: Chunks.Tile) -> void:
+	t.grass.queue_free()
+
+## The far forest takes the tiles' trees back first (in this frame), then their detail goes.
+func _release_details(list: Array[Chunks.Tile]) -> void:
+	var blocks := {}
+	for t in list:
+		forest_excluded.erase(t.key)
+		_mark_far(t.key, false, true)
+		blocks[_far_block_of(t.key).get("key")] = true
+	for block: Dictionary in far_blocks.values():
+		if block.forest_dirty and blocks.has(block.key): _rebuild_far_forest(block)
+	for t in list: t.detail.queue_free()
+
+## The far blocks take the tiles' ground back first (in this frame), then their mesh goes.
+func _release_terrains(list: Array[Chunks.Tile]) -> void:
+	for t in list:
+		far_excluded.erase(t.key)
+		_mark_far(t.key, true, false)
+	for block: Dictionary in far_blocks.values():
+		if block.terrain_dirty: _rebuild_far_terrain(block)
+	for t in list: t.terrain.queue_free()
+
+## A tile dropped from the streamer: its trees leave the far forest.
+func _forget_tile(t: Chunks.Tile) -> void:
+	_mark_far(t.key, false, true)
+
+## Hands the biome tint/debug maps to every open-field shader material.
 func _apply_biome_maps() -> void:
-	var tint := biome.tint_texture()
-	biome_debug_map = biome.debug_texture()
-	var surface := biome.surface_texture()
+	var tint: Texture2D = biome.tint_map
+	var surface: Texture2D = biome.surface_map
+	biome_debug_map = biome.debug_map
 	for material in _field_materials():
 		material.set_shader_parameter("biome_map", tint)
 		material.set_shader_parameter("biome_debug_map", biome_debug_map)
 		material.set_shader_parameter("biome_surface_map", surface)
 		material.set_shader_parameter("biome_uv_scale", biome.uv_scale())
 		material.set_shader_parameter("biome_uv_offset", biome.uv_offset())
-		material.set_shader_parameter("biome_extent", float(SIZE))
+		material.set_shader_parameter("biome_extent", float(extent))
 		material.set_shader_parameter("biome_enabled", 1.0)
 
 func _field_materials() -> Array[ShaderMaterial]:
@@ -1858,8 +2594,11 @@ func _field_materials() -> Array[ShaderMaterial]:
 	materials.append(terrain_material)
 	return materials
 
+## Place names over the landmarks: text, position, height above the ground or water.
+const LABELS := [["ルミエール城", CRAG, 44.0], ["城下町", TOWN_PLAZA, 16.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0], ["白瀬川", Vector2(265, 58), 10.0], ["碧瀬川", Vector2(340, 194), 8.0], ["碧の海", Vector2(430, 290), 8.0]]
+
 func _build_labels(parent: Node3D) -> void:
-	for entry in [["ルミエール城", CRAG, 44.0], ["城下町", TOWN_PLAZA, 16.0], ["鏡の湖", Vector2(150, 160), 6.0], ["風車の丘", VILLAGE, 20.0], ["白霧の遺跡", RUINS, 16.0], ["見晴らしの丘", SPAWN_HILL, 9.0], ["北嶺 アルヴァ", Vector2(300, 30), 22.0], ["白瀬川", Vector2(265, 58), 10.0], ["碧瀬川", Vector2(340, 194), 8.0], ["碧の海", Vector2(430, 290), 8.0]]:
+	for entry: Array in LABELS:
 		var label := Label3D.new()
 		label.text = entry[0]
 		var p: Vector2 = entry[1]
@@ -1985,22 +2724,27 @@ func _shot(shot_name: String) -> void:
 	_update_camera()
 
 ## Top-down 1 px = 1 m map: biome debug colors over a hillshade, sightlines in white.
+## Generates every tile of the field first (slow on a large field; a debugging aid).
 func _dump_maps(directory: String) -> void:
-	var image := Image.create_empty(SIZE + 1, SIZE + 1, false, Image.FORMAT_RGB8)
-	var debug := biome_debug_map.get_image()
+	for kz in chunks.tiles_per_side:
+		for kx in chunks.tiles_per_side: chunks.ensure_plan(Vector2i(kx, kz))
+	var image := Image.create_empty(extent + 1, extent + 1, false, Image.FORMAT_RGB8)
+	var debug := biome.debug_image
 	var light := Vector3(-1, 2, -1).normalized()
-	for z in SIZE + 1:
-		for x in SIZE + 1:
+	for z in extent + 1:
+		for x in extent + 1:
 			var normal := Vector3(_cached(x - 1, z) - _cached(x + 1, z), 2.0, _cached(x, z - 1) - _cached(x, z + 1)).normalized()
 			var color := debug.get_pixel(mini(x >> 1, debug.get_width() - 1), mini(z >> 1, debug.get_height() - 1))
-			var depth := water_cache[z * (SIZE + 1) + x] - _cached(x, z)
+			var depth := _water_level(x, z) - _cached(x, z)
 			if depth > 0.0: color = Color("1d3f66").lerp(Color("5fb8c8"), 1.0 - smoothstep(0.0, WADE_DEPTH, depth))
 			color = color * lerpf(0.45, 1.15, maxf(normal.dot(light), 0.0))
 			if _sightline_mask(Vector2(x, z)) > 0.5: color = color.lerp(Color.WHITE, 0.25)
 			image.set_pixel(x, z, color)
-	for rect in obstacles:
+	var rects: Array[Rect2] = obstacles.duplicate()
+	for t: Chunks.Tile in chunks.tiles.values(): rects.append_array(t.rects)
+	for rect in rects:
 		var center := rect.get_center()
-		if center.x >= 0 and center.y >= 0 and center.x <= SIZE and center.y <= SIZE:
+		if center.x >= 0 and center.y >= 0 and center.x <= extent and center.y <= extent:
 			image.set_pixel(int(center.x), int(center.y), Color.WHITE)
 	image.save_png(directory.path_join("open_field_map_biome.png"))
 
@@ -2045,6 +2789,10 @@ Walkable: %s" % [
 		Biomes.NAMES[get_biome_at(p.x, p.z)], " / ".join(shares), cell.x, cell.y,
 		get_visual_height(p.x, p.z), get_gameplay_height(p.x, p.z), get_logical_height(p.x, p.z),
 		get_slope_at(p.x, p.z), str(is_walkable_at(p.x, p.z))]
+	if streamed:
+		var tiles := chunks.stats()
+		terrain_text.text += "\nTiles: grass %d / detail %d / terrain %d\n  data %d / plan %d, queued %d" % [
+			tiles.grass, tiles.detail, tiles.terrain, tiles.data, tiles.plan, chunks.pending()]
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and mode == "explore":
@@ -2079,6 +2827,16 @@ func _region() -> String:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	if streamed and player:
+		# Around the explorer and around the camera, which may look from elsewhere (views).
+		chunks.update([Vector2(player.position.x, player.position.z), Vector2(camera.position.x, camera.position.z)], delta)
+		var started := Time.get_ticks_usec()
+		_update_far()
+		biome_flush_wait -= delta
+		if biome_flush_wait <= 0.0:
+			biome.flush_maps()
+			biome_flush_wait = 0.25
+		chunks.counters.max_far_ms = maxf(chunks.counters.max_far_ms, (Time.get_ticks_usec() - started) / 1000.0)
 	for hub in spinning: hub.rotation.z += delta * 0.55
 	if crystal:
 		crystal.rotation.y += delta * 0.6
@@ -2087,6 +2845,14 @@ func _process(delta: float) -> void:
 	if terrain_panel.visible: _update_terrain_hud()
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
 		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"
+
+## The orbit camera keeps clear of the ground as in world.gd, but only reads heights it
+## already has, so a far-flung overview never loads tiles for its clearance.
+func _update_camera() -> void:
+	camera.position = focus + Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * distance
+	if camera.position.x >= 0 and camera.position.x < extent and camera.position.z >= 0 and camera.position.z < extent:
+		camera.position.y = maxf(camera.position.y, _height_estimate(camera.position.x, camera.position.z) + minf(3.0, 0.5 + distance * 0.25))
+	camera.look_at(focus)
 
 ## Mirrors FieldWeather's time/weather/season onto the open-field materials.
 func _sync_conditions() -> void:
