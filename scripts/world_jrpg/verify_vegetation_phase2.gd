@@ -165,12 +165,25 @@ func _check_bush(asset: String) -> void:
 	check(tris[0] <= 2500 and tris[1] < tris[0] and tris[2] < tris[1], "%s LODs get coarser within 2,500 triangles" % asset)
 	var aabb := lods[0].get_aabb()
 	check(aabb.end.y >= 0.4 and aabb.end.y <= 1.35, "%s height 0.4-1.2 m (%.2f m)" % [asset, aabb.end.y])
+	# Seed-tree foliage (build_seed_trees.py): leaf cards (alpha 1) over a lump core (alpha 0).
 	for level in lods.size():
-		check(_surface_named(lods[level], Vegetation.FOLIAGE_MATERIAL) >= 0, "%s LOD%d uses the shared foliage material" % [asset, level])
-	var leaves := _surface_named(lods[0], Vegetation.FOLIAGE_MATERIAL)
-	check(_channel_range(lods[0], leaves, 1).y < 0.5, "%s sways less than a tree crown" % asset)
-	var tone := _channel_range(lods[0], leaves, 0)
-	check(tone.x < 0.25 and tone.y > 0.8, "%s foliage tone spans shadow to highlight (%.2f-%.2f)" % [asset, tone.x, tone.y])
+		var mesh := lods[level]
+		var seed_surfaces := 0
+		for surface in mesh.get_surface_count():
+			if mesh.surface_get_material(surface) == Vegetation.SEED_MATERIAL: seed_surfaces += 1
+		check(seed_surfaces == mesh.get_surface_count() and seed_surfaces == 2, "%s LOD%d is seed-tree cards + core (%d surfaces)" % [asset, level, seed_surfaces])
+	var alpha := Vector2(INF, -INF)
+	for surface in lods[0].get_surface_count():
+		var a := _channel_range(lods[0], surface, 3)
+		alpha = Vector2(minf(alpha.x, a.x), maxf(alpha.y, a.y))
+	check(alpha.x < 0.5 and alpha.y > 0.5, "%s has both leaf cards and a core" % asset)
+	# The cards sit on the bush (the export cancels the glTF UV2 flip): offsets centered on 0.
+	var cards := _surface_named(lods[0], Vegetation.SEED_MATERIAL)
+	var uv2: PackedVector2Array = lods[0].surface_get_arrays(cards)[Mesh.ARRAY_TEX_UV2]
+	var mean := Vector2.ZERO
+	for o in uv2: mean += o
+	mean /= maxi(uv2.size(), 1)
+	check(mean.length() < 0.1, "%s leaf cards are centered on their spots (mean UV2 offset %s)" % [asset, mean])
 
 ## Shared grass / flower cluster checks; returns the mesh for the material checks.
 func _check_cluster(asset: String) -> Mesh:

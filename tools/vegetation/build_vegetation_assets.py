@@ -1370,9 +1370,11 @@ ASSETS = {
     "oak_b": tree_asset("oak_b", "trees/oak", lambda: design_spreading(OAK_B)),
     "conifer_a": tree_asset("conifer_a", "trees/conifer", lambda: design_conifer(CONIFER_A), CONIFER_LODS),
     "conifer_b": tree_asset("conifer_b", "trees/conifer", lambda: design_conifer(CONIFER_B), CONIFER_LODS),
-    "bush_a": tree_asset("bush_a", "bushes", lambda: design_bush(BUSH_A), BUSH_LODS),
-    "bush_b": tree_asset("bush_b", "bushes", lambda: design_bush(BUSH_B), BUSH_LODS),
-    "bush_c": tree_asset("bush_c", "bushes", lambda: design_bush(BUSH_C), BUSH_LODS),
+    # The solid-mass bushes; bushes/bush_*.glb now come from build_seed_trees.py (seed-tree
+    # leaf cards), so these only build under their own names on request.
+    "bush_solid_a": tree_asset("bush_solid_a", "bushes/solid", lambda: design_bush(BUSH_A), BUSH_LODS),
+    "bush_solid_b": tree_asset("bush_solid_b", "bushes/solid", lambda: design_bush(BUSH_B), BUSH_LODS),
+    "bush_solid_c": tree_asset("bush_solid_c", "bushes/solid", lambda: design_bush(BUSH_C), BUSH_LODS),
     # Illustration-style leaf-card trees: five silhouettes that replace the solid broadleaf
     # and oak set on the map.
     "card_round": card_tree_asset("card_round", "trees/card", design_broadleaf_a),
@@ -1395,7 +1397,7 @@ ASSETS = {
 
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    names = argv or list(ASSETS)
+    names = argv or [name for name in ASSETS if not name.startswith("bush_solid_")]
     for name in names:
         objects, group, asset, report = ASSETS[name]()
         glb, blend = export(objects, group, asset)

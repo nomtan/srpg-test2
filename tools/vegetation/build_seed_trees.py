@@ -18,7 +18,7 @@ shoots (_side_shoots) also break up the bare limbs below the crown.
   - NORMAL: cards and core carry the crown's proxy ("hull_n") normal, so lighting reads per
     lump, never per card.
 """
-import bpy, math, os, random
+import bpy, math, os, random, sys
 import numpy as np
 from mathutils import Vector
 
@@ -173,7 +173,37 @@ def _conifers():
     return out
 
 
-VARIANTS = {**_variants(), **_conifers()}
+# Illustration bushes: the same canopy (lumps, cards, core and painting as the crowns) squashed
+# into a low mound standing on the ground, no trunk. They replace the solid-mass bushes
+# (build_vegetation_assets.py) under the same asset names and sizes.
+BUSH_DIR = os.path.join(VEG, "bushes")
+# Bush LODs as LODS: Godot shows them from 0 / 26 / 60 m (BUSH_LOD*_FROM) and never thins
+# them itself, so the far LODs drop cards here.
+BUSH_LODS = [(0.35, 1.0, 2, 0), (0.18, 1.4, 1, 0), (0.08, 2.0, 1, 0)]
+
+
+def _bushes():
+    """{asset: (crown seed, crown inputs, style, leaf hue, reference crown)} for the bushes:
+    a (~0.9 m rounded mound), b (~0.6 m low, wide hedge clump), c (~1.2 m upright understory
+    shrub). Sizes are Blender m (before EXPORT_SCALE)."""
+    shapes = {
+        "bush_a": dict(seed=301, clusters=9, width=0.32, depth=0.9, height=0.12, flatten=0.7, rmin=0.13, rmax=0.2, hue=0.2),
+        "bush_b": dict(seed=302, clusters=12, width=0.5, depth=0.55, height=0.06, flatten=0.85, rmin=0.11, rmax=0.16, hue=0.5),
+        "bush_c": dict(seed=303, clusters=10, width=0.22, depth=0.9, height=0.22, flatten=0.5, rmin=0.12, rmax=0.19, hue=-0.4),
+    }
+    out = {}
+    for asset, s in shapes.items():
+        crown = {"Clusters": s["clusters"], "Width": s["width"], "Depth Ratio": s["depth"], "Height": s["height"],
+                 "Bottom Flatten": s["flatten"], "Center Z": s["height"] * s["flatten"] + s["rmax"] * 0.8,
+                 "Cluster Radius Min": s["rmin"], "Cluster Radius Max": s["rmax"], "Shape Variation": 0.0,
+                 "Skew X": 0.0, "Skew Y": 0.0, "Taper": -0.3, "Jitter": 0.2}
+        # Smaller cards than a crown's, so a bush reads as leaves, not a few big blobs.
+        style = dict(bush=True, card_density=CARD_DENSITY * 4.0, card_size=CARD_SIZE * 0.4)
+        out[asset] = (s["seed"], crown, style, s["hue"], crown)
+    return out
+
+
+VARIANTS = {**_variants(), **_conifers(), **_bushes()}
 
 
 def _smoothstep(a, b, x):
@@ -359,9 +389,11 @@ def _crown(canopy, seed, density, card_size, subdivisions, card_obj, hue=0.0, le
     return cards, hull, list(lumps.values())
 
 
-def _add_crown(part, cards, hull, share, size_scale):
+def _add_crown(part, cards, hull, share, size_scale, exact_uv2=False):
     """Cards collapse to their center (lifted off the core) with the corner offset in UV2;
-    the core is the lump hull."""
+    the core is the lump hull. The glTF export stores UV2 as (u, 1 - v), which lifts every
+    card 1 m above its spot in Godot; exact_uv2 pre-flips v so the offset arrives as written
+    (the trees were tuned with the lift and keep it)."""
     for center, n, side, color, corners, spin, roll in cards:
         if roll >= share:
             continue
@@ -372,6 +404,8 @@ def _add_crown(part, cards, hull, share, size_scale):
         for u, v in corners:
             ox, oy = (u - 0.5) * side, (v - 0.5) * side
             off = ((ox * cs - oy * sn) * EXPORT_SCALE, (ox * sn + oy * cs) * EXPORT_SCALE)
+            if exact_uv2:
+                off = (off[0], 1.0 - off[1])
             idx.append(part.vertex(pos, n, color, (u, 1.0 - v), off))
         part.faces.append(tuple(idx))
         part.slots.append(0)
@@ -640,6 +674,46 @@ def _build_mesh(name, part, materials):
     return me
 
 
+def _export(objs, path):
+    bpy.ops.object.select_all(action="DESELECT")
+    for ob in objs:
+        ob.hide_set(False)
+        ob.select_set(True)
+    bpy.context.view_layer.objects.active = objs[0]
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB",
+                              use_selection=True, export_normals=True, export_texcoords=True,
+                              export_vertex_color="ACTIVE", export_materials="EXPORT", export_yup=True)
+    for ob in objs:
+        ob.hide_set(True)
+
+
+def _build_bush(asset, canopy, mod, ids, seed, crown, style, hue, card, materials, export_col, report):
+    """A bush: the crown's cards and core at BUSH_LODS, no branches, into bushes/<asset>.glb."""
+    for k, v in crown.items():
+        mod[ids[k]] = v
+    cards, _, lumps = _crown(canopy, seed, style["card_density"], style["card_size"], BUSH_LODS[0][2], card, hue, FOLIAGE_TINT)
+    hulls, objs = {}, []
+    for lod, (share, size_scale, subdivisions, _) in enumerate(BUSH_LODS):
+        if subdivisions not in hulls:
+            hulls[subdivisions] = _crown(canopy, seed, 0.0, CARD_SIZE, subdivisions, card, hue, FOLIAGE_TINT)[1]
+        part = Part()
+        _add_crown(part, cards, hulls[subdivisions], share, size_scale, exact_uv2=True)
+        name = "%s_LOD%d" % (asset, lod)
+        me = _build_mesh(name, part, materials)
+        ob = bpy.data.objects.get(name)
+        if ob:
+            bpy.data.objects.remove(ob)
+        ob = bpy.data.objects.new(name, me)
+        export_col.objects.link(ob)
+        objs.append(ob)
+        report[name] = sum(len(p.vertices) - 2 for p in me.polygons)
+    zs = [v.co.z for v in objs[0].data.vertices]
+    xs = [v.co.x for v in objs[0].data.vertices]
+    ys = [v.co.y for v in objs[0].data.vertices]
+    report[asset + "_size"] = (round(max(xs) - min(xs), 2), round(max(ys) - min(ys), 2), round(min(zs), 2), round(max(zs), 2))
+    _export(objs, os.path.join(BUSH_DIR, asset + ".glb"))
+
+
 def build():
     os.makedirs(OUT_DIR, exist_ok=True)
     make_leaf_texture(TEXTURE)
@@ -662,10 +736,17 @@ def build():
     if export_col.name not in bpy.context.scene.collection.children:
         bpy.context.scene.collection.children.link(export_col)
     report = {}
+    # Optional asset names after "--" rebuild only those (e.g. -- bush_a bush_b bush_c).
+    only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     try:
         for asset, (seed, crown, style, hue, reference) in VARIANTS.items():
+            if only and asset not in only:
+                continue
             objs = []
             style = dict(style)
+            if style.get("bush"):
+                _build_bush(asset, canopy, mod, ids, seed, crown, style, hue, card, materials, export_col, report)
+                continue
             # The trunk height comes from the reference crown, so warping the crown never
             # moves the trunk.
             for k, v in reference.items():
@@ -704,16 +785,7 @@ def build():
                 export_col.objects.link(ob)
                 objs.append(ob)
                 report[name] = sum(len(p.vertices) - 2 for p in me.polygons)
-            bpy.ops.object.select_all(action="DESELECT")
-            for ob in objs:
-                ob.hide_set(False)
-                ob.select_set(True)
-            bpy.context.view_layer.objects.active = objs[0]
-            bpy.ops.export_scene.gltf(filepath=os.path.join(OUT_DIR, asset + ".glb"), export_format="GLB",
-                                      use_selection=True, export_normals=True, export_texcoords=True,
-                                      export_vertex_color="ACTIVE", export_materials="EXPORT", export_yup=True)
-            for ob in objs:
-                ob.hide_set(True)
+            _export(objs, os.path.join(OUT_DIR, asset + ".glb"))
     finally:
         for k, v in keep.items():
             mod[ids[k]] = v

@@ -145,9 +145,10 @@ static var card_parts: Dictionary = {}
 static func has_asset(asset: String) -> bool:
 	return SCENES.has(asset) or asset in TOON_TREES
 
-## Trees whose leaf cards are split off into a non-casting MultiMesh (split_cards).
+## Trees (and the seed-foliage bushes) whose leaf cards are split off into a non-casting
+## MultiMesh (split_cards).
 static func _has_cards(asset: String) -> bool:
-	return asset in CARD_TREES or _is_seed(asset)
+	return asset in CARD_TREES or _is_seed(asset) or asset in BUSHES
 
 ## Seed-driven illustration trees (broadleaves and conifers).
 static func _is_seed(asset: String) -> bool:
@@ -439,7 +440,8 @@ static func add_bush_chunk(parent: Node3D, asset: String, transforms: Array) -> 
 	var lods := lod_meshes(asset)
 	var bands := [0.0, BUSH_LOD1_FROM, BUSH_LOD2_FROM, BUSH_LOD2_END]
 	for level in lods.size():
-		_range(_instances(parent, lods[level], transforms, "%s_LOD%d" % [asset, level], BUSH_SHADOWS[level]), bands[level], bands[level + 1])
+		for instance in _tree_instances(parent, asset, level, transforms, "%s_LOD%d" % [asset, level], BUSH_SHADOWS[level]):
+			_range(instance, bands[level], bands[level + 1])
 
 ## One grass or flower chunk: all clumps up to GRASS_NEAR, every other clump (scaled up 15 % to keep
 ## the cover) out to GRASS_FAR, where the shader has already sunk them into the ground.
