@@ -119,15 +119,18 @@ def rotate_region(mesh, pivot, rotation, weight_fn):
     return len(vertex_rotation)
 
 
-def align_arms(donor, body, rig):
+def align_arms(donor, body, rig, sides=(1, -1)):
     """Rotate each T-pose arm of body about the rig shoulder/elbow to match donor.
 
     Tripo bodies without a rig can have arms swung forward/back relative to the
     shared humanoid_v1 rest pose. Weight transfer and animation then leave the
     hands in the wrong place, so the working-scene copy is aligned first.
+    sides limits the alignment to the left (1) and/or right (-1) arm.
     """
     report = {}
     for side, prefix in ((1, 'mixamorig:Left'), (-1, 'mixamorig:Right')):
+        if side not in sides:
+            continue
         shoulder = rig.matrix_world @ rig.data.bones[prefix + 'Arm'].head_local
         elbow = rig.matrix_world @ rig.data.bones[prefix + 'ForeArm'].head_local
         xs, xe = abs(shoulder.x), abs(elbow.x)

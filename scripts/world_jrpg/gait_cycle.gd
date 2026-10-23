@@ -38,8 +38,6 @@ const RUN_STYLE := {
 	"run": true,
 }
 const HAND_TIPS := {"L": "mixamorig_LeftHandMiddle1", "R": "mixamorig_RightHandMiddle1"}
-# Reflects skeleton space across the body's midline (X).
-const MIRROR := Basis(Vector3(-1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1))
 # Toes stay flat on the ground while the heel rises, then follow the foot over this share of the swing.
 const TOE_RELEASE := 0.2
 
@@ -146,35 +144,12 @@ func _swing_arm(pose: Dictionary, style: Dictionary, side: String, swing: float,
 	# Turning about -X swings a hanging arm forward.
 	var upper := chest * Basis(Vector3.RIGHT, -deg_to_rad(upper_angle)) * hang
 	var fore := chest * (Basis(Vector3.RIGHT, -deg_to_rad(upper_angle + elbow)) * hang + Vector3(-outward * style.cross * forward, 0, 0))
-	# A straight wrist, the hand in line with the forearm.
+	# A straight wrist, the hand in line with the forearm. humanoid_v1 is left/right symmetric, so both
+	# arms aim the same way and come out as mirror images.
 	var directions: Array[Vector3] = [upper, fore, fore]
-	var correction := Basis.IDENTITY
+	var bones: Array = chain + [HAND_TIPS[side]]
 	for index in directions.size():
-		if side == "L":
-			_aim(pose, chain[index], (chain + [HAND_TIPS.L])[index + 1], directions[index])
-		else:
-			correction = _mirror_left(pose, index, directions[index], correction)
-
-
-## Gives a right-arm bone the mirror image of the turn its left counterpart takes to point along the mirrored
-## direction. The right arm's rest and idle are twisted unlike the left's, so aiming it directly turns the hand.
-## Its rest is also bent unlike the left's, so the upper arm and forearm are then swung the least way onto
-## direction; the hand takes the forearm's correction. Returns the correction for the next bone.
-func _mirror_left(pose: Dictionary, index: int, direction: Vector3, correction: Basis) -> Basis:
-	var left: Array = ARM_CHAINS.L + [HAND_TIPS.L]
-	var bone: String = ARM_CHAINS.R[index]
-	var idle: Transform3D = _idle_global[left[index]]
-	var from := ((_idle_global[left[index + 1]] as Transform3D).origin - idle.origin).normalized()
-	var turned := Basis(Quaternion(from, (MIRROR * direction).normalized())) * idle.basis
-	var deform := MIRROR * (turned * skeleton.get_bone_global_rest(skeleton.find_bone(left[index])).basis.inverse()) * MIRROR
-	var rest := skeleton.get_bone_global_rest(skeleton.find_bone(bone))
-	if index < 2:
-		var child := skeleton.get_bone_global_rest(skeleton.find_bone(ARM_CHAINS.R[index + 1]))
-		correction = Basis(Quaternion((deform * (child.origin - rest.origin)).normalized(), direction.normalized()))
-	var joint := _global(pose, skeleton.find_bone(bone))
-	joint.basis = correction * deform * rest.basis
-	_set_global(pose, bone, joint)
-	return correction
+		_aim(pose, bones[index], bones[index + 1], directions[index])
 
 
 ## Lean (forward pitch), yaw and roll in degrees as a skeleton-space rotation.

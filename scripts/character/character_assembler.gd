@@ -71,9 +71,11 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 	var rest_inverse := head_rest.affine_inverse()
 	# face_offset moves and face_scale sizes the Face in that rest space, for a Face on a Body it was not
 	# sized against. The scale pivots on the head joint so the Face stays seated on the neck.
+	# A Body whose collar or hood rises above Body001's neck carries its own face_offset, applied to every Face.
 	var neck := head_rest.origin
 	var sized := Transform3D(Basis.from_scale(Vector3.ONE * definition.face_scale), neck - neck * definition.face_scale)
-	face.transform = rest_inverse * Transform3D(Basis.IDENTITY, definition.face_offset) * sized
+	var offset := definition.face_offset + _body_face_offset(skeleton)
+	face.transform = rest_inverse * Transform3D(Basis.IDENTITY, offset) * sized
 	# Painted Tripo textures already carry their shading; extra toon bands and
 	# received shadows muddy them, so those Faces render flat. The Face sits under
 	# the Body skeleton now, so convert it first or the Body pass claims it.
@@ -98,6 +100,17 @@ static func assemble(definition: CharacterDefinition) -> Node3D:
 
 static func _is_static_part(part: Node3D) -> bool:
 	return not (part is Skeleton3D) and part.find_children("*", "Skeleton3D", true, false).is_empty() and part.find_children("*", "AnimationPlayer", true, false).is_empty()
+
+
+## The Body's face_offset (rest space, +Z forward) from its armature node extras; zero when it has none.
+## The glTF importer keeps the armature node as the Skeleton3D's parent and puts the extras there.
+static func _body_face_offset(skeleton: Skeleton3D) -> Vector3:
+	for node: Node in [skeleton, skeleton.get_parent()]:
+		var extras = node.get_meta("extras", {}) if node else {}
+		if extras is Dictionary and extras.get("face_offset") is Array and (extras.face_offset as Array).size() == 3:
+			var value: Array = extras.face_offset
+			return Vector3(value[0], value[1], value[2])
+	return Vector3.ZERO
 
 
 static func _has_baked_features(face: Node3D) -> bool:

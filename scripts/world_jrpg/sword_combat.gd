@@ -201,7 +201,7 @@ const GS_SMASH_KEYS := [
 	{"t": 0.30, "yaw": -28.0, "pitch": -19.0, "hip_yaw": -14.0, "hip": Vector3(0,0,-.05), "back": Vector3(0,.04,-.07), "step": Vector3(0,.06,.04),
 		"grip": Vector3(-.33,.16,.14), "blade": Vector3(-.25,-.25,-.93), "edge": Vector3(0,.93,-.25)},
 	{"t": 0.35, "yaw": -8.0, "pitch": 2.0, "hip_yaw": -4.0, "hip": Vector3(-.02,-.1,.14), "step": Vector3(-.04,.02,.3), "back": Vector3(0,0,-.12),
-		"grip": Vector3(-.1,-.05,.75), "blade": Vector3(-.1,.6,.8), "edge": Vector3(0,-.8,.6)},
+		"grip": Vector3(-.1,-.05,.7), "blade": Vector3(-.1,.6,.8), "edge": Vector3(0,-.8,.6)},
 	{"t": 0.39, "yaw": 4.0, "pitch": 24.0, "hip_yaw": 3.0, "hip": Vector3(-.03,-.28,.24), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
 		"grip": Vector3(.01,-.43,.58), "blade": Vector3(-.05,-.6,.8), "edge": Vector3(0,-.8,-.6)},
 	{"t": 0.56, "yaw": 5.0, "pitch": 22.0, "hip_yaw": 4.0, "hip": Vector3(-.03,-.26,.23), "step": Vector3(-.06,0,.48), "back": Vector3(0,0,-.22),
@@ -301,7 +301,7 @@ const BW_AIM := {"yaw": -40.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .
 const BW_SHOT_KEYS := [
 	{"t": 0.0, "ready": true},
 	{"t": 0.10, "yaw": -30.0, "hip_yaw": -40.0, "feet_turn": -55.0, "stance": .1, "hip": Vector3(0,-.07,0), "look": .9,
-		"bow": Vector3(.2,-.2,.8), "bow_up": Vector3(.25,1,.1), "draw": Vector3(.05,-.2,.45)},
+		"bow": Vector3(.2,-.2,.8), "bow_up": Vector3(.25,1,.1), "draw": Vector3(.05,-.2,.32)},
 	{"t": 0.24, "yaw": -40.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95,
 		"bow": Vector3(-.1,.05,1.15), "bow_up": Vector3(.08,1,0), "draw": Vector3(-.25,.1,.05)},
 	{"t": 0.34, "yaw": -40.0, "hip_yaw": -45.0, "feet_turn": -60.0, "stance": .1, "hip": Vector3(0,-.08,0), "look": .95,
@@ -1357,7 +1357,7 @@ func _bend_off_arm(pose: Dictionary, degrees: float) -> void:
 func _grip_arms(pose: Dictionary, offset: Vector3, blade: Vector3, both := true, elbow := Vector3.ZERO, edge := Vector3.ZERO) -> void:
 	var point := _shoulders(pose) + offset * arm_reach
 	blade = blade.normalized()
-	# The right hand sets the edges; the shorter left arm keeps its own line so it still reaches the handle.
+	# The right hand sets the edges; the left arm keeps its own line so it still reaches the handle.
 	_hold(pose, "R", point, blade, elbow, edge)
 	if both:
 		_hold(pose, "L", point - blade * GS_HAND_SPACING, blade)

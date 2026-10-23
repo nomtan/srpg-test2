@@ -98,10 +98,10 @@ fixtureは矩形Headと左眼／眉を覆う矩形Hair。**Tripo Face007では�
 Face007原本は1 mesh / 1 combined material、UV0のみ、6,821 vertices / 6,087 triangles。
 Head/Hair境界・UV/mask・normalization metadataがない。
 初回はBlender MCPへ接続できなかったが、ユーザーの再接続後にBlender 5.1.2へ接続確認済み。
-`artifacts/face007_authoring/face007-working.blend` に専用作業シーンとHead/Hair材質スロットを準備した。
+`docs/character/face007_authoring/face007-working.blend` に専用作業シーンとHead/Hair材質スロットを準備した。
 原本は695 UV島で、継ぎ目の重複頂点を仮想的につないでもHead/Hairの明示境界がなかった。
 原本を推測分類せず、ポリゴンの明示割当待ち。既存001〜006も再生成していない。
-[作業手順](../../artifacts/face007_authoring/README.md)と原本正面renderをworking directoryへ保存した。
+[作業手順](face007_authoring/README.md)と原本正面renderをworking directoryへ保存した。
 
 **Phase 5全体は未完了**。明示authoringされたFace007 working assetが必要。
 それを使った正式GLB、Body001〜006との組合せ、4 animations中のv2、ゲームカメラ確認、

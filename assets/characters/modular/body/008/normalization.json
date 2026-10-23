@@ -6,8 +6,13 @@
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
   "source_sha256": "90d90004ffc70da1c6e438f0dad74e8d53f765e66dfed253d611b211bee9839a",
-  "arm_alignment": "none",
+  "arm_alignment": "match_rig_source",
   "rest_fit": "landmarks_v1",
   "source_rig": "discard",
-  "decimate_ratio": 0.21
+  "decimate_ratio": 0.21,
+  "face_offset": [
+    0,
+    0.015,
+    0.01
+  ]
 }

@@ -43,3 +43,4 @@
 
 Normalizer は raw Body を直接上書きせず、`humanoid_v1.glb` を rig / weight donor として読み、transform、rest pose、weight、animation、toon material を正規化する。PBR normal / metallic / roughness はゲーム shader が利用しないため、新規アセットでは base color 以外の接続を除去する。Body001 は Reference Set の一例であり reference rig ではない。
 
+humanoid_v1 は左右対称（Right* は Left* の鏡像）。Tripo の Body は右前腕が前に曲がっていることが多いので、`arm_alignment: match_rig_source`（腕の中心線が肩パッドなどでぶれる Body は `whole_arm`、原本の腕がそのままでよい Body は `none`）で腕を donor に合わせてからウェイトを転送する。襟やフードが Body001 の首より高い Body は `face_offset`（rest 空間、+Y 上・+Z 前）を持ち、その Body に載る全 Face を移動する。詳細は [Tripo キャラクターパイプライン](tripo-character-pipeline.md)。

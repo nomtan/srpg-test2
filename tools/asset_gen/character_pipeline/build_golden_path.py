@@ -88,10 +88,45 @@ def build_body():
     create_animations(rig)
 
 
-def create_animations(rig, clips=None):
+# Relaxed standing arms, in degrees: upper arm and forearm out from the vertical, elbow bent forward.
+# The hand stays in line with the forearm.
+ARM_HANG = dict(upper_spread=22, fore_spread=16, elbow=10)
+
+
+def arm_hang(rig, spread=None):
+    """Armature-space rotations, relative to each bone's parent, that let the T-pose arms hang.
+
+    spread opens one arm further from the side, in degrees: {"left": deg, "right": deg}. It suits a Body
+    whose own arm geometry hangs closer to the body on one side.
+
+    The rig's rest arm is a T-pose with the forearm bent forward and the hand tilted; turning only the
+    upper arm down left the forearm sticking out and the wrist bent. Each arm bone instead takes the
+    least turn from its rest direction onto a hanging one, which keeps the palm facing the thigh.
+    """
+    hang = {}
+    for side, prefix in ((1, 'mixamorig:Left'), (-1, 'mixamorig:Right')):
+        extra = (spread or {}).get('left' if side > 0 else 'right', 0)
+        up, fore = (math.radians(ARM_HANG[k] + extra) for k in ('upper_spread', 'fore_spread'))
+        elbow = math.radians(ARM_HANG['elbow'])
+        chain = [prefix + name for name in ('Arm', 'ForeArm', 'Hand', 'HandMiddle1')]
+        if not all(name in rig.data.bones for name in chain):
+            continue
+        fore_dir = Vector((side * math.sin(fore), -math.sin(elbow), -math.cos(fore) * math.cos(elbow))).normalized()
+        targets = [Vector((side * math.sin(up), 0, -math.cos(up))), fore_dir, fore_dir]
+        parent = Quaternion()
+        for bone, child, target in zip(chain, chain[1:], targets):
+            rest = (rig.data.bones[child].head_local - rig.data.bones[bone].head_local).normalized()
+            turn = rest.rotation_difference(target)
+            hang[bone] = parent.inverted() @ turn
+            parent = turn
+    return hang
+
+
+def create_animations(rig, clips=None, arm_spread=None):
     """Shared in-place compatibility clips for the inspected 65-bone Tripo rig."""
     scene = bpy.context.scene
     rig.animation_data_create()
+    hang = arm_hang(rig, arm_spread)
     # A small in-place motion set for compatibility, not production combat art.
     clips = clips or [('idle', 60), ('walk', 30), ('attack', 30), ('hit', 24)]
     for clip, frames in clips:
@@ -102,19 +137,18 @@ def create_animations(rig, clips=None):
             t = (frame - 1) / frames
             wave = math.sin(2 * math.pi * t)
             pulse = math.sin(math.pi * t) ** 2
-            rotations = {'mixamorig:LeftArm': (0, .75, 0),
-                         'mixamorig:RightArm': (0, -.75, 0),
-                         'mixamorig:Spine2': (.025 * wave, 0, 0),
+            # Arm rotations turn the hanging arm (about X swings it forward/back).
+            rotations = {'mixamorig:Spine2': (.025 * wave, 0, 0),
                          'head': (.015 * wave, 0, .025 * wave)}
             if clip == 'walk':
                 rotations.update({'mixamorig:LeftUpLeg': (.25 * wave, 0, 0),
                                   'mixamorig:RightUpLeg': (-.25 * wave, 0, 0),
                                   'mixamorig:LeftLeg': (-.18 * max(0, wave), 0, 0),
                                   'mixamorig:RightLeg': (-.18 * max(0, -wave), 0, 0),
-                                  'mixamorig:LeftArm': (-.18 * wave, .75, 0),
-                                  'mixamorig:RightArm': (.18 * wave, -.75, 0)})
+                                  'mixamorig:LeftArm': (-.18 * wave, 0, 0),
+                                  'mixamorig:RightArm': (.18 * wave, 0, 0)})
             elif clip == 'attack':
-                rotations.update({'mixamorig:RightArm': (-.9 * pulse, -.75 + .35 * pulse, 0),
+                rotations.update({'mixamorig:RightArm': (-.9 * pulse, .35 * pulse, 0),
                                   'mixamorig:RightForeArm': (-.4 * pulse, 0, 0),
                                   'mixamorig:Spine2': (.10 * pulse, 0, -.15 * pulse),
                                   'head': (-.04 * pulse, 0, .07 * pulse)})
@@ -127,6 +161,7 @@ def create_animations(rig, clips=None):
                 p.scale = (1, 1, 1)
                 xyz = rotations.get(p.name, (0, 0, 0))
                 q = Quaternion((0, 0, 1), xyz[2]) @ Quaternion((0, 1, 0), xyz[1]) @ Quaternion((1, 0, 0), xyz[0])
+                q = q @ hang.get(p.name, Quaternion())
                 basis = p.bone.matrix_local.to_quaternion()
                 p.rotation_quaternion = basis.inverted() @ q @ basis
                 p.keyframe_insert('rotation_quaternion', frame=frame, group=p.name)

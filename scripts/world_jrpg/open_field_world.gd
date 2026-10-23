@@ -26,8 +26,8 @@ const BOW_REACH := 30.0
 ## off restores the solid Phase 2 trees and the procedural blossom tree.
 @export var card_trees := true
 ## Broadleaves and oaks are the seed-driven illustration trees (Vegetation.SEED_TREES, one
-## of twelve at random), conifers the seed conifers (Vegetation.SEED_CONIFERS); blossom still
-## follows toon_trees / card_trees.
+## of twelve at random), conifers the seed conifers (Vegetation.SEED_CONIFERS); the blossom
+## accents give way to seed broadleaves too.
 @export var seed_trees := false
 ## Grass carpet and flower clusters bend in the wind. Off holds them still (and skips the
 ## wind math on the GPU); on restores the sway and the gust bands rolling over the meadow.
@@ -1079,7 +1079,7 @@ func _build_world() -> void:
 func _preload_vegetation() -> void:
 	var dummy := Node3D.new()
 	var assets := {}
-	for kind in Vegetation.TREES + ["blossom"]:
+	for kind in Vegetation.TREES + ([] if seed_trees else ["blossom"]):
 		for roll in 16: assets[_tree_asset(kind, roll / 16.0) if kind != "blossom" or toon_trees or card_trees else ""] = true
 	assets.erase("")
 	var one := [Transform3D()]
@@ -2241,10 +2241,11 @@ func _plan_trees(t: Chunks.Tile) -> void:
 					kind = _tree_asset(kind, fmod(pick * 389.0, 1.0))
 					size = variation
 				else:
-					# Blossom trees are rare accents in the open meadows and on the shore.
+					# Blossom trees are rare accents in the open meadows and on the shore (not among
+					# the seed trees, where their spots take a seed broadleaf like their neighbors).
 					var meadow := b.weight(Biomes.Biome.PLAINS, p.x, p.y) + b.weight(Biomes.Biome.LAKESHORE, p.x, p.y)
 					var open_land := meadow + b.weight(Biomes.Biome.FARMLAND, p.x, p.y) + b.weight(Biomes.Biome.HIGHLAND, p.x, p.y)
-					if fmod(pick * 97.0, 1.0) < 0.06 * meadow:
+					if not seed_trees and fmod(pick * 97.0, 1.0) < 0.06 * meadow:
 						kind = _tree_asset("blossom") if toon_trees or card_trees else "broadleaf"
 						variant = 2
 						trunk = 0.5

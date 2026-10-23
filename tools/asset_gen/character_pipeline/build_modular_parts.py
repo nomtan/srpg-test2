@@ -19,8 +19,10 @@ import bpy
 from mathutils import Matrix, Vector
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_characters import align_arms, bounds, import_source, transfer_weights
+from build_characters import (align_arms, arm_centerline, bounds, fit_line, import_source, rotate_region,
+                              smoothstep, transfer_weights)
 from build_golden_path import create_animations
+from symmetrize_reference_rig import fit_right_forearm
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -171,6 +173,28 @@ def rest_fit_offset_y(donor, body):
     return sum(offsets) / len(offsets)
 
 
+def align_whole_arms(donor, body, rig):
+    """Turn each T-pose arm of body about its shoulder so the whole arm points like the donor's left arm.
+
+    match_rig_source fits the upper arm over the few centimetres between shoulder and elbow, where shoulder
+    pads and sleeve cuffs move the centerline; on Body002 the donor's right sample alone points ~20 degrees
+    down, so the right arm was lowered and hung against the body. Here one line is fitted from shoulder to
+    wrist on each side, and both aim at the donor's left (the rig is symmetric), mirrored for the right.
+    """
+    shoulder_x = abs(rig.data.bones["mixamorig:LeftArm"].head_local.x)
+    _, target, _ = fit_line(arm_centerline(donor, 1, shoulder_x + 0.02, 0.47))
+    report = {}
+    for side in (1, -1):
+        origin, current, _ = fit_line(arm_centerline(body, side, shoulder_x + 0.02, 0.47))
+        pivot = origin + current * ((side * shoulder_x - origin.x) / current.x)
+        rotation = current.rotation_difference(Vector((side * target.x, target.y, target.z)))
+        moved = rotate_region(body, pivot, rotation, lambda co: (
+            smoothstep(shoulder_x - 0.03, shoulder_x + 0.03, side * co.x) * smoothstep(0.60, 0.66, co.z)))
+        report["left" if side > 0 else "right"] = dict(angle_degrees=round(math.degrees(rotation.angle), 2),
+                                                       moved_vertices=moved)
+    return report
+
+
 def prepare_body(part_id, settings):
     if settings.get("rig_profile") != "humanoid_v1":
         raise ValueError("Body requires rig_profile humanoid_v1")
@@ -213,6 +237,12 @@ def prepare_body(part_id, settings):
             body.data.transform(Matrix.Translation((0, rest_fit_offset_y(donor, body), 0)))
         if settings.get("arm_alignment") == "match_rig_source":
             align_arms(donor, body, rig)
+        elif settings.get("arm_alignment") == "whole_arm":
+            print("ARM_ALIGNMENT", align_whole_arms(donor, body, rig))
+        if settings.get("right_arm_fit") == "mirror_left":
+            # arm_alignment fits only the arm above the belt, so a right glove that droops in the T-pose
+            # (Body004) stays low and hangs against the body in idle. Fit it onto this Body's own left.
+            print("RIGHT_ARM_FIT", fit_right_forearm(body, rig, rig.data.bones["mixamorig:Hips"].head_local.x))
         transfer_weights(donor, body, rig)
         for collection in list(donor.users_collection):
             collection.objects.unlink(donor)
@@ -222,7 +252,19 @@ def prepare_body(part_id, settings):
     root = bpy.data.objects.new("Character", None)
     bpy.context.scene.collection.objects.link(root)
     rig.parent = root
-    create_animations(rig)
+    face_offset = settings.get("face_offset")
+    if face_offset is not None:
+        # A high collar or hood on this Body would cover the chin of a Face fitted to Body001's neck.
+        # Godot rest space (+Y up, +Z forward); CharacterAssembler moves every Face on this Body by it.
+        if not (isinstance(face_offset, list) and len(face_offset) == 3 and all(isinstance(v, (int, float)) for v in face_offset)):
+            raise ValueError("Body face_offset must be [x, y, z]")
+        rig["face_offset"] = [float(v) for v in face_offset]
+    arm_spread = settings.get("arm_spread")
+    if arm_spread is not None and not (isinstance(arm_spread, dict) and set(arm_spread) <= {"left", "right"}
+                                       and all(isinstance(v, (int, float)) for v in arm_spread.values())):
+        raise ValueError('Body arm_spread must be {"left": degrees, "right": degrees}')
+    # Opens one arm of this Body's hanging pose wider, where its own sleeve or glove hugs the body.
+    create_animations(rig, arm_spread=arm_spread)
     if len(rig.data.bones) != 65 or "head" not in rig.data.bones:
         raise ValueError("Body skeleton validation failed")
     if not all(name in bpy.data.actions for name in REQUIRED_CLIPS):

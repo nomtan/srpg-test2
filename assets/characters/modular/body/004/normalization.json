@@ -7,5 +7,10 @@
   "coordinate_space": "humanoid_v1_rest",
   "source_sha256": "1778658bbeadcb542c389ab942101db0ef9c979927aaf8b363af974b20f01cd3",
   "arm_alignment": "none",
-  "rest_fit": "landmarks_v1"
+  "rest_fit": "landmarks_v1",
+  "face_offset": [
+    0,
+    0.01,
+    0.005
+  ]
 }

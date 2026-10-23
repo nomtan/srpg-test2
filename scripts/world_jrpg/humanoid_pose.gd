@@ -35,8 +35,27 @@ func setup(player: AnimationPlayer, target: Skeleton3D) -> bool:
 		if target.find_bone(bone) < 0: return false
 	skeleton = target
 	path = player.get_node(player.root_node).get_path_to(target)
+	_key_rest_tracks(player.get_animation("idle"))
 	_sample_idle(player.get_animation("idle"))
 	return true
+
+
+## The importer drops the idle's tracks for bones it leaves at rest, but the procedural clips key every
+## bone. Once a blend into the idle ends, the player stops writing those bones, so stopping mid-stride
+## left the hips lowered and the feet turned. Keys every missing rotation and position at rest instead.
+## The idle is shared by every instance of the Body; the keys only state what it already meant.
+func _key_rest_tracks(idle: Animation) -> void:
+	for index in skeleton.get_bone_count():
+		var node_path := NodePath("%s:%s" % [path, skeleton.get_bone_name(index)])
+		var rest := skeleton.get_bone_rest(index)
+		if idle.find_track(node_path, Animation.TYPE_ROTATION_3D) < 0:
+			var track := idle.add_track(Animation.TYPE_ROTATION_3D)
+			idle.track_set_path(track, node_path)
+			idle.rotation_track_insert_key(track, 0.0, rest.basis.get_rotation_quaternion())
+		if idle.find_track(node_path, Animation.TYPE_POSITION_3D) < 0:
+			var track := idle.add_track(Animation.TYPE_POSITION_3D)
+			idle.track_set_path(track, node_path)
+			idle.position_track_insert_key(track, 0.0, rest.origin)
 
 
 ## The idle's first frame as local bone poses; bones the idle leaves still keep their rest.

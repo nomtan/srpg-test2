@@ -109,7 +109,8 @@ func _verify_combinations(body_ids: Array, face_ids: Array, legacy_characters: A
 				var player := players[0] as AnimationPlayer
 				var head_index := skeleton.find_bone("head")
 				check(head_index >= 0, definition.id + " has head bone")
-				var rest_inverse := skeleton.get_bone_global_rest(head_index).affine_inverse()
+				# The Body's own face_offset (a high collar) shifts every Face it wears, in rest space.
+				var rest_inverse := skeleton.get_bone_global_rest(head_index).affine_inverse() * Transform3D(Basis.IDENTITY, CharacterAssembler._body_face_offset(skeleton))
 				check(face.transform.is_equal_approx(rest_inverse), definition.id + " cancels imported head rest")
 				var mounted_mesh := face.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 				for clip in REQUIRED_CLIPS:
