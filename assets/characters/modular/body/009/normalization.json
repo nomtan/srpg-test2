@@ -5,14 +5,16 @@
   "id": "009",
   "rig_profile": "humanoid_v1",
   "coordinate_space": "humanoid_v1_rest",
-  "source_sha256": "e9860ae84f55d230fba55428f2c44b801f8eed7d09a83bdb9e53818041f0bf46",
-  "arm_alignment": "match_rig_source",
+  "source_sha256": "3db5c3a82450736aae3a4dfc002521701354f135e96afe2387d529f2e8e68cc8",
+  "arm_alignment": "whole_arm",
   "rest_fit": "landmarks_v1",
-  "source_rig": "discard",
-  "decimate_ratio": 0.21,
   "face_offset": [
     0,
     0.015,
     0.025
-  ]
+  ],
+  "sleeve_weights": {
+    "min_abs_x": 0.24,
+    "min_z": 0.55
+  }
 }

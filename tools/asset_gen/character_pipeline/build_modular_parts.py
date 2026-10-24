@@ -17,6 +17,8 @@ from pathlib import Path
 
 import bpy
 from mathutils import Matrix, Vector
+from mathutils.bvhtree import BVHTree
+from mathutils.geometry import barycentric_transform
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_characters import (align_arms, arm_centerline, bounds, fit_line, import_source, rotate_region,
@@ -195,6 +197,55 @@ def align_whole_arms(donor, body, rig):
     return report
 
 
+def rebind_sleeves(donor, body, region):
+    """Re-transfer weights of a hanging sleeve from the donor's arm surface only (metadata sleeve_weights).
+
+    A wide sleeve that drapes below the T-pose arm sits beside the donor's hips, so the nearest-surface
+    transfer gives its lower edge Hips/UpLeg weights next to ForeArm ones and idle/walk tear it into spikes.
+    """
+    min_abs_x, min_z = region["min_abs_x"], region["min_z"]
+    donor.data.calc_loop_triangles()
+    verts = [v.co.copy() for v in donor.data.vertices]
+    names = {g.index: g.name for g in donor.vertex_groups}
+
+    def arm_side(vertex):
+        group = max(vertex.groups, key=lambda g: g.weight, default=None)
+        name = names[group.group] if group else ""
+        if not any(part in name for part in ("Shoulder", "Arm", "Hand")):
+            return 0
+        return 1 if "Left" in name else -1 if "Right" in name else 0
+
+    sides = [arm_side(v) for v in donor.data.vertices]
+    trees = {}
+    for side in (1, -1):
+        triangles = [tuple(t.vertices) for t in donor.data.loop_triangles
+                     if all(sides[i] == side for i in t.vertices)]
+        trees[side] = (BVHTree.FromPolygons(verts, triangles, all_triangles=True), triangles)
+    groups = {g.name: g for g in body.vertex_groups}
+    moved = 0
+    for vertex in body.data.vertices:
+        if abs(vertex.co.x) < min_abs_x or vertex.co.z < min_z:
+            continue
+        tree, triangles = trees[1 if vertex.co.x > 0 else -1]
+        point, _, index, _ = tree.find_nearest(vertex.co)
+        tri = triangles[index]
+        bc = barycentric_transform(point, *(verts[i] for i in tri),
+                                   Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+        weights = {}
+        for vi, influence in zip(tri, bc):
+            for group in donor.data.vertices[vi].groups:
+                weights[names[group.group]] = weights.get(names[group.group], 0) + max(0, influence) * group.weight
+        best = sorted(weights.items(), key=lambda pair: pair[1], reverse=True)[:4]
+        total = sum(weight for _, weight in best)
+        for group in vertex.groups[:]:
+            body.vertex_groups[group.group].remove([vertex.index])
+        for name, weight in best:
+            if weight > 0:
+                groups[name].add([vertex.index], weight / total, "REPLACE")
+        moved += 1
+    return dict(rebound_vertices=moved)
+
+
 def prepare_body(part_id, settings):
     if settings.get("rig_profile") != "humanoid_v1":
         raise ValueError("Body requires rig_profile humanoid_v1")
@@ -244,6 +295,8 @@ def prepare_body(part_id, settings):
             # (Body004) stays low and hangs against the body in idle. Fit it onto this Body's own left.
             print("RIGHT_ARM_FIT", fit_right_forearm(body, rig, rig.data.bones["mixamorig:Hips"].head_local.x))
         transfer_weights(donor, body, rig)
+        if settings.get("sleeve_weights"):
+            print("SLEEVE_WEIGHTS", rebind_sleeves(donor, body, settings["sleeve_weights"]))
         for collection in list(donor.users_collection):
             collection.objects.unlink(donor)
     body.name = "Body"
