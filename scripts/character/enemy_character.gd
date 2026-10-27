@@ -58,6 +58,8 @@ var _defeated := false
 var _walk_origin := Vector3.ZERO
 var _home: Transform3D
 var _attack_turn := 0
+# Seconds left of a hit-stop freeze (see hold).
+var _hold := 0.0
 
 
 func _ready() -> void:
@@ -114,6 +116,13 @@ func is_dead() -> bool:
 	return hp <= 0
 
 
+## Hit-stop: freezes the pose and every beat (walking, timers) for `seconds`. Call it before take_hit so a
+## finishing blow's fall waits it out too.
+func hold(seconds: float) -> void:
+	_hold = maxf(_hold, seconds)
+	if animation_player: animation_player.speed_scale = 0.0
+
+
 ## A player blow: guards now and then, flinches otherwise, and falls on the last hit point.
 func take_hit() -> void:
 	if is_dead() or _defeated:
@@ -142,7 +151,7 @@ func _defeat() -> void:
 	_await_clip = false
 	hp = 0
 	play_animation("death", 0.05)
-	await get_tree().create_timer(animation_player.get_animation("death").length + LIE_STILL).timeout
+	await get_tree().create_timer(_hold + animation_player.get_animation("death").length + LIE_STILL).timeout
 	$NameLabel.visible = false
 	_spawn_dust()
 	await _fade_dissolve(0.0, 1.0, CRUMBLE)
@@ -284,6 +293,10 @@ func _apply_materials(root: Node) -> void:
 
 
 func _process(delta: float) -> void:
+	if _hold > 0.0:
+		_hold -= delta
+		if _hold > 0.0: return
+		if animation_player: animation_player.speed_scale = 1.0
 	if animation_player and animation_player.current_animation == "walk":
 		var step := Vector3(sin(rotation.y), 0, cos(rotation.y)) * WALK_SPEED * delta
 		position += step

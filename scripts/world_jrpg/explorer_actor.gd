@@ -247,6 +247,14 @@ func skill() -> bool:
 	animation_player.play(sword_combat.skill_clip, 0.07)
 	return true
 
+## Freezes the running attack clip (and its slash arcs) for `seconds` as a hit-stop, then resumes normal speed.
+func hold_attack(seconds: float) -> void:
+	if not attacking or animation_player == null: return
+	var clip := animation_player.current_animation
+	animation_player.speed_scale = 0.0
+	get_tree().create_timer(seconds).timeout.connect(func() -> void:
+		if attacking and animation_player.current_animation == clip: animation_player.speed_scale = 1.0)
+
 ## Guard (shield or greatsword) while held; the guard clip ends on the held pose until released.
 func set_guard(enabled: bool) -> void:
 	if enabled == guarding: return

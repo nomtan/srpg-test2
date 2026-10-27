@@ -88,7 +88,11 @@ func _attacks(id: String, capture: bool) -> void:
 		check(started >= 0.0 and absf(started - profile.start_time) < 0.04, "%s %s arc appears at %.2fs (profile %.2fs, longest frame %.3fs)" % [id, clip, started, profile.start_time, longest])
 		check(peaked >= 0.0 and absf(peaked - (profile.start_time + profile.swing_time)) < 0.05 and absf(peaked - impact) < 0.06,
 			"%s %s full swing at %.2fs, impact %.2fs" % [id, clip, peaked, impact])
-		check(stopped >= 0.0 and absf(stopped - impact) < 0.04, "%s %s hit-stop still lands at the impact (%.2fs)" % [id, clip, stopped])
+		if combat.slows_on_hit(clip):
+			# Sword and shield freeze only when a blow connects (the world calls hold_attack); a swing alone plays through.
+			check(stopped < 0.0, "%s %s swing plays through at normal speed without a target" % [id, clip])
+		else:
+			check(stopped >= 0.0 and absf(stopped - impact) < 0.04, "%s %s hit-stop still lands at the impact (%.2fs)" % [id, clip, stopped])
 		check(slashes.all(func(slash) -> bool: return not slash.playing), "%s %s leaves no arc after the clip" % [id, clip])
 	character.queue_free()
 	await process_frame

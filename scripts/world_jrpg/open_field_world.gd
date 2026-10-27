@@ -14,6 +14,13 @@ const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdsh
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
 const RIVER_SHADER = preload("res://scripts/world_jrpg/open_field_river.gdshader")
 const SPARRING_SCENE = preload("res://scenes/characters/tripo_roster/charcter001.tscn")
+const HitFx = preload("res://scripts/world_jrpg/sword_hit_fx.gd")
+# How far in front of a struck target (toward the attacker) its hit effect shows.
+const HIT_FX_INSET := 0.35
+# Hit-stop on a connecting sword-and-shield blow: the attack, everything it struck and the hit effect freeze this long.
+const HIT_STOP := 0.15
+# On-screen turn of the horizontal slash's hit effect (degrees, counterclockwise): its long points lie closer to the swing.
+const SLASH_HIT_TILT := -45.0
 # Sparring partner stands this far ahead of the spawn; melee reaches it within MELEE_REACH,
 # arrows within BOW_REACH, both only inside the attacker's forward cone.
 const SPARRING_OFFSET := 2.5
@@ -2696,11 +2703,18 @@ func _face_toward(actor: Node3D, target: Vector3) -> void:
 	var to := Vector2(target.x - actor.position.x, target.z - actor.position.z)
 	if not to.is_zero_approx(): actor.rotation.y = atan2(to.x, to.y)
 
-func _on_player_attack_impact(_clip: String) -> void:
+func _on_player_attack_impact(clip: String) -> void:
+	var stops: bool = player.sword_combat.slows_on_hit(clip)
+	var struck: Array[Node3D] = []
 	for enemy in enemies:
 		if _within_strike(enemy):
 			_face_toward(enemy, player.position)
+			# Freeze first, so a finishing blow's fall waits out the hit-stop too.
+			if stops: enemy.hold(HIT_STOP)
 			enemy.take_hit()
+			struck.append(enemy)
+	if sparring_partner and _within_strike(sparring_partner): struck.append(sparring_partner)
+	if not struck.is_empty() and stops: _show_hits(struck, clip)
 	if sparring_partner == null or not _within_strike(sparring_partner): return
 	var animation_player: AnimationPlayer = sparring_partner.animation_player
 	if animation_player == null or not animation_player.has_animation("hit"): return
@@ -2708,6 +2722,31 @@ func _on_player_attack_impact(_clip: String) -> void:
 	# Restart on every blow so combos read as separate hits.
 	animation_player.play("hit", 0.05)
 	animation_player.seek(0.0, true)
+	if stops: _hold_clip(animation_player)
+
+## Freezes a struck character's clip for the hit-stop, unless another clip has taken over by then.
+func _hold_clip(animation_player: AnimationPlayer) -> void:
+	var clip := animation_player.current_animation
+	animation_player.speed_scale = 0.0
+	get_tree().create_timer(HIT_STOP).timeout.connect(func() -> void:
+		if is_instance_valid(animation_player) and animation_player.current_animation == clip: animation_player.speed_scale = 1.0)
+
+## A hit effect on each struck target's near side at sword height; it and the attack freeze for the hit-stop.
+func _show_hits(targets: Array[Node3D], clip: String) -> void:
+	var combat = player.sword_combat
+	var tilt := SLASH_HIT_TILT if clip in [combat.slash_clip, combat.alt_slash_clip] else 0.0
+	var height: float = player.sword_combat.grip.global_position.y if player.sword_combat.grip else player.position.y + 1.0
+	for target in targets:
+		var toward := player.position - target.position
+		toward.y = 0.0
+		var fx := HitFx.new()
+		fx.name = "SwordHitFx"
+		fx.hold = HIT_STOP
+		fx.tilt_degrees = tilt
+		add_child(fx)
+		var at := target.position + toward.limit_length(HIT_FX_INSET)
+		fx.global_position = Vector3(at.x, height, at.z)
+	player.hold_attack(HIT_STOP)
 
 func _within_strike(target: Node3D) -> bool:
 	var to := target.position - player.position

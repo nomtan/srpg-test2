@@ -132,6 +132,9 @@ const GUARD_KEYS := [
 ]
 # Impact moment (seconds) for each clip: the hit-stop lands here, and the slash profiles' full swing is lined up with it.
 const FX := {SLASH: {"impact": 0.13}, OVERHEAD: {"impact": 0.18}}
+# Sword and shield: no hit-stop on every swing; the clip freezes only when it connects ("hit_slow", see
+# ExplorerActor.hold_attack), and a miss plays through at normal speed.
+const SWORD_FX := {SLASH: {"impact": 0.13, "hit_stop": false, "hit_slow": true}, OVERHEAD: {"impact": 0.18, "hit_stop": false, "hit_slow": true}}
 # Slash effects per clip (one profile per blade), tuned in the inspector; see scripts/world_jrpg/sword_slash_profile.gd.
 const SLASH_FX := {
 	SLASH: [preload("res://assets/fx/sword_slash/sword_slash.tres")],
@@ -600,7 +603,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			has_shield = true
 			guard_clip = GUARD
 	if has_shield:
-		_add_slashes(model, player, SLASH_FX.merged({SKILL: _skill_trails()}), FX.merged({SKILL: {"impact": SKILL_IMPACT}}))
+		_add_slashes(model, player, SLASH_FX.merged({SKILL: _skill_trails()}), SWORD_FX.merged({SKILL: {"impact": SKILL_IMPACT}}))
 	else:
 		_add_slashes(model, player, SLASH_FX, FX)
 	library.add_animation("slash", _make_clip(path, "横薙ぎ", SLASH_KEYS))
@@ -658,6 +661,10 @@ func next_slash_clip() -> String:
 ## Contact moment of an attack clip in seconds, or -1 when the clip has none.
 func impact_time(clip: String) -> float:
 	return float((impacts.get(clip, {}) as Dictionary).get("impact", -1.0))
+
+## True when the clip freezes only on a connecting blow instead of a hit-stop on every swing.
+func slows_on_hit(clip: String) -> bool:
+	return bool((impacts.get(clip, {}) as Dictionary).get("hit_slow", false))
 
 func is_ranged() -> bool:
 	return bow_model != null
