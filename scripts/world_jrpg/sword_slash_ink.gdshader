@@ -1,6 +1,6 @@
 shader_type spatial;
-// Anime ink slash for the sword's quick attacks: a dark ink crescent whose leading (outer) rim burns cyan to white.
-// It snaps out in a couple of frames, flattens into a thin cyan streak after the full swing (`peak`),
+// Anime ink slash for the sword's quick attacks: a dark ink crescent whose leading (outer) rim burns white.
+// It snaps out in a couple of frames, flattens into a thin light streak after the full swing (`peak`),
 // then tears into ink flecks and broken light dashes as it fades.
 // Driven like sword_slash.gdshader: `progress` (0 → 1 over the whole effect), `peak` and `opacity`.
 // UV.x runs along the swing (0 start, 1 full swing); UV.y from the inner edge (0) to the outer edge (1).
@@ -15,9 +15,9 @@ uniform float opacity = 1.0;
 uniform float trail_length = 0.8;
 // Crescent thickness behind the tip, as a fraction of the band width.
 uniform float thickness = 1.0;
-uniform vec4 ink_color : source_color = vec4(0.02, 0.05, 0.15, 1.0);
-uniform vec4 edge_color : source_color = vec4(0.2, 0.8, 1.0, 1.0);
-uniform vec4 core_color : source_color = vec4(0.9, 1.0, 1.0, 1.0);
+uniform vec4 ink_color : source_color = vec4(0.03, 0.03, 0.03, 1.0);
+uniform vec4 edge_color : source_color = vec4(0.8, 0.8, 0.8, 1.0);
+uniform vec4 core_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 // Lit rim depth at the tip, as a fraction of the crescent's thickness (it narrows toward the tail).
 uniform float edge_width = 0.4;
 uniform float ink_alpha = 0.92;
@@ -70,7 +70,7 @@ void fragment() {
 	// Ragged inner edge: brush strokes running along the swing.
 	float brush = noise(vec2(u * 7.0, v * streaks));
 	float shape = cel(0.4 * brush * (1.0 - settle), t) * (1.0 - cel(1.0, t)) * along;
-	// Lit rim (cyan, white-hot at the very edge) narrowing toward the tail; the streak keeps ink wisps under its light.
+	// Lit rim (white-hot at the very edge) narrowing toward the tail; the streak keeps ink wisps under its light.
 	float depth = 1.0 - t;
 	float lit_width = mix(edge_width * (1.0 - 0.6 * ac), 0.55, settle);
 	float lit = 1.0 - cel(lit_width, depth + 0.12 * brush);

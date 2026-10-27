@@ -76,7 +76,8 @@ func _pose(style: Dictionary, phase: float) -> Dictionary:
 	# Pelvis: the swinging leg's hip leads (left forward at the left heel strike), the swing side dips.
 	var pelvis_yaw: float = -style.pelvis_yaw * cos(TAU * phase)
 	var pelvis_roll: float = style.pelvis_roll * over_left
-	var chest_yaw: float = style.chest_yaw * cos(TAU * phase)
+	# "turn" (optional): a steady shoulder turn on top of the counter-turn, as SwordGait carries the shield side forward.
+	var chest_yaw: float = style.chest_yaw * cos(TAU * phase) + style.get("turn", 0.0)
 	var hips: Transform3D = _idle_global[HIPS]
 	hips.origin += Vector3(style.sway * over_left, -style.drop + style.bob * bob, 0) * leg_length
 	hips.basis = _turn(style.lean * 0.4, pelvis_yaw, pelvis_roll) * hips.basis

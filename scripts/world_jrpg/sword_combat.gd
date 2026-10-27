@@ -16,6 +16,7 @@ const SlashPlayer = preload("res://scripts/world_jrpg/sword_slash_player.gd")
 const BowShotFx = preload("res://scripts/world_jrpg/bow_shot_fx.gd")
 const SkillFx = preload("res://scripts/world_jrpg/sword_skill_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
+const SwordGait = preload("res://scripts/world_jrpg/sword_gait.gd")
 const CHARACTER_TOON = preload("res://assets/characters/_shared/materials/character_toon.gdshader")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
@@ -469,6 +470,12 @@ var ready_stance: Dictionary = GS_READY
 var idle_hold: Dictionary = {}
 # Clips whose keys decide how firmly the left hand holds the handle.
 var two_hand_clips: Dictionary = GS_CLIPS
+# The loadout's own stance and gait (sword and shield, see SwordGait) in place of the Body's idle, walk and run;
+# empty when it keeps the Body's. rest_pose is the stance's first pose, which keys without a blade take instead of the idle.
+var idle_clip := ""
+var walk_clip := ""
+var run_clip := ""
+var rest_pose: Dictionary = {}
 # Katana: the sheathed model at the hip, and the drawn blade with the empty scabbard left behind.
 var sheathed: Node3D
 var drawn: Array[Node3D] = []
@@ -602,6 +609,12 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			_attach_shield()
 			has_shield = true
 			guard_clip = GUARD
+			var shield_grip: Basis = (_idle_global[rig["hand.L"]] as Transform3D).basis.inverse() * _shield_rest
+			rest_pose = SwordGait.install_armed(player, skeleton, grip.basis, shield_grip)
+			if not rest_pose.is_empty():
+				idle_clip = SwordGait.STANCE_CLIP
+				walk_clip = SwordGait.ARMED_WALK
+				run_clip = SwordGait.ARMED_RUN
 	if has_shield:
 		_add_slashes(model, player, SLASH_FX.merged({SKILL: _skill_trails()}), SWORD_FX.merged({SKILL: {"impact": SKILL_IMPACT}}))
 	else:
@@ -1088,7 +1101,8 @@ func _pose(key: Dictionary) -> Dictionary:
 	# "ready" keys take the equipped loadout's ready stance (the greatsword's for the greatsword clips).
 	key = gs_key(key) if not key.get("ready", false) else ready_stance.merged(key)
 	var pose := _idle.duplicate()
-	if not key.has("blade") and not key.has("blade_l") and not key.has("bow"): return pose
+	if not key.has("blade") and not key.has("blade_l") and not key.has("bow"):
+		return pose if rest_pose.is_empty() else rest_pose.duplicate()
 	var hip_yaw: float = key.get("hip_yaw", 0.0)
 	if not legs.is_empty():
 		# Drop and shift the pelvis (in leg lengths), then keep the feet planted with leg IK.

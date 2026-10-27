@@ -18,8 +18,9 @@ signal attack_impact(clip: String)
 var locomotion_speed := -1.0
 var model: Node3D
 var animation_player: AnimationPlayer
-# Unarmed models walk and run with the procedural gait; armed ones keep the Body's walk
-# and its own run, or one built from that walk.
+# Unarmed models walk and run with the procedural gait, sword and shield with its own stance and
+# gait (SwordGait); other armed ones keep the Body's walk and its own run, or one built from that walk.
+var idle_clip := "idle"
 var walk_clip := "walk"
 var run_clip := "run"
 var use_3d := true
@@ -96,8 +97,13 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	# Weapon holds are tuned against the Body's walk and would fight the seated pose,
 	# so only unarmed models take the procedural gait and sit.
 	var skeleton := model.find_child("Skeleton3D", true, false) as Skeleton3D
+	idle_clip = "idle"
 	walk_clip = "walk"
-	if sword_combat == null and GaitCycle.install(animation_player, skeleton):
+	if sword_combat and not sword_combat.idle_clip.is_empty():
+		idle_clip = sword_combat.idle_clip
+		walk_clip = sword_combat.walk_clip
+		run_clip = sword_combat.run_clip
+	elif sword_combat == null and GaitCycle.install(animation_player, skeleton):
 		walk_clip = GaitCycle.WALK
 		run_clip = GaitCycle.RUN
 	else:
@@ -192,11 +198,11 @@ func _update_model() -> void:
 	var gaits := [walk_clip, run_clip]
 	# Easing out of a sprint keeps the run until the speed is back near a walk.
 	var run := walking and (running or locomotion_speed > RUN_EXIT_SPEED)
-	var clip := run_clip if run else (walk_clip if walking else "idle")
+	var clip := run_clip if run else (walk_clip if walking else idle_clip)
 	# Models with only a walk cycle also support sprinting at the existing cadence.
 	if clip == run_clip and not animation_player.has_animation(run_clip):
 		clip = walk_clip
-	var resting_walk := clip == "idle" and not animation_player.has_animation("idle") and animation_player.has_animation(walk_clip)
+	var resting_walk := clip == idle_clip and not animation_player.has_animation(idle_clip) and animation_player.has_animation(walk_clip)
 	if resting_walk:
 		clip = walk_clip
 	animation_player.speed_scale = 1.0

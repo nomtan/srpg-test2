@@ -8,7 +8,7 @@ const LIFETIME := 0.2
 const HOLD_AT := 0.07
 # Quad size; the shader keeps the effect within 1.6 m except the long diagonal points (its `extent`, 2.5).
 const BURST_SIZE := 4.0
-const SPARK_COLOR := Color(0.72, 0.84, 1.0)
+const SPARK_COLOR := Color(1.0, 1.0, 1.0)
 
 ## Hit-stop seconds from the moment of contact; set before adding the effect to the tree.
 var hold := 0.0

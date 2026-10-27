@@ -8,9 +8,9 @@ render_mode unshaded, cull_disabled, depth_draw_never, depth_test_disabled, shad
 uniform float elapsed = 0.0;
 // Varies the shapes per hit (0 → 1).
 uniform float seed = 0.0;
-uniform vec4 core_color : source_color = vec4(0.94, 0.97, 1.0, 1.0);
-uniform vec4 glow_color : source_color = vec4(0.35, 0.55, 1.0, 1.0);
-uniform vec4 ink_color : source_color = vec4(0.05, 0.07, 0.18, 1.0);
+uniform vec4 core_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+uniform vec4 glow_color : source_color = vec4(0.75, 0.75, 0.75, 1.0);
+uniform vec4 ink_color : source_color = vec4(0.06, 0.06, 0.06, 1.0);
 uniform float glow = 2.0;
 // Soft white glow hugging the flash and the star's outline.
 uniform float white_glow = 0.7;

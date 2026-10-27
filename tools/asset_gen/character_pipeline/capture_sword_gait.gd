@@ -1,0 +1,86 @@
+extends SceneTree
+## Captures the sword-and-shield stance, walk and run (SwordGait) next to the Body's own idle and walk with the same
+## equipment, front, three-quarter and side.
+## Needs a renderer (not --headless): godot --path . --script res://tools/asset_gen/character_pipeline/capture_sword_gait.gd -- [out_dir] [character ...]
+## One image per character (artifacts/sword_gait/<character>.png).
+
+const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
+const SwordGait = preload("res://scripts/world_jrpg/sword_gait.gd")
+# Panel: [clip, normalized phase, model yaw in degrees]. Yaw 0 faces the camera; -90 shows the character's right side.
+const PANELS := [
+	["idle", 0.0, 0.0], ["walk", 0.25, -90.0],
+	[SwordGait.STANCE_CLIP, 0.0, 0.0], [SwordGait.STANCE_CLIP, 0.0, -45.0], [SwordGait.STANCE_CLIP, 0.0, -90.0], [SwordGait.STANCE_CLIP, 0.5, 45.0],
+	[SwordGait.ARMED_WALK, 0.0, 0.0], [SwordGait.ARMED_WALK, 0.25, -90.0], [SwordGait.ARMED_WALK, 0.75, -90.0], [SwordGait.ARMED_WALK, 0.25, 45.0],
+	[SwordGait.ARMED_RUN, 0.0, 0.0], [SwordGait.ARMED_RUN, 0.25, -90.0], [SwordGait.ARMED_RUN, 0.75, -90.0],
+]
+const SPACING := 1.3
+
+
+func _initialize() -> void:
+	call_deferred("run")
+
+
+func run() -> void:
+	var args := OS.get_cmdline_user_args()
+	var out_dir: String = args[0] if args.size() > 0 else "res://artifacts/sword_gait"
+	var characters: Array = args.slice(1) if args.size() > 1 else ["charcter004"]
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
+	root.size = Vector2i(330 * PANELS.size(), 720)
+	var stage := _stage()
+	var camera := Camera3D.new()
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	stage.add_child(camera)
+	camera.make_current()
+	for id: String in characters:
+		var models: Array[Node3D] = []
+		for index in PANELS.size():
+			var panel: Array = PANELS[index]
+			var model := (load("res://scenes/characters/tripo_roster/%s.tscn" % id) as PackedScene).instantiate() as Node3D
+			model.set_meta("loadout", "sword_shield")
+			model.position.x = index * SPACING
+			stage.add_child(model)
+			var visual := model.get_node_or_null("Model") as Node3D
+			(visual if visual else model).rotation_degrees.y = panel[2]
+			var label := model.get_node_or_null("NameLabel") as Node3D
+			if label: label.hide()
+			models.append(model)
+			var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+			var combat := SwordCombat.new()
+			if not combat.install(model, player) or combat.idle_clip.is_empty():
+				push_error("%s: sword gait install failed" % id)
+				quit(1)
+				return
+			model.set_meta("combat", combat)
+			player.play(panel[0])
+			player.seek(player.current_animation_length * panel[1], true)
+			player.pause()
+		var width := (PANELS.size() - 1) * SPACING
+		camera.keep_aspect = Camera3D.KEEP_WIDTH
+		camera.size = PANELS.size() * SPACING
+		camera.position = Vector3(width * 0.5, 1.0, 6.0)
+		await process_frame
+		await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("%s/%s.png" % [out_dir, id])
+		for model in models:
+			model.queue_free()
+		await process_frame
+	print("SWORD_GAIT_CAPTURE ", out_dir)
+	quit()
+
+
+func _stage() -> Node3D:
+	var stage := Node3D.new()
+	root.add_child(stage)
+	var environment := WorldEnvironment.new()
+	environment.environment = Environment.new()
+	environment.environment.background_mode = Environment.BG_COLOR
+	environment.environment.background_color = Color("b7c4bd")
+	environment.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.environment.ambient_light_color = Color("b2c2c7")
+	environment.environment.ambient_light_energy = 0.4
+	stage.add_child(environment)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, -30, 0)
+	stage.add_child(sun)
+	return stage
