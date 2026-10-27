@@ -54,6 +54,20 @@ const READY_BLADE := Vector3(-0.55, 0.24, 1.0)
 const SWORD_REST_BLADE := Vector3(-0.3, 0.8, 0.75)
 # Mesh weight on the hand and its fingers above which a vertex counts as part of the fist.
 const FIST_WEIGHT := 0.6
+# Loadouts that can be sheathed (the model's "sheathed" meta): worn on the back with no clips, moving as bare hands.
+const SHEATHABLE := ["sword_shield"]
+# Sheathed sword and shield on the back, from the middle of the back surface at chest height, in character axes
+# (+Z forward, -X right) leaned back along the surface. The shield hangs face out, its grip point BACK_SHIELD_DROP below
+# and BACK_SHIELD_OUT behind; the sword lies between it and the back, hilt out past the right shoulder, the grip point
+# at BACK_SWORD_GRIP.
+const BACK_SHIELD_DROP := 0.06
+const BACK_SHIELD_OUT := 0.11
+const BACK_SHIELD_TILT := 0.0 # Degrees the shield's top leans further out from the back.
+const BACK_SWORD_GRIP := Vector3(-0.25, 0.14, -0.04)
+const BACK_SWORD_TIP := Vector3(0.5, -1.0, 0.0)
+# Height bands the back surface is sampled in, and the most it may lean back (degrees, flaring out below).
+const BACK_BAND := 0.05
+const BACK_MAX_LEAN := 30.0
 # Rig-neutral roles mapped to each supported skeleton's bone names.
 const RIGS := [
 	{"spine": "spine", "head": "head", "upper_arm.R": "upper_arm.R", "forearm.R": "forearm.R", "hand.R": "hand.R",
@@ -439,6 +453,8 @@ var _unkeyed: Dictionary = {}
 var has_shield := false
 # The installed equipment: a LOADOUTS value or "sword_shield".
 var loadout := ""
+# Sheathed (a SHEATHABLE loadout worn on the back): no clips are added, and the actor moves as if bare-handed.
+var stowed := false
 var two_handed := false
 # Clips for the equipped weapon; the guard clip is empty when the loadout cannot guard.
 var slash_clip := SLASH
@@ -605,6 +621,9 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		"staff":
 			_attach_staff()
 		_:
+			if model.get_meta("sheathed", false):
+				_stow_on_back()
+				return true
 			_attach_sword()
 			_attach_shield()
 			has_shield = true
@@ -726,24 +745,32 @@ func _fist_center(side: String) -> Vector3:
 	while index < bones.size():
 		bones.append_array(skeleton.get_bone_children(bones[index]))
 		index += 1
+	var vertices := _part_vertices(hand, bones)
+	if vertices.is_empty(): return Vector3(0, rig["palm"], 0)
 	var sum := Vector3.ZERO
-	var count := 0
+	for vertex in vertices:
+		sum += vertex
+	return sum / vertices.size()
+
+## Mesh vertices weighted more than FIST_WEIGHT to the given bones, in the frame bone's bind frame; empty without skin data.
+func _part_vertices(frame: int, bones: Array) -> PackedVector3Array:
+	var result := PackedVector3Array()
 	for node in skeleton.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
 		var skin := mesh.skin
 		if skin == null or mesh.mesh == null: continue
-		# Per bind: whether it moves with the fist, and the hand bind that brings bind-pose vertices into the hand's frame.
-		var in_fist: Array[bool] = []
-		var to_hand := Transform3D()
-		var has_hand := false
+		# Per bind: whether it moves with the part, and the frame bind that brings bind-pose vertices into the frame.
+		var in_part: Array[bool] = []
+		var to_frame := Transform3D()
+		var has_frame := false
 		for bind in skin.get_bind_count():
 			var bone := skin.get_bind_bone(bind)
 			if bone < 0: bone = skeleton.find_bone(skin.get_bind_name(bind))
-			in_fist.append(bone in bones)
-			if bone == hand:
-				to_hand = skin.get_bind_pose(bind)
-				has_hand = true
-		if not has_hand: continue
+			in_part.append(bone in bones)
+			if bone == frame:
+				to_frame = skin.get_bind_pose(bind)
+				has_frame = true
+		if not has_frame: continue
 		for surface in mesh.mesh.get_surface_count():
 			var arrays := mesh.mesh.surface_get_arrays(surface)
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -756,11 +783,10 @@ func _fist_center(side: String) -> Vector3:
 				var weight := 0.0
 				for slot in per:
 					var bind := vertex_bones[vertex * per + slot]
-					if bind < in_fist.size() and in_fist[bind]: weight += weights[vertex * per + slot]
+					if bind < in_part.size() and in_part[bind]: weight += weights[vertex * per + slot]
 				if weight > FIST_WEIGHT:
-					sum += to_hand * vertices[vertex]
-					count += 1
-	return sum / count if count > 0 else Vector3(0, rig["palm"], 0)
+					result.append(to_frame * vertices[vertex])
+	return result
 
 ## Mirror one-handed keys onto the other side: the left arm swings as the right did, and the body turns the other way.
 func _mirror_keys(keys: Array) -> Array:
@@ -962,6 +988,86 @@ func _attach_shield() -> void:
 	shield.scale = Vector3.ONE * SHIELD_SCALE
 	shield.position = Vector3(0, 0, SHIELD_WRIST_CLEARANCE) - SHIELD_GRIP * SHIELD_SCALE
 	shield_grip.add_child(shield)
+
+## Sheathed sword and shield on the back (see BACK_*), hung from the chest so they follow the torso.
+func _stow_on_back() -> void:
+	stowed = true
+	# The chest is the bone the shoulders hang from.
+	var chest := skeleton.get_bone_parent(skeleton.get_bone_parent(skeleton.find_bone(rig["upper_arm.R"])))
+	var back_socket := BoneAttachment3D.new()
+	back_socket.name = "BackSocket"
+	back_socket.bone_name = skeleton.get_bone_name(chest)
+	skeleton.add_child(back_socket)
+	var chest_pose: Transform3D = _idle_global[back_socket.bone_name]
+	# A frame on the back surface with character axes, leaning back along it (the BACK_* offsets are in this frame),
+	# so the placement does not depend on the rig's bone axes.
+	var back := _back_line(chest)
+	var frame := Node3D.new()
+	frame.name = "BackFrame"
+	frame.transform = chest_pose.affine_inverse() * Transform3D(Basis(Vector3.RIGHT, atan(back.y)), Vector3(0, chest_pose.origin.y, back.x))
+	back_socket.add_child(frame)
+	var out := Vector3.FORWARD
+	var shield_grip := Node3D.new()
+	shield_grip.name = "BackShieldGrip"
+	var lean := Basis(Vector3.RIGHT, deg_to_rad(-BACK_SHIELD_TILT))
+	var up := lean * Vector3.UP
+	var face := lean * out
+	shield_grip.transform = Transform3D(Basis(up.cross(face), up, face), out * BACK_SHIELD_OUT + Vector3.DOWN * BACK_SHIELD_DROP)
+	frame.add_child(shield_grip)
+	var shield := SHIELD.instantiate() as Node3D
+	_apply_character_toon(shield)
+	shield.name = "SheathedShield"
+	shield.scale = Vector3.ONE * SHIELD_SCALE
+	shield.position = -SHIELD_GRIP * SHIELD_SCALE
+	shield_grip.add_child(shield)
+	var sword_grip := Node3D.new()
+	sword_grip.name = "BackSwordGrip"
+	var tip := BACK_SWORD_TIP.normalized()
+	# Flat of the blade against the back, the guard across it.
+	sword_grip.transform = Transform3D(Basis(tip.cross(out), tip, out), BACK_SWORD_GRIP)
+	frame.add_child(sword_grip)
+	var sword := SWORD.instantiate() as Node3D
+	_apply_character_toon(sword)
+	sword.name = "SheathedSword"
+	# Same flip as in hand: tip along +Y, handle at the grip.
+	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * SWORD_SCALE)
+	sword.position = -(sword.basis * GRIP)
+	sword_grip.add_child(sword)
+
+## The back surface down the middle of the torso in the idle pose, as a line in character space: x is its Z at chest
+## height, y how much Z grows per unit of height (positive where clothing flares out below). Fitted through the
+## rearmost torso mesh point in each BACK_BAND of height, up to the chest.
+func _back_line(chest: int) -> Vector2:
+	var chest_pose: Transform3D = _idle_global[skeleton.get_bone_name(chest)]
+	# The spine from the chest down to the pelvis.
+	var spine := []
+	var bone := chest
+	while bone >= 0:
+		spine.append(bone)
+		bone = skeleton.get_bone_parent(bone)
+	var half_width := absf((_idle_global[rig["upper_arm.R"]] as Transform3D).origin.x - chest_pose.origin.x) * 0.5
+	var rearmost: Dictionary = {}
+	for vertex in _part_vertices(chest, spine):
+		var point := chest_pose * vertex
+		if absf(point.x - chest_pose.origin.x) > half_width or point.y > chest_pose.origin.y + BACK_BAND: continue
+		var band := floori((point.y - chest_pose.origin.y) / BACK_BAND)
+		if not rearmost.has(band) or point.z < (rearmost[band] as Vector3).z: rearmost[band] = point
+	if rearmost.size() < 2:
+		return Vector2(chest_pose.origin.z - 0.1 * leg_length, 0.0)
+	# Least squares Z = depth + slope * (Y - chest height).
+	var n := float(rearmost.size())
+	var sy := 0.0
+	var sz := 0.0
+	var syy := 0.0
+	var syz := 0.0
+	for point: Vector3 in rearmost.values():
+		var y := point.y - chest_pose.origin.y
+		sy += y
+		sz += point.z
+		syy += y * y
+		syz += y * point.z
+	var slope := clampf((n * syz - sy * sz) / maxf(n * syy - sy * sy, 1e-6), 0.0, tan(deg_to_rad(BACK_MAX_LEAN)))
+	return Vector2((sz - slope * sy) / n, slope)
 
 ## Weapons use the characters' toon shading so they keep the same brightness at night instead of going black.
 ## Only instance-level overrides are set; the imported weapon resources are left untouched.

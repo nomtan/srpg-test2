@@ -30,6 +30,8 @@ var guarding := false
 # Unarmed models can sit on the ground: "" standing, "down" sitting down, "seated", "up" standing up.
 # Equipment chosen for the current model (a SwordCombat loadout or "none"); "" keeps the character's own.
 var weapon := ""
+# Weapon worn sheathed on the back (SwordCombat.SHEATHABLE loadouts only); the actor then moves as if bare-handed.
+var sheathed := false
 # Body part worn instead of the character's own (a CharacterDefinition body_id); "" keeps it.
 var body := ""
 # Face part worn instead of the character's own (a CharacterDefinition face_id); "" keeps it.
@@ -51,6 +53,7 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	# A different character starts with its own equipment and Body.
 	if scene != model_scene:
 		weapon = ""
+		sheathed = false
 		body = ""
 		face = ""
 	_roster_layout = roster_layout
@@ -75,6 +78,7 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 		var label := model.get_node_or_null("NameLabel") as Label3D
 		if label: label.hide()
 	if not weapon.is_empty(): model.set_meta("loadout", weapon)
+	if sheathed: model.set_meta("sheathed", true)
 	# The roster scene assembles its Body/Face on _ready, so swap the Body / Face in a private copy
 	# of its definition before it enters the tree (the shared .tres stays untouched).
 	if (not body.is_empty() or not face.is_empty()) and model.get("definition") is CharacterDefinition:
@@ -95,20 +99,21 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	if equipment.install(model, animation_player):
 		sword_combat = equipment
 	# Weapon holds are tuned against the Body's walk and would fight the seated pose,
-	# so only unarmed models take the procedural gait and sit.
+	# so only unarmed (or sheathed) models take the procedural gait and sit.
 	var skeleton := model.find_child("Skeleton3D", true, false) as Skeleton3D
+	var in_hand: bool = sword_combat != null and not sword_combat.stowed
 	idle_clip = "idle"
 	walk_clip = "walk"
-	if sword_combat and not sword_combat.idle_clip.is_empty():
+	if in_hand and not sword_combat.idle_clip.is_empty():
 		idle_clip = sword_combat.idle_clip
 		walk_clip = sword_combat.walk_clip
 		run_clip = sword_combat.run_clip
-	elif sword_combat == null and GaitCycle.install(animation_player, skeleton):
+	elif not in_hand and GaitCycle.install(animation_player, skeleton):
 		walk_clip = GaitCycle.WALK
 		run_clip = GaitCycle.RUN
 	else:
 		_add_run_cycle()
-	can_sit = sword_combat == null and GroundSit.install(animation_player, skeleton)
+	can_sit = not in_hand and GroundSit.install(animation_player, skeleton)
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
 	set_3d_enabled(use_3d)
@@ -119,6 +124,20 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 func set_weapon(loadout: String) -> void:
 	weapon = loadout
 	set_model_scene(model_scene, _roster_layout)
+
+## Sheathes the weapon onto the back, or draws it back into the hands; only for loadouts that can (can_sheathe).
+func set_sheathed(enabled: bool) -> void:
+	if enabled == sheathed or (enabled and not can_sheathe()): return
+	sheathed = enabled
+	set_model_scene(model_scene, _roster_layout)
+
+## True when the current weapon can be sheathed.
+func can_sheathe() -> bool:
+	return sword_combat != null and sword_combat.loadout in SwordCombat.SHEATHABLE
+
+## True while the weapon is worn sheathed on the back.
+func is_sheathed() -> bool:
+	return sword_combat != null and sword_combat.stowed
 
 ## Rebuilds the current character on another Body (a CharacterDefinition body_id).
 func set_body(body_id: String) -> void:
@@ -229,8 +248,9 @@ func _update_model() -> void:
 		if phase >= 0.0:
 			animation_player.seek(phase * animation_player.get_animation(clip).length, true)
 
+## Sheathed weapons cannot attack (nor guard or use the skill, which have no clips then).
 func attack(overhead := false) -> bool:
-	if attacking or guarding or not use_3d or sword_combat == null: return false
+	if attacking or guarding or not use_3d or sword_combat == null or sword_combat.stowed: return false
 	_update_model()
 	attacking = true
 	_impact_clip = ""

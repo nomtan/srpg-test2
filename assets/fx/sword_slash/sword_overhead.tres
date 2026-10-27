@@ -1,16 +1,16 @@
-[gd_resource type="Resource" script_class="SwordSlashProfile" format=3]
+[gd_resource type="Resource" script_class="SwordSlashProfile" format=3 uid="uid://cub5npl4yr2ld"]
 
-[ext_resource type="Script" path="res://scripts/world_jrpg/sword_slash_profile.gd" id="1_up37y"]
+[ext_resource type="Script" uid="uid://byspk72gtnevp" path="res://scripts/world_jrpg/sword_slash_profile.gd" id="1_up37y"]
 [ext_resource type="Material" path="res://assets/fx/sword_slash/sword_slash_ink.tres" id="2_ink"]
 
 [resource]
 script = ExtResource("1_up37y")
 start_time = 0.12
 swing_time = 0.06
+afterglow_time = 0.22
 offset = Vector3(-0.371, 0.654, 0.091)
 rotation_degrees = Vector3(36.8, -165.40001, 91.3)
 radius = 1.261
 width = 0.648
 sweep_degrees = 170.8
-afterglow_time = 0.22
 material = ExtResource("2_ink")

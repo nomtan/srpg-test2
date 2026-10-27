@@ -44,6 +44,9 @@ var character_text: Label
 const WEAPONS := [["none", "武器なし"], ["sword_shield", "片手剣+盾"], ["greatsword", "両手剣"], ["dual_daggers", "短剣"],
 	["staff", "杖"], ["bow", "弓"], ["katana", "刀"], ["greataxe", "両手斧"]]
 var weapon_buttons: Dictionary = {}
+## Draw / sheathe buttons (true is sheathed), shown only for a weapon that can be sheathed.
+var sheathe_row: HBoxContainer
+var sheathe_buttons: Dictionary = {}
 ## Body panel choices: CharacterDefinition body IDs (assets/characters/modular/body).
 const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006", "body007", "body008", "body009", "body010", "body011", "body012", "body013", "body014"]
 var body_buttons: Dictionary = {}
@@ -631,6 +634,21 @@ func _setup_weapon_panel() -> void:
 		button.pressed.connect(_on_weapon_selected.bind(weapon[0]))
 		grid.add_child(button)
 		weapon_buttons[weapon[0]] = button
+	sheathe_row = HBoxContainer.new()
+	sheathe_row.hide()
+	box.add_child(sheathe_row)
+	var sheathe_group := ButtonGroup.new()
+	for state: Array in [[false, "抜刀"], [true, "納刀"]]:
+		var button := Button.new()
+		button.text = state[1]
+		button.toggle_mode = true
+		button.button_group = sheathe_group
+		button.custom_minimum_size = Vector2(82, 34)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_sheathe_selected.bind(state[0]))
+		sheathe_row.add_child(button)
+		sheathe_buttons[state[0]] = button
 	_setup_body_panel(panel)
 
 ## Body buttons under the equipment panel, in the same style; they follow its height.
@@ -718,6 +736,11 @@ func _on_weapon_selected(loadout: String) -> void:
 		player.set_weapon(loadout)
 	_sync_weapon_buttons()
 
+func _on_sheathe_selected(sheathed: bool) -> void:
+	if mode == "explore" and player and player.has_method("set_sheathed"):
+		player.set_sheathed(sheathed)
+	_sync_weapon_buttons()
+
 ## Lights the buttons for what the explorer carries and wears now (they change with the
 ## character too).
 func _sync_weapon_buttons() -> void:
@@ -727,6 +750,11 @@ func _sync_weapon_buttons() -> void:
 		var current: String = player.current_weapon()
 		for loadout: String in weapon_buttons:
 			weapon_buttons[loadout].set_pressed_no_signal(loadout == current)
+	if sheathe_row and player.has_method("can_sheathe"):
+		sheathe_row.visible = player.can_sheathe()
+		var sheathed: bool = player.is_sheathed()
+		for state: bool in sheathe_buttons:
+			sheathe_buttons[state].set_pressed_no_signal(state == sheathed)
 	if player.has_method("current_body"):
 		var body_id: String = player.current_body()
 		for id: String in body_buttons:
