@@ -19,6 +19,9 @@ const SPARRING_SCENE = preload("res://scenes/characters/tripo_roster/charcter001
 const SPARRING_OFFSET := 2.5
 const MELEE_REACH := 3.0
 const BOW_REACH := 30.0
+# Field enemies stand in a row centred this far ahead of the spawn, ENEMY_SPACING apart.
+const ENEMY_OFFSET := 7.5
+const ENEMY_SPACING := 3.2
 ## Every tree is a low-poly, static anime tree (Vegetation.TOON_SWAP). Off falls back to
 ## card_trees.
 @export var toon_trees := true
@@ -32,6 +35,12 @@ const BOW_REACH := 30.0
 ## Grass carpet and flower clusters bend in the wind. Off holds them still (and skips the
 ## wind math on the GPU); on restores the sway and the gust bands rolling over the meadow.
 @export var grass_sway := false
+## Enemies (scenes/characters/enemies) placed in a row ahead of the spawn. They flinch, guard and
+## fall to the explorer's blows like the sparring partner.
+@export var field_enemies: Array[PackedScene] = []
+## The first field enemy of each kind (enemy_id) cycles through all of its motions on its own,
+## labelled with the clip.
+@export var enemy_demo := true
 ## Streaming (see "Streaming tiles" and open_field_chunks.gd): the field is generated in
 ## CHUNK tiles around the explorer instead of all at once.
 @export_group("Streaming")
@@ -226,6 +235,7 @@ var meshes: Dictionary = {}
 ## The streamed field keeps it per tile (see _cover_at).
 var cover_cells: Dictionary = {}
 var sparring_partner: Node3D
+var enemies: Array[Node3D] = []
 ## Streaming state: the field side in use, the tile streamer, the rivers and roads split
 ## into per-tile buckets, the far terrain blocks and which tiles they leave out.
 var streamed := false
@@ -2633,6 +2643,7 @@ func _spawn_characters() -> void:
 		character_text.text = "操作キャラ：" + player.model.display_name
 	_sync_weapon_buttons()
 	_spawn_sparring_partner(spawn)
+	_spawn_enemies(spawn)
 	player.attack_impact.connect(_on_player_attack_impact)
 	encounter_marker = Node3D.new()
 	encounter_marker.visible = false
@@ -2661,26 +2672,51 @@ func _spawn_sparring_partner(spawn: Vector2) -> void:
 		"lines": Array(sparring_partner.dialogue)
 	}})
 
+func _spawn_enemies(spawn: Vector2) -> void:
+	var forward := Vector2(player.world_facing.x, player.world_facing.z).normalized()
+	var right := Vector2(-forward.y, forward.x)
+	var demo_kinds: Dictionary = {}
+	for index in field_enemies.size():
+		var enemy := field_enemies[index].instantiate() as Node3D
+		enemy.name = "Enemy%d" % index
+		var at := spawn + forward * ENEMY_OFFSET + right * ENEMY_SPACING * (index - (field_enemies.size() - 1) * 0.5)
+		enemy.position = Vector3(at.x, _surface(at.x, at.y) + 0.05, at.y)
+		enemy.set("ground_height", _surface)
+		var kind: String = enemy.get("enemy_id")
+		if enemy_demo and not demo_kinds.has(kind):
+			demo_kinds[kind] = true
+			enemy.set("demo", true)
+			enemy.set("show_clip_label", true)
+		add_child(enemy)
+		_face_toward(enemy, player.position)
+		enemies.append(enemy)
+
 ## Roster visuals face +Z.
 func _face_toward(actor: Node3D, target: Vector3) -> void:
 	var to := Vector2(target.x - actor.position.x, target.z - actor.position.z)
 	if not to.is_zero_approx(): actor.rotation.y = atan2(to.x, to.y)
 
 func _on_player_attack_impact(_clip: String) -> void:
-	if sparring_partner == null: return
-	var to := sparring_partner.position - player.position
-	to.y = 0.0
-	var reach := BOW_REACH if player.sword_combat.is_ranged() else MELEE_REACH
-	if to.length() > reach: return
-	# A wide cone up close, a narrow one for arrows at range.
-	var cone := 0.9 if reach == BOW_REACH and to.length() > MELEE_REACH else 0.2
-	if to.length() > 0.3 and to.normalized().dot(player.world_facing.normalized()) < cone: return
+	for enemy in enemies:
+		if _within_strike(enemy):
+			_face_toward(enemy, player.position)
+			enemy.take_hit()
+	if sparring_partner == null or not _within_strike(sparring_partner): return
 	var animation_player: AnimationPlayer = sparring_partner.animation_player
 	if animation_player == null or not animation_player.has_animation("hit"): return
 	_face_toward(sparring_partner, player.position)
 	# Restart on every blow so combos read as separate hits.
 	animation_player.play("hit", 0.05)
 	animation_player.seek(0.0, true)
+
+func _within_strike(target: Node3D) -> bool:
+	var to := target.position - player.position
+	to.y = 0.0
+	var reach := BOW_REACH if player.sword_combat.is_ranged() else MELEE_REACH
+	if to.length() > reach: return false
+	# A wide cone up close, a narrow one for arrows at range.
+	var cone := 0.9 if reach == BOW_REACH and to.length() > MELEE_REACH else 0.2
+	return to.length() <= 0.3 or to.normalized().dot(player.world_facing.normalized()) >= cone
 
 func _preset(index: int) -> void:
 	overview = true

@@ -5,7 +5,7 @@ extends SceneTree
 ## One image per Body (artifacts/body_gait/bodyNNN.png) plus head close-ups (headNNN.png).
 
 const GaitCycle = preload("res://scripts/world_jrpg/gait_cycle.gd")
-const BODIES := ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010"]
+const BODIES := ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013", "014"]
 # Panel: [clip, normalized phase, model yaw in degrees]. Yaw 0 faces the camera; -90 shows the character's right side.
 const PANELS := [
 	["idle", 0.0, 0.0], ["idle", 0.0, -90.0],
@@ -100,7 +100,9 @@ func _assemble(body_id: String) -> Node3D:
 	var definition := CharacterDefinition.new()
 	definition.id = "gait_" + body_id
 	definition.body_id = "body" + body_id
-	definition.face_id = "face" + body_id
+	# Bodies without a matching Face (011 and later) wear Face001.
+	var face_id := "face" + body_id
+	definition.face_id = face_id if ResourceLoader.exists("res://assets/characters/modular/face/%s/model.glb" % body_id) else "face001"
 	definition.face_offset = _trial_offsets.get(body_id, Vector3.ZERO)
 	return CharacterAssembler.assemble(definition)
 

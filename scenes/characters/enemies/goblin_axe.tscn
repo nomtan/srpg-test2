@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin.tscn" id="1"]
+
+[node name="GoblinAxe" instance=ExtResource("1")]
+display_name = "ゴブリン（斧）"
+weapon_id = "hand_axe"
+shield_id = "round"
+
+[node name="NameLabel" parent="." index="1"]
+text = "ゴブリン（斧）"

@@ -1,0 +1,11 @@
+{
+  "standard": "ashen_character_v1",
+  "version": 1,
+  "asset_type": "body",
+  "id": "013",
+  "rig_profile": "humanoid_v1",
+  "coordinate_space": "humanoid_v1_rest",
+  "source_sha256": "5b40b203ebd4399962c9a9a7b327b8a4d3d274641c37b32ba2198709bb431076",
+  "arm_alignment": "whole_arm",
+  "rest_fit": "landmarks_v1"
+}

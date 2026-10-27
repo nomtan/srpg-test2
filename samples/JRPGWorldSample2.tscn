@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/open_field_world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter001.tscn" id="17"]
@@ -8,10 +8,17 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter005.tscn" id="character005"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter006.tscn" id="character006"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/character007.tscn" id="character007"]
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin.tscn" id="goblin"]
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_axe.tscn" id="goblin_axe"]
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_longsword.tscn" id="goblin_longsword"]
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_staff.tscn" id="goblin_staff"]
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/wolf.tscn" id="wolf"]
+[ext_resource type="PackedScene" path="res://scenes/characters/enemies/grimm.tscn" id="grimm"]
 
 [node name="JRPGWorldSample2" type="Node3D"]
 script = ExtResource("1")
 player_spawn_position = Vector3(150, 0, 300)
 seed_trees = true
+field_enemies = Array[PackedScene]([ExtResource("goblin"), ExtResource("goblin_axe"), ExtResource("goblin_longsword"), ExtResource("goblin_staff"), ExtResource("wolf"), ExtResource("grimm")])
 player_model = ExtResource("17")
 character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007")])

@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/enemy_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemy/goblin/model.glb" id="2"]
+
+[node name="Goblin" type="Node3D"]
+script = ExtResource("1")
+enemy_id = "goblin"
+display_name = "ゴブリン"
+model_scene = ExtResource("2")
+weapon_id = "scimitar"
+shield_id = "round"
+
+[node name="Model" type="Node3D" parent="."]
+scale = Vector3(2.025, 2.025, 2.025)
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.4, 0)
+billboard = 1
+text = "ゴブリン"
+font_size = 24
+pixel_size = 0.010
+modulate = Color(1, 0.72, 0.62, 1)
+no_depth_test = false

@@ -45,7 +45,7 @@ const WEAPONS := [["none", "武器なし"], ["sword_shield", "片手剣+盾"], [
 	["staff", "杖"], ["bow", "弓"], ["katana", "刀"], ["greataxe", "両手斧"]]
 var weapon_buttons: Dictionary = {}
 ## Body panel choices: CharacterDefinition body IDs (assets/characters/modular/body).
-const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006", "body007", "body008", "body009", "body010"]
+const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006", "body007", "body008", "body009", "body010", "body011", "body012", "body013", "body014"]
 var body_buttons: Dictionary = {}
 ## Face panel choices: CharacterDefinition face IDs (assets/characters/modular/face).
 const FACES := ["face001", "face002", "face003", "face004", "face005", "face006", "face007", "face008", "face009", "face010"]
@@ -650,7 +650,7 @@ func _setup_body_panel(above: PanelContainer) -> void:
 	label.text = "ボディ"
 	label.modulate = Color("ead4a8")
 	box.add_child(label)
-	# Same five narrow columns as the Face panel: ten Bodies in two rows.
+	# Same five narrow columns as the Face panel: five Bodies per row.
 	var grid := GridContainer.new()
 	grid.columns = 5
 	grid.add_theme_constant_override("h_separation", 3)

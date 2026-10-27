@@ -23,6 +23,10 @@
     {"id": "007", "source": "assets/characters/tripo/body/007/model.glb", "size_bytes": 2215628},
     {"id": "008", "source": "assets/characters/tripo/body/008/model.glb", "size_bytes": 2204728},
     {"id": "009", "source": "assets/characters/tripo/body/009/model.glb", "size_bytes": 2419972},
-    {"id": "010", "source": "assets/characters/tripo/body/010/model.glb", "size_bytes": 2185560}
+    {"id": "010", "source": "assets/characters/tripo/body/010/model.glb", "size_bytes": 2185560},
+    {"id": "011", "source": "assets/characters/tripo/body/011/model.glb", "size_bytes": 762100},
+    {"id": "012", "source": "assets/characters/tripo/body/012/model.glb", "size_bytes": 697156},
+    {"id": "013", "source": "assets/characters/tripo/body/013/model.glb", "size_bytes": 670832},
+    {"id": "014", "source": "assets/characters/tripo/body/014/model.glb", "size_bytes": 742976}
   ]
 }
