@@ -51,7 +51,7 @@ var sheathe_buttons: Dictionary = {}
 const BODIES := ["body001", "body002", "body003", "body004", "body005", "body006", "body007", "body008", "body009", "body010", "body011", "body012", "body013", "body014"]
 var body_buttons: Dictionary = {}
 ## Face panel choices: CharacterDefinition face IDs (assets/characters/modular/face).
-const FACES := ["face001", "face002", "face003", "face004", "face005", "face006", "face007", "face008", "face009", "face010"]
+const FACES := ["face001", "face002", "face003", "face004", "face005", "face006", "face007", "face008", "face009", "face010", "face012"]
 var face_buttons: Dictionary = {}
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"

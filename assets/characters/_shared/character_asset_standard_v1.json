@@ -140,7 +140,8 @@
       "007",
       "008",
       "009",
-      "010"
+      "010",
+      "012"
     ]
   },
   "expression_atlas": {
@@ -187,6 +188,10 @@
       "005": {
         "reason": "closed helmet: no visible face; keeps the previous helmet Head+Hair width",
         "width_m": 0.44050174802541736
+      },
+      "012": {
+        "reason": "visual review: eye/jaw reference looked too large (half-closed eyes, beard); 0.81x of the reference scale",
+        "width_m": 0.3515678942203522
       }
     },
     "tolerance_m": 0.001

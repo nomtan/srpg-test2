@@ -11,7 +11,8 @@
     {"id": "007", "source": "assets/characters/tripo/face/007/model.glb", "size_bytes": 1217224},
     {"id": "008", "source": "assets/characters/tripo/face/008/model.glb", "size_bytes": 1220432},
     {"id": "009", "source": "assets/characters/tripo/face/009/model.glb", "size_bytes": 1290476},
-    {"id": "010", "source": "assets/characters/tripo/face/010/model.glb", "size_bytes": 1419832}
+    {"id": "010", "source": "assets/characters/tripo/face/010/model.glb", "size_bytes": 1419832},
+    {"id": "012", "source": "assets/characters/tripo/face/012/model.glb", "size_bytes": 587168}
   ],
   "body": [
     {"id": "001", "source": "assets/characters/tripo/body/001/model.glb", "size_bytes": 2161032},

@@ -1,0 +1,32 @@
+{
+  "standard": "ashen_character_v1",
+  "version": 1,
+  "asset_type": "face",
+  "id": "012",
+  "rig_profile": "humanoid_v1",
+  "coordinate_space": "humanoid_v1_rest",
+  "expression_profile": "default",
+  "source_sha256": "65f2994a5f2e36ca1190f5b1030cb378a8ef81b29838e515ee52efc7ca6679a8",
+  "baked_face_features": true,
+  "scale": 0.4192479881531778,
+  "position": [
+    -9.454166283830992e-05,
+    -0.03900576669771724,
+    0.8975694159323943
+  ],
+  "size_reference": "eye_jaw_face002_v1",
+  "head_metrics": {
+    "method": "eye_jaw_face002_v1",
+    "eye_distance_source": 0.2958,
+    "eye_height_source": 0.0692,
+    "jaw_width_source": 0.46,
+    "chin_height_source": 0.012,
+    "front_y_source": -0.3622
+  },
+  "fit_reference": "charcter002 runtime fit baked: face_scale 1.05 about head joint, face_offset (0, 0.01, -0.025)",
+  "size_adjustment": {
+    "reason": "visual review: eye/jaw reference size looked too large (half-closed eyes, beard)",
+    "eye_jaw_reference_scale": 0.5175901088310837,
+    "factor": 0.81
+  }
+}

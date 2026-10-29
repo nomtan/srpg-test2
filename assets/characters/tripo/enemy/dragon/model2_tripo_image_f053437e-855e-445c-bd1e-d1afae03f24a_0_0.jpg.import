@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d4klyqilr77eb"
-path="res://.godot/imported/model_tripo_image_d4ccdae6-2b89-4ecd-83ee-15df08bc3ae2_0_0.jpg-e4029cc87be81a13e7c32b216db8ca62.ctex"
+uid="uid://c4xasmmm71frk"
+path="res://.godot/imported/model2_tripo_image_f053437e-855e-445c-bd1e-d1afae03f24a_0_0.jpg-99ac6985345b1ca774383841b1bf5b25.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "ecb3251ce79a31e0340de2ad0395fd12"
+"md5": "a2d302e4617e641a3b36f30c18c500e6"
 }
 
 [deps]
 
-source_file="res://assets/characters/enemy/dragon/model_tripo_image_d4ccdae6-2b89-4ecd-83ee-15df08bc3ae2_0_0.jpg"
-dest_files=["res://.godot/imported/model_tripo_image_d4ccdae6-2b89-4ecd-83ee-15df08bc3ae2_0_0.jpg-e4029cc87be81a13e7c32b216db8ca62.ctex"]
+source_file="res://assets/characters/tripo/enemy/dragon/model2_tripo_image_f053437e-855e-445c-bd1e-d1afae03f24a_0_0.jpg"
+dest_files=["res://.godot/imported/model2_tripo_image_f053437e-855e-445c-bd1e-d1afae03f24a_0_0.jpg-99ac6985345b1ca774383841b1bf5b25.ctex"]
 
 [params]
 
@@ -40,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

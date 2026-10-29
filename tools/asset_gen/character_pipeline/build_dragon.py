@@ -1,4 +1,4 @@
-"""Rigs the Tripo dragon (assets/characters/tripo/enemy/dragon/model.glb, never overwritten) into
+"""Rigs the Tripo dragon (assets/characters/tripo/enemy/dragon/model2.glb, never overwritten) into
 assets/characters/enemy/dragon/model.glb.
 
 The source is a static upright red dragon with raised wings, 0.735 tall, facing -Y in Blender (+Z in
@@ -29,7 +29,7 @@ import numpy as np
 from mathutils import Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parents[3]
-SOURCE = ROOT / 'assets/characters/tripo/enemy/dragon/model.glb'
+SOURCE = ROOT / 'assets/characters/tripo/enemy/dragon/model2.glb'
 OUT = ROOT / 'assets/characters/enemy/dragon/model.glb'
 FPS = 30
 
