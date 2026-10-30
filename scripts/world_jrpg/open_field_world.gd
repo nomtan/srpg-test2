@@ -11,6 +11,7 @@ const Vegetation = preload("res://scripts/world_jrpg/open_field_vegetation.gd")
 const Meadow = preload("res://scripts/world_jrpg/open_field_meadow.gd")
 const Chunks = preload("res://scripts/world_jrpg/open_field_chunks.gd")
 const TERRAIN_SHADER = preload("res://scripts/world_jrpg/open_field_terrain.gdshader")
+const ACTIVE_MARKER_SHADER = preload("res://scripts/world_jrpg/active_marker.gdshader")
 const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader")
 const RIVER_SHADER = preload("res://scripts/world_jrpg/open_field_river.gdshader")
 const SPARRING_SCENE = preload("res://scenes/characters/tripo_roster/charcter001.tscn")
@@ -188,8 +189,18 @@ const REGION_NAMES := {
 	Biomes.Biome.HIGHLAND: "東の高原", Biomes.Biome.MOUNTAIN: "北嶺の山腹", Biomes.Biome.WETLAND: "湖畔の湿原",
 	Biomes.Biome.FARMLAND: "城下の畑", Biomes.Biome.LAKESHORE: "鏡の湖畔",
 }
-## Battle-grid conventions: 1 m cells; logical heights snap to 1 m steps.
+## Battle-grid conventions: 1 m cells; logical heights snap to 1 m steps. A battle moves
+## units on tactical cells of TACTICAL_SPAN x TACTICAL_SPAN cells (2 m x 2 m), aligned to
+## the world origin; a unit stands at the tactical cell's center (with an even span, the
+## corner its four middle 1 m cells share).
 const CELL_SIZE := 1.0
+const TACTICAL_SPAN := 2
+## Grid view (F4) preview: tactical cells the explorer could reach in this many steps over
+## walkable cells, with grid lines only up to GRID_LINE_MARGIN cells (grid steps) beyond
+## them, in a GRID_RANGE_SIZE square map around it.
+const MOVE_PREVIEW := 4
+const GRID_LINE_MARGIN := 5
+const GRID_RANGE_SIZE := 32
 const HEIGHT_STEP := 1.0
 ## Visual-only micro relief amplitude at ground_roughness 1.0.
 const MICRO_RELIEF := 0.18
@@ -217,6 +228,15 @@ var biome := Biomes.new()
 var gameplay_cache := PackedFloat32Array()
 var biome_debug_map: ImageTexture
 var biome_debug := false
+var grid_debug := false
+var grid_range_image := Image.create(GRID_RANGE_SIZE, GRID_RANGE_SIZE, false, Image.FORMAT_RG8)
+var grid_range_map := ImageTexture.create_from_image(grid_range_image)
+## The tactical cell grid_range_map was last built around.
+var grid_range_focus := Vector2i(-100000, -100000)
+## Grid view: the yellow chevron over the explorer's head (the active unit), and the model
+## its height was measured on.
+var active_marker: MeshInstance3D
+var active_marker_model: Node3D
 var terrain_panel: PanelContainer
 var terrain_text: Label
 var path_field := PackedFloat32Array()
@@ -330,6 +350,12 @@ func _ready() -> void:
 			_focus_player()
 			_update_camera()
 		if arg == "--debug-biome": _set_biome_debug(true)
+		if arg == "--debug-grid": _set_grid_debug(true)
+		# Looks down over the explorer's shoulder at the grid view's move range.
+		if arg == "--view=grid":
+			pitch = 0.85
+			distance = 14.0
+			_update_camera()
 		if arg == "--debug-terrain": terrain_panel.visible = true
 		if arg == "--hide-hud":
 			hud.visible = false
@@ -359,6 +385,7 @@ func _ready() -> void:
 		for arg in args:
 			if arg.begins_with("--time=") or arg.begins_with("--weather=") or arg.begins_with("--season="): capture_name += "_" + arg.get_slice("=", 1)
 		if biome_debug: capture_name += "_biome"
+		if grid_debug: capture_name += "_grid"
 		get_viewport().get_texture().get_image().save_png(directory.path_join("open_field_%s.png" % capture_name))
 		get_tree().quit()
 
@@ -653,14 +680,40 @@ func cell_to_world_position(cell: Vector2i) -> Vector3:
 	var z := (cell.y + 0.5) * CELL_SIZE
 	return Vector3(x, get_visual_height(x, z), z)
 
+func world_position_to_tactical_cell(p: Vector3) -> Vector2i:
+	var size := CELL_SIZE * TACTICAL_SPAN
+	return Vector2i(floori(p.x / size), floori(p.z / size))
+
+## Tactical cell center on the visible ground, where a unit standing in the cell is placed.
+func tactical_cell_to_world_position(tactical: Vector2i) -> Vector3:
+	var size := CELL_SIZE * TACTICAL_SPAN
+	var x := (tactical.x + 0.5) * size
+	var z := (tactical.y + 0.5) * size
+	return Vector3(x, get_visual_height(x, z), z)
+
+## The 1 m cells a tactical cell covers, row by row.
+func tactical_cell_cells(tactical: Vector2i) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for z in TACTICAL_SPAN:
+		for x in TACTICAL_SPAN:
+			cells.append(tactical * TACTICAL_SPAN + Vector2i(x, z))
+	return cells
+
 ## Everything a future BattleCell needs for one cell.
 func get_cell_info(cell: Vector2i) -> Dictionary:
-	var center := cell_to_world_position(cell)
+	return _point_info(cell, cell_to_world_position(cell))
+
+## The same for a tactical cell, read at its center point alone (the 1 m cell holding the
+## center gives the cover).
+func get_tactical_cell_info(tactical: Vector2i) -> Dictionary:
+	return _point_info(tactical, tactical_cell_to_world_position(tactical))
+
+func _point_info(coord: Vector2i, center: Vector3) -> Dictionary:
 	return {
-		"coord": cell, "world_position": center,
+		"coord": coord, "world_position": center,
 		"height": get_gameplay_height(center.x, center.z), "logical_height": get_logical_height(center.x, center.z),
 		"biome": get_biome_at(center.x, center.z), "slope": get_slope_at(center.x, center.z),
-		"walkable": is_walkable_at(center.x, center.z), "cover": _cover_at(cell),
+		"walkable": is_walkable_at(center.x, center.z), "cover": _cover_at(world_position_to_cell(center)),
 		"water_depth": maxf(_water_depth(center.x, center.z), 0.0),
 	}
 
@@ -2829,12 +2882,88 @@ func _set_biome_debug(on: bool) -> void:
 	for material in _field_materials():
 		material.set_shader_parameter("biome_debug", 1.0 if on else 0.0)
 
+func _set_grid_debug(on: bool) -> void:
+	grid_debug = on
+	for material in _field_materials():
+		material.set_shader_parameter("grid_debug", 1.0 if on else 0.0)
+		material.set_shader_parameter("grid_span", CELL_SIZE * TACTICAL_SPAN)
+		material.set_shader_parameter("grid_extent", float(extent))
+		material.set_shader_parameter("grid_range_map", grid_range_map)
+	grid_range_focus = Vector2i(-100000, -100000)
+	if on and not active_marker:
+		active_marker = MeshInstance3D.new()
+		var quad := QuadMesh.new()
+		quad.size = Vector2(1.2, 1.2)
+		active_marker.mesh = quad
+		var material := ShaderMaterial.new()
+		material.shader = ACTIVE_MARKER_SHADER
+		active_marker.material_override = material
+		active_marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if active_marker: active_marker.visible = on
+
+## Keeps the active marker on the explorer, a little above the top of its model and its name
+## label (measured again whenever the model is swapped).
+func _update_active_marker() -> void:
+	if active_marker.get_parent() != player:
+		if active_marker.get_parent(): active_marker.get_parent().remove_child(active_marker)
+		player.add_child(active_marker)
+	var model: Node3D = player.get("model")
+	if model == active_marker_model: return
+	active_marker_model = model
+	var top := 1.6
+	if model:
+		top = 0.0
+		for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+			top = maxf(top, (mesh.global_transform * mesh.get_aabb()).end.y - player.global_position.y)
+		for label: Label3D in model.find_children("*", "Label3D", true, false):
+			if label.visible: top = maxf(top, label.global_position.y - player.global_position.y + 0.15)
+	active_marker.position = Vector3(0.0, top + 0.5, 0.0)
+
+## Rebuilds the move range when the explorer enters another tactical cell. The shaders'
+## grid_cursor (the yellow destination focus) stays unset until move selection exists.
+func _update_grid_preview() -> void:
+	var focus := world_position_to_tactical_cell(player.position)
+	if focus == grid_range_focus: return
+	grid_range_focus = focus
+	for material in _field_materials():
+		material.set_shader_parameter("grid_current", Vector2(focus))
+	var origin := focus - Vector2i.ONE * (GRID_RANGE_SIZE / 2)
+	grid_range_image.fill(Color.BLACK)
+	var steps := {focus: 0}
+	var frontier: Array[Vector2i] = [focus]
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_front()
+		if steps[cell] == MOVE_PREVIEW: continue
+		for next: Vector2i in [cell + Vector2i.LEFT, cell + Vector2i.RIGHT, cell + Vector2i.UP, cell + Vector2i.DOWN]:
+			if steps.has(next): continue
+			var center := tactical_cell_to_world_position(next)
+			if not is_walkable_at(center.x, center.z): continue
+			steps[next] = steps[cell] + 1
+			frontier.append(next)
+	# The line band: every cell within GRID_LINE_MARGIN grid steps of the range, walkable or not.
+	var band := {}
+	for cell: Vector2i in steps:
+		band[cell] = 0
+	frontier.assign(steps.keys())
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_front()
+		if band[cell] == GRID_LINE_MARGIN: continue
+		for next: Vector2i in [cell + Vector2i.LEFT, cell + Vector2i.RIGHT, cell + Vector2i.UP, cell + Vector2i.DOWN]:
+			if band.has(next): continue
+			band[next] = band[cell] + 1
+			frontier.append(next)
+	for cell: Vector2i in band:
+		grid_range_image.set_pixelv(cell - origin, Color(1.0 if steps.has(cell) else 0.0, 1.0, 0.0))
+	grid_range_map.update(grid_range_image)
+	for material in _field_materials():
+		material.set_shader_parameter("grid_range_origin", Vector2(origin))
+
 func _setup_hud() -> void:
 	super._setup_hud()
 	for label: Label in hud.find_children("*", "Label", true, false):
 		if label.text.begins_with("WASD"):
 			label.text += "
-5 : 絶景（見晴らしの丘）　F3 : バイオーム表示　F4 : 地形情報"
+5 : 絶景（見晴らしの丘）　F3 : バイオーム表示　F4 : 升目表示　F6 : 地形情報"
 	terrain_panel = _panel(Vector2.ZERO)
 	terrain_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	terrain_panel.offset_left = -284
@@ -2854,15 +2983,16 @@ func _update_terrain_hud() -> void:
 	for id: int in ids.slice(0, 3):
 		shares.append("%s %.2f" % [Biomes.NAMES[id], weights[id]])
 	var cell := world_position_to_cell(p)
+	var tactical := world_position_to_tactical_cell(p)
 	terrain_text.text = "Biome: %s
   %s
-Cell: (%d, %d)
+Cell: (%d, %d)  Tactical: (%d, %d)
 Visual Height: %.2fm
 Gameplay Height: %.2fm
 Logical Height: %.0fm
 Slope: %.2f
 Walkable: %s" % [
-		Biomes.NAMES[get_biome_at(p.x, p.z)], " / ".join(shares), cell.x, cell.y,
+		Biomes.NAMES[get_biome_at(p.x, p.z)], " / ".join(shares), cell.x, cell.y, tactical.x, tactical.y,
 		get_visual_height(p.x, p.z), get_gameplay_height(p.x, p.z), get_logical_height(p.x, p.z),
 		get_slope_at(p.x, p.z), str(is_walkable_at(p.x, p.z))]
 	if streamed:
@@ -2878,6 +3008,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 			KEY_F4:
+				_set_grid_debug(not grid_debug)
+				get_viewport().set_input_as_handled()
+				return
+			KEY_F6:
 				terrain_panel.visible = not terrain_panel.visible
 				get_viewport().set_input_as_handled()
 				return
@@ -2919,6 +3053,9 @@ func _process(delta: float) -> void:
 		crystal.position.y = 4.2 + sin(Time.get_ticks_msec() * 0.0015) * 0.25
 	_sync_conditions()
 	if terrain_panel.visible: _update_terrain_hud()
+	if grid_debug and player:
+		_update_grid_preview()
+		_update_active_marker()
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
 		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"
 

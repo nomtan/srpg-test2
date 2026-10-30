@@ -93,6 +93,97 @@ uniform float biome_debug = 0.0;
 uniform float biome_uv_scale = 0.0025;
 uniform float biome_uv_offset = 0.0;
 uniform float biome_extent = 400.0;
+// Battle-grid view (F4): grid_span m tactical cells inside 0..grid_extent, each outlined as
+// its own tile: blue glowing tiles for the move range, thin faint outlines for a band of
+// cells around it, and a yellow cursor cell with corner brackets. grid_range_map holds one
+// texel per tactical cell (texel (0, 0) at cell grid_range_origin): R = 1 in the move
+// range, G = 1 in the range and the band. The terrain and the grass blades both draw it, so it lies over
+// the turf.
+uniform float grid_debug = 0.0;
+uniform float grid_span = 2.0;
+uniform float grid_extent = 400.0;
+uniform sampler2D grid_range_map : filter_nearest, repeat_disable, hint_default_black;
+uniform vec2 grid_range_origin = vec2(-100000.0);
+uniform vec2 grid_cursor = vec2(-100000.0);
+// The explorer's cell: a slightly more opaque fill with a wider inner glow.
+uniform vec2 grid_current = vec2(-100000.0);
+
+vec2 of_grid_cell(vec2 cell) {
+    vec2 uv = (cell - grid_range_origin + 0.5) / vec2(textureSize(grid_range_map, 0));
+    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return vec2(0.0);
+    return texture(grid_range_map, uv).rg;
+}
+
+float of_grid_in_range(vec2 cell) {
+    return of_grid_cell(cell).r;
+}
+
+// Grass blade height scale at ground point p: blades in the move range are cut to grid_mow
+// so the tiles stay clear while the turf still shows.
+uniform float grid_mow = 0.3;
+float of_grid_mow(vec2 p) {
+    if (grid_debug < 0.5) return 1.0;
+    return of_grid_in_range(floor(p / grid_span)) > 0.5 ? grid_mow : 1.0;
+}
+
+// Blends the grid over `color` (sRGB) at ground point p and adds its glow (sRGB) to `glow`.
+// px: meters per screen pixel along x / z, so lines keep about the same width on screen
+// and fade where cells shrink to a few pixels.
+void of_grid_overlay(vec2 p, vec2 px, inout vec3 color, inout vec3 glow) {
+    if (grid_debug < 0.5 || p.x < 0.0 || p.y < 0.0 || p.x > grid_extent || p.y > grid_extent) return;
+    const vec3 LINE = vec3(0.45, 0.88, 1.0);
+    const vec3 FILL = vec3(0.25, 0.66, 0.96);
+    const vec3 CURSOR = vec3(1.0, 0.8, 0.22);
+    vec2 t = p / grid_span;
+    vec2 cell = floor(t);
+    vec2 f = t - cell;
+    vec2 step_t = max(px / grid_span, vec2(1e-5));
+    vec2 cells = of_grid_cell(cell);
+    bool cursor = length(cell - grid_cursor) < 0.5;
+    bool current = length(cell - grid_current) < 0.5;
+    if (cells.g < 0.5 && !cursor) return;
+    // Every cell is its own tile, outlined just inside its edges so neighbors keep a gap:
+    // pixels inside the outline (negative in the gap).
+    vec2 inside = (min(f, 1.0 - f) - 0.045) / step_t;
+    float to_rim = min(inside.x, inside.y);
+    float visible = 1.0 - smoothstep(0.06, 0.2, max(step_t.x, step_t.y));
+    if (cells.r > 0.5) {
+        // In range: a blue tile with a bright glowing rim.
+        float rim = 1.0 - smoothstep(0.8, 2.2, abs(to_rim));
+        // The explorer's own cell glows twice as far in from its rim.
+        float halo = to_rim > 0.0 ? exp(-to_rim / (current ? 12.0 : 6.0)) : exp(to_rim / 6.0) * 0.4;
+        // The cursor's yellow replaces the blue fill but keeps the rim.
+        if (!cursor && to_rim > 0.0) {
+            // The explorer's own cell is also a little more opaque.
+            color = mix(color, FILL, (current ? 0.52 : 0.42) + halo * 0.2);
+            glow += FILL * (0.42 + halo * 0.4);
+        }
+        glow += LINE * (halo * 0.6 + rim * 1.5);
+        color = mix(color, vec3(0.5, 0.9, 1.0), rim);
+    } else if (cells.g > 0.5) {
+        // The band around the range: a thin faint outline only.
+        float rim = (1.0 - smoothstep(0.4, 1.4, abs(to_rim))) * visible;
+        color = mix(color, LINE, rim * 0.6);
+        glow += LINE * rim * 0.5;
+    }
+    if (cursor) {
+        // Corner brackets: L-shaped arms along each corner's two edges, thicker than the outline.
+        vec2 c = min(f, 1.0 - f) / step_t;
+        vec2 arm = 0.28 / step_t;
+        float thick = 3.5;
+        float bracket = max((1.0 - smoothstep(thick, thick + 1.0, c.x)) * step(c.y, arm.y), (1.0 - smoothstep(thick, thick + 1.0, c.y)) * step(c.x, arm.x));
+        float outline = 1.0 - smoothstep(0.6, 1.6, abs(to_rim));
+        color = mix(color, CURSOR, 0.5);
+        color = mix(color, vec3(1.0, 0.92, 0.5), max(bracket, outline * 0.7));
+        glow += CURSOR * (0.3 + outline * 0.6 + bracket * 2.2);
+    }
+}
+
+// Meters per pixel at a point `dist` m from the camera, for of_grid_overlay off the
+// terrain (the grass blades), where screen derivatives of the ground point do not exist.
+vec2 of_grid_px(float dist, float elevation, mat4 projection, vec2 viewport) {
+    return vec2(dist * 2.0 / (projection[1][1] * viewport.y) / max(elevation, 0.2));
+}
 
 vec4 of_biome(vec2 p) {
     if (biome_enabled < 0.5) return vec4(0.47, 0.65, 0.28, 0.0);

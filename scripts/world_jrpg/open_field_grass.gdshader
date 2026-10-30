@@ -68,7 +68,7 @@ void vertex() {
     // The tip ramp flattens out ahead of the sink, so the carpet's far edge is already
     // the ground's color when the blades go.
     near = smoothstep(0.0, 0.6, fade);
-    VERTEX.y = origin.y + (VERTEX.y - origin.y) * fade - (1.0 - fade) * 0.05;
+    VERTEX.y = origin.y + (VERTEX.y - origin.y) * fade * of_grid_mow(VERTEX.xz) - (1.0 - fade) * 0.05;
     // Out-of-season flowers fold into the ground.
     if (flower > 0.5 && of_season_bloom(origin.xz) < 0.5) VERTEX = origin - vec3(0.0, 0.1, 0.0);
 }
@@ -98,7 +98,14 @@ void fragment() {
     // Snow: whole blades go snow-white, cool blue-grey at the root to white at the tip.
     color = mix(color, mix(vec3(0.70, 0.77, 0.86), vec3(0.95, 0.97, 1.0), 0.35 + 0.65 * COLOR.r), clamp(snow_cover * 1.25, 0.0, 1.0));
     color *= 1.0 - wetness * 0.18;
+    vec3 grid_glow = vec3(0.0);
+    if (grid_debug > 0.5) {
+        vec3 wp = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+        float elevation = abs(normalize(wp - CAMERA_POSITION_WORLD).y);
+        of_grid_overlay(wp.xz, of_grid_px(length(VERTEX), elevation, PROJECTION_MATRIX, VIEWPORT_SIZE), color, grid_glow);
+    }
     ALBEDO = of_to_linear(color);
+    EMISSION = of_to_linear(grid_glow);
     // Same surface response as the terrain, so blade and ground light identically.
     ROUGHNESS = mix(0.95, 0.5, wetness);
     SPECULAR = 0.25;

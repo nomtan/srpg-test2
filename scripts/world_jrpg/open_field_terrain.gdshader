@@ -83,11 +83,13 @@ void fragment() {
         vec3 flat_color = (p.x < 0.0 || p.y < 0.0 || p.x > biome_extent || p.y > biome_extent) ? vec3(0.3) : of_biome_debug(p);
         color = mix(flat_color * (0.7 + 0.3 * n.y), vec3(0.05), line * 0.5);
     }
+    vec3 grid_glow = vec3(0.0);
+    of_grid_overlay(p, fwidth(p), color, grid_glow);
     // Distant ridges cool and lift toward the haze so the ranges layer into depth.
     float aerial = smoothstep(140.0, 900.0, length(VERTEX)) * (1.0 - biome_debug);
     color = mix(color, haze_color, aerial * 0.55);
     ALBEDO = of_to_linear(color);
-    EMISSION = of_to_linear(haze_color) * aerial * 0.18;
+    EMISSION = of_to_linear(haze_color) * aerial * 0.18 + of_to_linear(grid_glow);
     ROUGHNESS = mix(0.95, 0.45, max(wetness, damp * 0.6));
     SPECULAR = 0.25;
 }

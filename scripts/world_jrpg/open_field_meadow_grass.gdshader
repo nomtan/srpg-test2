@@ -92,6 +92,7 @@ void vertex() {
             dip = dot(offset, offset) * 1.4 * w / max(patch_height, 0.05);
         }
         VERTEX.y -= lift * (1.0 - scale) + min(dip, lift * 0.6) * scale + (1.0 - fade) * 0.05;
+        VERTEX.y -= lift * scale * (1.0 - of_grid_mow(VERTEX.xz));
     }
 }
 
@@ -115,7 +116,14 @@ void fragment() {
     // Snow: whole blades go snow-white, cool blue-grey at the root to white at the tip.
     color = mix(color, mix(vec3(0.70, 0.77, 0.86), vec3(0.95, 0.97, 1.0), 0.35 + 0.65 * tone), clamp(snow_cover * 1.25, 0.0, 1.0));
     color *= 1.0 - wetness * 0.18;
+    vec3 grid_glow = vec3(0.0);
+    if (grid_debug > 0.5) {
+        vec3 wp = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+        float elevation = abs(normalize(wp - CAMERA_POSITION_WORLD).y);
+        of_grid_overlay(wp.xz, of_grid_px(length(VERTEX), elevation, PROJECTION_MATRIX, VIEWPORT_SIZE), color, grid_glow);
+    }
     ALBEDO = of_to_linear(color);
+    EMISSION = of_to_linear(grid_glow);
     // Back faces keep the ground normal too (Godot flips NORMAL on them).
     if (!FRONT_FACING) NORMAL = -NORMAL;
 }

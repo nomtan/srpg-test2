@@ -92,7 +92,7 @@ world.release_battle_area(id)                       # 通常のストリーミ�
 | `startup_radius` | 128 | 起動時にこの距離までは読み込みを終えてから開始 |
 
 コマンドライン: `--field-size=<m>`、`--stream=<grass>,<detail>,<terrain>,<data>,<far>`、`--stream-margin=<m>`、
-`--stream-jobs=<n>`、`--stream-budget=<ms>`、`--startup-radius=<m>`。F4 の地形情報パネルに区画数を表示する。
+`--stream-jobs=<n>`、`--stream-budget=<ms>`、`--startup-radius=<m>`。F6 の地形情報パネルに区画数を表示する。
 
 ## 検証
 

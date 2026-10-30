@@ -1507,8 +1507,9 @@ func _setup_hud() -> void:
 func _update_terrain_hud() -> void:
 	var p: Vector3 = player.position
 	var cell := world_position_to_cell(p)
-	terrain_text.text = "Region: %s\nCell: (%d, %d)\nHeight: %.2fm\nLogical Height: %.0fm\nSlope: %.2f\nWalkable: %s" % [
-		_region(), cell.x, cell.y, get_gameplay_height(p.x, p.z), get_logical_height(p.x, p.z), get_slope_at(p.x, p.z), str(is_walkable_at(p.x, p.z))]
+	var tactical := world_position_to_tactical_cell(p)
+	terrain_text.text = "Region: %s\nCell: (%d, %d)  Tactical: (%d, %d)\nHeight: %.2fm\nLogical Height: %.0fm\nSlope: %.2f\nWalkable: %s" % [
+		_region(), cell.x, cell.y, tactical.x, tactical.y, get_gameplay_height(p.x, p.z), get_logical_height(p.x, p.z), get_slope_at(p.x, p.z), str(is_walkable_at(p.x, p.z))]
 
 func _set_biome_debug(_on: bool) -> void:
 	pass
