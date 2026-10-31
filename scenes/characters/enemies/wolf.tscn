@@ -10,6 +10,7 @@ display_name = "ウルフ"
 model_scene = ExtResource("2")
 weapon_id = "none"
 shield_id = "none"
+footprint = 2
 
 [node name="Model" type="Node3D" parent="."]
 scale = Vector3(3.6, 3.6, 3.6)

@@ -11,6 +11,7 @@ model_scene = ExtResource("2")
 weapon_id = "none"
 shield_id = "none"
 max_hp = 5
+footprint = 3
 
 [node name="Model" type="Node3D" parent="."]
 scale = Vector3(5.6, 5.6, 5.6)

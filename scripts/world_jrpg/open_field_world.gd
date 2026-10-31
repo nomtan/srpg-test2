@@ -16,10 +16,14 @@ const LAKE_SHADER = preload("res://scripts/world_jrpg/open_field_water.gdshader"
 const RIVER_SHADER = preload("res://scripts/world_jrpg/open_field_river.gdshader")
 const SPARRING_SCENE = preload("res://scenes/characters/tripo_roster/charcter001.tscn")
 const HitFx = preload("res://scripts/world_jrpg/sword_hit_fx.gd")
+const HpGauge = preload("res://scripts/ui/hp_gauge_3d.gd")
+const DamageNumber = preload("res://scripts/effect/damage_number_3d.gd")
 # How far in front of a struck target (toward the attacker) its hit effect shows.
 const HIT_FX_INSET := 0.35
 # Hit-stop on a connecting sword-and-shield blow: the attack, everything it struck and the hit effect freeze this long.
 const HIT_STOP := 0.15
+## Shown for every blow on an enemy until damage is worked out.
+const PLACEHOLDER_DAMAGE := 9999
 # On-screen turn of the horizontal slash's hit effect (degrees, counterclockwise): its long points lie closer to the swing.
 const SLASH_HIT_TILT := -45.0
 # Sparring partner stands this far ahead of the spawn; melee reaches it within MELEE_REACH,
@@ -27,9 +31,10 @@ const SLASH_HIT_TILT := -45.0
 const SPARRING_OFFSET := 2.5
 const MELEE_REACH := 3.0
 const BOW_REACH := 30.0
-# Field enemies stand in a row centred this far ahead of the spawn, ENEMY_SPACING apart.
+# Field enemies stand in a row centred this far (m) ahead of the spawn, each on its footprint
+# square of tactical cells with ENEMY_GAP free cells between neighbours.
 const ENEMY_OFFSET := 7.5
-const ENEMY_SPACING := 3.2
+const ENEMY_GAP := 1
 ## Every tree is a low-poly, static anime tree (Vegetation.TOON_SWAP). Off falls back to
 ## card_trees.
 @export var toon_trees := true
@@ -233,6 +238,9 @@ var grid_range_image := Image.create(GRID_RANGE_SIZE, GRID_RANGE_SIZE, false, Im
 var grid_range_map := ImageTexture.create_from_image(grid_range_image)
 ## The tactical cell grid_range_map was last built around.
 var grid_range_focus := Vector2i(-100000, -100000)
+## Tactical cell -> the field unit (sparring partner, enemy) standing on it; a human takes one
+## cell, an enemy its footprint square. The move range never enters them.
+var occupied_cells := {}
 ## Grid view: the yellow chevron over the explorer's head (the active unit), and the model
 ## its height was measured on.
 var active_marker: MeshInstance3D
@@ -2715,8 +2723,8 @@ func _spawn_sparring_partner(spawn: Vector2) -> void:
 	sparring_partner = SPARRING_SCENE.instantiate() as Node3D
 	sparring_partner.name = "SparringPartner"
 	add_child(sparring_partner)
-	var at := spawn + Vector2(player.world_facing.x, player.world_facing.z) * SPARRING_OFFSET
-	sparring_partner.position = Vector3(at.x, _surface(at.x, at.y) + 0.05, at.y)
+	var forward := Vector2(player.world_facing.x, player.world_facing.z)
+	_place_on_block(sparring_partner, spawn + forward * SPARRING_OFFSET, 1, _cardinal(forward))
 	_face_toward(sparring_partner, player.position)
 	var animation_player: AnimationPlayer = sparring_partner.animation_player
 	if animation_player:
@@ -2734,13 +2742,24 @@ func _spawn_sparring_partner(spawn: Vector2) -> void:
 
 func _spawn_enemies(spawn: Vector2) -> void:
 	var forward := Vector2(player.world_facing.x, player.world_facing.z).normalized()
-	var right := Vector2(-forward.y, forward.x)
+	var right := _cardinal(Vector2(-forward.y, forward.x))
+	var size := CELL_SIZE * TACTICAL_SPAN
+	var row: Array[Node3D] = []
+	var width := -ENEMY_GAP * size
+	for scene in field_enemies:
+		var enemy := scene.instantiate() as Node3D
+		row.append(enemy)
+		width += (int(enemy.get("footprint")) + ENEMY_GAP) * size
+	# Left to right along the row, each enemy's square ENEMY_GAP cells clear of the last.
+	var along := -width * 0.5
 	var demo_kinds: Dictionary = {}
-	for index in field_enemies.size():
-		var enemy := field_enemies[index].instantiate() as Node3D
+	for index in row.size():
+		var enemy := row[index]
 		enemy.name = "Enemy%d" % index
-		var at := spawn + forward * ENEMY_OFFSET + right * ENEMY_SPACING * (index - (field_enemies.size() - 1) * 0.5)
-		enemy.position = Vector3(at.x, _surface(at.x, at.y) + 0.05, at.y)
+		var cells: int = enemy.get("footprint")
+		along += cells * size * 0.5
+		_place_on_block(enemy, spawn + forward * ENEMY_OFFSET + Vector2(right) * along, cells, right)
+		along += (cells * 0.5 + ENEMY_GAP) * size
 		enemy.set("ground_height", _surface)
 		var kind: String = enemy.get("enemy_id")
 		if enemy_demo and not demo_kinds.has(kind):
@@ -2750,6 +2769,33 @@ func _spawn_enemies(spawn: Vector2) -> void:
 		add_child(enemy)
 		_face_toward(enemy, player.position)
 		enemies.append(enemy)
+
+## Stands a field unit in the middle of a `cells` x `cells` square of tactical cells centred as
+## near `at` as possible, moved along `step` until the square is clear of other units and the
+## explorer, and claims the square in occupied_cells.
+func _place_on_block(actor: Node3D, at: Vector2, cells: int, step: Vector2i) -> void:
+	var size := CELL_SIZE * TACTICAL_SPAN
+	var corner := Vector2i(roundi(at.x / size - cells * 0.5), roundi(at.y / size - cells * 0.5))
+	var player_cell := world_position_to_tactical_cell(player.position)
+	if step == Vector2i.ZERO: step = Vector2i.RIGHT
+	while _block_cells(corner, cells).any(func(cell: Vector2i) -> bool: return occupied_cells.has(cell) or cell == player_cell):
+		corner += step
+	for cell in _block_cells(corner, cells):
+		occupied_cells[cell] = actor
+	var center := (Vector2(corner) + Vector2.ONE * cells * 0.5) * size
+	actor.position = Vector3(center.x, _surface(center.x, center.y) + 0.05, center.y)
+
+func _block_cells(corner: Vector2i, cells: int) -> Array[Vector2i]:
+	var block: Array[Vector2i] = []
+	for z in cells:
+		for x in cells:
+			block.append(corner + Vector2i(x, z))
+	return block
+
+## The grid axis closest to `v`, as a unit step.
+func _cardinal(v: Vector2) -> Vector2i:
+	if absf(v.x) >= absf(v.y): return Vector2i(int(signf(v.x)), 0)
+	return Vector2i(0, int(signf(v.y)))
 
 ## Roster visuals face +Z.
 func _face_toward(actor: Node3D, target: Vector3) -> void:
@@ -2762,6 +2808,7 @@ func _on_player_attack_impact(clip: String) -> void:
 	for enemy in enemies:
 		if _within_strike(enemy):
 			_face_toward(enemy, player.position)
+			if enemy.can_take_hit(): _show_damage(enemy, PLACEHOLDER_DAMAGE)
 			# Freeze first, so a finishing blow's fall waits out the hit-stop too.
 			if stops: enemy.hold(HIT_STOP)
 			enemy.take_hit()
@@ -2800,6 +2847,47 @@ func _show_hits(targets: Array[Node3D], clip: String) -> void:
 		var at := target.position + toward.limit_length(HIT_FX_INSET)
 		fx.global_position = Vector3(at.x, height, at.z)
 	player.hold_attack(HIT_STOP)
+
+## The damage number pops up just below where the unit's name label (or HP gauge) floats.
+func _show_damage(target: Node3D, amount: int) -> void:
+	var label := target.get_node_or_null("NameLabel") as Node3D
+	var number := DamageNumber.new()
+	number.name = "DamageNumber"
+	add_child(number)
+	number.play(amount, (label.global_position if label else target.global_position + Vector3.UP * 1.6) + Vector3.DOWN * 0.3)
+
+## SRPG grid view: each unit's name label gives way to an HP gauge in its place (the explorer
+## has no HP yet and shows a full one); off, the labels come back.
+func _sync_hp_gauges(on: bool) -> void:
+	var units: Array[Node3D] = [player.model, sparring_partner]
+	units.append_array(enemies)
+	for unit in units:
+		if unit == null: continue
+		var label := unit.get_node_or_null("NameLabel") as Label3D
+		if label == null: continue
+		# Faded out rather than hidden: the explorer and the enemies set `visible` themselves.
+		if on and not label.has_meta("srpg_alpha"):
+			label.set_meta("srpg_alpha", Vector2(label.modulate.a, label.outline_modulate.a))
+			label.modulate.a = 0.0
+			label.outline_modulate.a = 0.0
+		elif not on and label.has_meta("srpg_alpha"):
+			var alpha: Vector2 = label.get_meta("srpg_alpha")
+			label.modulate.a = alpha.x
+			label.outline_modulate.a = alpha.y
+			label.remove_meta("srpg_alpha")
+		var gauge := unit.get_node_or_null("HpGauge") as HpGauge
+		if not on:
+			if gauge: gauge.visible = false
+			continue
+		if gauge == null:
+			gauge = HpGauge.new()
+			gauge.name = "HpGauge"
+			gauge.configure(unit in enemies)
+			unit.add_child(gauge)
+			gauge.position = label.position
+		gauge.visible = label.visible or unit == player.model
+		var max_hp = unit.get("max_hp")
+		if max_hp: gauge.set_ratio(float(unit.get("hp")) / max_hp)
 
 func _within_strike(target: Node3D) -> bool:
 	var to := target.position - player.position
@@ -2890,6 +2978,7 @@ func _set_grid_debug(on: bool) -> void:
 		material.set_shader_parameter("grid_extent", float(extent))
 		material.set_shader_parameter("grid_range_map", grid_range_map)
 	grid_range_focus = Vector2i(-100000, -100000)
+	if not on and player: _sync_hp_gauges(false)
 	if on and not active_marker:
 		active_marker = MeshInstance3D.new()
 		var quad := QuadMesh.new()
@@ -2935,7 +3024,7 @@ func _update_grid_preview() -> void:
 		var cell: Vector2i = frontier.pop_front()
 		if steps[cell] == MOVE_PREVIEW: continue
 		for next: Vector2i in [cell + Vector2i.LEFT, cell + Vector2i.RIGHT, cell + Vector2i.UP, cell + Vector2i.DOWN]:
-			if steps.has(next): continue
+			if steps.has(next) or occupied_cells.has(next): continue
 			var center := tactical_cell_to_world_position(next)
 			if not is_walkable_at(center.x, center.z): continue
 			steps[next] = steps[cell] + 1
@@ -3055,6 +3144,8 @@ func _process(delta: float) -> void:
 	if terrain_panel.visible: _update_terrain_hud()
 	if grid_debug and player:
 		_update_grid_preview()
+		# Before the marker, so it measures the explorer's gauge too.
+		_sync_hp_gauges(true)
 		_update_active_marker()
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
 		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"

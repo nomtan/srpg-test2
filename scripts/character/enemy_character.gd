@@ -18,12 +18,10 @@ const LOOPING := ["idle", "walk"]
 const EXTRA_ATTACKS := ["attack_bite"]
 const EQUIPMENT_ROOT := "res://assets/characters/enemy/equipment"
 const DISSOLVE_SHADER := preload("res://assets/characters/_shared/materials/enemy_dissolve.gdshader")
-## Demo order: [clip, seconds]; 0 waits for the clip to end. "walk" paces forward and back,
-## "death" runs the whole fall, dust and return.
+## Demo order: [clip, seconds]; 0 waits for the clip to end. "walk" steps in place (the enemy
+## keeps its tactical cell), "death" runs the whole fall, dust and return.
 const DEMO := [["idle", 2.0], ["walk", 3.0], ["attack", 0.0], ["idle", 0.6], ["attack", 0.0],
 	["guard", 1.6], ["idle", 0.8], ["hit", 0.0], ["idle", 0.8], ["death", 0.0]]
-const WALK_SPEED := 1.3
-const WALK_REACH := 2.0
 ## Idle pause after reacting to a blow before the demo carries on.
 const RECOVER := 1.5
 ## Defeat timing (seconds): lying still after the fall, crumbling, gone, then fading back in.
@@ -38,6 +36,8 @@ const REFORM := 0.8
 @export_enum("none", "scimitar", "hand_axe", "longsword", "staff") var weapon_id := "scimitar"
 @export_enum("none", "round", "kite") var shield_id := "round"
 @export var max_hp := 3
+## Tactical cells (2 m) per side of the square the enemy takes up on the battle grid.
+@export_range(1, 4) var footprint := 1
 ## Cycles through every clip on its own so the motions can be watched in the field.
 @export var demo := false
 ## Shows the current clip under the name.
@@ -55,7 +55,6 @@ var _timer := 0.0
 var _await_clip := false
 var _reacting := false
 var _defeated := false
-var _walk_origin := Vector3.ZERO
 var _home: Transform3D
 var _attack_turn := 0
 # Seconds left of a hit-stop freeze (see hold).
@@ -114,6 +113,11 @@ func attack_clips() -> Array:
 
 func is_dead() -> bool:
 	return hp <= 0
+
+
+## False from the fall until it has fully come back.
+func can_take_hit() -> bool:
+	return not is_dead() and not _defeated
 
 
 ## Hit-stop: freezes the pose and every beat (walking, timers) for `seconds`. Call it before take_hit so a
@@ -297,14 +301,6 @@ func _process(delta: float) -> void:
 		_hold -= delta
 		if _hold > 0.0: return
 		if animation_player: animation_player.speed_scale = 1.0
-	if animation_player and animation_player.current_animation == "walk":
-		var step := Vector3(sin(rotation.y), 0, cos(rotation.y)) * WALK_SPEED * delta
-		position += step
-		if ground_height.is_valid():
-			position.y = ground_height.call(position.x, position.z) + 0.05
-		# Turn back at the end of the beat.
-		if position.distance_to(_walk_origin) > WALK_REACH and (position - _walk_origin).dot(step) > 0.0:
-			rotation.y += PI
 	if _timer > 0.0:
 		_timer -= delta
 		if _timer <= 0.0:
@@ -336,8 +332,6 @@ func _next_demo_step() -> void:
 	if clip == "death":
 		_defeat()
 		return
-	if clip == "walk":
-		_walk_origin = position
 	if clip == "attack":
 		var attacks := attack_clips()
 		clip = attacks[_attack_turn % attacks.size()]
