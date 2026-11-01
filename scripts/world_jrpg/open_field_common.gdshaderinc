@@ -93,12 +93,12 @@ uniform float biome_debug = 0.0;
 uniform float biome_uv_scale = 0.0025;
 uniform float biome_uv_offset = 0.0;
 uniform float biome_extent = 400.0;
-// Battle-grid view (F4): grid_span m tactical cells inside 0..grid_extent, each outlined as
-// its own tile: blue glowing tiles for the move range, thin faint outlines for a band of
-// cells around it, and a yellow cursor cell with corner brackets. grid_range_map holds one
-// texel per tactical cell (texel (0, 0) at cell grid_range_origin): R = 1 in the move
-// range, G = 1 in the range and the band. The terrain and the grass blades both draw it, so it lies over
-// the turf.
+// Battle-grid view (SRPG mode): grid_span m tactical cells inside 0..grid_extent, each outlined as
+// its own tile: blue glowing tiles for the move range, red ones for the attack range, thin faint
+// outlines for a band of cells around them, and a yellow cursor cell with corner brackets.
+// grid_range_map holds one texel per tactical cell (texel (0, 0) at cell grid_range_origin):
+// R = 1 in the move range, B = 1 in the attack range, G = 1 in either and the band. The terrain
+// and the grass blades both draw it, so it lies over the turf.
 uniform float grid_debug = 0.0;
 uniform float grid_span = 2.0;
 uniform float grid_extent = 400.0;
@@ -108,14 +108,15 @@ uniform vec2 grid_cursor = vec2(-100000.0);
 // The explorer's cell: a slightly more opaque fill with a wider inner glow.
 uniform vec2 grid_current = vec2(-100000.0);
 
-vec2 of_grid_cell(vec2 cell) {
+vec3 of_grid_cell(vec2 cell) {
     vec2 uv = (cell - grid_range_origin + 0.5) / vec2(textureSize(grid_range_map, 0));
-    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return vec2(0.0);
-    return texture(grid_range_map, uv).rg;
+    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return vec3(0.0);
+    return texture(grid_range_map, uv).rgb;
 }
 
 float of_grid_in_range(vec2 cell) {
-    return of_grid_cell(cell).r;
+    vec3 cells = of_grid_cell(cell);
+    return max(cells.r, cells.b);
 }
 
 // Grass blade height scale at ground point p: blades in the move range are cut to grid_mow
@@ -133,12 +134,14 @@ void of_grid_overlay(vec2 p, vec2 px, inout vec3 color, inout vec3 glow) {
     if (grid_debug < 0.5 || p.x < 0.0 || p.y < 0.0 || p.x > grid_extent || p.y > grid_extent) return;
     const vec3 LINE = vec3(0.45, 0.88, 1.0);
     const vec3 FILL = vec3(0.25, 0.66, 0.96);
+    const vec3 ATTACK_LINE = vec3(1.0, 0.45, 0.4);
+    const vec3 ATTACK_FILL = vec3(0.92, 0.22, 0.2);
     const vec3 CURSOR = vec3(1.0, 0.8, 0.22);
     vec2 t = p / grid_span;
     vec2 cell = floor(t);
     vec2 f = t - cell;
     vec2 step_t = max(px / grid_span, vec2(1e-5));
-    vec2 cells = of_grid_cell(cell);
+    vec3 cells = of_grid_cell(cell);
     bool cursor = length(cell - grid_cursor) < 0.5;
     bool current = length(cell - grid_current) < 0.5;
     if (cells.g < 0.5 && !cursor) return;
@@ -147,7 +150,17 @@ void of_grid_overlay(vec2 p, vec2 px, inout vec3 color, inout vec3 glow) {
     vec2 inside = (min(f, 1.0 - f) - 0.045) / step_t;
     float to_rim = min(inside.x, inside.y);
     float visible = 1.0 - smoothstep(0.06, 0.2, max(step_t.x, step_t.y));
-    if (cells.r > 0.5) {
+    if (cells.b > 0.5) {
+        // In attack range: the same tile in red.
+        float rim = 1.0 - smoothstep(0.8, 2.2, abs(to_rim));
+        float halo = to_rim > 0.0 ? exp(-to_rim / 6.0) : exp(to_rim / 6.0) * 0.4;
+        if (!cursor && to_rim > 0.0) {
+            color = mix(color, ATTACK_FILL, 0.42 + halo * 0.2);
+            glow += ATTACK_FILL * (0.36 + halo * 0.4);
+        }
+        glow += ATTACK_LINE * (halo * 0.6 + rim * 1.5);
+        color = mix(color, vec3(1.0, 0.62, 0.55), rim);
+    } else if (cells.r > 0.5) {
         // In range: a blue tile with a bright glowing rim.
         float rim = 1.0 - smoothstep(0.8, 2.2, abs(to_rim));
         // The explorer's own cell glows twice as far in from its rim.

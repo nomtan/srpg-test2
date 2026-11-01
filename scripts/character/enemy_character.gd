@@ -42,6 +42,9 @@ const REFORM := 0.8
 @export var demo := false
 ## Shows the current clip under the name.
 @export var show_clip_label := false
+## Comes back at its first spot once it has crumbled away. Off (the SRPG battle), it stays gone
+## until revive.
+var revives := true
 
 static var _materials: Dictionary = {}
 var animation_player: AnimationPlayer
@@ -55,6 +58,8 @@ var _timer := 0.0
 var _await_clip := false
 var _reacting := false
 var _defeated := false
+# Crumbled away and waiting for revive (revives off).
+var _gone := false
 var _home: Transform3D
 var _attack_turn := 0
 # Seconds left of a hit-stop freeze (see hold).
@@ -148,6 +153,15 @@ func take_hit() -> void:
 	_defeat()
 
 
+## Falls at once, whatever its hit points (an SRPG blow worked out elsewhere).
+func fall() -> void:
+	if _defeated:
+		return
+	_reacting = false
+	defeated.emit()
+	_defeat()
+
+
 ## Falls, lies still, crumbles to dust and comes back at its first spot.
 func _defeat() -> void:
 	_defeated = true
@@ -160,7 +174,18 @@ func _defeat() -> void:
 	_spawn_dust()
 	await _fade_dissolve(0.0, 1.0, CRUMBLE)
 	$Model.visible = false
+	if not revives:
+		_gone = true
+		return
 	await get_tree().create_timer(GONE).timeout
+	revive()
+
+
+## Fades back in at its first spot with full hit points (after crumbling away with revives off).
+func revive() -> void:
+	if not _defeated or (not _gone and $Model.visible):
+		return
+	_gone = false
 	transform = _home
 	if ground_height.is_valid():
 		position.y = ground_height.call(position.x, position.z) + 0.05

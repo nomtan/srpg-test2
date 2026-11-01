@@ -18,6 +18,7 @@ const SPARRING_SCENE = preload("res://scenes/characters/tripo_roster/charcter001
 const HitFx = preload("res://scripts/world_jrpg/sword_hit_fx.gd")
 const HpGauge = preload("res://scripts/ui/hp_gauge_3d.gd")
 const DamageNumber = preload("res://scripts/effect/damage_number_3d.gd")
+const SrpgBattle = preload("res://scripts/world_jrpg/srpg_battle.gd")
 # How far in front of a struck target (toward the attacker) its hit effect shows.
 const HIT_FX_INSET := 0.35
 # Hit-stop on a connecting sword-and-shield blow: the attack, everything it struck and the hit effect freeze this long.
@@ -48,12 +49,9 @@ const ENEMY_GAP := 1
 ## Grass carpet and flower clusters bend in the wind. Off holds them still (and skips the
 ## wind math on the GPU); on restores the sway and the gust bands rolling over the meadow.
 @export var grass_sway := false
-## Enemies (scenes/characters/enemies) placed in a row ahead of the spawn. They flinch, guard and
-## fall to the explorer's blows like the sparring partner.
+## Enemies (scenes/characters/enemies) placed in a row ahead of the spawn. They stand idle, and
+## flinch, guard and fall to the explorer's blows like the sparring partner.
 @export var field_enemies: Array[PackedScene] = []
-## The first field enemy of each kind (enemy_id) cycles through all of its motions on its own,
-## labelled with the clip.
-@export var enemy_demo := true
 ## Streaming (see "Streaming tiles" and open_field_chunks.gd): the field is generated in
 ## CHUNK tiles around the explorer instead of all at once.
 @export_group("Streaming")
@@ -200,9 +198,22 @@ const REGION_NAMES := {
 ## corner its four middle 1 m cells share).
 const CELL_SIZE := 1.0
 const TACTICAL_SPAN := 2
-## Grid view (F4) preview: tactical cells the explorer could reach in this many steps over
-## walkable cells, with grid lines only up to GRID_LINE_MARGIN cells (grid steps) beyond
-## them, in a GRID_RANGE_SIZE square map around it.
+## SRPG mode (F4) quarter view: the explore camera looking down SRPG_PITCH (rad, ~35 deg) along a
+## grid diagonal from SRPG_DISTANCE m (zoomable within SRPG_ZOOM). It stays a perspective camera
+## this near, since grass fade, shadow reach and fog are all measured from the camera.
+## Four angles (srpg_quarter 0..3: from the south-east, north-east, north-west, south-west).
+const SRPG_PITCH := 0.61
+const SRPG_DISTANCE := 22.0
+const SRPG_ZOOM := Vector2(10.0, 48.0)
+const SRPG_TURN_TIME := 0.35
+## The SRPG camera's tilt range (rad) for raising and lowering it, and how quickly (1/s) its
+## tilt and distance ease toward where they were sent.
+const SRPG_TILT := Vector2(0.35, 1.25)
+const SRPG_EASE := 8.0
+## Grid view preview (--debug-grid outside SRPG mode): tactical cells the explorer could reach in
+## this many steps over walkable cells, with grid lines only up to GRID_LINE_MARGIN cells (grid
+## steps) beyond them (and beyond the SRPG battle's ranges), in a GRID_RANGE_SIZE square map
+## around it.
 const MOVE_PREVIEW := 4
 const GRID_LINE_MARGIN := 5
 const GRID_RANGE_SIZE := 32
@@ -234,7 +245,17 @@ var gameplay_cache := PackedFloat32Array()
 var biome_debug_map: ImageTexture
 var biome_debug := false
 var grid_debug := false
-var grid_range_image := Image.create(GRID_RANGE_SIZE, GRID_RANGE_SIZE, false, Image.FORMAT_RG8)
+## Explore camera, grid view and HUD saved on entering SRPG mode; empty outside it.
+var srpg_saved := {}
+## The battle SRPG mode runs (srpg_battle.gd).
+var srpg_battle: Node
+## The quarter-view yaw the SRPG camera is at or turning to.
+var srpg_yaw := 0.0
+## The tilt and distance the SRPG camera eases toward.
+var srpg_pitch := SRPG_PITCH
+var srpg_distance := SRPG_DISTANCE
+var srpg_tween: Tween
+var grid_range_image := Image.create(GRID_RANGE_SIZE, GRID_RANGE_SIZE, false, Image.FORMAT_RGB8)
 var grid_range_map := ImageTexture.create_from_image(grid_range_image)
 ## The tactical cell grid_range_map was last built around.
 var grid_range_focus := Vector2i(-100000, -100000)
@@ -359,6 +380,7 @@ func _ready() -> void:
 			_update_camera()
 		if arg == "--debug-biome": _set_biome_debug(true)
 		if arg == "--debug-grid": _set_grid_debug(true)
+		if arg == "--srpg": _set_srpg_mode(true)
 		# Looks down over the explorer's shoulder at the grid view's move range.
 		if arg == "--view=grid":
 			pitch = 0.85
@@ -394,6 +416,7 @@ func _ready() -> void:
 			if arg.begins_with("--time=") or arg.begins_with("--weather=") or arg.begins_with("--season="): capture_name += "_" + arg.get_slice("=", 1)
 		if biome_debug: capture_name += "_biome"
 		if grid_debug: capture_name += "_grid"
+		if not srpg_saved.is_empty(): capture_name += "_srpg"
 		get_viewport().get_texture().get_image().save_png(directory.path_join("open_field_%s.png" % capture_name))
 		get_tree().quit()
 
@@ -2752,7 +2775,6 @@ func _spawn_enemies(spawn: Vector2) -> void:
 		width += (int(enemy.get("footprint")) + ENEMY_GAP) * size
 	# Left to right along the row, each enemy's square ENEMY_GAP cells clear of the last.
 	var along := -width * 0.5
-	var demo_kinds: Dictionary = {}
 	for index in row.size():
 		var enemy := row[index]
 		enemy.name = "Enemy%d" % index
@@ -2761,11 +2783,6 @@ func _spawn_enemies(spawn: Vector2) -> void:
 		_place_on_block(enemy, spawn + forward * ENEMY_OFFSET + Vector2(right) * along, cells, right)
 		along += (cells * 0.5 + ENEMY_GAP) * size
 		enemy.set("ground_height", _surface)
-		var kind: String = enemy.get("enemy_id")
-		if enemy_demo and not demo_kinds.has(kind):
-			demo_kinds[kind] = true
-			enemy.set("demo", true)
-			enemy.set("show_clip_label", true)
 		add_child(enemy)
 		_face_toward(enemy, player.position)
 		enemies.append(enemy)
@@ -2803,6 +2820,8 @@ func _face_toward(actor: Node3D, target: Vector3) -> void:
 	if not to.is_zero_approx(): actor.rotation.y = atan2(to.x, to.y)
 
 func _on_player_attack_impact(clip: String) -> void:
+	# The SRPG battle works out its own blows.
+	if srpg_battle: return
 	var stops: bool = player.sword_combat.slows_on_hit(clip)
 	var struck: Array[Node3D] = []
 	for enemy in enemies:
@@ -2886,8 +2905,10 @@ func _sync_hp_gauges(on: bool) -> void:
 			unit.add_child(gauge)
 			gauge.position = label.position
 		gauge.visible = label.visible or unit == player.model
+		var ratio: float = srpg_battle.hp_ratio(unit) if srpg_battle else -1.0
 		var max_hp = unit.get("max_hp")
-		if max_hp: gauge.set_ratio(float(unit.get("hp")) / max_hp)
+		if ratio >= 0.0: gauge.set_ratio(ratio)
+		elif max_hp: gauge.set_ratio(float(unit.get("hp")) / max_hp)
 
 func _within_strike(target: Node3D) -> bool:
 	var to := target.position - player.position
@@ -2990,50 +3011,132 @@ func _set_grid_debug(on: bool) -> void:
 		active_marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if active_marker: active_marker.visible = on
 
-## Keeps the active marker on the explorer, a little above the top of its model and its name
-## label (measured again whenever the model is swapped).
-func _update_active_marker() -> void:
-	if active_marker.get_parent() != player:
+## Enters or leaves SRPG mode. Entering stops the explorer, hides the explore HUD, swings the
+## camera to the quarter view on the nearest grid diagonal and starts the battle (which turns
+## the grid view on once it is set up); leaving ends the battle and restores the rest.
+func _set_srpg_mode(on: bool) -> void:
+	if on == not srpg_saved.is_empty(): return
+	if srpg_tween: srpg_tween.kill()
+	if on:
+		srpg_saved = {"yaw": yaw, "pitch": pitch, "distance": distance, "grid": grid_debug,
+			"hud": hud.visible, "controls": field_weather.controls.visible}
+		mode = "srpg"
+		player.walking = false
+		player.running = false
+		player.locomotion_speed = 0.0
+		player.cancel_attack()
+		hud.visible = false
+		field_weather.controls.visible = false
+		srpg_pitch = SRPG_PITCH
+		srpg_distance = SRPG_DISTANCE
+		_focus_player()
+		srpg_yaw = PI * 0.25 + roundf((yaw - PI * 0.25) / (PI * 0.5)) * PI * 0.5
+		turn_srpg_camera(0.0)
+		srpg_battle = SrpgBattle.new()
+		srpg_battle.name = "SrpgBattle"
+		add_child(srpg_battle)
+		srpg_battle.begin(self)
+	else:
+		# It frees itself once anything it still runs has wound down.
+		srpg_battle.finish()
+		srpg_battle = null
+		mode = "explore"
+		yaw = srpg_saved.yaw
+		pitch = srpg_saved.pitch
+		distance = srpg_saved.distance
+		_set_grid_debug(srpg_saved.grid)
+		set_grid_cursor(Vector2i(-100000, -100000))
+		hud.visible = srpg_saved.hud
+		field_weather.controls.visible = srpg_saved.controls
+		srpg_saved = {}
+		_focus_player()
+		_update_camera()
+
+## Swings the SRPG camera `turn` radians on from its quarter view.
+func turn_srpg_camera(turn: float) -> void:
+	srpg_yaw += turn
+	if srpg_tween: srpg_tween.kill()
+	srpg_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	srpg_tween.tween_property(self, "yaw", srpg_yaw, SRPG_TURN_TIME)
+
+## The SRPG camera's angle, 0..3 (see SRPG_PITCH).
+func srpg_quarter() -> int:
+	return posmod(roundi((srpg_yaw - PI * 0.25) / (PI * 0.5)), 4)
+
+## Turns the SRPG camera the short way round to angle `index` (0..3).
+func set_srpg_quarter(index: int) -> void:
+	var turn := posmod(index - srpg_quarter(), 4)
+	turn_srpg_camera((turn if turn < 3 else -1) * PI * 0.5)
+
+func zoom_srpg_camera(factor: float) -> void:
+	srpg_distance = clampf(srpg_distance * factor, SRPG_ZOOM.x, SRPG_ZOOM.y)
+
+## Raises (positive) or lowers the SRPG camera by `amount` radians of tilt.
+func tilt_srpg_camera(amount: float) -> void:
+	srpg_pitch = clampf(srpg_pitch + amount, SRPG_TILT.x, SRPG_TILT.y)
+
+## SRPG mode's input goes to the battle; F4 leaves it.
+func _srpg_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F4:
+		_set_srpg_mode(false)
+	elif srpg_battle:
+		srpg_battle.handle_input(event)
+	get_viewport().set_input_as_handled()
+
+## Roster switching (world.gd) would swap the explorer's model mid-battle.
+func _input(event: InputEvent) -> void:
+	if mode != "srpg": super._input(event)
+
+## Keeps the active marker over `holder` (hidden without one), a little above the top of
+## `model` and its name label (measured again whenever either changes).
+func _update_active_marker(holder: Node3D, model: Node3D) -> void:
+	active_marker.visible = holder != null
+	if holder == null: return
+	if active_marker.get_parent() != holder:
 		if active_marker.get_parent(): active_marker.get_parent().remove_child(active_marker)
-		player.add_child(active_marker)
-	var model: Node3D = player.get("model")
+		holder.add_child(active_marker)
+		active_marker_model = null
 	if model == active_marker_model: return
 	active_marker_model = model
 	var top := 1.6
 	if model:
 		top = 0.0
 		for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
-			top = maxf(top, (mesh.global_transform * mesh.get_aabb()).end.y - player.global_position.y)
-		for label: Label3D in model.find_children("*", "Label3D", true, false):
-			if label.visible: top = maxf(top, label.global_position.y - player.global_position.y + 0.15)
+			top = maxf(top, (mesh.global_transform * mesh.get_aabb()).end.y - holder.global_position.y)
+		for label: Label3D in holder.find_children("NameLabel", "Label3D", true, false):
+			if label.visible: top = maxf(top, label.global_position.y - holder.global_position.y + 0.15)
 	active_marker.position = Vector3(0.0, top + 0.5, 0.0)
 
-## Rebuilds the move range when the explorer enters another tactical cell. The shaders'
-## grid_cursor (the yellow destination focus) stays unset until move selection exists.
+## Rebuilds the move range when the explorer enters another tactical cell.
 func _update_grid_preview() -> void:
-	var focus := world_position_to_tactical_cell(player.position)
-	if focus == grid_range_focus: return
-	grid_range_focus = focus
-	for material in _field_materials():
-		material.set_shader_parameter("grid_current", Vector2(focus))
-	var origin := focus - Vector2i.ONE * (GRID_RANGE_SIZE / 2)
-	grid_range_image.fill(Color.BLACK)
-	var steps := {focus: 0}
-	var frontier: Array[Vector2i] = [focus]
+	var center := world_position_to_tactical_cell(player.position)
+	if center == grid_range_focus: return
+	grid_range_focus = center
+	var steps := {center: 0}
+	var frontier: Array[Vector2i] = [center]
 	while not frontier.is_empty():
 		var cell: Vector2i = frontier.pop_front()
 		if steps[cell] == MOVE_PREVIEW: continue
 		for next: Vector2i in [cell + Vector2i.LEFT, cell + Vector2i.RIGHT, cell + Vector2i.UP, cell + Vector2i.DOWN]:
 			if steps.has(next) or occupied_cells.has(next): continue
-			var center := tactical_cell_to_world_position(next)
-			if not is_walkable_at(center.x, center.z): continue
+			var at := tactical_cell_to_world_position(next)
+			if not is_walkable_at(at.x, at.z): continue
 			steps[next] = steps[cell] + 1
 			frontier.append(next)
-	# The line band: every cell within GRID_LINE_MARGIN grid steps of the range, walkable or not.
-	var band := {}
-	for cell: Vector2i in steps:
-		band[cell] = 0
-	frontier.assign(steps.keys())
+	paint_grid(center, center, steps, {})
+
+## Paints the grid view around tactical cell `center`: `move` cells as blue tiles, `attack` cells
+## as red ones (dictionaries keyed by cell), `current` a little brighter, and faint outlines up
+## to GRID_LINE_MARGIN cells beyond them all.
+func paint_grid(center: Vector2i, current: Vector2i, move: Dictionary, attack: Dictionary) -> void:
+	var origin := center - Vector2i.ONE * (GRID_RANGE_SIZE / 2)
+	grid_range_image.fill(Color.BLACK)
+	# The line band: every cell within GRID_LINE_MARGIN grid steps of a range, walkable or not.
+	var band := {current: 0}
+	for cell: Vector2i in move: band[cell] = 0
+	for cell: Vector2i in attack: band[cell] = 0
+	var frontier: Array[Vector2i] = []
+	frontier.assign(band.keys())
 	while not frontier.is_empty():
 		var cell: Vector2i = frontier.pop_front()
 		if band[cell] == GRID_LINE_MARGIN: continue
@@ -3041,18 +3144,26 @@ func _update_grid_preview() -> void:
 			if band.has(next): continue
 			band[next] = band[cell] + 1
 			frontier.append(next)
+	var bounds := Rect2i(Vector2i.ZERO, Vector2i.ONE * GRID_RANGE_SIZE)
 	for cell: Vector2i in band:
-		grid_range_image.set_pixelv(cell - origin, Color(1.0 if steps.has(cell) else 0.0, 1.0, 0.0))
+		if bounds.has_point(cell - origin):
+			grid_range_image.set_pixelv(cell - origin, Color(1.0 if move.has(cell) else 0.0, 1.0, 1.0 if attack.has(cell) else 0.0))
 	grid_range_map.update(grid_range_image)
 	for material in _field_materials():
 		material.set_shader_parameter("grid_range_origin", Vector2(origin))
+		material.set_shader_parameter("grid_current", Vector2(current))
+
+## The grid view's yellow cursor cell (far off to hide it).
+func set_grid_cursor(cell: Vector2i) -> void:
+	for material in _field_materials():
+		material.set_shader_parameter("grid_cursor", Vector2(cell))
 
 func _setup_hud() -> void:
 	super._setup_hud()
 	for label: Label in hud.find_children("*", "Label", true, false):
 		if label.text.begins_with("WASD"):
 			label.text += "
-5 : 絶景（見晴らしの丘）　F3 : バイオーム表示　F4 : 升目表示　F6 : 地形情報"
+5 : 絶景（見晴らしの丘）　F3 : バイオーム表示　F4 : SRPGモード　F6 : 地形情報"
 	terrain_panel = _panel(Vector2.ZERO)
 	terrain_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	terrain_panel.offset_left = -284
@@ -3090,6 +3201,9 @@ Walkable: %s" % [
 			tiles.grass, tiles.detail, tiles.terrain, tiles.data, tiles.plan, chunks.pending()]
 
 func _unhandled_input(event: InputEvent) -> void:
+	if mode == "srpg":
+		_srpg_input(event)
+		return
 	if event is InputEventKey and event.pressed and not event.echo and mode == "explore":
 		match event.keycode:
 			KEY_F3:
@@ -3097,7 +3211,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 			KEY_F4:
-				_set_grid_debug(not grid_debug)
+				_set_srpg_mode(true)
 				get_viewport().set_input_as_handled()
 				return
 			KEY_F6:
@@ -3142,11 +3256,20 @@ func _process(delta: float) -> void:
 		crystal.position.y = 4.2 + sin(Time.get_ticks_msec() * 0.0015) * 0.25
 	_sync_conditions()
 	if terrain_panel.visible: _update_terrain_hud()
+	# world.gd only moves the camera while exploring; SRPG mode follows the battle's cursor.
+	if not srpg_saved.is_empty():
+		var target: Vector3 = srpg_battle.focus_point() if srpg_battle else player.position + Vector3.UP
+		focus = focus.lerp(target, 1.0 - exp(-8.0 * delta))
+		var ease := 1.0 - exp(-SRPG_EASE * delta)
+		pitch = lerpf(pitch, srpg_pitch, ease)
+		distance = lerpf(distance, srpg_distance, ease)
+		_update_camera()
 	if grid_debug and player:
-		_update_grid_preview()
+		if srpg_battle == null: _update_grid_preview()
 		# Before the marker, so it measures the explorer's gauge too.
 		_sync_hp_gauges(true)
-		_update_active_marker()
+		if srpg_battle: _update_active_marker(srpg_battle.marker_holder(), srpg_battle.marker_model())
+		else: _update_active_marker(player, player.get("model"))
 	if mode == "explore" and prompt_text and not prompt_text.text.begins_with("E /"):
 		prompt_text.text = "目標 : 丘の上のルミエール城を目指して、開けた野を自由に旅しよう"
 

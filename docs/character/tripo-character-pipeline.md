@@ -101,7 +101,7 @@ Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従
 - クリップ: `idle`・`walk`（ループ）、`attack`・`guard`・`hit`・`death`（最終フレームで停止）。その場モーションで、移動はゲーム側が行う。`death`（4.1秒）は大きく上を見上げ、力が抜けて腕が垂れ膝が折れ、膝をついてからスローモーションのようにゆっくりかかとの上へ座り込み、上体を前へ丸めて頭と腕を垂らす（横や後ろへは倒れない）。キーは通常の速さ（膝つき38→座り込む60フレーム）で書き、`DEATH_PACE`（1.5）倍に引き延ばす。膝をついた時点からは最下点が地面に来るようRootを上下させ、宙に浮かずに地面に沿って崩れる。
 - Godot: `scenes/characters/enemies/goblin.tscn`（`scripts/character/enemy_character.gd`、Modelは2.025倍）と、継承シーン `goblin_axe`（片手斧+円盾）・`goblin_longsword`（ロングソード+カイトシールド）・`goblin_staff`（片手杖、盾なし）。`weapon_id`／`shield_id` をインスペクタで選ぶか、実行中に `set_weapon(id)`／`set_shield(id)` で差し替える（`none` で外す）。装備は `RightHand`／`LeftHand` の `BoneAttachment3D` 下に `get_bone_global_rest().affine_inverse() * socket` で付く。
 - 描画と消滅: 本体・装備とも `enemy_dissolve.gdshader`（Tripoの描き込み陰影を保つ無陰影表示）。インスタンスごとの `dissolve` で、倒れた後にノイズ状に燃える縁を残しながら崩れ、骨に沿って灰と火の粉が舞い上がる（CPUParticles3D）。2秒後に最初の位置へ戻り、逆向きのdissolveで現れる。
-- `JRPGWorldSample2` は `field_enemies` の6体（ゴブリン4体＋ウルフ＋グリム）を出現位置の7.5m前に3.2m間隔で並べる。種類（`enemy_id`）ごとに先頭の1体が全モーション（最後に塵化と再出現）を順に再生するデモ（`enemy_demo`）。攻撃が当たると `hit`／ときどき `guard`、`max_hp` 発目（既定3、グリムは5）で倒れて塵になる。
+- `JRPGWorldSample2` は `field_enemies` の6体（ゴブリン4体＋ウルフ＋グリム）を出現位置の7.5m前に3.2m間隔で並べる。全員 `idle` で立っているだけ（自動で動くデモは無し。`enemy_character.gd` の `demo` は検証用に残る）。攻撃が当たると `hit`／ときどき `guard`、`max_hp` 発目（既定3、グリムは5）で倒れて塵になる。
 
 ### ウルフ（wolf）
 

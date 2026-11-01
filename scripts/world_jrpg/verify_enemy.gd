@@ -92,7 +92,7 @@ func run() -> void:
 	var ids: Array = world.enemies.map(func(e: Node) -> String: return e.enemy_id + ":" + e.weapon_id)
 	check(ids == ["goblin:scimitar", "goblin:hand_axe", "goblin:longsword", "goblin:staff", "wolf:none", "grimm:none"], "Scimitar, hand axe, longsword and staff goblins, then the wolf and the grimm (%s)" % [ids])
 	var demos: Array = world.enemies.map(func(e: Node) -> bool: return e.demo)
-	check(demos == [true, false, false, false, true, true], "The first goblin, the wolf and the grimm run the motion demo (%s)" % [demos])
+	check(not demos.has(true), "Field enemies stand idle without the motion demo (%s)" % [demos])
 	var target: Node3D = world.enemies[1]
 	var home := target.position
 	world.player.position = target.position - Vector3(0, 0, 1.2)
