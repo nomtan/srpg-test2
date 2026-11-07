@@ -122,6 +122,41 @@ GRIMM_BONES = {
     'RightFoot': ((-.05, .42, .27), (-.10, .48, .09), 'RightLeg', .025),
 }
 
+# Four-armed skeleton warrior in a wide, bandy-legged stance: the upper arms hold a scimitar (right,
+# raised behind the head) and a spiked mace (left), the lower arms a sickle (right, blade forward) and a
+# round shield (left). The weapons stay part of the body and ride rigidly on their hands (ENEMIES
+# 'rigid'). Lower* bones are the second pair of arms, hung from the bottom of the ribcage.
+SKELETON_BONES = {
+    'Root': ((0, 0, 0), (0, 0, .15), None, None),
+    'Hips': ((0, .05, .42), (0, .06, .50), 'Root', .06),
+    'Spine': ((0, .06, .50), (0, .05, .58), 'Hips', .035),
+    'Chest': ((0, .05, .58), (-.01, .03, .69), 'Spine', .07),
+    'Neck': ((-.01, .03, .69), (-.02, 0, .73), 'Chest', .025),
+    'Head': ((-.02, 0, .73), (-.03, -.03, .88), 'Neck', .08),
+    'RightShoulder': ((-.03, .04, .67), (-.11, .03, .68), 'Chest', .03),
+    'RightArm': ((-.11, .03, .68), (-.22, .025, .677), 'RightShoulder', .025),
+    'RightForeArm': ((-.22, .025, .677), (-.27, -.023, .77), 'RightArm', .022),
+    'RightHand': ((-.27, -.023, .77), (-.30, -.04, .81), 'RightForeArm', .025),
+    'RightLowerShoulder': ((-.03, .04, .60), (-.09, .03, .59), 'Chest', .025),
+    'RightLowerArm': ((-.09, .03, .59), (-.198, .011, .556), 'RightLowerShoulder', .022),
+    'RightLowerForeArm': ((-.198, .011, .556), (-.265, -.044, .47), 'RightLowerArm', .02),
+    'RightLowerHand': ((-.265, -.044, .47), (-.28, -.04, .43), 'RightLowerForeArm', .022),
+    'LeftShoulder': ((.03, .04, .67), (.11, .03, .69), 'Chest', .03),
+    'LeftArm': ((.11, .03, .69), (.209, .027, .66), 'LeftShoulder', .025),
+    'LeftForeArm': ((.209, .027, .66), (.27, -.016, .732), 'LeftArm', .022),
+    'LeftHand': ((.27, -.016, .732), (.29, -.03, .77), 'LeftForeArm', .025),
+    'LeftLowerShoulder': ((.03, .04, .60), (.085, .03, .59), 'Chest', .025),
+    'LeftLowerArm': ((.085, .03, .59), (.176, .005, .556), 'LeftLowerShoulder', .022),
+    'LeftLowerForeArm': ((.176, .005, .556), (.22, -.004, .534), 'LeftLowerArm', .02),
+    'LeftLowerHand': ((.22, -.004, .534), (.26, -.02, .52), 'LeftLowerForeArm', .022),
+    'RightUpLeg': ((-.055, .04, .43), (-.22, -.03, .27), 'Hips', .03),
+    'RightLeg': ((-.22, -.03, .27), (-.264, .015, .094), 'RightUpLeg', .025),
+    'RightFoot': ((-.264, .015, .094), (-.33, -.06, .03), 'RightLeg', .02),
+    'LeftUpLeg': ((.066, .04, .43), (.198, 0, .226), 'Hips', .03),
+    'LeftLeg': ((.198, 0, .226), (.264, .048, .072), 'LeftUpLeg', .025),
+    'LeftFoot': ((.264, .048, .072), (.33, -.01, .012), 'LeftLeg', .02),
+}
+
 ENEMIES = {
     'goblin': {
         'bones': GOBLIN_BONES,
@@ -159,6 +194,26 @@ ENEMIES = {
         # Only the front feet reach the ground and they stand off to the right; keep the body's own centre.
         'keep_x': True,
         'preview': {'scale': 2.1, 'target': (0, 0, .42), 'direction': (-1, -.55, .3)},
+    },
+    'skeleton': {
+        'bones': SKELETON_BONES,
+        'piece_gap': .015,
+        'remove_inside': [],
+        # The toes splay out to both sides; keep the model's own centre line.
+        'keep_x': True,
+        # Skull and hood: Head between z .71 and .77 (full above) within .1 of the skull's x. Unlike
+        # head_full, nothing outside that reach goes to Head (the raised hands and weapons are as high).
+        'head_region': {'x': -.03, 'reach': .1, 'blend': (.71, .77)},
+        # Weapons move rigidly with the hand holding them: capsules along a polyline, or a sphere
+        # cut by a plane x > min_x (the shield, without the forearm behind it).
+        'rigid': [
+            ('RightHand', {'path': [(-.317, -.083, .72), (-.25, .005, .81), (-.187, .104, .908), (-.11, .226, .965)], 'radius': .045}),
+            ('RightLowerHand', {'path': [(-.237, .003, .40), (-.275, -.034, .446), (-.29, -.06, .48), (-.33, -.15, .53), (-.36, -.23, .575)], 'radius': .04}),
+            ('LeftHand', {'path': [(.336, -.085, .677), (.187, .039, .908)], 'radius': .03}),
+            ('LeftHand', {'sphere': (.187, .05, .908), 'radius': .065}),
+            ('LeftLowerHand', {'sphere': (.31, -.05, .46), 'radius': .17, 'min_x': .235}),
+        ],
+        'preview': {'scale': 1.5, 'target': (0, 0, .47), 'direction': (-.7, -1, .25)},
     },
 }
 
@@ -535,6 +590,12 @@ def skin(mesh, rig, spec, shift):
         t = np.clip((z - spec['head_blend']) / (spec['head_full'] - spec['head_blend']), 0, 1)
         t = np.where(z >= spec['head_full'], 1, np.where(reach, t * t * (3 - 2 * t), 0))
         w = w * (1 - t[:, None]) + head * t[:, None]
+    if 'head_region' in spec:
+        region, head = spec['head_region'], one_hot('Head')
+        lo, hi = region['blend']
+        t = np.clip((co[:, 2] - s[2] - lo) / (hi - lo), 0, 1)
+        t = np.where(np.abs(co[:, 0] - s[0] - region['x']) < region['reach'], t * t * (3 - 2 * t), 0)
+        w = w * (1 - t[:, None]) + head * t[:, None]
     # Tripo meshes are hundreds of loose islands; smoothing across a small radius keeps
     # neighbouring islands moving together instead of tearing apart.
     kd = KDTree(len(co))
@@ -545,6 +606,16 @@ def skin(mesh, rig, spec, shift):
     for _ in range(3):
         smoothed = np.array([w[n].mean(0) for n in near])
         w = smoothed
+    for bone, shape in spec.get('rigid', []):
+        p = co - s
+        if 'path' in shape:
+            path = [np.array(q) for q in shape['path']]
+            d = np.min([segment_distance(p, a, b) for a, b in zip(path, path[1:])], axis=0)
+            hit = d < shape['radius']
+        else:
+            hit = (np.linalg.norm(p - np.array(shape['sphere']), axis=1) < shape['radius']) & (p[:, 0] > shape.get('min_x', -np.inf))
+        w[hit] = one_hot(bone)
+        print('Rigid', bone, int(hit.sum()), 'vertices')
     w[w < .01] = 0
     w /= w.sum(1, keepdims=True)
     for k, name in enumerate(names):
@@ -854,6 +925,118 @@ GRIMM_SLUMP = {'Root': (0, 0, 0), 'loc': (0, .04, -.32), 'Hips': (.15, 0, 0), 'N
                'LeftUpLeg': (.7, 0, 0), 'LeftFoot': (.3, 0, 0), 'RightUpLeg': (.7, 0, 0), 'RightFoot': (.3, 0, 0),
                'Tail': (.15, 0, 0), 'Tail1': (.2, 0, 0), 'Tail2': (1.1, 0, 0)}
 
+def skeleton_idle(frame, frames):
+    """Swaying on its splayed legs with all four weapons weaving out of step, the skull tilting."""
+    phase = 2 * math.pi * frame / frames
+    w, v = math.sin(phase), math.sin(phase + 1.3)
+    return {'loc': (0, 0, -.006 * (1 - math.cos(phase))),
+            'Spine': (.02 * w, 0, .03 * v), 'Chest': (.03 * w, 0, .05 * v),
+            'Head': (-.04 * w, .08 * math.sin(2 * phase + .5), -.04 * v),
+            'RightArm': (0, .08 * w, .08 * v), 'RightForeArm': (.12 * v, 0, 0),
+            'LeftArm': (0, -.08 * v, -.08 * w), 'LeftForeArm': (.12 * w, 0, 0),
+            'RightLowerArm': (0, .06 * v, .1 * w), 'RightLowerForeArm': (.1 * w, 0, 0),
+            'LeftLowerArm': (0, -.05 * w, -.06 * v),
+            'LeftUpLeg': (-.03 * w, 0, 0), 'LeftLeg': (.05 * w, 0, 0),
+            'RightUpLeg': (-.03 * w, 0, 0), 'RightLeg': (.05 * w, 0, 0)}
+
+
+def skeleton_walk(frame, frames):
+    """A rattling, bow-legged stalk; the upper arms swing against the legs and the lower pair against them."""
+    phase = 2 * math.pi * frame / frames
+    w, c = math.sin(phase), math.cos(phase)
+    return {'loc': (0, 0, -.015 + .015 * math.cos(2 * phase)),
+            'Hips': (0, .04 * w, .12 * w), 'Spine': (.05, 0, -.06 * w), 'Chest': (.06, .05 * w, -.1 * w),
+            'Head': (-.08, -.06 * w, .08 * w),
+            'LeftUpLeg': (-.4 * w, 0, 0), 'LeftLeg': (.55 * max(0, c), 0, 0), 'LeftFoot': (-.3 * max(0, c) + .15 * w, 0, 0),
+            'RightUpLeg': (.4 * w, 0, 0), 'RightLeg': (.55 * max(0, -c), 0, 0), 'RightFoot': (-.3 * max(0, -c) - .15 * w, 0, 0),
+            'RightArm': (0, .05 * c, .3 * w), 'LeftArm': (0, .05 * c, .3 * w),
+            'RightForeArm': (.1 * w, 0, 0), 'LeftForeArm': (-.1 * w, 0, 0),
+            'RightLowerArm': (0, 0, -.25 * w), 'LeftLowerArm': (0, 0, -.2 * w)}
+
+
+# attack: the upper pair cocks back (scimitar behind the head, mace raised high) with the body wound to
+# its right, then both come crashing down together as it lunges, and the sickle hooks in after them.
+SKELETON_WINDUP = {'loc': (0, .03, -.03), 'Spine': (-.08, 0, -.2), 'Chest': (-.12, 0, -.3), 'Head': (.1, 0, .25),
+                   'RightArm': (0, .5, -.4), 'RightForeArm': (-.45, 0, 0), 'RightHand': (-.3, 0, 0),
+                   'LeftArm': (0, -.55, .3), 'LeftForeArm': (-.5, 0, 0),
+                   'RightLowerArm': (0, .15, -.45), 'RightLowerForeArm': (-.2, 0, 0),
+                   'LeftLowerArm': (0, 0, .2),
+                   'LeftUpLeg': (-.2, 0, 0), 'LeftLeg': (.3, 0, 0), 'RightUpLeg': (-.15, 0, 0), 'RightLeg': (.25, 0, 0)}
+SKELETON_SMASH = {'loc': (0, -.08, -.06), 'Spine': (.18, 0, .15), 'Chest': (.32, 0, .25), 'Head': (-.25, 0, -.2),
+                  'RightArm': (0, -.35, .7), 'RightForeArm': (1.0, 0, 0), 'RightHand': (.4, 0, 0),
+                  'LeftArm': (0, .45, -.7), 'LeftForeArm': (1.1, 0, 0), 'LeftHand': (.3, 0, 0),
+                  'RightLowerArm': (0, .1, -.3), 'LeftLowerArm': (0, 0, -.2),
+                  'LeftUpLeg': (-.45, 0, 0), 'LeftLeg': (.4, 0, 0), 'LeftFoot': (-.1, 0, 0),
+                  'RightUpLeg': (.2, 0, 0), 'RightLeg': (.2, 0, 0)}
+SKELETON_HOOK = dict(SKELETON_SMASH, Chest=(.3, 0, .05), Spine=(.15, 0, 0),
+                     RightLowerArm=(0, .2, .75), RightLowerForeArm=(.5, 0, 0), RightLowerHand=(.3, 0, 0))
+# attack_flurry: crouched with all four arms flung wide and the body wound back, it leaps into one
+# full spin, the four blades sweeping a circle round it, and lands facing front again.
+SKELETON_SPREAD = {'loc': (0, 0, -.06), 'Spine': (.06, 0, -.2), 'Chest': (.08, 0, -.3), 'Head': (.05, 0, .3),
+                   'RightArm': (0, .15, -.2), 'RightForeArm': (.5, 0, 0),
+                   'LeftArm': (0, -.15, .2), 'LeftForeArm': (.5, 0, 0),
+                   'RightLowerArm': (0, .45, -.1), 'RightLowerForeArm': (0, .5, 0),
+                   'LeftLowerArm': (0, -.45, .1),
+                   'LeftUpLeg': (-.35, 0, 0), 'LeftLeg': (.6, 0, 0), 'LeftFoot': (-.25, 0, 0),
+                   'RightUpLeg': (-.35, 0, 0), 'RightLeg': (.6, 0, 0), 'RightFoot': (-.25, 0, 0)}
+SKELETON_SPIN_ARMS = {'Spine': (.04, 0, .1), 'Chest': (.06, 0, .15), 'Head': (0, 0, -.15),
+                      'RightArm': (0, .2, .1), 'RightForeArm': (.8, 0, 0), 'RightHand': (.3, 0, 0),
+                      'LeftArm': (0, -.2, -.1), 'LeftForeArm': (.8, 0, 0),
+                      'RightLowerArm': (0, .5, .1), 'RightLowerForeArm': (0, .6, 0),
+                      'LeftLowerArm': (0, -.5, -.1),
+                      'LeftUpLeg': (-.15, 0, 0), 'LeftLeg': (.3, 0, 0), 'RightUpLeg': (-.15, 0, 0), 'RightLeg': (.3, 0, 0)}
+
+
+def skeleton_flurry(frame, frames):
+    turn = 2 * math.pi * smooth((frame - 8) / 12)
+    hop = .06 * math.sin(math.pi * min(max((frame - 8) / 12, 0), 1))
+    arms = keyed([(0, {}), (7, SKELETON_SPREAD), (10, SKELETON_SPIN_ARMS), (18, SKELETON_SPIN_ARMS), (22, SKELETON_SPREAD), (32, {})], frame)
+    # Wound back -.5 before the spin; the spin carries it round to 2 pi and it eases back to 0.
+    wind = keyed([(0, {'w': (0, 0, 0)}), (7, {'w': (0, 0, -.5)}), (8, {'w': (0, 0, -.5)}), (20, {'w': (0, 0, 0)})], frame)['w'][2]
+    # Once round (frame 20) the turn wraps back to 0 so the clip ends on the rest rotation itself.
+    pose = dict(arms, Root=(0, 0, turn + wind if 8 <= frame < 20 else wind))
+    pose['loc'] = (0, 0, hop)
+    # Crouching and landing bend the knees around the hips, not the root.
+    pose['hips'] = keyed([(0, {'h': (0, 0, 0)}), (7, {'h': (0, 0, -.05)}), (9, {'h': (0, 0, 0)}), (20, {'h': (0, 0, 0)}), (22, {'h': (0, 0, -.05)}), (32, {'h': (0, 0, 0)})], frame)['h']
+    return pose
+
+
+SKELETON_GUARD = {'loc': (0, .02, -.05), 'Spine': (.1, 0, .1), 'Chest': (.14, 0, .2), 'Head': (.15, 0, -.15),
+                  'LeftLowerShoulder': (0, 0, -.15), 'LeftLowerArm': (0, -.5, -.75), 'LeftLowerForeArm': (0, 0, -.3), 'LeftLowerHand': (0, 0, -.2),
+                  'RightArm': (0, -.1, .55), 'RightForeArm': (.3, 0, 0),
+                  'LeftArm': (0, .1, -.5), 'LeftForeArm': (.3, 0, 0),
+                  'RightLowerArm': (0, .1, .2),
+                  'LeftUpLeg': (-.25, 0, 0), 'LeftLeg': (.4, 0, 0), 'LeftFoot': (-.15, 0, 0),
+                  'RightUpLeg': (-.25, 0, 0), 'RightLeg': (.4, 0, 0), 'RightFoot': (-.15, 0, 0)}
+SKELETON_HIT = {'loc': (0, .05, -.01), 'Spine': (-.2, 0, .05), 'Chest': (-.3, 0, .12), 'Head': (-.35, .2, .25),
+                'RightArm': (0, .3, -.35), 'RightForeArm': (-.3, 0, 0), 'LeftArm': (0, -.3, .35), 'LeftForeArm': (-.3, 0, 0),
+                'RightLowerArm': (0, .3, -.2), 'LeftLowerArm': (0, -.3, .2),
+                'LeftUpLeg': (.1, 0, 0), 'RightUpLeg': (.1, 0, 0)}
+# Dying: it rattles with the skull thrown back and all four arms flung up, then the weapons sag, the
+# bowed legs fold out sideways and it drops in a heap, the ribcage folding over and the skull lolling.
+SKELETON_RATTLE = {'Root': (0, 0, 0), 'loc': (0, .02, -.01), 'Spine': (-.15, 0, 0), 'Chest': (-.3, 0, .1), 'Neck': (-.3, 0, 0),
+                   'Head': (-.5, .15, .1), 'RightArm': (0, .35, 0), 'RightForeArm': (-.3, 0, 0),
+                   'LeftArm': (0, -.35, 0), 'LeftForeArm': (-.3, 0, 0),
+                   'RightLowerArm': (0, .35, 0), 'LeftLowerArm': (0, -.35, 0)}
+SKELETON_SAG = {'Root': (0, 0, 0), 'loc': (0, .02, -.08), 'Spine': (.1, 0, .05), 'Chest': (.15, 0, .05), 'Neck': (.1, 0, 0),
+                'Head': (.3, .1, .1), 'RightArm': (0, -.6, .1), 'RightForeArm': (.8, 0, 0), 'RightHand': (.3, 0, 0),
+                'LeftArm': (0, .6, -.1), 'LeftForeArm': (.8, 0, 0),
+                'RightLowerArm': (0, -.4, 0), 'RightLowerForeArm': (.3, 0, 0), 'LeftLowerArm': (0, .4, 0),
+                'LeftUpLeg': (-.35, 0, 0), 'LeftLeg': (.6, 0, 0), 'LeftFoot': (-.25, 0, 0),
+                'RightUpLeg': (-.35, 0, 0), 'RightLeg': (.6, 0, 0), 'RightFoot': (-.25, 0, 0)}
+SKELETON_COLLAPSE = {'Root': (0, 0, 0), 'loc': (0, .04, -.25), 'Spine': (.3, 0, .05), 'Chest': (.3, 0, .05), 'Neck': (.2, 0, 0),
+                     'Head': (.4, .2, .15), 'RightArm': (0, -.9, .2), 'RightForeArm': (1.0, 0, 0), 'RightHand': (.3, 0, 0),
+                     'LeftArm': (0, .9, -.2), 'LeftForeArm': (1.0, 0, 0),
+                     'RightLowerArm': (0, -.6, .1), 'RightLowerForeArm': (.4, 0, 0), 'LeftLowerArm': (0, .6, -.1),
+                     'LeftUpLeg': (-.9, -.35, 0), 'LeftLeg': (1.4, 0, 0), 'LeftFoot': (-.4, 0, 0),
+                     'RightUpLeg': (-.9, .35, 0), 'RightLeg': (1.4, 0, 0), 'RightFoot': (-.4, 0, 0)}
+SKELETON_HEAP = {'Root': (0, 0, 0), 'loc': (0, .06, -.35), 'Spine': (.5, 0, .1), 'Chest': (.5, 0, .1), 'Neck': (.3, 0, 0),
+                 'Head': (.5, .35, .25), 'RightArm': (0, -1.0, .4), 'RightForeArm': (1.1, 0, 0), 'RightHand': (.3, 0, 0),
+                 'LeftArm': (0, 1.0, -.4), 'LeftForeArm': (1.1, 0, 0),
+                 'RightLowerArm': (0, -.7, .3), 'RightLowerForeArm': (.5, 0, 0), 'LeftLowerArm': (0, .7, -.3),
+                 'LeftUpLeg': (-1.1, -.5, 0), 'LeftLeg': (1.6, 0, 0), 'LeftFoot': (-.5, 0, 0),
+                 'RightUpLeg': (-1.1, .5, 0), 'RightLeg': (1.6, 0, 0), 'RightFoot': (-.5, 0, 0)}
+
 # The death clips slow down for the final fall (38 to 60), as if in slow motion. Their key frames are
 # given at normal pace and stretched by DEATH_PACE (1.5 = the whole clip plays half again as slowly).
 DEATH_PACE = 1.5
@@ -896,10 +1079,20 @@ CLIPS = {
         ('hit', 15, False, lambda f, n: keyed([(0, {}), (3, GRIMM_HIT), (15, {})], f)),
         ('death', death_frame(82), False, lambda f, n: keyed(death_keys([(0, {}), (9, GRIMM_LOOK_UP), (24, GRIMM_SAG), (38, GRIMM_SINK), (60, GRIMM_SLUMP), (65, blend(GRIMM_SLUMP, GRIMM_SINK, .1)), (70, GRIMM_SLUMP), (82, GRIMM_SLUMP)]), f)),
     ],
+    'skeleton': [
+        ('idle', 54, True, skeleton_idle),
+        ('walk', 26, True, skeleton_walk),
+        ('attack', 32, False, lambda f, n: keyed([(0, {}), (10, SKELETON_WINDUP), (14, SKELETON_SMASH), (17, SKELETON_SMASH), (20, SKELETON_HOOK), (23, SKELETON_HOOK), (32, {})], f)),
+        ('attack_flurry', 32, False, skeleton_flurry),
+        ('guard', 30, False, lambda f, n: blend(keyed([(0, {}), (7, SKELETON_GUARD)], f), skeleton_idle(f, 30), .3 * smooth(f / 7))),
+        ('hit', 15, False, lambda f, n: keyed([(0, {}), (3, SKELETON_HIT), (15, {})], f)),
+        ('death', death_frame(82), False, lambda f, n: keyed(death_keys([(0, {}), (9, SKELETON_RATTLE), (24, SKELETON_SAG), (38, SKELETON_COLLAPSE), (60, SKELETON_HEAP), (65, blend(SKELETON_HEAP, SKELETON_COLLAPSE, .1)), (70, SKELETON_HEAP), (82, SKELETON_HEAP)]), f)),
+    ],
 }
 # Frames from which the death clip keeps the body on the ground instead of only above it: from the
 # moment it has sunk to its knees / belly, so it slumps over along the ground rather than in the air.
-GROUNDED_FROM = {'goblin': {'death': death_frame(38)}, 'wolf': {'death': death_frame(38)}, 'grimm': {'death': death_frame(38)}}
+GROUNDED_FROM = {'goblin': {'death': death_frame(38)}, 'wolf': {'death': death_frame(38)}, 'grimm': {'death': death_frame(38)},
+                 'skeleton': {'death': death_frame(38)}}
 
 
 def euler_quaternion(xyz):
@@ -919,6 +1112,9 @@ def apply_pose(rig, pose, lift=0.0):
     if 'Root' not in pose:
         root.location = (0, 0, 0)
         hips.location = hips.bone.matrix_local.to_quaternion().inverted() @ loc
+    elif 'hips' in pose:
+        # A pose that turns Root can still crouch: 'hips' is an offset of the hips alone.
+        hips.location = hips.bone.matrix_local.to_quaternion().inverted() @ Vector(pose['hips'])
 
 
 def lowest_point(mesh):

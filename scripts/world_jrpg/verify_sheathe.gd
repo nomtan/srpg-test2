@@ -1,8 +1,8 @@
 extends SceneTree
-## Sheathing: the draw / sheathe buttons show only for the sword and shield; sheathed, both hang on the back,
+## Sheathing: the draw / sheathe buttons show only for the sword and shield; sheathed, the shield hangs on the back and the sword at the left hip,
 ## the explorer walks and sits bare-handed and cannot attack, guard or use the skill; drawing brings them back to hand.
 ## godot --headless --path . --script scripts/world_jrpg/verify_sheathe.gd
-## Rendered views of the back: tools/asset_gen/character_pipeline/capture_sheathed.gd.
+## Rendered views: tools/asset_gen/character_pipeline/capture_sheathed.gd.
 const SAMPLE = preload("res://samples/JRPGWorldSample.tscn")
 const GaitCycle = preload("res://scripts/world_jrpg/gait_cycle.gd")
 var failed := false
@@ -33,7 +33,7 @@ func run() -> void:
 	world._on_sheathe_selected(true)
 	var model: Node3D = actor.model
 	check(actor.is_sheathed() and world.sheathe_buttons[true].button_pressed, "Sheathe button sheathes")
-	check(model.find_child("SheathedSword", true, false) != null and model.find_child("SheathedShield", true, false) != null, "Sword and shield on the back")
+	check(model.find_child("SheathedSword", true, false) != null and model.find_child("SheathedShield", true, false) != null, "Shield on the back, sword at the left hip")
 	check(model.find_child("EquippedSword", true, false) == null and model.find_child("EquippedShield", true, false) == null, "Nothing in hand")
 	check(actor.current_weapon() == "sword_shield", "Still equipped with the sword and shield")
 	check(actor.walk_clip == GaitCycle.WALK and actor.can_sit, "Walks and sits as bare-handed")

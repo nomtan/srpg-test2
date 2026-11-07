@@ -3,11 +3,13 @@ extends SceneTree
 ## shield, crumbling to dust when defeated; four weapon patterns placed in JRPGWorldSample2.
 ## Wolf: a quadruped with the same clips and no equipment, placed after the goblins.
 ## Grimm: an antlered quadruped (gore and bite attacks, no equipment), placed after the wolf.
+## Skeleton: a four-armed biped whose weapons ride rigidly on its hands (smash and spin attacks), last.
 ## godot --headless --path . --script scripts/world_jrpg/verify_enemy.gd
 ## Rendered frames: drop --headless and append -- --capture (saved to artifacts/enemy/).
 const GOBLIN = preload("res://scenes/characters/enemies/goblin.tscn")
 const WOLF = preload("res://scenes/characters/enemies/wolf.tscn")
 const GRIMM = preload("res://scenes/characters/enemies/grimm.tscn")
+const SKELETON = preload("res://scenes/characters/enemies/skeleton.tscn")
 const PATTERNS := {"res://scenes/characters/enemies/goblin_axe.tscn": ["hand_axe", "round"],
 	"res://scenes/characters/enemies/goblin_longsword.tscn": ["longsword", "kite"],
 	"res://scenes/characters/enemies/goblin_staff.tscn": ["staff", "none"]}
@@ -84,13 +86,14 @@ func run() -> void:
 		pattern.queue_free()
 	await _check_wolf()
 	await _check_grimm()
+	await _check_skeleton()
 	await process_frame
 	var world := SAMPLE.instantiate()
 	root.add_child(world)
 	await process_frame
-	check(world.enemies.size() == 6, "JRPGWorldSample2 places four goblins, a wolf and a grimm")
+	check(world.enemies.size() == 7, "JRPGWorldSample2 places four goblins, a wolf, a grimm and a skeleton")
 	var ids: Array = world.enemies.map(func(e: Node) -> String: return e.enemy_id + ":" + e.weapon_id)
-	check(ids == ["goblin:scimitar", "goblin:hand_axe", "goblin:longsword", "goblin:staff", "wolf:none", "grimm:none"], "Scimitar, hand axe, longsword and staff goblins, then the wolf and the grimm (%s)" % [ids])
+	check(ids == ["goblin:scimitar", "goblin:hand_axe", "goblin:longsword", "goblin:staff", "wolf:none", "grimm:none", "skeleton:none"], "Scimitar, hand axe, longsword and staff goblins, then the wolf, the grimm and the skeleton (%s)" % [ids])
 	var demos: Array = world.enemies.map(func(e: Node) -> bool: return e.demo)
 	check(not demos.has(true), "Field enemies stand idle without the motion demo (%s)" % [demos])
 	var target: Node3D = world.enemies[1]
@@ -279,6 +282,42 @@ func _capture_wolf(wolf: Node3D) -> void:
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://artifacts/enemy/wolf_%s_%d.png" % [shot[0], int(shot[1] * 100)])
 	camera.queue_free()
+
+func _check_skeleton() -> void:
+	var enemy := SKELETON.instantiate() as Node3D
+	root.add_child(enemy)
+	var player: AnimationPlayer = enemy.animation_player
+	check(player != null, "Skeleton has an AnimationPlayer")
+	for clip in enemy.CLIPS:
+		check(player.has_animation(clip), "Skeleton has the %s clip" % clip)
+	check(enemy.attack_clips() == ["attack", "attack_flurry"], "Skeleton has two attacks: smash and spin (%s)" % [enemy.attack_clips()])
+	check(player.get_animation("idle").loop_mode == Animation.LOOP_LINEAR and player.get_animation("attack_flurry").loop_mode == Animation.LOOP_NONE, "Skeleton idle loops, spin plays once")
+	var skeleton: Skeleton3D = enemy.skeleton
+	for bone in ["Head", "RightHand", "LeftHand", "RightLowerHand", "LeftLowerHand", "LeftFoot"]:
+		check(skeleton.find_bone(bone) >= 0, "Skeleton rig has " + bone)
+	var skinned := enemy.find_children("*", "MeshInstance3D", true, false).filter(func(m: MeshInstance3D) -> bool: return m.skin != null)
+	check(skinned.size() == 1 and skinned[0].get_surface_override_material(0) is ShaderMaterial, "One skinned skeleton body with the flat dissolve material")
+	check(enemy.weapon_id == "none" and skeleton.get_node_or_null("WeaponSocket") == null, "The skeleton's weapons are part of its body")
+	var bounds: AABB = skinned[0].get_aabb()
+	check(absf(bounds.get_center().x) < 0.03 and bounds.position.y > -0.01, "Skeleton stands centred on the ground (%s)" % bounds)
+	# Smash: both upper hands come down from the windup (frame 10) to the blow (frame 14).
+	player.play("attack")
+	var hands := {}
+	for f in [10.0, 15.0]:
+		player.seek(f / 30.0, true)
+		hands[f] = skeleton.get_bone_global_pose(skeleton.find_bone("RightHand")).origin.y + skeleton.get_bone_global_pose(skeleton.find_bone("LeftHand")).origin.y
+	check(hands[15.0] < hands[10.0] - 0.1, "Skeleton smash brings both upper hands down (%s)" % [hands])
+	# Spin: half way round the body faces back, and it ends facing front at its spot.
+	var root_bone := skeleton.find_bone("Root")
+	player.play("attack_flurry")
+	player.seek(15.0 / 30.0, true)
+	var mid := skeleton.get_bone_global_pose(root_bone).basis.z
+	player.seek(player.get_animation("attack_flurry").length, true)
+	var end := skeleton.get_bone_global_pose(root_bone).basis.z
+	check(mid.dot(skeleton.get_bone_global_rest(root_bone).basis.z) < 0.0 and end.dot(skeleton.get_bone_global_rest(root_bone).basis.z) > 0.99, "Skeleton spins round and lands facing front (%s, %s)" % [mid, end])
+	check(_looks_up(skeleton) > 0.3, "Skeleton death first rattles at the sky (%.2f rad)" % _looks_up(skeleton))
+	check(_slumps_forward(skeleton), "Skeleton death ends in a heap where it stood (%s)" % _slump_report(skeleton))
+	enemy.queue_free()
 
 ## The end of the death clip: collapsed forward where it stood rather than toppled onto its back or side.
 ## The head has dropped to three quarters of its standing height or less and stays in front of the hips,

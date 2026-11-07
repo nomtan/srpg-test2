@@ -30,7 +30,7 @@ var guarding := false
 # Unarmed models can sit on the ground: "" standing, "down" sitting down, "seated", "up" standing up.
 # Equipment chosen for the current model (a SwordCombat loadout or "none"); "" keeps the character's own.
 var weapon := ""
-# Weapon worn sheathed on the back (SwordCombat.SHEATHABLE loadouts only); the actor then moves as if bare-handed.
+# Weapon worn sheathed (shield on the back, sword at the left hip) (SwordCombat.SHEATHABLE loadouts only); the actor then moves as if bare-handed.
 var sheathed := false
 # Body part worn instead of the character's own (a CharacterDefinition body_id); "" keeps it.
 var body := ""

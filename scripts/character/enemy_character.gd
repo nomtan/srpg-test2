@@ -4,7 +4,8 @@ extends Node3D
 ## idle / walk / attack / guard / hit / death. The visual faces +Z like the roster.
 ## The weapon and shield are separate GLBs (assets/characters/enemy/equipment/{weapon,shield}/<id>)
 ## held at the sockets the body GLB records, and can be swapped with set_weapon / set_shield.
-## Enemies whose GLB records no sockets (the wolf, the grimm) carry nothing; their ids stay "none".
+## Enemies whose GLB records no sockets (the wolf, the grimm, the skeleton whose four weapons are part
+## of its body) carry nothing swappable; their ids stay "none".
 ## Defeated, it falls, crumbles into dust and comes back where it first stood.
 
 signal defeated
@@ -13,9 +14,9 @@ signal respawned
 const CLIPS := ["idle", "walk", "attack", "guard", "hit", "death"]
 const LOOPING := ["idle", "walk"]
 ## Attack clips an enemy may have besides "attack" (the wolf: claw swipe = attack, leap and bite =
-## attack_bite; the grimm: antler gore = attack, lunging bite = attack_bite); the demo's attack steps
-## take turns through those present.
-const EXTRA_ATTACKS := ["attack_bite"]
+## attack_bite; the grimm: antler gore = attack, lunging bite = attack_bite; the skeleton: four-arm
+## smash = attack, leaping spin = attack_flurry); the demo's attack steps take turns through those present.
+const EXTRA_ATTACKS := ["attack_bite", "attack_flurry"]
 const EQUIPMENT_ROOT := "res://assets/characters/enemy/equipment"
 const DISSOLVE_SHADER := preload("res://assets/characters/_shared/materials/enemy_dissolve.gdshader")
 ## Demo order: [clip, seconds]; 0 waits for the clip to end. "walk" steps in place (the enemy

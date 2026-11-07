@@ -54,17 +54,20 @@ const READY_BLADE := Vector3(-0.55, 0.24, 1.0)
 const SWORD_REST_BLADE := Vector3(-0.3, 0.8, 0.75)
 # Mesh weight on the hand and its fingers above which a vertex counts as part of the fist.
 const FIST_WEIGHT := 0.6
-# Loadouts that can be sheathed (the model's "sheathed" meta): worn on the back with no clips, moving as bare hands.
+# Loadouts that can be sheathed (the model's "sheathed" meta): worn (shield on the back, sword at the left hip)
+# with no clips, moving as bare hands.
 const SHEATHABLE := ["sword_shield"]
-# Sheathed sword and shield on the back, from the middle of the back surface at chest height, in character axes
+# Sheathed shield on the back, from the middle of the back surface at chest height, in character axes
 # (+Z forward, -X right) leaned back along the surface. The shield hangs face out, its grip point BACK_SHIELD_DROP below
-# and BACK_SHIELD_OUT behind; the sword lies between it and the back, hilt out past the right shoulder, the grip point
-# at BACK_SWORD_GRIP.
+# and BACK_SHIELD_OUT behind.
 const BACK_SHIELD_DROP := 0.06
 const BACK_SHIELD_OUT := 0.11
 const BACK_SHIELD_TILT := 0.0 # Degrees the shield's top leans further out from the back.
-const BACK_SWORD_GRIP := Vector3(-0.25, 0.14, -0.04)
-const BACK_SWORD_TIP := Vector3(0.5, -1.0, 0.0)
+# Sheathed sword at the left hip, hung from the pelvis: the grip point HIP_SWORD_GRIP from the pelvis (leg lengths,
+# character space, +X left; x is the clearance past the body's left side at that height, measured on the mesh),
+# hilt forward and the tip along HIP_SWORD_TIP (back and down), the flat against the hip.
+const HIP_SWORD_GRIP := Vector3(0.04, 0.25, 0.2)
+const HIP_SWORD_TIP := Vector3(0.0, -0.6, -1.0)
 # Height bands the back surface is sampled in, and the most it may lean back (degrees, flaring out below).
 const BACK_BAND := 0.05
 const BACK_MAX_LEAN := 30.0
@@ -989,7 +992,7 @@ func _attach_shield() -> void:
 	shield.position = Vector3(0, 0, SHIELD_WRIST_CLEARANCE) - SHIELD_GRIP * SHIELD_SCALE
 	shield_grip.add_child(shield)
 
-## Sheathed sword and shield on the back (see BACK_*), hung from the chest so they follow the torso.
+## Sheathed shield on the back (see BACK_*), hung from the chest, and sword at the left hip (see HIP_SWORD_*).
 func _stow_on_back() -> void:
 	stowed = true
 	# The chest is the bone the shoulders hang from.
@@ -1020,12 +1023,23 @@ func _stow_on_back() -> void:
 	shield.scale = Vector3.ONE * SHIELD_SCALE
 	shield.position = -SHIELD_GRIP * SHIELD_SCALE
 	shield_grip.add_child(shield)
+	# The sword hangs from the pelvis so it follows the hips rather than the chest.
+	var hip_bone: String = legs.hips if not legs.is_empty() else rig["spine"]
+	var hip_socket := BoneAttachment3D.new()
+	hip_socket.name = "HipSocket"
+	hip_socket.bone_name = hip_bone
+	skeleton.add_child(hip_socket)
+	var hips: Transform3D = _idle_global[hip_bone]
 	var sword_grip := Node3D.new()
-	sword_grip.name = "BackSwordGrip"
-	var tip := BACK_SWORD_TIP.normalized()
-	# Flat of the blade against the back, the guard across it.
-	sword_grip.transform = Transform3D(Basis(tip.cross(out), tip, out), BACK_SWORD_GRIP)
-	frame.add_child(sword_grip)
+	sword_grip.name = "HipSwordGrip"
+	var tip := HIP_SWORD_TIP.normalized()
+	# Flat of the blade against the hip (facing out to the left), the guard across the facing direction.
+	var side := (Vector3.RIGHT - tip * tip.dot(Vector3.RIGHT)).normalized()
+	var at := hips.origin + HIP_SWORD_GRIP * leg_length
+	at.x = _body_left(hips.origin.x, at.y) + HIP_SWORD_GRIP.x * leg_length
+	var worn := Transform3D(Basis(tip.cross(side), tip, side), at)
+	sword_grip.transform = hips.affine_inverse() * worn
+	hip_socket.add_child(sword_grip)
 	var sword := SWORD.instantiate() as Node3D
 	_apply_character_toon(sword)
 	sword.name = "SheathedSword"
@@ -1033,6 +1047,26 @@ func _stow_on_back() -> void:
 	sword.basis = Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * SWORD_SCALE)
 	sword.position = -(sword.basis * GRIP)
 	sword_grip.add_child(sword)
+
+## The body's leftmost X (character space, idle pose) within a band around the given height, arms left out (they hang
+## free of the hip); without skin data, a fallback from the left thigh.
+func _body_left(center_x: float, height: float) -> float:
+	var arms: Array[int] = [skeleton.find_bone(rig["upper_arm.L"]), skeleton.find_bone(rig["upper_arm.R"])]
+	var body := []
+	for bone in skeleton.get_bone_count():
+		var up := bone
+		while up >= 0 and up not in arms: up = skeleton.get_bone_parent(up)
+		if up < 0: body.append(bone)
+	var frame := skeleton.find_bone(legs.hips if not legs.is_empty() else rig["spine"])
+	var frame_pose: Transform3D = _idle_global[skeleton.get_bone_name(frame)]
+	var left := -INF
+	for vertex in _part_vertices(frame, body):
+		var point := frame_pose * vertex
+		if absf(point.y - height) < BACK_BAND * 2.0: left = maxf(left, point.x)
+	if left == -INF:
+		var thigh: Vector3 = (_idle_global[legs["thigh.L"]] as Transform3D).origin if not legs.is_empty() else Vector3(center_x, 0, 0)
+		return thigh.x + 0.25 * leg_length
+	return left
 
 ## The back surface down the middle of the torso in the idle pose, as a line in character space: x is its Z at chest
 ## height, y how much Z grows per unit of height (positive where clothing flares out below). Fitted through the

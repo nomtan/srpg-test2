@@ -344,6 +344,12 @@ var river_rows := PackedFloat64Array()
 var path_rows := PackedFloat64Array()
 
 func _ready() -> void:
+	# Hand-placed big creatures (field_dragon.gd) stand in clearings of their own, so no tree
+	# grows through them. Before streaming starts: the tile tasks read open_rows.
+	for child in get_children():
+		var radius = child.get("clear_radius")
+		if child is Node3D and radius is float and radius > 0.0:
+			open_rows.append_array([child.position.x, child.position.z, radius])
 	noise.seed = world_seed
 	noise.frequency = 0.025
 	noise.fractal_octaves = 3

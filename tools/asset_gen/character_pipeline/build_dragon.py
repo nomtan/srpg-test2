@@ -10,13 +10,18 @@ glTF, like the roster). This script
   wings of upper arm, forearm and four fingers), measured from orthographic views and slices,
 - weights every vertex to its nearest bones by distance to the bone's surface, only on its own side,
   then smooths the weights over the mesh so joints bend softly,
-- keys the clips idle (looping breath, neck and tail sway, wing drift) and roar (rears back, roars,
-  beats its wings twice).
+- keys the clips idle (looping breath, neck and tail sway, wing drift), roar (rears back, roars,
+  wings spread), flap (three wingbeats), tail_slam (hauls the tail over its back and slams it down
+  twice) and tail_sweep (lashes the tail across to its right and back).
 The GLB keeps Tripo's size; the Godot scene scales it.
+
+The blue dragon (assets/characters/tripo/enemy/dragon-blue/model.glb) is the same Tripo mesh with a
+blue texture, stray foot included, so it is built by this same script with --variant blue.
 
 Usage:
     blender -b --factory-startup --python tools/asset_gen/character_pipeline/build_dragon.py
-    (add -- --preview <dir> to render a contact sheet of every clip, --no-export to skip the GLB)
+    (add -- --variant blue for the blue dragon, --preview <dir> to render a contact sheet of every
+    clip, --no-export to skip the GLB)
 """
 import argparse
 import math
@@ -29,8 +34,13 @@ import numpy as np
 from mathutils import Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parents[3]
-SOURCE = ROOT / 'assets/characters/tripo/enemy/dragon/model2.glb'
-OUT = ROOT / 'assets/characters/enemy/dragon/model.glb'
+# variant: (Tripo source, never overwritten; rigged output)
+VARIANTS = {
+    'red': ('assets/characters/tripo/enemy/dragon/model2.glb', 'assets/characters/enemy/dragon/model.glb'),
+    'blue': ('assets/characters/tripo/enemy/dragon-blue/model.glb', 'assets/characters/enemy/dragon-blue/model.glb'),
+}
+SOURCE = ROOT / VARIANTS['red'][0]
+OUT = ROOT / VARIANTS['red'][1]
 FPS = 30
 
 
@@ -273,7 +283,8 @@ def idle(frame, frames):
         'Neck2': (0, 0, .12 * math.sin(t - .25)), 'Head': (-.03 * b, 0, .16 * math.sin(t)),
     }
     for i in range(6):
-        pose[f'Tail{i + 1}'] = (.01 * math.sin(2 * t - i), 0, .09 * math.sin(t - .6 * i - .8))
+        pose[f'Tail{i + 1}'] = tuple(TAIL_LIFT_AXES[i] * .05 * math.sin(2 * t - .7 * i)
+            + np.array((0, 0, .15 * math.sin(t - .6 * i - .8))))
     return add(CROUCH, pose, wing(raise_=.025 * b, fold=-.04 * b))
 
 
@@ -354,7 +365,97 @@ def roar(frame, frames):
     return add(body_only(idle(0, 1)), body, {'Head': (0, 0, shake), 'Neck2': (0, 0, -.5 * shake)}, wings_pose)
 
 
-CLIPS = [('idle', 150, idle), ('roar', 140, roar), ('flap', 170, flap)]
+# --- Tail displays ---------------------------------------------------------------------------
+# The tail curls off to the dragon's left, so "up" for each tail bone is its own axis: horizontal,
+# square to the bone, turning it toward +Z. A rotation about global Z swings it sideways (+Z swings
+# it to the dragon's right, -Z to its left, where it curls at rest).
+def _tail_lift_axes():
+    axes = []
+    for i in range(6):
+        d = np.array(TAIL[i + 1]) - np.array(TAIL[i])
+        flat = np.array((d[0], d[1], 0.0))
+        axis = np.cross(flat, (0, 0, 1))
+        axes.append(axis / np.linalg.norm(axis))
+    return axes
+
+
+TAIL_LIFT_AXES = _tail_lift_axes()
+EASE = {'smooth': smooth, 'in': lambda t: max(0.0, min(1.0, t)) ** 3,
+    'out': lambda t: 1 - (1 - max(0.0, min(1.0, t))) ** 3}
+
+
+def track(keys, frame):
+    """Value at frame along keys [(frame, value, ease into this key)], held past either end."""
+    if frame <= keys[0][0]: return keys[0][1]
+    for (f0, a, _), (f1, b, ease) in zip(keys, keys[1:]):
+        if frame <= f1:
+            return a + (b - a) * EASE[ease]((frame - f0) / (f1 - f0))
+    return keys[-1][1]
+
+
+def tail(lift_keys, swing_keys, frame, lift_weights, swing_weights, lag):
+    """Each tail bone follows the same curves a few frames behind its parent, so the base leads and
+    the tip whips after it."""
+    pose = {}
+    for i in range(6):
+        f = frame - lag * i
+        v = TAIL_LIFT_AXES[i] * track(lift_keys, f) * lift_weights[i] + np.array((0, 0, track(swing_keys, f) * swing_weights[i]))
+        pose[f'Tail{i + 1}'] = tuple(v)
+    return pose
+
+
+# Slam: hauls the tail high over its back, quivers, then brings it down hard on the ground, bounces
+# and slams once more before letting it settle. The body is jolted by each blow.
+SLAM_LIFT = [(0, 0, 'smooth'), (26, 1, 'smooth'), (34, 1.06, 'smooth'), (40, -.12, 'in'), (48, .42, 'out'),
+    (54, -.1, 'in'), (64, .05, 'smooth'), (84, 0, 'smooth')]
+SLAM_LIFT_WEIGHTS = [.6, .55, .45, .35, .25, .15]
+# While raised the tail also uncurls toward the middle so it rises over the back.
+SLAM_SWING = [(0, 0, 'smooth'), (26, .5, 'smooth'), (34, .5, 'smooth'), (40, .1, 'in'), (64, 0, 'smooth')]
+
+
+def tail_slam(frame, frames):
+    rest = body_only(idle(0, 1))
+    lift = tail(SLAM_LIFT, SLAM_SWING, frame, SLAM_LIFT_WEIGHTS, [.3, .3, .3, .25, .2, .1], 1.5)
+    quiver = .05 * math.sin(frame * 2.1) * smooth((frame - 24) / 4) * (1 - smooth((frame - 34) / 3))
+    lift['Tail4'] = tuple(np.array(lift['Tail4']) + TAIL_LIFT_AXES[3] * quiver)
+    # Wind-up: hindquarters lift, the head lowers and turns to watch; then a jolt at each impact.
+    windup = smooth(frame / 24) * (1 - smooth((frame - 34) / 6))
+    # The tip lands a few frames after the base (lag), so the jolt waits for it.
+    hit = math.exp(-(frame - 43) / 4) if frame >= 43 else 0.0
+    hit += .6 * math.exp(-(frame - 57) / 4) if frame >= 57 else 0.0
+    settle = 1 - smooth((frame - 62) / (frames - 62))
+    body = {
+        'Hips@loc': (0, 0, .008 * windup - .01 * hit), 'Hips': (.06 * windup - .05 * hit, 0, 0),
+        'Chest': (.04 * windup + .06 * hit, 0, 0), 'Neck1': (-.12 * windup * settle, 0, .15 * windup),
+        'Neck2': (0, 0, .12 * windup), 'Head': (.08 * hit - .1 * windup, 0, .2 * windup + .04 * math.sin(frame * 2.5) * hit),
+    }
+    wings_pose = wing(raise_=.12 * windup + .18 * hit, fold=-.15 * hit)
+    return add(rest, body, lift, wings_pose)
+
+
+# Sweep: draws the tail far round to its left, then lashes it across to the right in one big arc
+# (lifted a little to clear the ground), back across to the left, and home. The body twists
+# against each swing and the head follows the tail.
+SWEEP_SWING = [(0, 0, 'smooth'), (24, -.45, 'smooth'), (30, -.5, 'smooth'), (42, 2.7, 'smooth'), (50, 2.75, 'smooth'),
+    (68, -.45, 'smooth'), (76, -.5, 'smooth'), (100, 0, 'smooth')]
+SWEEP_LIFT = [(0, 0, 'smooth'), (24, .1, 'smooth'), (36, .35, 'smooth'), (52, .15, 'smooth'), (62, .3, 'smooth'),
+    (78, .1, 'smooth'), (100, 0, 'smooth')]
+SWEEP_SWING_WEIGHTS = [.28, .3, .3, .28, .22, .15]
+
+
+def tail_sweep(frame, frames):
+    rest = body_only(idle(0, 1))
+    pose = tail(SWEEP_LIFT, SWEEP_SWING, frame, SLAM_LIFT_WEIGHTS, SWEEP_SWING_WEIGHTS, 2.0)
+    s = track(SWEEP_SWING, frame - 1) * .5
+    body = {
+        'Hips': (0, 0, -.06 * s), 'Spine': (0, 0, .04 * s), 'Chest': (0, 0, .05 * s),
+        'Neck1': (0, 0, .12 * s), 'Neck2': (0, 0, .1 * s), 'Head': (0, 0, .14 * s),
+    }
+    return add(rest, body, pose, wing(raise_=.06 * abs(s), fold=-.05 * abs(s)))
+
+
+CLIPS = [('idle', 150, idle), ('roar', 140, roar), ('flap', 170, flap), ('tail_slam', 92, tail_slam),
+    ('tail_sweep', 108, tail_sweep)]
 
 
 def setup_leg_ik(rig):
@@ -453,7 +554,8 @@ def preview(rig, directory):
     target = Vector((0, 0, .38))
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    samples = {'idle': [0, 38, 75, 112, 150], 'roar': [0, 16, 36, 60, 120], 'flap': [12, 31, 38, 46, 53]}
+    samples = {'idle': [0, 38, 75, 112, 150], 'roar': [0, 16, 36, 60, 120], 'flap': [12, 31, 38, 46, 53],
+        'tail_slam': [0, 30, 38, 42, 48, 56], 'tail_sweep': [0, 28, 38, 48, 74, 108]}
     rows = []
     for view in ((-.7, -1, .45), (1, 0, .1)):
         direction = Vector(view).normalized()
@@ -470,6 +572,7 @@ def preview(rig, directory):
                 image = bpy.data.images.load(str(path))
                 row.append(np.array(image.pixels[:]).reshape(size, size, 4))
                 bpy.data.images.remove(image)
+            row += [np.ones((size, size, 4))] * (max(map(len, samples.values())) - len(row))
             rows.append(np.concatenate(row, axis=1))
     sheet = np.concatenate(rows[::-1], axis=0)
     image = bpy.data.images.new('sheet', sheet.shape[1], sheet.shape[0])
@@ -483,9 +586,13 @@ def preview(rig, directory):
 def main():
     argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
     parser = argparse.ArgumentParser()
+    parser.add_argument('--variant', choices=sorted(VARIANTS), default='red')
     parser.add_argument('--preview')
     parser.add_argument('--no-export', action='store_true')
     args = parser.parse_args(argv)
+    global SOURCE, OUT
+    SOURCE, OUT = (ROOT / p for p in VARIANTS[args.variant])
+    assert SOURCE != OUT
     mesh = import_source()
     rig = build_armature()
     skin(mesh, rig)

@@ -1,14 +1,16 @@
 extends Node3D
 ## A dragon placed by hand in a field scene (assets/characters/enemy/dragon/model.glb, built by
 ## tools/asset_gen/character_pipeline/build_dragon.py). It crouches, breathes and looks about on
-## "idle" and every few seconds rears up to roar ("roar") or to beat its wings ("flap"). Once the
+## "idle" and every few seconds rears up to roar ("roar"), beats its wings ("flap"), slams its tail
+## on the ground ("tail_slam") or lashes it from side to side ("tail_sweep"). Once the
 ## world has built its terrain it turns toward face_toward and settles onto the ground under its
 ## feet. The visual faces +Z.
 
+const FLAT_SHADER := preload("res://assets/characters/_shared/materials/enemy_dissolve.gdshader")
 ## Seconds between displays, picked at random in this range.
 const ROAR_EVERY := Vector2(7.0, 12.0)
 ## Displays it breaks off its idle for, one picked at random each time.
-const DISPLAYS := ["roar", "flap"]
+const DISPLAYS := ["roar", "flap", "tail_slam", "tail_sweep"]
 ## Foot centres in model units (+Z forward, +X the dragon's left): front left, front right, hind
 ## left, hind right; scaled by $Model.scale. Sampled so the dragon leans with the ground.
 const FEET := [Vector3(0.068, 0, 0.277), Vector3(-0.085, 0, 0.332), Vector3(0.119, 0, -0.015), Vector3(-0.08, 0, 0.11)]
@@ -21,6 +23,9 @@ const MAX_LEAN := 0.2094
 @export var display_name := "レッドドラゴン"
 ## World XZ it turns to face once placed (e.g. the explorer's spawn); zero keeps the scene rotation.
 @export var face_toward := Vector2.ZERO
+## Radius (m) of the clearing the field world keeps free of trees and bushes around it; covers
+## the spread wings at the scene's 30x scale.
+@export var clear_radius := 16.0
 
 var animation_player: AnimationPlayer
 var _until_roar := 0.0
@@ -29,6 +34,7 @@ var _until_roar := 0.0
 func _ready() -> void:
 	if model_scene and $Model.get_child_count() == 0:
 		$Model.add_child(model_scene.instantiate())
+	_apply_flat_material()
 	animation_player = find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if animation_player:
 		if animation_player.has_animation("idle"):
@@ -40,6 +46,20 @@ func _ready() -> void:
 	_until_roar = randf_range(ROAR_EVERY.x, ROAR_EVERY.y)
 	# The world builds its terrain in its own _ready, after its children's.
 	_settle.call_deferred()
+
+
+## The painted Tripo texture already carries its shading, so it renders flat like the other enemies
+## (see enemy_character.gd).
+func _apply_flat_material() -> void:
+	for mesh: MeshInstance3D in $Model.find_children("*", "MeshInstance3D", true, false):
+		if mesh.mesh == null: continue
+		for surface in mesh.mesh.get_surface_count():
+			var source := mesh.get_active_material(surface) as BaseMaterial3D
+			if source == null or source.albedo_texture == null: continue
+			var material := ShaderMaterial.new()
+			material.shader = FLAT_SHADER
+			material.set_shader_parameter("base_color_texture", source.albedo_texture)
+			mesh.set_surface_override_material(surface, material)
 
 
 func _settle() -> void:

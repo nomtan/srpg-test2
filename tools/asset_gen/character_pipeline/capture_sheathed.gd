@@ -1,5 +1,5 @@
 extends SceneTree
-## Captures the sheathed sword and shield worn on the back, standing idle and over the bare-handed walk and run
+## Captures the sheathed shield on the back and sword at the left hip, standing idle and over the bare-handed walk and run
 ## (GaitCycle), from behind, three-quarter back, the side and the front.
 ## Needs a renderer (not --headless): godot --path . --script res://tools/asset_gen/character_pipeline/capture_sheathed.gd -- [out_dir] [character ...]
 ## One image per character (artifacts/sheathed/<character>.png).

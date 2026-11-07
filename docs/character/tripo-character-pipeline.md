@@ -90,7 +90,7 @@ Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従
 `assets/characters/tripo/enemy/<id>/model.glb` は敵1体分の静的メッシュ原本で、Body/Faceと同様に上書きしない。humanoid_v1は使わず、`tools/asset_gen/character_pipeline/build_enemy.py` がモデル自身の姿勢に合わせた小さなSkeleton（Root + 19ボーン）を作り、`assets/characters/enemy/<id>/model.glb` へ出力する。
 
 ```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b --factory-startup --python tools/asset_gen/character_pipeline/build_enemy.py -- --id goblin --preview artifacts/enemy_preview   # ウルフは --id wolf、グリムは --id grimm
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b --factory-startup --python tools/asset_gen/character_pipeline/build_enemy.py -- --id goblin --preview artifacts/enemy_preview   # ウルフは --id wolf、グリムは --id grimm、スケルトンは --id skeleton
 & 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --headless --path . --script scripts/world_jrpg/verify_enemy.gd
 ```
 
@@ -101,7 +101,7 @@ Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従
 - クリップ: `idle`・`walk`（ループ）、`attack`・`guard`・`hit`・`death`（最終フレームで停止）。その場モーションで、移動はゲーム側が行う。`death`（4.1秒）は大きく上を見上げ、力が抜けて腕が垂れ膝が折れ、膝をついてからスローモーションのようにゆっくりかかとの上へ座り込み、上体を前へ丸めて頭と腕を垂らす（横や後ろへは倒れない）。キーは通常の速さ（膝つき38→座り込む60フレーム）で書き、`DEATH_PACE`（1.5）倍に引き延ばす。膝をついた時点からは最下点が地面に来るようRootを上下させ、宙に浮かずに地面に沿って崩れる。
 - Godot: `scenes/characters/enemies/goblin.tscn`（`scripts/character/enemy_character.gd`、Modelは2.025倍）と、継承シーン `goblin_axe`（片手斧+円盾）・`goblin_longsword`（ロングソード+カイトシールド）・`goblin_staff`（片手杖、盾なし）。`weapon_id`／`shield_id` をインスペクタで選ぶか、実行中に `set_weapon(id)`／`set_shield(id)` で差し替える（`none` で外す）。装備は `RightHand`／`LeftHand` の `BoneAttachment3D` 下に `get_bone_global_rest().affine_inverse() * socket` で付く。
 - 描画と消滅: 本体・装備とも `enemy_dissolve.gdshader`（Tripoの描き込み陰影を保つ無陰影表示）。インスタンスごとの `dissolve` で、倒れた後にノイズ状に燃える縁を残しながら崩れ、骨に沿って灰と火の粉が舞い上がる（CPUParticles3D）。2秒後に最初の位置へ戻り、逆向きのdissolveで現れる。
-- `JRPGWorldSample2` は `field_enemies` の6体（ゴブリン4体＋ウルフ＋グリム）を出現位置の7.5m前に3.2m間隔で並べる。全員 `idle` で立っているだけ（自動で動くデモは無し。`enemy_character.gd` の `demo` は検証用に残る）。攻撃が当たると `hit`／ときどき `guard`、`max_hp` 発目（既定3、グリムは5）で倒れて塵になる。
+- `JRPGWorldSample2` は `field_enemies` の7体（ゴブリン4体＋ウルフ＋グリム＋スケルトン）を出現位置の7.5m前に3.2m間隔で並べる。全員 `idle` で立っているだけ（自動で動くデモは無し。`enemy_character.gd` の `demo` は検証用に残る）。攻撃が当たると `hit`／ときどき `guard`、`max_hp` 発目（既定3、スケルトンは4、グリムは5）で倒れて塵になる。
 
 ### ウルフ（wolf）
 
@@ -122,3 +122,13 @@ Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従
 - Skeleton（Root + 27ボーン）: `Hips → Spine → Chest → Neck → Head → Jaw`、角は `Head → {Left,Right}Antler → …Antler1`（付け根から外への枝と、上へ伸びる先端。キーは打たず頭と一緒に固く動く）、`Hips → Tail → Tail1 → Tail2`、前脚 `{Left,Right}Shoulder → Arm → ForeArm → Hand` を `Chest` から、後脚 `{Left,Right}UpLeg → Leg → Foot` を `Hips` から（宙に丸まった形のまま）。
 - クリップ（`CLIPS['grimm']`）: `idle`（荒い呼吸、頭の揺れ、丸まった後脚のひくつき）、`walk`（前脚で交互に踏み出し、後脚は宙で逆位相に掻く）、攻撃2種 `attack`（頭をのけぞらせ片前脚を上げて立ち上がり、頭を下げて角を前へ突き出し、そのまま上へかち上げる）と `attack_bite`（顎を開いて低く溜め、`GRIMM_BITE_REACH`（0.3＝ゲーム内約1.7m）前へ首を伸ばして飛び込み、牙を閉じて首をひねってから元の位置へ戻る）、`guard`（頭を下げて角を相手へ向け、前脚を開いて踏ん張り後ずさる）、`hit`（前半身がのけぞり頭と角が横へ跳ねる）、`death`（4.1秒。天を仰いで吠え、前脚が胸の下に深く折れて腹ばいに沈み込み、頭と角を前へ垂らして地に付ける。丸まった後脚は腰の下から後ろへ流し、尾も後ろへ伸ばして体を支えないようにする。横には転がらない）。
 - Godot: `scenes/characters/enemies/grimm.tscn`（Modelは5.6倍＝肩の高さ約4m、角の先まで約5.2m、`max_hp` 5、`weapon_id`／`shield_id` は `none`）。`attack_clips()` は `attack` と `attack_bite` を返す。`verify_enemy.gd` は角が頭に固定されて動くこと、突きと噛みつきの動き、死亡後に元の位置で前へ崩れ込むことを確認する。
+
+### スケルトン（skeleton）
+
+`--id skeleton` で同じスクリプトから作る。フードとぼろ布の腰巻をまとった4本腕の骸骨戦士で、上の腕に曲刀（右、頭の後ろへ振りかぶる）とトゲ付きメイス（左）、下の腕に鎌（右、刃が前向き）と円盾（左）を持つ。原本は1つの塊で浮遊物は無い。脚は大きく外へ開き、つま先が左右に広がるので `keep_x` で中心線（x=0）を保つ。
+
+- 装備: 4つの武器は差し替えずに本体の一部として残し、ソケットも出力しない（`weapon_id`／`shield_id` は `none`）。代わりに `rigid` が武器の範囲（曲刀・鎌・メイスの柄は折れ線のカプセル、メイスの頭は球、盾は球を x>0.235 の面で切った範囲）の頂点を握る手のボーンへ100%で割り当て、武器が曲がらず手と一緒に固く動く。
+- 頭: `head_region` が頭蓋とフード（頭のx±0.1、z 0.71〜0.77で徐々に、それより上は完全に `Head`）を割り当てる。`head_full` と違い範囲外の高い位置（振り上げた手や武器）は `Head` にしない。
+- Skeleton（Root + 27ボーン）: `Hips → Spine → Chest → Neck → Head`、上の腕 `{Left,Right}Shoulder → Arm → ForeArm → Hand` と下の腕 `{Left,Right}LowerShoulder → LowerArm → LowerForeArm → LowerHand` を `Chest` から、脚 `{Left,Right}UpLeg → Leg → Foot` を `Hips` から。
+- クリップ（`CLIPS['skeleton']`）: `idle`（開いた脚の上で揺れ、4本の武器が少しずつずれて揺れる、頭蓋が傾く）、`walk`（がに股でカタカタ歩く。上の腕は脚と逆、下の腕はさらに逆に振れる）、攻撃2種 `attack`（体を右へひねって曲刀とメイスを振りかぶり、踏み込んで2本同時に叩きつけ、続けて鎌を横から引っかける）と `attack_flurry`（4本の腕を大きく広げて沈み、小さく跳びながらその場で1回転して4つの刃で周囲を薙ぎ、正面を向いて着地。回転は `Root` のZ回転、しゃがみは pose の `hips` キーで腰だけを下げる）、`guard`（円盾を前へ掲げ、曲刀とメイスを胸の前で構えて腰を落とす）、`hit`（のけぞって4本の腕が跳ねる）、`death`（4.1秒。頭蓋を天へ向けて腕を振り上げ、武器が垂れ、がに股の脚が外へ折れて崩れ落ち、肋骨が前へ折れ頭蓋が垂れた骨の山になる）。
+- Godot: `scenes/characters/enemies/skeleton.tscn`（Modelは4.6倍＝フードの先まで約4m、武器を広げた幅約3.4m、`footprint` 2（4m四方）、`max_hp` 4）。`enemy_character.gd` の `EXTRA_ATTACKS` に `attack_flurry` を追加し、`attack_clips()` は `attack` と `attack_flurry` を返す。SRPG戦闘のステータスは `srpg_battle.gd` の `ENEMY_STATS.skeleton`。`verify_enemy.gd` は叩きつけで上の両手が下がること、回転して正面に戻ること、死亡後に元の位置で崩れることを確認する。
