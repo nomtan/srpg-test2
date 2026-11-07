@@ -17,6 +17,7 @@ const BowShotFx = preload("res://scripts/world_jrpg/bow_shot_fx.gd")
 const SkillFx = preload("res://scripts/world_jrpg/sword_skill_fx.gd")
 const TwoHandGrip = preload("res://scripts/world_jrpg/greatsword_grip.gd")
 const SwordGait = preload("res://scripts/world_jrpg/sword_gait.gd")
+const GaitCycle = preload("res://scripts/world_jrpg/gait_cycle.gd")
 const CHARACTER_TOON = preload("res://assets/characters/_shared/materials/character_toon.gdshader")
 const SLASH := "sword/slash"
 const OVERHEAD := "sword/overhead"
@@ -54,9 +55,10 @@ const READY_BLADE := Vector3(-0.55, 0.24, 1.0)
 const SWORD_REST_BLADE := Vector3(-0.3, 0.8, 0.75)
 # Mesh weight on the hand and its fingers above which a vertex counts as part of the fist.
 const FIST_WEIGHT := 0.6
-# Loadouts that can be sheathed (the model's "sheathed" meta): worn (shield on the back, sword at the left hip)
-# with no clips, moving as bare hands.
-const SHEATHABLE := ["sword_shield"]
+# Loadouts that can be sheathed (the model's "sheathed" meta): worn with no clips, moving as bare hands. The sword and
+# shield wear the shield on the back and the sword at the left hip, the daggers cross at the small of the back
+# (DG_BACK_*), the greatsword and greataxe hang across the back (GS_BACK_*, GA_BACK_*).
+const SHEATHABLE := ["sword_shield", "dual_daggers", "greatsword", "greataxe"]
 # Sheathed shield on the back, from the middle of the back surface at chest height, in character axes
 # (+Z forward, -X right) leaned back along the surface. The shield hangs face out, its grip point BACK_SHIELD_DROP below
 # and BACK_SHIELD_OUT behind.
@@ -151,7 +153,9 @@ const GUARD_KEYS := [
 # Impact moment (seconds) for each clip: the hit-stop lands here, and the slash profiles' full swing is lined up with it.
 const FX := {SLASH: {"impact": 0.13}, OVERHEAD: {"impact": 0.18}}
 # Sword and shield: no hit-stop on every swing; the clip freezes only when it connects ("hit_slow", see
-# ExplorerActor.hold_attack), and a miss plays through at normal speed.
+# ExplorerActor.hold_attack), and a miss plays through at normal speed. The other blades do the same; their keys may add
+# "hit_hold" (seconds the blow freezes, the world's HIT_STOP by default), "hit_tilt" (the hit effect's on-screen turn in
+# degrees, the world's own by default) and "hit_scale" (the hit effect's size, 1 by default).
 const SWORD_FX := {SLASH: {"impact": 0.13, "hit_stop": false, "hit_slow": true}, OVERHEAD: {"impact": 0.18, "hit_stop": false, "hit_slow": true}}
 # Slash effects per clip (one profile per blade), tuned in the inspector; see scripts/world_jrpg/sword_slash_profile.gd.
 const SLASH_FX := {
@@ -238,7 +242,19 @@ const GS_GUARD_KEYS := [
 	{"t": 0.14, "yaw": 15.0, "pitch": 6.0, "hip_yaw": 8.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.06), "back": Vector3(0,0,-.1),
 		"grip": Vector3(.21,-.24,.54), "blade": Vector3(-.6,.75,.2)},
 ]
-const GS_FX := {GS_SWEEP: {"impact": 0.34}, GS_SMASH: {"impact": 0.39}}
+# Heavier blows freeze longer on contact, with a bigger burst; the axe bites harder still.
+const GS_FX := {GS_SWEEP: {"impact": 0.34, "hit_stop": false, "hit_slow": true, "hit_hold": 0.2, "hit_scale": 1.3},
+	GS_SMASH: {"impact": 0.39, "hit_stop": false, "hit_slow": true, "hit_hold": 0.22, "hit_scale": 1.35}}
+const GA_FX := {GS_SWEEP: {"impact": 0.34, "hit_stop": false, "hit_slow": true, "hit_hold": 0.21, "hit_scale": 1.4},
+	GS_SMASH: {"impact": 0.39, "hit_stop": false, "hit_slow": true, "hit_hold": 0.24, "hit_scale": 1.45}}
+# Sheathed greatsword across the back from the right shoulder: the grip point (just below the guard) at GS_BACK_GRIP in
+# the back frame (see _back_frame: metres, +X left, +Y up, -Z out of the back), the tip along GS_BACK_TIP (down to the
+# left), the flat against the back. The axe hangs the other way up: the hand's place low on the haft by the left hip and
+# the head (GA_BACK_TIP) up behind the right shoulder.
+const GS_BACK_GRIP := Vector3(-0.22, 0.26, -0.07)
+const GS_BACK_TIP := Vector3(0.62, -1.0, 0.0)
+const GA_BACK_GRIP := Vector3(0.2, -0.5, -0.07)
+const GA_BACK_TIP := Vector3(-0.9, 1.0, 0.0)
 const GS_SLASH_FX := {
 	GS_SWEEP: [preload("res://assets/fx/sword_slash/greatsword_sweep.tres")],
 	GS_SMASH: [preload("res://assets/fx/sword_slash/greatsword_smash.tres")],
@@ -253,6 +269,15 @@ const GS_CLIPS := {GS_SWEEP: GS_SWEEP_KEYS, GS_SMASH: GS_SMASH_KEYS, GS_GUARD: G
 # Dual daggers, one in each hand. The source stands tip-down along +Y like the one-handed sword.
 const DG_SCALE := 0.63
 const DG_GRIP := Vector3(0.0, 0.84, 0.0)
+# Quick, light blows: a short freeze on contact and a smaller burst, its long points along each hand's swing.
+const DG_HIT := {"hit_stop": false, "hit_slow": true, "hit_hold": 0.1, "hit_scale": 0.8}
+const DG_FX := {DG_SLASH: {"impact": 0.13, "hit_tilt": -45.0}, DG_SLASH_L: {"impact": 0.13, "hit_tilt": 45.0},
+	DG_OVERHEAD: {"impact": 0.18, "hit_hold": 0.13, "hit_scale": 0.95}}
+# Sheathed daggers crossed at the small of the back, hung from the pelvis, hilts out to their own sides for the draw:
+# per hand the grip point from the pelvis (leg lengths, character space, +X left; z is the clearance behind the back
+# surface at that height) and the tip direction (across the back to the other side, a little down).
+const DG_BACK_GRIP := {"R": Vector3(-0.2, 0.2, 0.05), "L": Vector3(0.2, 0.12, 0.09)}
+const DG_BACK_TIP := {"R": Vector3(1.0, -0.35, 0.0), "L": Vector3(-1.0, -0.35, 0.0)}
 # Both blades land together in the double cut, each with its own arc (the hit-stop still lands once).
 const DG_SLASH_FX := {
 	DG_SLASH: [preload("res://assets/fx/sword_slash/dagger_slash.tres")],
@@ -434,7 +459,13 @@ const KT_GUARD_KEYS := [
 	{"t": 0.24, "yaw": -8.0, "pitch": 6.0, "hip_yaw": -6.0, "hip": Vector3(0,-.12,-.02), "step": Vector3(0,0,.12), "back": Vector3(0,0,-.1),
 		"grip": Vector3(-.05,-.4,.62), "blade": Vector3(.05,.5,.86)},
 ]
-const KT_FX := {KT_IAI: {"impact": 1.23}, KT_KESA: {"impact": 0.50}}
+# Hits freeze only on contact, as the other blades: the draw-cut longest (its burst leaning along the left-to-right cut,
+# the sword slash's mirror), the kesa cut a little shorter.
+const KT_FX := {KT_IAI: {"impact": 1.23, "hit_stop": false, "hit_slow": true, "hit_hold": 0.22, "hit_tilt": 45.0, "hit_scale": 1.15},
+	KT_KESA: {"impact": 0.50, "hit_stop": false, "hit_slow": true, "hit_hold": 0.17, "hit_scale": 1.1}}
+# The stance breathes as the sword's does (SwordGait.STANCE): the hips rise and fall and the weight drifts between the
+# feet (leg lengths), the head nods a little (degrees). The whole body moves together, so the hand stays on the hilt.
+const KT_BREATH := {"length": 3.6, "bob": 0.006, "shift": 0.012, "nod": 1.2}
 const KT_SLASH_FX := {
 	KT_IAI: [preload("res://assets/fx/sword_slash/katana_iai.tres")],
 	KT_KESA: [preload("res://assets/fx/sword_slash/katana_kesa.tres")],
@@ -546,8 +577,13 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 	match loadout:
 		"greatsword", "greataxe":
 			var axe := loadout == "greataxe"
+			if model.get_meta("sheathed", false):
+				_stow_greatsword(axe)
+				return true
 			_attach_greatsword(axe)
-			_add_slashes(model, player, GA_SLASH_FX if axe else GS_SLASH_FX, GS_FX)
+			_add_slashes(model, player, GA_SLASH_FX if axe else GS_SLASH_FX, GA_FX if axe else GS_FX)
+			# Its own stance and gait, the weapon shouldered; the clips start from and end in the stance.
+			_install_gait(player, SwordGait.GREATSWORD, {"R": grip.basis})
 			library.add_animation("sweep", _make_clip(path, "大剣・横薙ぎ", GS_SWEEP_KEYS))
 			library.add_animation("smash", _make_clip(path, "大剣・振り下ろし", GS_SMASH_KEYS))
 			library.add_animation("guard", _make_clip(path, "大剣・防御", GS_GUARD_KEYS))
@@ -555,15 +591,22 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			slash_clip = GS_SWEEP
 			overhead_clip = GS_SMASH
 			guard_clip = GS_GUARD
-			# Keeps both hands on the handle during every clip and holds the ready stance outside the greatsword clips.
+			# Keeps both hands on the handle during every clip, and holds the ready stance outside the greatsword clips
+			# when the Body has no stance of its own.
 			var holder: SkeletonModifier3D = TwoHandGrip.new()
 			holder.name = "GreatswordTwoHandGrip"
 			holder.setup(self, player, "greatsword/")
 			skeleton.add_child(holder)
 			return true
 		"dual_daggers":
+			if model.get_meta("sheathed", false):
+				_stow_daggers()
+				return true
 			_attach_daggers()
-			_add_slashes(model, player, DG_SLASH_FX, {DG_SLASH: FX[SLASH], DG_SLASH_L: FX[SLASH], DG_OVERHEAD: FX[OVERHEAD]})
+			var dagger_fx: Dictionary = {}
+			for clip: String in DG_FX: dagger_fx[clip] = DG_HIT.merged(DG_FX[clip], true)
+			_add_slashes(model, player, DG_SLASH_FX, dagger_fx)
+			_install_gait(player, SwordGait.DAGGER, {"R": grip.basis, "L": off_grip.basis})
 			library.add_animation("slash", _make_clip(path, "短剣・右横薙ぎ", SLASH_KEYS))
 			library.add_animation("slash_l", _make_clip(path, "短剣・左横薙ぎ", _mirror_keys(SLASH_KEYS)))
 			library.add_animation("overhead", _make_clip(path, "短剣・二刀振り下ろし", _both(DG_OVERHEAD_KEYS)))
@@ -573,8 +616,8 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			alt_slash_clip = DG_SLASH_L
 			overhead_clip = DG_OVERHEAD
 			guard_clip = DG_GUARD
-			# Holds the greatsword-style ready stance outside the dagger clips.
-			ready_stance = DG_READY
+			# Without a stance of its own, holds the greatsword-style ready stance outside the dagger clips.
+			if rest_pose.is_empty(): ready_stance = DG_READY
 			var holder: SkeletonModifier3D = TwoHandGrip.new()
 			holder.name = "DaggerReadyGrip"
 			holder.setup(self, player, "dagger/")
@@ -616,6 +659,12 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			ready_stance = {}
 			idle_hold = _pose(KT_STANCE)
 			two_hand_clips = KT_CLIPS
+			# Walks and runs with the bare-handed gait instead of the Body's stiff walk; the modifier keeps the left hand
+			# on the scabbard mouth (walk_saya) while the right arm swings.
+			if GaitCycle.install(player, skeleton):
+				idle_clip = "idle"
+				walk_clip = GaitCycle.WALK
+				run_clip = GaitCycle.RUN
 			var holder: SkeletonModifier3D = TwoHandGrip.new()
 			holder.name = "KatanaGrip"
 			holder.setup(self, player, "katana/")
@@ -653,6 +702,17 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		model.add_child(skill_fx)
 	player.add_animation_library("sword", library)
 	return true
+
+## The loadout's own stance, walk and run (see SwordGait.install_loadout) in place of the Body's; its first pose is the
+## rest pose the weapon clips start from and end in ("ready" keys included, so the grip modifier holds no ready stance).
+## Leaves the Body's clips and the ready stance when the Body cannot take it. Call before making the clips.
+func _install_gait(player: AnimationPlayer, spec: Dictionary, grips: Dictionary) -> void:
+	rest_pose = SwordGait.install_loadout(player, skeleton, spec, grips)
+	if rest_pose.is_empty(): return
+	ready_stance = {}
+	idle_clip = spec.library + "/idle"
+	walk_clip = spec.library + "/walk"
+	run_clip = spec.library + "/run"
 
 ## Attack clips' slash effects, placed in skeleton space (the frame the clip keys use), with their hit-stops.
 func _add_slashes(model: Node3D, player: AnimationPlayer, profiles: Dictionary, clip_impacts: Dictionary) -> void:
@@ -700,6 +760,18 @@ func impact_time(clip: String) -> float:
 ## True when the clip freezes only on a connecting blow instead of a hit-stop on every swing.
 func slows_on_hit(clip: String) -> bool:
 	return bool((impacts.get(clip, {}) as Dictionary).get("hit_slow", false))
+
+## Seconds a connecting blow of the clip freezes (its "hit_hold"), or fallback.
+func hit_hold(clip: String, fallback: float) -> float:
+	return float((impacts.get(clip, {}) as Dictionary).get("hit_hold", fallback))
+
+## On-screen turn of the clip's hit effect in degrees (its "hit_tilt"), or fallback.
+func hit_tilt(clip: String, fallback: float) -> float:
+	return float((impacts.get(clip, {}) as Dictionary).get("hit_tilt", fallback))
+
+## Size of the clip's hit effect (its "hit_scale", 1 by default).
+func hit_scale(clip: String) -> float:
+	return float((impacts.get(clip, {}) as Dictionary).get("hit_scale", 1.0))
 
 func is_ranged() -> bool:
 	return bow_model != null
@@ -992,23 +1064,78 @@ func _attach_shield() -> void:
 	shield.position = Vector3(0, 0, SHIELD_WRIST_CLEARANCE) - SHIELD_GRIP * SHIELD_SCALE
 	shield_grip.add_child(shield)
 
-## Sheathed shield on the back (see BACK_*), hung from the chest, and sword at the left hip (see HIP_SWORD_*).
-func _stow_on_back() -> void:
-	stowed = true
-	# The chest is the bone the shoulders hang from.
+## A frame on the back surface at chest height with character axes, leaning back along it, hung from the chest (the
+## bone the shoulders hang from), so placements in it do not depend on the rig's bone axes. Its -Z points out of the back.
+func _back_frame() -> Node3D:
 	var chest := skeleton.get_bone_parent(skeleton.get_bone_parent(skeleton.find_bone(rig["upper_arm.R"])))
 	var back_socket := BoneAttachment3D.new()
 	back_socket.name = "BackSocket"
 	back_socket.bone_name = skeleton.get_bone_name(chest)
 	skeleton.add_child(back_socket)
 	var chest_pose: Transform3D = _idle_global[back_socket.bone_name]
-	# A frame on the back surface with character axes, leaning back along it (the BACK_* offsets are in this frame),
-	# so the placement does not depend on the rig's bone axes.
 	var back := _back_line(chest)
 	var frame := Node3D.new()
 	frame.name = "BackFrame"
 	frame.transform = chest_pose.affine_inverse() * Transform3D(Basis(Vector3.RIGHT, atan(back.y)), Vector3(0, chest_pose.origin.y, back.x))
 	back_socket.add_child(frame)
+	return frame
+
+## A sheathed weapon: the source scene flipped and scaled as in hand (weapon_basis), its handle point (handle, source
+## units) at the holder's origin with the tip along the holder's +Y.
+func _worn(scene: PackedScene, part_name: String, holder: Node3D, weapon_basis: Basis, handle: Vector3) -> Node3D:
+	var weapon := scene.instantiate() as Node3D
+	_apply_character_toon(weapon)
+	weapon.name = part_name
+	weapon.basis = weapon_basis
+	weapon.position = -(weapon_basis * handle)
+	holder.add_child(weapon)
+	return weapon
+
+## Sheathed greatsword (or greataxe) across the back (see GS_BACK_*, GA_BACK_*), the flat of the blade against it.
+func _stow_greatsword(axe: bool) -> void:
+	stowed = true
+	var frame := _back_frame()
+	var out := Vector3.FORWARD
+	var tip := (GA_BACK_TIP if axe else GS_BACK_TIP).normalized()
+	var holder := Node3D.new()
+	holder.name = "BackGreatswordGrip"
+	holder.transform = Transform3D(Basis(tip.cross(out), tip, out), GA_BACK_GRIP if axe else GS_BACK_GRIP)
+	frame.add_child(holder)
+	# Same flip and scale as in hand (_attach_greatsword); the axe already stands head-up.
+	var weapon_basis := (Basis.IDENTITY if axe else Basis(Vector3.RIGHT, PI)).scaled(Vector3.ONE * (GA_SCALE if axe else GS_SCALE))
+	_worn(GREATAXE if axe else GREATSWORD, "SheathedGreataxe" if axe else "SheathedGreatsword", holder, weapon_basis, GA_GRIP if axe else GS_GRIP)
+
+## Sheathed daggers crossed at the small of the back (see DG_BACK_*), hung from the pelvis, the flats against the back.
+func _stow_daggers() -> void:
+	stowed = true
+	var hip_bone: String = legs.hips if not legs.is_empty() else rig["spine"]
+	var hip_socket := BoneAttachment3D.new()
+	hip_socket.name = "HipSocket"
+	hip_socket.bone_name = hip_bone
+	skeleton.add_child(hip_socket)
+	var hips: Transform3D = _idle_global[hip_bone]
+	var chest := skeleton.get_bone_parent(skeleton.get_bone_parent(skeleton.find_bone(rig["upper_arm.R"])))
+	var chest_y := (_idle_global[skeleton.get_bone_name(chest)] as Transform3D).origin.y
+	var back := _back_line(chest)
+	var out := Vector3.FORWARD
+	for side in ["R", "L"]:
+		var at: Vector3 = hips.origin + (DG_BACK_GRIP[side] as Vector3) * leg_length
+		# Out behind the back surface, extended down from the chest along its lean.
+		at.z = back.x + back.y * (at.y - chest_y) - (DG_BACK_GRIP[side] as Vector3).z * leg_length
+		var tip: Vector3 = (DG_BACK_TIP[side] as Vector3).normalized()
+		var holder := Node3D.new()
+		holder.name = "BackDaggerGrip" + side
+		# Leaning back along the surface like the back frame, so the flats lie on it.
+		var lean := Basis(Vector3.RIGHT, atan(back.y))
+		holder.transform = hips.affine_inverse() * Transform3D(lean * Basis(tip.cross(out), tip, out), at)
+		hip_socket.add_child(holder)
+		_worn(DAGGER, "SheathedDagger" + side, holder, Basis(Vector3.RIGHT, PI).scaled(Vector3.ONE * DG_SCALE), DG_GRIP)
+
+## Sheathed shield on the back (see BACK_*), hung from the chest, and sword at the left hip (see HIP_SWORD_*).
+func _stow_on_back() -> void:
+	stowed = true
+	# The BACK_* offsets are in the back frame.
+	var frame := _back_frame()
 	var out := Vector3.FORWARD
 	var shield_grip := Node3D.new()
 	shield_grip.name = "BackShieldGrip"
@@ -1376,6 +1503,10 @@ func stance_weight(clip: String, time: float) -> float:
 	var closing: float = keys[-1].t
 	return _key_weight(clip, time, func(key: Dictionary) -> float: return 1.0 if key.t == closing else 0.0)
 
+## How firmly the left hand holds the worn scabbard outside the katana's clips: 1 over its walk and run, 0 elsewhere.
+func walk_saya(clip: String) -> float:
+	return 1.0 if sheath != null and not walk_clip.is_empty() and clip in [walk_clip, run_clip] else 0.0
+
 ## How far the left hand has pulled the scabbard in to the hilt pose: 1 at "hilt" keys, 0 elsewhere.
 func sheath_pull(clip: String, time: float) -> float:
 	if sheath == null: return 0.0
@@ -1414,8 +1545,9 @@ func settle_unkeyed(target: Skeleton3D, animation: Animation, weight: float, res
 ## Live weapon hold, run by the skeleton modifier after the animation each frame.
 ## ready_weight blends the torso turn and the right arm into the loadout's ready stance;
 ## crouch blends in the stance's half crouch; two_hand blends the left hand onto the handle, saya onto the scabbard,
-## pull moves the scabbard from the hip in to the hilt pose, and stance blends the whole body into idle_hold.
-func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0, saya := 0.0, pull := 0.0, stance := 0.0) -> void:
+## pull moves the scabbard from the hip in to the hilt pose, and stance blends the whole body into idle_hold, breathing
+## (KT_BREATH) at breath seconds into its cycle.
+func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch := 0.0, saya := 0.0, pull := 0.0, stance := 0.0, breath := 0.0) -> void:
 	if sheath != null:
 		sheath.transform = _sheath_rest.interpolate_with(_sheath_drawn, pull)
 	var pose: Dictionary = {}
@@ -1425,6 +1557,8 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 		if stance > 0.0 and bone in idle_hold:
 			pose[bone] = (pose[bone] as Transform3D).interpolate_with(idle_hold[bone], stance)
 			target.set_bone_pose(index, pose[bone])
+	if stance > 0.0 and not legs.is_empty():
+		_breathe(target, pose, stance, breath)
 	var right: Array = ["upper_arm.R", "forearm.R", "hand.R"].map(func(role: String) -> String: return rig[role])
 	var left: Array = ["upper_arm.L", "forearm.L", "hand.L"].map(func(role: String) -> String: return rig[role])
 	var torso: Array = [rig["spine"], rig["head"]]
@@ -1485,6 +1619,22 @@ func apply_grip(target: Skeleton3D, ready_weight: float, two_hand: float, crouch
 		for index in left.size():
 			pose[left[index]] = (animated[index] as Transform3D).interpolate_with(pose[left[index]], saya)
 	for bone: String in torso + right + left:
+		target.set_bone_pose(target.find_bone(bone), pose[bone])
+
+## The katana stance's breath (KT_BREATH), by weight: the pelvis rises and falls and drifts sideways with the feet kept
+## planted, and the head nods. Everything above the pelvis (the hands, the scabbard) moves with it, so the hold stays.
+func _breathe(target: Skeleton3D, pose: Dictionary, weight: float, seconds: float) -> void:
+	var phase := TAU * seconds / KT_BREATH.length
+	var feet: Array = ["R", "L"].map(func(side: String) -> Vector3: return _global(pose, skeleton.find_bone(legs["foot." + side])).origin)
+	var hips := _global(pose, skeleton.find_bone(legs.hips))
+	hips.origin += Vector3(KT_BREATH.shift * sin(phase + 1.3), KT_BREATH.bob * sin(phase), 0) * leg_length * weight
+	_set_global(pose, legs.hips, hips)
+	_plant_leg(pose, "R", feet[0])
+	_plant_leg(pose, "L", feet[1])
+	var head := _global(pose, skeleton.find_bone(rig["head"]))
+	head.basis = Basis(Vector3.RIGHT, deg_to_rad(KT_BREATH.nod * sin(phase - 0.6) * weight)) * head.basis
+	_set_global(pose, rig["head"], head)
+	for bone: String in [legs.hips, legs["thigh.R"], legs["shin.R"], legs["foot.R"], legs["thigh.L"], legs["shin.L"], legs["foot.L"], rig["head"]]:
 		target.set_bone_pose(target.find_bone(bone), pose[bone])
 
 ## Left hand on the bow grip; the right hand draws the string, braces the upper limb, or is left as it is.

@@ -53,6 +53,21 @@ var body_buttons: Dictionary = {}
 ## Face panel choices: CharacterDefinition face IDs (assets/characters/modular/face).
 const FACES := ["face001", "face002", "face003", "face004", "face005", "face006", "face007", "face008", "face009", "face010", "face012"]
 var face_buttons: Dictionary = {}
+## Guardians (the stand-like spirit the explorer equips, one at a time): [id, button label, scene].
+## Each is made on its first summon and kept.
+const GUARDIANS := [
+	["shadow1", "影", preload("res://scenes/characters/guardians/shadow.tscn")],
+	["shadow2", "影２", preload("res://scenes/characters/guardians/shadow2.tscn")],
+]
+## The equipped guardian's id, and its instance once summoned (others stay cached in guardian_nodes).
+var guardian_id := "shadow1"
+var guardian: Node3D
+var guardian_nodes: Dictionary = {}
+## Summon / dismiss buttons (true is summoned).
+var guardian_buttons: Dictionary = {}
+## Guardian choice buttons by id.
+var guardian_choice_buttons: Dictionary = {}
+var guardian_name_label: Label
 const Skirmish = preload("res://scripts/world_jrpg/skirmish.gd")
 @export_file("*.json") var story_path := "res://assets/world_jrpg/story.json"
 var player: Node3D
@@ -572,7 +587,8 @@ func _setup_hud() -> void:
 	location_text = Label.new()
 	info.add_child(location_text)
 	var help := Label.new()
-	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話   C / Start : 座る（座ったまま押すと座り方を切替）　X : 片足を伸ばして座る（武器なし）\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　L : 奥義（片手剣）　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\n1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
+	help.text = "WASD / 矢印 : 歩く   Shift : 走る   E : 会話   C / Start : 座る（座ったまま押すと座り方を切替）　X : 片足を伸ばして座る（武器なし）\nJ / X・□ : 横薙ぎ　K / Y・△ : 上段斬り　L : 奥義（片手剣）　G / A 長押し : 盾で防御\n右ドラッグ : 視点   ホイール : 距離   M / LB : 全景\nT : ガーディアン出現／返還
+1–4 : 景観   R : キャラクターに戻る   H : UI\nパッド：左 移動 + RB 走る　右 視点 / 押込 戻す\nA 会話（長押しで防御）　B・○ 切替（会話中は閉じる）　LT/RT 距離\n十字 景観　Back UI　B / V / 左押込：2D・3D切替"
 	if not character_roster.is_empty():
 		help.text = help.text.replace("2D・3D切替", "操作キャラ切替")
 	help.add_theme_font_size_override("font_size", 16)
@@ -650,6 +666,105 @@ func _setup_weapon_panel() -> void:
 		sheathe_row.add_child(button)
 		sheathe_buttons[state[0]] = button
 	_setup_body_panel(panel)
+	_setup_guardian_panel(panel)
+
+## Guardian panel in a second column left of the equipment panel (the right column is full):
+## the equipped guardian's name and its summon / dismiss buttons.
+func _setup_guardian_panel(beside: PanelContainer) -> void:
+	var panel := _panel(Vector2.ZERO)
+	panel.name = "GuardianPanel"
+	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = beside.offset_left - 12 - 204
+	panel.offset_right = beside.offset_left - 12
+	panel.offset_top = beside.offset_top
+	(panel.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(14)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	var label := Label.new()
+	label.text = "ガーディアン"
+	label.modulate = Color("ead4a8")
+	box.add_child(label)
+	guardian_name_label = Label.new()
+	guardian_name_label.modulate = Color("e07a86")
+	guardian_name_label.add_theme_font_size_override("font_size", 15)
+	box.add_child(guardian_name_label)
+	var choices := HBoxContainer.new()
+	box.add_child(choices)
+	var choice_group := ButtonGroup.new()
+	for entry: Array in GUARDIANS:
+		var button := Button.new()
+		button.text = entry[1]
+		button.toggle_mode = true
+		button.button_group = choice_group
+		button.custom_minimum_size = Vector2(82, 34)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_guardian_chosen.bind(entry[0]))
+		choices.add_child(button)
+		guardian_choice_buttons[entry[0]] = button
+	guardian_choice_buttons[guardian_id].button_pressed = true
+	guardian_name_label.text = _guardian_display_name(guardian_id)
+	var row := HBoxContainer.new()
+	box.add_child(row)
+	var group := ButtonGroup.new()
+	for state: Array in [[true, "出現"], [false, "返還"]]:
+		var button := Button.new()
+		button.text = state[1]
+		button.toggle_mode = true
+		button.button_group = group
+		button.custom_minimum_size = Vector2(82, 34)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_on_guardian_selected.bind(state[0]))
+		row.add_child(button)
+		guardian_buttons[state[0]] = button
+	guardian_buttons[false].button_pressed = true
+
+## Summons (true) or returns (false) the explorer's equipped guardian.
+func _on_guardian_selected(summon: bool) -> void:
+	if summon and mode == "explore" and player:
+		guardian = _guardian_node(guardian_id)
+		guardian.follow_target = player
+		guardian.summon()
+	elif guardian:
+		guardian.dismiss()
+	_sync_guardian_buttons()
+
+## Equips another guardian. If one is out, it is returned and the new one is summoned in its place.
+func _on_guardian_chosen(id: String) -> void:
+	if id == guardian_id: return
+	var was_out: bool = guardian != null and guardian.is_summoned()
+	if was_out: guardian.dismiss()
+	guardian_id = id
+	guardian_name_label.text = _guardian_display_name(id)
+	guardian_choice_buttons[id].button_pressed = true
+	if was_out: _on_guardian_selected(true)
+	else: guardian = guardian_nodes.get(id)
+	_sync_guardian_buttons()
+
+func _guardian_node(id: String) -> Node3D:
+	if not guardian_nodes.has(id):
+		for entry: Array in GUARDIANS:
+			if entry[0] != id: continue
+			var node: Node3D = (entry[2] as PackedScene).instantiate()
+			node.name = "Guardian_" + id
+			add_child(node)
+			node.dismissed.connect(_sync_guardian_buttons)
+			guardian_nodes[id] = node
+	return guardian_nodes[id]
+
+func _guardian_display_name(id: String) -> String:
+	for entry: Array in GUARDIANS:
+		if entry[0] == id:
+			var state: SceneState = (entry[2] as PackedScene).get_state()
+			for i in state.get_node_property_count(0):
+				if state.get_node_property_name(0, i) == "display_name": return state.get_node_property_value(0, i)
+	return id
+
+func _sync_guardian_buttons() -> void:
+	var out: bool = guardian != null and guardian.is_summoned()
+	if guardian_buttons.has(out): guardian_buttons[out].button_pressed = true
 
 ## Body buttons under the equipment panel, in the same style; they follow its height.
 func _setup_body_panel(above: PanelContainer) -> void:
@@ -991,6 +1106,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_L:
 				player.skill()
+				get_viewport().set_input_as_handled()
+			KEY_T:
+				_on_guardian_selected(guardian == null or not guardian.is_summoned())
 				get_viewport().set_input_as_handled()
 			KEY_C, KEY_X:
 				# Seated, either key changes the sitting pose; moving stands up.

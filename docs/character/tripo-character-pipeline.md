@@ -132,3 +132,35 @@ Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従
 - Skeleton（Root + 27ボーン）: `Hips → Spine → Chest → Neck → Head`、上の腕 `{Left,Right}Shoulder → Arm → ForeArm → Hand` と下の腕 `{Left,Right}LowerShoulder → LowerArm → LowerForeArm → LowerHand` を `Chest` から、脚 `{Left,Right}UpLeg → Leg → Foot` を `Hips` から。
 - クリップ（`CLIPS['skeleton']`）: `idle`（開いた脚の上で揺れ、4本の武器が少しずつずれて揺れる、頭蓋が傾く）、`walk`（がに股でカタカタ歩く。上の腕は脚と逆、下の腕はさらに逆に振れる）、攻撃2種 `attack`（体を右へひねって曲刀とメイスを振りかぶり、踏み込んで2本同時に叩きつけ、続けて鎌を横から引っかける）と `attack_flurry`（4本の腕を大きく広げて沈み、小さく跳びながらその場で1回転して4つの刃で周囲を薙ぎ、正面を向いて着地。回転は `Root` のZ回転、しゃがみは pose の `hips` キーで腰だけを下げる）、`guard`（円盾を前へ掲げ、曲刀とメイスを胸の前で構えて腰を落とす）、`hit`（のけぞって4本の腕が跳ねる）、`death`（4.1秒。頭蓋を天へ向けて腕を振り上げ、武器が垂れ、がに股の脚が外へ折れて崩れ落ち、肋骨が前へ折れ頭蓋が垂れた骨の山になる）。
 - Godot: `scenes/characters/enemies/skeleton.tscn`（Modelは4.6倍＝フードの先まで約4m、武器を広げた幅約3.4m、`footprint` 2（4m四方）、`max_hp` 4）。`enemy_character.gd` の `EXTRA_ATTACKS` に `attack_flurry` を追加し、`attack_clips()` は `attack` と `attack_flurry` を返す。SRPG戦闘のステータスは `srpg_battle.gd` の `ENEMY_STATS.skeleton`。`verify_enemy.gd` は叩きつけで上の両手が下がること、回転して正面に戻ること、死亡後に元の位置で崩れることを確認する。
+
+## ガーディアン（guardian）
+
+ガーディアンはキャラクターが1体ずつ装備できるスタンドのような存在。将来は装備したガーディアンからステータスやスキルを得るが、現状はビジュアル（出現・返還）のみ。`assets/characters/tripo/guardian/<id>/model.glb` は原本で上書きしない。`tools/asset_gen/character_pipeline/build_guardian.py` が `build_enemy.py` のヘルパー（Armature生成・ポーズ合成・プレビュー）を使ってリグとクリップを付け、`assets/characters/guardian/<id>/model.glb` へ出力する。
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b --factory-startup --python tools/asset_gen/character_pipeline/build_guardian.py -- --id shadow1 --preview artifacts/guardian_preview   # 影２は --id shadow2
+& 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --headless --path . --script scripts/world_jrpg/verify_guardian.gd
+& 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --path . --script res://tools/asset_gen/character_pipeline/capture_guardian.gd   # -- res://artifacts/guardian_shadow2 shadow2 で影２
+```
+
+### 影（シャドウ）（shadow1）
+
+宙に浮く影の怪物。大きく裂けた牙の口、鉤爪の両腕、頭の触手、下半身は尾のような煙状。原本は1つの塊（19,829頂点）で高さ0.96、尾の先が原点。右手は前（y −0.18）、左手は後ろ（y +0.08）に構えた非対称の姿勢をそのまま使う。
+
+- Skeleton（Root + 18ボーン）: `Hips → Spine → Chest → Head → Jaw`、`Hips → Tail → Tail1 → Tail2`、腕 `{Left,Right}Shoulder → Arm → ForeArm → Hand → Fingers`（Fingersは鉤爪全体）を `Chest` から。
+- スキニング: ボーン距離に加え、口の隙間（下の歯 z 0.54〜0.62、上の歯 0.68〜0.74）より下・ヒンジ（y −0.1）より前を `Jaw`、隙間より上の上顎と頭蓋を `Head` に固定し、平滑化でも上下の歯が混ざらないようにしている。
+- クリップ（`CLIPS['shadow1']`、全て浮遊・接地補正なし）: `idle`（ループ。上下に漂い、尾が波打ち、爪と顎がゆっくり動く）、`roar`（身を丸めてから頭を反らし、口を大きく開いて両腕を広げる。出現時に再生）、`attack`（右の鉤爪を肩の上へ引いて前へ振り下ろす）、`attack_bite`（引いてから突進して噛みつく）。単発クリップはidleの初期姿勢で終わる。
+- Godot: `scenes/characters/guardians/shadow.tscn`（`scripts/character/guardian_character.gd`、Modelは6.3倍＝約6m、探索者の約3倍）。描画は `guardian_shadow.gdshader`（Tripoの描き込みを無陰影で表示＋淡い深紅のリム）。インスタンスごとの `reveal`（0=消滅、1=完全）で、縦方向の筆の筋に沿って尾から頭へ墨として現れ、縁は深紅に焼けた線と墨の帯がゆらぐ。返還は頭から尾へ消える。
+- 筆の演出: `guardian_ink_fx.gd` が円弧リボン（半径は `height` に比例、`guardian_ink_stroke.gdshader`、かすれのある墨の筆致＋深紅の縁）を動かす。出現時は16本が外側から螺旋を描いて体へ集まり、返還時は体から剥がれて外・上へ散る。出現中の常時エフェクトは無し。
+- 追従: `follow_target`（探索者）の向き基準で `follow_offset`（既定 前 −2.0・上 0.3・左 0.8 m＝すぐ後ろの少し左）に浮かび、少し遅れて追い、同じ向きを向く。12m以上離れると瞬間移動。
+- API: `summon()` / `dismiss()` / `toggle()` / `is_summoned()`、`act("attack" | "attack_bite" | "roar")`（出現中のみ）、シグナル `summoned` / `dismissed`。途中で逆操作すると現在の `reveal` から引き返す。
+- UI: `world.gd` の装備パネルの左に「ガーディアン」パネル（装備中の名前、`影` / `影２` の選択ボタン、`出現` / `返還` ボタン。右列は1080pで埋まっているため2列目）。キーボードは `T` で出現／返還を切替。候補は `GUARDIANS`（id・ボタン名・シーン）で、各ガーディアンは最初の出現時に生成して `guardian_nodes` に保持する。出現中に別のガーディアンを選ぶと、今のものを返還して選んだものを出現させる。
+- `verify_guardian.gd` は両ガーディアンのボーン・クリップ・roarで顎が開くこと、ボタンで徐々に出現／返還すること、左後ろに浮いて同じ向きを向くこと、出現途中で返還できること、影２への切替と出現中の入れ替えを確認する。`capture_guardian.gd` はJRPGWorldSample2でUIと出現・攻撃・返還のコマ（演出のコマはHUDを隠す）を `artifacts/guardian/` に撮る。
+
+### 影２（シャドウ２）（shadow2）
+
+墨の悪魔のような大柄な姿。前へ突き出た嘴状の頭（鼻先 y −0.24・z 0.67、小さな口）、両腕は前へ垂らした鉤爪（右手の方が前）、背中から触手がなびき、下半身は尾の煙。原本は1つの塊（23,748頂点）で高さ0.97、尾の先が原点。
+
+- Skeleton: 影と同じボーン名・階層（Root + 18ボーン）を `SHADOW2_BONES` で体形に合わせて配置。クリップも影と共通（`CLIPS['shadow2'] = CLIPS['shadow1']`）。
+- スキニング: 顎はヒンジ y −0.17 より前、z 0.635〜0.70 の嘴の下縁（x ±0.07）。頭は z 0.69〜0.74 で `Head` へ移行（x ±0.19、z 0.78以上は全て）。背中の触手（y > 0.06）は腕に乗らず（`arm_max_y`）、腰より上は y 0.08〜0.16 で `Chest` に移行する（`back`）。
+- Godot: `scenes/characters/guardians/shadow2.tscn`（Modelは6.2倍＝約6m）。描画・筆の演出・追従は影と同じ `guardian_character.gd`。

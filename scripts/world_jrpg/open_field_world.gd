@@ -21,7 +21,8 @@ const DamageNumber = preload("res://scripts/effect/damage_number_3d.gd")
 const SrpgBattle = preload("res://scripts/world_jrpg/srpg_battle.gd")
 # How far in front of a struck target (toward the attacker) its hit effect shows.
 const HIT_FX_INSET := 0.35
-# Hit-stop on a connecting sword-and-shield blow: the attack, everything it struck and the hit effect freeze this long.
+# Hit-stop on a connecting blade's blow: the attack, everything it struck and the hit effect freeze this long, unless the
+# clip sets its own (SwordCombat.hit_hold).
 const HIT_STOP := 0.15
 ## Shown for every blow on an enemy until damage is worked out.
 const PLACEHOLDER_DAMAGE := 9999
@@ -2829,17 +2830,19 @@ func _on_player_attack_impact(clip: String) -> void:
 	# The SRPG battle works out its own blows.
 	if srpg_battle: return
 	var stops: bool = player.sword_combat.slows_on_hit(clip)
+	# Each weapon's blows freeze for their own time (heavier ones longer).
+	var hold: float = player.sword_combat.hit_hold(clip, HIT_STOP)
 	var struck: Array[Node3D] = []
 	for enemy in enemies:
 		if _within_strike(enemy):
 			_face_toward(enemy, player.position)
 			if enemy.can_take_hit(): _show_damage(enemy, PLACEHOLDER_DAMAGE)
 			# Freeze first, so a finishing blow's fall waits out the hit-stop too.
-			if stops: enemy.hold(HIT_STOP)
+			if stops: enemy.hold(hold)
 			enemy.take_hit()
 			struck.append(enemy)
 	if sparring_partner and _within_strike(sparring_partner): struck.append(sparring_partner)
-	if not struck.is_empty() and stops: _show_hits(struck, clip)
+	if not struck.is_empty() and stops: _show_hits(struck, clip, hold)
 	if sparring_partner == null or not _within_strike(sparring_partner): return
 	var animation_player: AnimationPlayer = sparring_partner.animation_player
 	if animation_player == null or not animation_player.has_animation("hit"): return
@@ -2847,31 +2850,34 @@ func _on_player_attack_impact(clip: String) -> void:
 	# Restart on every blow so combos read as separate hits.
 	animation_player.play("hit", 0.05)
 	animation_player.seek(0.0, true)
-	if stops: _hold_clip(animation_player)
+	if stops: _hold_clip(animation_player, hold)
 
 ## Freezes a struck character's clip for the hit-stop, unless another clip has taken over by then.
-func _hold_clip(animation_player: AnimationPlayer) -> void:
+func _hold_clip(animation_player: AnimationPlayer, seconds: float) -> void:
 	var clip := animation_player.current_animation
 	animation_player.speed_scale = 0.0
-	get_tree().create_timer(HIT_STOP).timeout.connect(func() -> void:
+	get_tree().create_timer(seconds).timeout.connect(func() -> void:
 		if is_instance_valid(animation_player) and animation_player.current_animation == clip: animation_player.speed_scale = 1.0)
 
-## A hit effect on each struck target's near side at sword height; it and the attack freeze for the hit-stop.
-func _show_hits(targets: Array[Node3D], clip: String) -> void:
+## A hit effect on each struck target's near side at sword height; it and the attack freeze for the hit-stop (hold).
+## The clip may turn and size its effect (SwordCombat.hit_tilt, hit_scale); without a hold it freezes for the clip's own.
+func _show_hits(targets: Array[Node3D], clip: String, hold := -1.0) -> void:
 	var combat = player.sword_combat
-	var tilt := SLASH_HIT_TILT if clip in [combat.slash_clip, combat.alt_slash_clip] else 0.0
+	if hold < 0.0: hold = combat.hit_hold(clip, HIT_STOP)
+	var tilt: float = combat.hit_tilt(clip, SLASH_HIT_TILT if clip in [combat.slash_clip, combat.alt_slash_clip] else 0.0)
 	var height: float = player.sword_combat.grip.global_position.y if player.sword_combat.grip else player.position.y + 1.0
 	for target in targets:
 		var toward := player.position - target.position
 		toward.y = 0.0
 		var fx := HitFx.new()
 		fx.name = "SwordHitFx"
-		fx.hold = HIT_STOP
+		fx.hold = hold
 		fx.tilt_degrees = tilt
+		fx.size_scale = combat.hit_scale(clip)
 		add_child(fx)
 		var at := target.position + toward.limit_length(HIT_FX_INSET)
 		fx.global_position = Vector3(at.x, height, at.z)
-	player.hold_attack(HIT_STOP)
+	player.hold_attack(hold)
 
 ## The damage number pops up just below where the unit's name label (or HP gauge) floats.
 func _show_damage(target: Node3D, amount: int) -> void:

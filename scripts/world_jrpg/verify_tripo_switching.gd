@@ -39,7 +39,7 @@ func run() -> void:
 	check(actor.guarding and actor.animation_player.current_animation == "greatsword/guard", "Holding guard raises the greatsword")
 	check(not actor.attack(), "Cannot attack while guarding")
 	actor.set_guard(false)
-	check(not actor.guarding and actor.animation_player.current_animation == "idle", "Releasing guard returns to idle")
+	check(not actor.guarding and actor.animation_player.current_animation == actor.idle_clip, "Releasing guard returns to idle")
 	var ids := ["charcter001", "charcter002", "charcter003", "charcter004", "charcter005", "charcter006", "character007"]
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
@@ -62,9 +62,12 @@ func run() -> void:
 			if ids[next] == "charcter006":
 				check(actor.model.find_child("EquippedBow", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 006 equips the bow")
 			check(world.player == actor and actor.position == origin, "Actor identity and position stay unchanged")
-			var expected_clip: String = "walk" if clip == "run" and not actor.animation_player.has_animation("run") else clip
-			if expected_clip == "idle" and not actor.animation_player.has_animation("idle"):
-				expected_clip = "walk"
+			# Each loadout (and the bare-handed gait) has its own clip names for the same movement.
+			var expected_clip: String = {"idle": actor.idle_clip, "walk": actor.walk_clip, "run": actor.run_clip}[clip]
+			if expected_clip == actor.run_clip and not actor.animation_player.has_animation(expected_clip):
+				expected_clip = actor.walk_clip
+			if expected_clip == actor.idle_clip and not actor.animation_player.has_animation(expected_clip):
+				expected_clip = actor.walk_clip
 			if ids[next] == "character007":
 				check(actor.model.find_child("SheathedKatana", true, false) != null and actor.model.find_child("EquippedShield", true, false) == null, "Character 007 wears the sheathed katana")
 			check(actor.animation_player.current_animation == expected_clip, "Current movement animation is preserved")

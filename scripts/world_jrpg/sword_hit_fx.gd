@@ -14,13 +14,15 @@ const SPARK_COLOR := Color(1.0, 1.0, 1.0)
 var hold := 0.0
 ## On-screen turn of the effect in degrees, counterclockwise; set before adding the effect to the tree.
 var tilt_degrees := 0.0
+## Size of the burst and the spread of its sparks (heavier weapons hit bigger); set before adding the effect to the tree.
+var size_scale := 1.0
 
 func _ready() -> void:
 	top_level = true
 	var burst := MeshInstance3D.new()
 	burst.name = "Burst"
 	burst.mesh = QuadMesh.new()
-	burst.scale = Vector3.ONE * BURST_SIZE
+	burst.scale = Vector3.ONE * BURST_SIZE * size_scale
 	burst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var material := ShaderMaterial.new()
 	material.shader = BURST_SHADER
@@ -57,14 +59,14 @@ func _make_sparks() -> CPUParticles3D:
 	mesh.material = material
 	sparks.mesh = mesh
 	sparks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	sparks.amount = 18
+	sparks.amount = roundi(18 * size_scale)
 	sparks.lifetime = LIFETIME
 	sparks.one_shot = true
 	sparks.explosiveness = 1.0
 	sparks.direction = Vector3.UP
 	sparks.spread = 180.0
-	sparks.initial_velocity_min = 2.5
-	sparks.initial_velocity_max = 5.0
+	sparks.initial_velocity_min = 2.5 * size_scale
+	sparks.initial_velocity_max = 5.0 * size_scale
 	sparks.gravity = Vector3(0, -6.0, 0)
 	sparks.damping_min = 6.0
 	sparks.damping_max = 10.0

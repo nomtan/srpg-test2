@@ -30,7 +30,7 @@ var guarding := false
 # Unarmed models can sit on the ground: "" standing, "down" sitting down, "seated", "up" standing up.
 # Equipment chosen for the current model (a SwordCombat loadout or "none"); "" keeps the character's own.
 var weapon := ""
-# Weapon worn sheathed (shield on the back, sword at the left hip) (SwordCombat.SHEATHABLE loadouts only); the actor then moves as if bare-handed.
+# Weapon worn sheathed (SwordCombat.SHEATHABLE loadouts only: on the back or at the hip); the actor then moves as if bare-handed.
 var sheathed := false
 # Body part worn instead of the character's own (a CharacterDefinition body_id); "" keeps it.
 var body := ""
@@ -124,6 +124,8 @@ func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 func set_weapon(loadout: String) -> void:
 	weapon = loadout
 	set_model_scene(model_scene, _roster_layout)
+	# A weapon that cannot be sheathed is in hand; the next one starts drawn too.
+	if sheathed and not is_sheathed(): sheathed = false
 
 ## Sheathes the weapon onto the back, or draws it back into the hands; only for loadouts that can (can_sheathe).
 func set_sheathed(enabled: bool) -> void:

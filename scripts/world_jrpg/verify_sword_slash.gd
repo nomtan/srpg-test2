@@ -49,6 +49,8 @@ func _standalone() -> void:
 
 func _attacks(id: String, capture: bool) -> void:
 	var character := (load("res://scenes/characters/tripo_roster/%s.tscn" % id) as PackedScene).instantiate() as Node3D
+	# Character 002 is set to go unarmed (weapon_enabled = false); its dual daggers are given explicitly.
+	if id == "charcter002": character.set_meta("loadout", "dual_daggers")
 	root.add_child(character)
 	var player: AnimationPlayer = character.animation_player
 	var combat := SwordCombat.new()

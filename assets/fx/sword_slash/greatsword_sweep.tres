@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="SwordSlashProfile" format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/sword_slash_profile.gd" id="1_v3jdh"]
+[ext_resource type="Material" path="res://assets/fx/sword_slash/sword_slash_ink.tres" id="2_ink"]
 
 [resource]
 script = ExtResource("1_v3jdh")
@@ -12,3 +13,4 @@ rotation_degrees = Vector3(-6.7, 162.1, 9.6)
 radius = 1.478
 width = 0.99
 sweep_degrees = 166.5
+material = ExtResource("2_ink")

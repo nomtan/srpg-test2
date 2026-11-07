@@ -5,7 +5,8 @@ extends SkeletonModifier3D
 ## Standing idle adds the stance's half crouch; the walk cycle is left as animated.
 ## The left hand is solved onto the handle below the right hand wherever the clip swings two-handed,
 ## or onto the scabbard mouth in the katana's "saya" keys, pulling the scabbard in to the hilt around its "hilt" keys.
-## The katana has no ready stance; standing idle takes its whole stance instead, hand on the hilt and scabbard held.
+## The katana has no ready stance; standing idle takes its whole stance instead, hand on the hilt and scabbard held,
+## breathing; walking and running, the left hand keeps hold of the worn scabbard.
 const FADE := 0.12
 const CROUCH_FADE := 0.2
 
@@ -22,6 +23,8 @@ var hold_weight := 1.0
 # (see SwordCombat.settle_unkeyed); the residue holds those starting poses until the next weapon clip.
 var settle_weight := 1.0
 var _residue: Dictionary = {}
+# Seconds the modifier has run: the katana stance's breathing clock.
+var _breath_time := 0.0
 
 func setup(equipment: RefCounted, animation_player: AnimationPlayer, prefix: String) -> void:
 	combat = equipment
@@ -60,7 +63,8 @@ func _process_modification_with_delta(delta: float) -> void:
 	else:
 		# Let go of the handle smoothly when a clip is interrupted mid-swing or the guard is released.
 		two_hand_weight = move_toward(two_hand_weight, 0.0, delta / FADE)
-		saya_weight = move_toward(saya_weight, 0.0, delta / FADE)
+		# The katana's walk and run keep the left hand on the worn scabbard.
+		saya_weight = move_toward(saya_weight, combat.walk_saya(clip), delta / FADE)
 		sheath_pull = move_toward(sheath_pull, 0.0, delta / FADE)
 		# Back to the idle pose as fast as the ready stance returns, so the two hand over without a jump.
 		settle_weight = move_toward(settle_weight, 1.0, delta / FADE)
@@ -72,4 +76,5 @@ func _process_modification_with_delta(delta: float) -> void:
 		sheath_pull = maxf(sheath_pull, hold_weight)
 	ready_weight = target if target < ready_weight else move_toward(ready_weight, target, delta / FADE)
 	combat.update_sheath(clip, time)
-	combat.apply_grip(skeleton, ready_weight, two_hand_weight, ready_weight * idle_weight, saya_weight, sheath_pull, hold_weight)
+	_breath_time += delta
+	combat.apply_grip(skeleton, ready_weight, two_hand_weight, ready_weight * idle_weight, saya_weight, sheath_pull, hold_weight, _breath_time)

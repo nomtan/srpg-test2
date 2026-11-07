@@ -23,6 +23,8 @@ func _initialize() -> void:
 func run() -> void:
 	var capture := "--capture" in OS.get_cmdline_user_args()
 	var model := MODEL.instantiate() as Node3D
+	# Character 002 is set to go unarmed (weapon_enabled = false); its dual daggers are given explicitly.
+	model.set_meta("loadout", "dual_daggers")
 	root.add_child(model)
 	var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	var combat := SwordCombat.new()

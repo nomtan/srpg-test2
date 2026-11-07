@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/guardian_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/characters/guardian/shadow2/model.glb" id="2"]
+
+[node name="Shadow2" type="Node3D"]
+script = ExtResource("1")
+guardian_id = "shadow2"
+display_name = "影２（シャドウ２）"
+model_scene = ExtResource("2")
+height = 6.0
+
+[node name="Model" type="Node3D" parent="."]
+scale = Vector3(6.2, 6.2, 6.2)
