@@ -2,7 +2,8 @@
 
 Guardians are the stand-like spirits a character can equip (one each). The source
 (assets/characters/tripo/guardian/<id>/model.glb) is read only. A small skeleton fitted to the
-model's own floating pose is added (body column, tail wisp, head with a hinged Jaw, two clawed arms
+model's own floating pose is added (after dropping loose strays and, for some, sharpening the tendril
+ends into brush-stroke flicks) (body column, tail wisp, head with a hinged Jaw, two clawed arms
 with a Fingers bone for the claws), the mesh is skinned by distance to the bones with explicit
 jaw / head regions, and in-place clips are keyed. The result goes to
 assets/characters/guardian/<id>/model.glb.
@@ -16,6 +17,7 @@ bone forward / swings a downward bone back (and opens the forward-pointing Jaw),
 character's left (+X). A guardian floats: nothing is kept on the ground.
 """
 import argparse
+import heapq
 import math
 import sys
 from pathlib import Path
@@ -97,6 +99,12 @@ GUARDIANS = {
         'head_from': .74, 'head_blend': .69, 'head_width': .19,
         # Back tendrils (y > .06) stay off the arms; above the waist they ride on the Chest.
         'arm_max_y': .06, 'back': {'from_y': .08, 'full_y': .16, 'min_z': .48},
+        # A loose strand floating ~8 cm behind the right shoulder (not joined to the body).
+        'piece_gap': .004, 'remove_inside': [((-.40, .20, .56), (-.28, .30, .71))],
+        # The streaming tendril ends are drawn in to sharp brush-stroke flicks (払い).
+        # Pieces smaller than min_island (specks) and tips inside `exclude` (the beak and teeth) are left as is.
+        'taper': {'thin': .035, 'length': .09, 'min_branch': .02, 'window': .008, 'curve': .9, 'extend': .35,
+                  'min_island': .008, 'exclude': [((-.1, -.35, .62), (.1, -.15, .78))]},
         'preview': {'scale': 1.3, 'target': (0, -.05, .48), 'direction': (-.55, -1, .2)},
     },
 }
@@ -194,6 +202,122 @@ def skin(mesh, rig, spec):
     modifier.object = rig
     print('Skinned', len(co), 'vertices to', len(names), 'bones; jaw', int(lower.sum()), 'upper', int(upper.sum()),
           'kept apart', int(keep_apart.sum()))
+
+
+def taper_tips(mesh, spec):
+    """Draws every tendril end in to a sharp point, like the flick (払い) at the end of a brush stroke.
+
+    Geodesic distance g runs over the surface from each piece's most central vertex (nearest a bone).
+    Tendril tips are the peaks of g; sweeping g downward, a peak's branch grows until it meets a higher
+    one, and only peaks that stood out by at least `min_branch` (persistence) count, so surface noise is
+    ignored. Along a branch, vertices at the same g form a ring around the tendril; within `length` of the
+    tip (shorter for a short spike, and only while the ring stays thinner than `thin`) each vertex is
+    pulled in to its ring's centre, fully at the tip, and the tip is drawn out a little further."""
+    cfg = spec['taper']
+    me = mesh.data
+    n = len(me.vertices)
+    co = np.array([v.co[:] for v in me.vertices])
+    # The import splits vertices along UV seams; coincident copies are joined (weld) for the walk.
+    kd = KDTree(n)
+    for i, p in enumerate(co):
+        kd.insert(p, i)
+    kd.balance()
+    weld = np.array([min(j for _, j, _ in kd.find_range(p, 1e-6)) for p in co])
+    adjacency = [[] for _ in range(n)]
+    for e in me.edges:
+        a, b = weld[e.vertices[0]], weld[e.vertices[1]]
+        if a == b:
+            continue
+        length = float(np.linalg.norm(co[a] - co[b]))
+        adjacency[a].append((b, length))
+        adjacency[b].append((a, length))
+
+    # Seed each piece at the vertex nearest a bone; tiny pieces (teeth, specks) are left alone.
+    bones = [(np.array(b[0]), np.array(b[1])) for b in spec['bones'].values() if b[2] is not None]
+    to_bone = np.min([be.segment_distance(co, h, t) for h, t in bones], axis=0)
+    g = np.full(n, np.inf)
+    heap = []
+    for piece in be.pieces(co, [e.vertices[:] for e in me.edges], 1e-6):
+        if np.linalg.norm(np.ptp(co[piece], axis=0)) < cfg['min_island']:
+            continue
+        seed = weld[piece[int(np.argmin(to_bone[piece]))]]
+        g[seed] = 0
+        heap.append((0.0, seed))
+    heapq.heapify(heap)
+    while heap:
+        d, i = heapq.heappop(heap)
+        if d > g[i]:
+            continue
+        for j, length in adjacency[i]:
+            if d + length < g[j]:
+                g[j] = d + length
+                heapq.heappush(heap, (d + length, j))
+
+    # Persistence sweep from the top: components are branches, each owned by its peak.
+    parent = np.full(n, -1)
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    own = {}          # peak -> vertices of that branch alone
+    persistence = {}  # peak -> how far it stood out before meeting a higher branch
+    order = [i for i in np.argsort(-g) if np.isfinite(g[i]) and weld[i] == i]
+    for v in order:
+        roots = {find(j) for j, _ in adjacency[v] if parent[j] >= 0}
+        if not roots:
+            parent[v] = v
+            own[v] = [v]
+            continue
+        top = max(roots, key=lambda r: g[r])
+        for r in roots - {top}:
+            parent[r] = top
+            persistence[r] = g[r] - g[v]
+            if persistence[r] < cfg['min_branch']:
+                own[top].extend(own.pop(r))  # a bump on the branch, not a tendril of its own
+        parent[v] = top
+        own[top].append(v)
+    for r in own:
+        persistence.setdefault(r, g[r])
+    out = co.copy()
+    tapered = moved = 0
+    window = cfg['window']
+    for tip, members in own.items():
+        if persistence[tip] < cfg['min_branch'] or any(be.inside(co[[tip]], box) for box in cfg.get('exclude', [])):
+            continue
+        members = np.array(members)
+        depth = g[tip] - g[members]
+        span = min(cfg['length'], persistence[tip] * .8)
+        near_tip = depth < span + window
+        members, depth = members[near_tip], depth[near_tip]
+        p = co[members]
+        # Ring centre and radius at each vertex: the branch's vertices at about the same depth (a window,
+        # since the tendrils are coarse and one depth may hold a single vertex).
+        same = np.abs(depth[:, None] - depth[None, :]) < window
+        axis = (same @ p) / same.sum(1, keepdims=True)
+        radius = np.array([np.linalg.norm(p[same[k]] - axis[k], axis=1).max() for k in range(len(p))])
+        # Stop where the ring gets thick (the tendril has opened into the body).
+        thick = depth[radius > cfg['thin']]
+        if len(thick):
+            span = min(span, thick.min())
+        if span < cfg['min_branch'] * .5:
+            continue
+        keep = depth < span
+        members, depth, p, axis = members[keep], depth[keep], p[keep], axis[keep]
+        base = axis[np.argmax(depth)]
+        direction = co[tip] - base
+        direction /= max(np.linalg.norm(direction), 1e-6)
+        u = depth / span
+        keep_ratio = u ** cfg['curve']
+        out[members] = axis + (p - axis) * keep_ratio[:, None] + direction * (span * cfg['extend'] * (1 - u) ** 2)[:, None]
+        tapered += 1
+        moved += len(members)
+    for i, v in enumerate(me.vertices):
+        v.co = out[weld[i]]
+    me.update()
+    print('Tapered', tapered, 'tendril tips,', moved, 'vertices')
 
 
 # --- Animation --------------------------------------------------------------------------------
@@ -319,6 +443,10 @@ def main():
     args = parser.parse_args(argv)
     spec = GUARDIANS[args.id]
     mesh = import_source(args.id)
+    if 'remove_inside' in spec:
+        be.remove_strays(mesh, spec)
+    if 'taper' in spec:
+        taper_tips(mesh, spec)
     rig = be.build_armature(spec['bones'], Vector())
     skin(mesh, rig, spec)
     create_animations(rig, args.id)

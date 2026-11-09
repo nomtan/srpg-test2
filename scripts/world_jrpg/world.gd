@@ -7,6 +7,21 @@ const MANOR_MODEL = preload("res://assets/house/001/model.glb")
 const MANOR_AT := Vector2(47, 63)
 const MANOR_SCALE := 4.5
 const MANOR_HALF := Vector2(4.3, 3.5)
+## Tripo town models: each is about 1 m tall with its base at y = 0 and its front (door,
+## arch, stall counter) facing +Z. Value: [scene, half footprint along local X and Z].
+const TOWN_MODELS := {
+	"house1": [preload("res://assets/characters/tripo/assets/house1/model.glb"), Vector2(0.468, 0.408)],
+	"house2": [preload("res://assets/characters/tripo/assets/house2/model.glb"), Vector2(0.369, 0.314)],
+	"house3": [preload("res://assets/characters/tripo/assets/house3/model.glb"), Vector2(0.311, 0.265)],
+	"house4": [preload("res://assets/characters/tripo/assets/house4/model.glb"), Vector2(0.451, 0.48)],
+	"church1": [preload("res://assets/characters/tripo/assets/church1/model.glb"), Vector2(0.382, 0.414)],
+	"shop1": [preload("res://assets/characters/tripo/assets/shop1/model.glb"), Vector2(0.472, 0.318)],
+	"gate1": [preload("res://assets/characters/tripo/assets/gate1/model.glb"), Vector2(0.484, 0.153)],
+	"well1": [preload("res://assets/characters/tripo/assets/well1/model.glb"), Vector2(0.406, 0.349)],
+}
+const TOWN_HOUSES := ["house1", "house2", "house3", "house4"]
+## gate1's archway is clear for |x| < GATE_OPENING (model units) below its raised portcullis.
+const GATE_OPENING := 0.114
 const SIZE := 400
 const CHUNK := 32
 const WATER := 2.6
@@ -259,11 +274,12 @@ func _build_world() -> void:
 	var landmarks := Node3D.new()
 	landmarks.name = "Landmarks"
 	add_child(landmarks)
-	for pos in [Vector2(37, 74), Vector2(47, 72), Vector2(38, 87), Vector2(50, 89)]:
-		var house := Prop.new()
-		house.kind = "cottage"
-		house.position = Vector3(pos.x, 3.5, pos.y)
-		landmarks.add_child(house)
+	# One of each Tripo house; the north pair faces south and the south pair north, onto the square.
+	var lots := [Vector2(37, 74), Vector2(47, 72), Vector2(38, 87), Vector2(50, 89)]
+	for i in lots.size():
+		var pos: Vector2 = lots[i]
+		var key: String = TOWN_HOUSES[i]
+		_town_model(landmarks, key, Vector3(pos.x, 3.5, pos.y), 0.0 if pos.y < 80.0 else PI, _town_fit(key, Vector2(5.4, 4.4)))
 		obstacles.append(Rect2(pos - Vector2(2.8, 2.3), Vector2(5.6, 4.6)))
 	var manor := MANOR_MODEL.instantiate() as Node3D
 	manor.name = "Manor"
@@ -294,6 +310,21 @@ const SIDES: Array[Vector2i] = [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1)
 func _side_face(b: Batch, x: int, z: int, d: Vector2i, bottom: float, top: float, color: String) -> void:
 	var corner := Vector3(x + maxi(d.x, 0), bottom, z + maxi(d.y, 0))
 	b.quad(corner, Vector3(absi(d.y), 0, absi(d.x)), Vector3(0, top - bottom, 0), Vector3(d.x, 0, d.y), color)
+
+## Instance of a TOWN_MODELS entry with its base at `at` and its front (+Z) turned to yaw_angle.
+func _town_model(parent: Node3D, key: String, at: Vector3, yaw_angle: float, scale_factor: float) -> Node3D:
+	var model := (TOWN_MODELS[key][0] as PackedScene).instantiate() as Node3D
+	model.name = key.capitalize().replace(" ", "")
+	model.position = at
+	model.rotation.y = yaw_angle
+	model.scale = Vector3.ONE * scale_factor
+	parent.add_child(model)
+	return model
+
+## Largest scale at which a TOWN_MODELS entry fits a lot of `size` (local X, Z) metres.
+func _town_fit(key: String, size: Vector2) -> float:
+	var half: Vector2 = TOWN_MODELS[key][1]
+	return minf(size.x / (half.x * 2.0), size.y / (half.y * 2.0))
 
 func _index_obstacles() -> void:
 	obstacle_chunks.clear()
@@ -408,18 +439,11 @@ func _build_details(parent: Node3D) -> void:
 	for z in range(55, 64, 2):
 		b.box(Vector3(35.4, 14.8, z), Vector3(0.16, 1.5, 0.16), "trunk")
 	b.box(Vector3(35.4, 15.4, 59), Vector3(0.15, 0.18, 9), "wood")
-	# Village well and market awning.
-	for x in [-1, 1]:
-		b.box(Vector3(44 + x, 4, 76), Vector3(0.4, 1, 2.4), "rock_light")
-		b.box(Vector3(44 + x, 5.2, 76), Vector3(0.15, 3.0, 0.15), "trunk")
-	b.box(Vector3(44, 6.7, 76), Vector3(3.0, 0.3, 3.0), "roof")
+	# Village well and market stall (Tripo models), the stall's counter facing the square.
+	_town_model(parent, "well1", Vector3(44, 3.5, 76), 0.0, 3.4)
 	obstacles.append(Rect2(42.6, 74.6, 2.8, 2.8))
-	for x in range(48, 54):
-		b.box(Vector3(x, 6.0, 83), Vector3(1, 0.15, 3), "plaster" if x % 2 == 0 else "flag")
-	for x in [48, 53]:
-		b.box(Vector3(x, 4.8, 83), Vector3(0.16, 2.5, 0.16), "wood")
-	b.box(Vector3(50.5, 4.1, 83), Vector3(5, 1, 0.9), "wood")
-	obstacles.append(Rect2(47.5, 82.4, 6, 1.2))
+	_town_model(parent, "shop1", Vector3(50.5, 3.5, 83), PI, _town_fit("shop1", Vector2(5.6, 3.0)))
+	obstacles.append(Rect2(48.2, 81.5, 4.6, 3.0))
 	# Small south-coast jetty, boats and a lighthouse.
 	for z in range(105, 119):
 		b.box(Vector3(47, 3.6, z), Vector3(3, 0.2, 0.94), "wood")

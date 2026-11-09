@@ -107,9 +107,15 @@ const CRAG := Vector2(205, 121)
 const CRAG_TOP := 44.0
 const TOWN_RECT := Rect2(180, 146, 50, 54)
 const TOWN_PLAZA := Vector2(205, 178)
-## The house/001 manor takes the west back-row lot at z = 166, facing the main street.
-const TOWN_MANOR_LOT := Vector2(186.5, 166.0)
+## The house/001 manor stands behind the west houses at z = 167, facing the main street.
 const TOWN_MANOR_AT := Vector2(186.5, 167.0)
+## gate1 at this scale is ~13.5 m wide and ~10.4 m tall with a ~3.2 m archway.
+const TOWN_GATE_SCALE := 14.0
+## Tripo houses are ~1 m tall, so this caps a fitted house at about 7 m before HOUSE_SIZE.
+const HOUSE_MAX_SCALE := 7.0
+## Houses are drawn this many times their lot's size (lots are given at 1x), so they stand
+## several storeys over the ~3 m explorers.
+const HOUSE_SIZE := 3.0
 const SPAWN_HILL := Vector2(150, 305)
 const VILLAGE := Vector2(325, 262)
 const RUINS := Vector2(75, 225)
@@ -1702,39 +1708,43 @@ func _anchor(parent: Node3D, at: Vector2, yaw_angle := 0.0, height := NAN) -> No
 	parent.add_child(node)
 	return node
 
-## Half-timbered cottage. The ridge runs along local X.
-func _house(parent: Node3D, at: Vector2, yaw_angle: float, w: float, d: float, wall: float, roof: Color) -> void:
-	var root := _anchor(parent, at, yaw_angle)
-	var stone := Props.rock_material(Color("8f8d86"), 0.3)
-	var plaster := Props.flat(Color("efe4cc"))
-	var timber := Props.flat(Color("5a3f2c"))
-	var glass := Props.flat(Color("2f4656"), 0.3)
-	_part(root, "box", Vector3(w + 0.3, 1.8, d + 0.3), Vector3(0, -0.3, 0), stone)
-	_part(root, "box", Vector3(w, wall, d), Vector3(0, 0.6 + wall * 0.5, 0), plaster)
-	for sx in [-1, 1]:
-		for sz in [-1, 1]:
-			_part(root, "box", Vector3(0.28, wall, 0.28), Vector3(sx * w * 0.5, 0.6 + wall * 0.5, sz * d * 0.5), timber)
-	for y in [0.6 + wall * 0.5, 0.6 + wall]:
-		_part(root, "box", Vector3(w + 0.06, 0.22, d + 0.06), Vector3(0, y, 0), timber)
-	var roof_h := d * 0.55
-	_part(root, "prism", Vector3(d + 1.0, roof_h, w + 1.0), Vector3(0, 0.6 + wall + roof_h * 0.5, 0), Props.flat(roof, 0.8), Vector3(0, PI / 2, 0))
-	_part(root, "box", Vector3(0.7, 2.0, 0.7), Vector3(w * 0.28, 0.6 + wall + roof_h * 0.6, d * 0.18), stone)
+## Tripo house (TOWN_HOUSES key) fitted to a w x d lot, then enlarged HOUSE_SIZE times; its
+## front (+Z) faces yaw_angle.
+func _house(parent: Node3D, at: Vector2, yaw_angle: float, key: String, w: float, d: float) -> void:
+	_town_building(parent, key, at, yaw_angle, minf(_town_fit(key, Vector2(w, d)), HOUSE_MAX_SCALE) * HOUSE_SIZE)
+
+## TOWN_MODELS entry on a stone plinth that absorbs the slope; its front (+Z) faces yaw_angle.
+func _town_building(parent: Node3D, key: String, at: Vector2, yaw_angle: float, scale_factor: float) -> void:
+	var half: Vector2 = TOWN_MODELS[key][1] * scale_factor
+	_town_model(_plinth(parent, at, yaw_angle, half), key, Vector3.ZERO, 0.0, scale_factor)
+
+## gate1 as a gatehouse across a north-south street: front (+Z) outward to the south, its
+## base sunk to the lowest ground under it, the archway left open and the flanks blocked.
+func _town_gate(parent: Node3D, at: Vector2, scale_factor: float) -> void:
+	var half: Vector2 = TOWN_MODELS["gate1"][1] * scale_factor
+	var lo := INF
+	for dz in [-half.y, 0.0, half.y]:
+		for dx in [-half.x, -half.x * 0.5, 0.0, half.x * 0.5, half.x]:
+			lo = minf(lo, _height(at.x + dx, at.y + dz))
+	_town_model(parent, "gate1", Vector3(at.x, lo, at.y), 0.0, scale_factor)
+	var inner := GATE_OPENING * scale_factor + 0.15
 	for side in [-1, 1]:
-		for i in [-1, 1]:
-			_part(root, "box", Vector3(0.8, 0.9, 0.08), Vector3(i * w * 0.27, 0.6 + wall * 0.62, side * (d * 0.5 + 0.03)), glass)
-	_part(root, "box", Vector3(1.0, 1.8, 0.1), Vector3(0, 1.5, d * 0.5 + 0.05), Props.flat(Color("7b5639")))
-	var corners := [Vector2(w, d), Vector2(-w, d), Vector2(w, -d), Vector2(-w, -d)]
-	var lo := Vector2(INF, INF)
-	var hi := -lo
-	for c: Vector2 in corners:
-		var r := (c * 0.5 + c.sign() * 0.2).rotated(-yaw_angle)
-		lo = lo.min(r)
-		hi = hi.max(r)
-	obstacles.append(Rect2(at + lo, hi - lo))
+		_block(at + Vector2(side * (inner + half.x) * 0.5, 0.0), Vector2((half.x - inner) * 0.5, half.y))
 
 ## House/001 model on a stone plinth that absorbs the slope; its arched front (+Z) faces yaw_angle.
 func _manor(parent: Node3D, at: Vector2, yaw_angle: float) -> void:
-	var half := Vector2(0.95, 0.78) * MANOR_SCALE
+	var root := _plinth(parent, at, yaw_angle, Vector2(0.95, 0.78) * MANOR_SCALE)
+	root.name = "Manor"
+	var manor := MANOR_MODEL.instantiate() as Node3D
+	manor.scale = Vector3.ONE * MANOR_SCALE
+	# The mesh is centred on its origin; lift its base (y = -0.65) onto the plinth.
+	manor.position.y = 0.65 * MANOR_SCALE
+	root.add_child(manor)
+
+## Level stone plinth under a footprint of `half` (local X, Z) turned to yaw_angle, rising
+## from the lowest ground to just above the highest. Returns a node on its top face, turned
+## to yaw_angle, and blocks the plinth's reach.
+func _plinth(parent: Node3D, at: Vector2, yaw_angle: float, half: Vector2) -> Node3D:
 	var lo := INF
 	var hi := -INF
 	for dz in range(-ceili(half.y), ceili(half.y) + 1):
@@ -1745,16 +1755,11 @@ func _manor(parent: Node3D, at: Vector2, yaw_angle: float) -> void:
 			hi = maxf(hi, h)
 	var floor_y := hi + 0.15
 	var root := _anchor(parent, at, yaw_angle, floor_y)
-	root.name = "Manor"
 	var plinth := floor_y - lo + 0.6
 	_part(root, "box", Vector3(half.x * 2.0 + 0.4, plinth, half.y * 2.0 + 0.4), Vector3(0, -plinth * 0.5, 0), Props.rock_material(Color("8f8d86"), 0.3))
-	var manor := MANOR_MODEL.instantiate() as Node3D
-	manor.scale = Vector3.ONE * MANOR_SCALE
-	# The mesh is centred on its origin; lift its base (y = -0.65) onto the plinth.
-	manor.position.y = 0.65 * MANOR_SCALE
-	root.add_child(manor)
 	var reach := (half + Vector2(0.2, 0.2)).rotated(-yaw_angle).abs()
 	_block(at, reach)
+	return root
 
 func _lamp(parent: Node3D, at: Vector2, height := NAN) -> void:
 	var root := _anchor(parent, at, 0.0, height)
@@ -1855,34 +1860,34 @@ func _build_town(parent: Node3D) -> void:
 	var mid := (n + s) * 0.5
 	for at in [Vector2(w, n), Vector2(w, mid), Vector2(w, s), Vector2(e, s), Vector2(e, mid), Vector2(e, n)]:
 		_round_tower(root, at, 2.2, 8.5, stone, slate)
+	# The gate1 gatehouse spans the main street; its flanks overlap the wall ends at ±3 m.
+	_town_gate(root, Vector2(CRAG.x, s), TOWN_GATE_SCALE)
+	# Big houses (HOUSE_SIZE) face the main street, one per side between the gate and the
+	# plaza and one per side up toward the crag; each 1x lot is [west x, z, width along the
+	# street]. Fronts stop at x = 205 ± 4 by the gate so the street and its lamps stay clear,
+	# and at ± 8.5 up north, where the castle ramp's embankment climbs from x = 205 ± 5.
+	var lot := 0
 	for side in [-1, 1]:
-		_round_tower(root, Vector2(CRAG.x + side * 4.2, s), 1.8, 9.5, stone, brown)
-	var gate_top := _height(CRAG.x, s) + 4.2
-	_part(root, "box", Vector3(6.6, 2.0, 1.8), Vector3(CRAG.x, gate_top + 1.0, s), stone)
-	# Houses line the main street and a second row behind it, all facing the street.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = world_seed + 77
-	var roofs := [Color("6e4430"), Color("7d4b33"), Color("5e3a28"), Color("4c5a6c"), Color("845034")]
-	for side in [-1, 1]:
-		for z in [195.0, 165.0, 153.5, 146.0]:
-			var offset := 9.5 if z > 170.0 else 11.0
-			_house(root, Vector2(CRAG.x + side * offset, z), side * -PI / 2.0, rng.randf_range(4.6, 5.6), rng.randf_range(4.0, 4.6), rng.randf_range(3.0, 3.6), roofs[rng.randi() % roofs.size()])
-		for z in [195.0, 166.0, 153.5]:
-			if Vector2(CRAG.x + side * 18.5, z) == TOWN_MANOR_LOT:
-				# Draw the cottage's random numbers anyway so every other house keeps its look.
-				for i in 3: rng.randf()
-				rng.randi()
-				_manor(root, TOWN_MANOR_AT, PI / 2.0)
-				continue
-			_house(root, Vector2(CRAG.x + side * 18.5, z), side * -PI / 2.0, rng.randf_range(4.8, 6.0), rng.randf_range(4.0, 4.6), rng.randf_range(3.0, 3.8), roofs[rng.randi() % roofs.size()])
+		for spot in [[195.0, 192.0, 3.6], [190.5, 154.5, 5.0]]:
+			var x: float = spot[0] if side < 0 else 2.0 * CRAG.x - spot[0]
+			_house(root, Vector2(x, spot[1]), side * -PI / 2.0, TOWN_HOUSES[lot % TOWN_HOUSES.size()], spot[2], 4.0)
+			lot += 1
+	_manor(root, TOWN_MANOR_AT, PI / 2.0)
 	_cathedral(root, Vector2(220, TOWN_PLAZA.y), stone, slate)
-	_church(root, Vector2(190, TOWN_PLAZA.y), stone, slate)
+	# church1 west of the plaza, its door facing east onto it.
+	_town_building(root, "church1", Vector2(190, TOWN_PLAZA.y), PI / 2.0, 9.5)
 	_fountain(root, TOWN_PLAZA, stone)
+	# Market stalls on the plaza's street edges, counters toward the main street.
+	_town_building(root, "shop1", Vector2(198.5, 182.0), PI / 2.0, 4.0)
+	_town_building(root, "shop1", Vector2(211.5, 174.0), -PI / 2.0, 4.0)
 	for at in [Vector2(201.4, 197), Vector2(208.6, 197), Vector2(201.4, 186.5), Vector2(208.6, 169.5)]:
 		_lamp(root, at)
-	# Farmsteads and a watchtower among the fields outside the gate.
-	for farm in [[Vector2(188, 208), 0.0], [Vector2(222, 207), 0.0], [Vector2(170, 230), PI / 2.0], [Vector2(242, 228), -PI / 2.0], [Vector2(184, 250), 0.0], [Vector2(216, 240), PI], [Vector2(196, 222), 0.0], [Vector2(214, 221), PI]]:
-		_house(root, farm[0], farm[1], rng.randf_range(5.0, 6.5), rng.randf_range(4.0, 4.8), rng.randf_range(2.8, 3.2), roofs[rng.randi() % 3])
+	# Farmsteads and a watchtower among the fields outside the gate: two just outside the
+	# wall (clear of its corner towers and the side roads) and one beyond each outer field.
+	var farms := [[Vector2(190, 207.5), 0.0], [Vector2(220, 207.5), 0.0], [Vector2(162, 228), PI / 2.0], [Vector2(248, 228), -PI / 2.0]]
+	for i in farms.size():
+		var farm: Array = farms[i]
+		_house(root, farm[0], farm[1], TOWN_HOUSES[(i + 1) % TOWN_HOUSES.size()], 5.0, 3.6)
 	_round_tower(root, Vector2(240, 212), 2.0, 11.0, Props.rock_material(Color("b9ad98"), 0.4), brown)
 
 ## A crenellated wall stepping along the terrain from a to b.
@@ -1934,19 +1939,6 @@ func _cathedral(parent: Node3D, at: Vector2, stone: Material, dome: Material) ->
 			_part(root, "cone", Vector3(0.95, 2.4, 0), Vector3(sx * 4.0, 9.7, sz * 4.5), dome)
 	_block(at, Vector2(5.4, 4.6))
 
-## Small church with a west steeple (front faces local +Z).
-func _church(parent: Node3D, at: Vector2, stone: Material, slate: Material) -> void:
-	var root := _anchor(parent, at, PI / 2.0)
-	var plaster := Props.flat(Color("efe4cc"))
-	_part(root, "box", Vector3(5.6, 2.0, 9.4), Vector3(0, -0.3, 0), stone)
-	_part(root, "box", Vector3(5.2, 5.0, 9.0), Vector3(0, 3.0, 0), plaster)
-	_part(root, "prism", Vector3(6.2, 2.8, 9.6), Vector3(0, 6.9, 0), Props.flat(Color("74492f"), 0.8))
-	_part(root, "box", Vector3(2.8, 10.0, 2.8), Vector3(0, 5.0, -4.6), stone)
-	_part(root, "box", Vector3(0.5, 1.4, 0.1), Vector3(0, 8.0, -3.15), Props.flat(Color("2c3640")))
-	_part(root, "cone", Vector3(2.1, 6.5, 0), Vector3(0, 13.25, -4.6), slate)
-	_part(root, "box", Vector3(1.3, 2.2, 0.1), Vector3(0, 1.6, 4.55), Props.flat(Color("5a3f2c")))
-	_block(at, Vector2(6.0, 3.0))
-
 func _fountain(parent: Node3D, at: Vector2, stone: Material) -> void:
 	var root := _anchor(parent, at)
 	var water := Props.flat(Color("4f8fa6"), 0.15)
@@ -1961,27 +1953,23 @@ func _build_village(parent: Node3D) -> void:
 	var root := Node3D.new()
 	root.name = "WindmillVillage"
 	parent.add_child(root)
-	var roofs := [Color("b4573a"), Color("8a5a3c"), Color("4e6680"), Color("a8483a")]
-	var houses := [[Vector2(310, 247), 0.0, 8.0, 5.5], [Vector2(338, 274), 0.0, 7.0, 5.0], [Vector2(318, 279), PI / 2, 7.0, 5.0],
-		[Vector2(352, 258), PI / 2, 7.0, 5.0], [Vector2(325, 236), 0.0, 8.0, 5.0], [Vector2(300, 254), PI / 2, 6.0, 4.6]]
+	# Big houses (HOUSE_SIZE) ring the plaza, all facing it: 1x lot [at, yaw, width, depth].
+	# The north one stays west of the windmill's sail sweep (x > ~337), the west pair north
+	# of the road in from the ramp.
+	var houses := [[Vector2(325, 244), 0.0, 5.0, 4.0], [Vector2(304, 255), PI / 2, 5.0, 4.0], [Vector2(346, 262), -PI / 2, 5.0, 4.0],
+		[Vector2(325, 280), PI, 5.0, 4.0], [Vector2(303, 236), PI / 2, 5.0, 4.0]]
 	for i in houses.size():
 		var h: Array = houses[i]
-		_house(root, h[0], h[1], h[2], h[3], 3.4, roofs[i % roofs.size()])
+		_house(root, h[0], h[1], TOWN_HOUSES[i % TOWN_HOUSES.size()], h[2], h[3])
 	_windmill(root, Vector2(346, 239), -0.73)
-	# Well on the plaza.
-	var well := _anchor(root, VILLAGE)
-	var stone := Props.rock_material(Color("9a968c"), 0.35)
-	_part(well, "cylinder", Vector3(1.3, 1.0, 1.3), Vector3(0, 0.5, 0), stone)
-	_part(well, "cylinder", Vector3(1.0, 0.1, 1.0), Vector3(0, 0.95, 0), Props.flat(Color("2e4d5c"), 0.2))
-	for side in [-1, 1]:
-		_part(well, "box", Vector3(0.18, 2.4, 0.18), Vector3(side * 1.1, 1.6, 0), Props.flat(Color("5a3f2c")))
-	_part(well, "prism", Vector3(2.9, 0.8, 1.8), Vector3(0, 3.1, 0), Props.flat(Color("8a5a3c")))
-	_block(VILLAGE, Vector2(1.4, 1.4))
+	# well1 on the plaza, facing the road in from the west; a market stall faces it from the south.
+	_town_building(root, "well1", VILLAGE, -PI / 2.0, 3.4)
+	_town_building(root, "shop1", Vector2(325, 269.5), PI, 4.0)
 	for at in [Vector2(318, 262), Vector2(332, 259), Vector2(325, 252)]:
 		_lamp(root, at)
 	# Barrels and crates by the doors.
 	var wood := Props.flat(Color("8b6440"))
-	for at in [Vector2(313, 251.5), Vector2(314.2, 251.8), Vector2(341, 278), Vector2(354.5, 262)]:
+	for at in [Vector2(311.6, 249.5), Vector2(312.7, 249.9), Vector2(338.4, 268.5), Vector2(333.5, 272.8)]:
 		var barrel := _anchor(root, at)
 		_part(barrel, "cylinder", Vector3(0.42, 1.0, 0.42), Vector3(0, 0.5, 0), wood)
 		for y in [0.2, 0.8]: _part(barrel, "cylinder", Vector3(0.44, 0.07, 0.44), Vector3(0, y, 0), Props.flat(Color("3b3430"), 0.5))
