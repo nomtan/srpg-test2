@@ -18,5 +18,5 @@
   "maxRange": 1,
   "requiresLineOfSight": false,
   "visualModelPath": "res://assets/weapons/sword/hero_voxel_sword.glb",
-  "visualScale": 1
+  "visualScale": 0.78
 }
