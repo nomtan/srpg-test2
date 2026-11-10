@@ -1,0 +1,17 @@
+{
+  "id": "guard_stance",
+  "name": "ガードスタンス",
+  "type": "buff",
+  "targetType": "SELF",
+  "rangeType": "MAGIC",
+  "element": "NONE",
+  "apCost": 6,
+  "power": 0,
+  "accuracyModifier": 0,
+  "minRange": 0,
+  "maxRange": 0,
+  "areaRadius": 0,
+  "requiresLineOfSight": false,
+  "scalingType": "FIXED",
+  "criticalModifier": 0
+}
