@@ -1,0 +1,12 @@
+{
+  "id": "GODOT-004",
+  "title": "戦闘イベントと反撃連鎖防止",
+  "status": "todo",
+  "priority": "high",
+  "area": "godot",
+  "description": "on_attackedを命中・回避確定後に通知。反撃への反撃を禁止し、1回の攻撃で同一スキルは1回だけ判定。死亡時や射程外の処理を実装。",
+  "godotFiles": [
+    "scripts/battle/"
+  ],
+  "relatedDataIds": []
+}
