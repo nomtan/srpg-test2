@@ -1,0 +1,17 @@
+{
+  "id": "piercing_arrow",
+  "name": "貫通矢",
+  "type": "attack",
+  "targetType": "ENEMY",
+  "rangeType": "RANGED",
+  "element": "WIND",
+  "apCost": 9,
+  "power": 10,
+  "accuracyModifier": -5,
+  "minRange": 2,
+  "maxRange": 4,
+  "areaRadius": 0,
+  "requiresLineOfSight": true,
+  "scalingType": "PHYSICAL",
+  "criticalModifier": 0
+}
