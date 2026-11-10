@@ -8,5 +8,29 @@
   "godotFiles": [
     "scripts/battle/"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "攻撃イベントの命中・回避結果と攻撃起点をリアクションシステムに伝達し、無限連鎖を防ぐ。",
+  "context": "on_damage_takenのみでは回避時に発動できないためon_attackedを使う。反撃に対する反撃は禁止するが、回復リアクションはREACTION被攻撃でも発動可能。",
+  "implementation": [
+    "実際の攻撃解決処理の所在を調査し、AttackContextにorigin(ACTIVE/REACTION),attacker,target,hitResult等を持たせる。",
+    "命中/回避確定後にon_attackedを通知する。命中時はダメージ確定後、回避時はダメージ0で通知する。",
+    "反撃効果はorigin=ACTIVEの場合のみ実行。REACTION→REACTIONの反撃連鎖を禁止する。",
+    "同一攻撃イベントに対し同じスキルは1回だけ抽選し、処理済みIDを管理する。",
+    "死亡時・対象消滅・攻撃中断時のイベント処理順序を定義しログで追跡する。"
+  ],
+  "acceptanceCriteria": [
+    "命中・回避いずれもon_attackedが1回通知される。",
+    "ACTIVE→REACTION反撃は成立し、REACTION→反撃は発生しない。",
+    "回復リアクションはREACTION被攻撃でも発動し得る。",
+    "同一スキルが単一攻撃に重複発動せず、無限ループが起きない。"
+  ],
+  "dependencies": [
+    "GODOT-002"
+  ],
+  "openQuestions": [
+    "回避・無効化・ガードのhitResult分類は既存戦闘処理を確認して決める。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
