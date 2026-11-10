@@ -1,0 +1,35 @@
+{
+  "id": "ninja",
+  "name": "忍者",
+  "rank": "ADVANCED",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 3,
+    "dex": 6,
+    "vit": -1,
+    "mnd": 1,
+    "int": 1,
+    "agi": 8
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {
+    "dual_blader": 5
+  },
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    5,
+    6
+  ],
+  "bodyScenePath": ""
+}

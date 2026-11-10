@@ -1,0 +1,35 @@
+{
+  "id": "heavy_knight",
+  "name": "重騎士",
+  "rank": "ADVANCED",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 7,
+    "dex": -1,
+    "vit": 8,
+    "mnd": 1,
+    "int": -1,
+    "agi": -2
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {
+    "axeman": 5
+  },
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    2,
+    3
+  ],
+  "bodyScenePath": ""
+}
