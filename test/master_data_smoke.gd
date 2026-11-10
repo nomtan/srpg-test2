@@ -25,6 +25,7 @@ func _run() -> void:
 	_check_fallback(jobs.jobs, skills.skills)
 	_check_save_and_battle(jobs, skills, equipment)
 	_check_passive_slots_and_save(jobs, skills)
+	await _check_reactions(skills)
 	jobs.free()
 	skills.free()
 	equipment.free()
@@ -138,6 +139,75 @@ func _check_passive_slots_and_save(jobs: JobDatabase, skills: SkillDatabase) -> 
 	_check(unit.equipped_passive_skill_ids.is_empty(), "old save defaults to empty passive slots")
 	for node: Node in [unit, progress, unlocks]:
 		node.free()
+
+func _check_reactions(skills: SkillDatabase) -> void:
+	var counter := {"type": "counter_attack", "powerMultiplier": 1}
+	var heal := {"type": "heal", "target": "self", "powerMultiplier": 1}
+	var first := {"event": "on_attacked", "attackOrigins": ["active"], "hitResults": ["hit", "evade"], "chance": 0.5, "effects": [counter]}
+	var second := first.merged({"chance": 1}, true)
+	var recovery := first.merged({"attackOrigins": ["active", "reaction"], "chance": 1, "effects": [counter, heal]}, true)
+	skills.skills["test_counter"] = GameDataLoader._make_skill({"id": "test_counter", "name": "Counter", "type": "passive", "activationMode": "equipped", "triggers": [first, second]})
+	skills.skills["test_recovery"] = GameDataLoader._make_skill({"id": "test_recovery", "name": "Recovery", "type": "passive", "activationMode": "equipped", "triggers": [recovery]})
+	var grid := GridSystem.new()
+	grid.generate_grid()
+	var manager := UnitManager.new()
+	manager.grid = grid
+	var attacker := BattleUnit.new()
+	var defender := BattleUnit.new()
+	attacker.configure("attacker", "Attacker", Vector2i(10, 10), "player")
+	defender.configure("defender", "Defender", Vector2i(11, 10), "enemy")
+	for unit: BattleUnit in [attacker, defender]:
+		var position := Vector2i(unit.grid_x, unit.grid_z)
+		grid.get_cell(position).height = 0
+		grid.set_occupied_unit(position, unit)
+		manager.units.append(unit)
+	attacker.hp = 30
+	attacker.equipped_passive_skill_ids.append("test_recovery")
+	defender.equipped_passive_skill_ids.append("test_counter")
+	defender.has_acted = true
+	defender.ap = 0
+	var attacks := AttackSystem.new()
+	attacks.setup(grid, null)
+	attacks.setup_reactions(skills, manager)
+	var events: Array[AttackContext] = []
+	attacks.on_attacked.connect(func(context: AttackContext) -> void: events.append(context))
+	for hit: bool in [true, false]:
+		_seed_chance(true)
+		var context := attacks.notify_attacked(attacker, defender, hit, 5 if hit else 0, AttackContext.Origin.ACTIVE)
+		_check(events.size() == 2 and events[0].origin == AttackContext.Origin.REACTION and events[1] == context,
+			"active hit or evade sends exactly one event and one counter")
+		_check(context.reaction_messages.size() == 2 and "recovers" in context.reaction_messages[1], "reaction attacks allow healing without another counter")
+		_check(defender.has_acted and defender.ap == 0 and attacker.ap == 30, "reaction leaves AP and action state unchanged")
+		attacker.hp = 30
+		events.clear()
+	_seed_chance(false)
+	var failed := attacks.notify_attacked(attacker, defender, false, 0, AttackContext.Origin.ACTIVE)
+	_check(events.size() == 1 and failed.reaction_messages.size() == 1 and "did not trigger" in failed.reaction_messages[0],
+		"a failed 50% roll cannot retry via the second trigger")
+	defender.equipped_passive_skill_ids.clear()
+	events.clear()
+	var attack := await attacks.execute_attack(attacker, defender)
+	_check(events.size() == 1 and events[0].hit == attack.hit and events[0].damage == attack.damage, "normal attack publishes its resolved result")
+	events.clear()
+	var elements := ElementSystem.new()
+	var system := SkillSystem.new()
+	system.setup(grid, manager, attacks, elements, null)
+	var skill_result := system.execute_skill(attacker, skills.get_skill("power_slash"), Vector2i(11, 10))
+	_check(skill_result.success and events.size() == 1 and events[0].origin == AttackContext.Origin.ACTIVE, "attack skill publishes an active attack event")
+	defender.take_damage(defender.hp)
+	defender.equipped_passive_skill_ids.append("test_counter")
+	events.clear()
+	attacks.notify_attacked(attacker, defender, true, 999, AttackContext.Origin.ACTIVE)
+	_check(events.size() == 1, "dead defenders cannot react")
+	for node: Node in [system, elements, attacks, manager, grid, attacker, defender]:
+		node.free()
+
+func _seed_chance(success: bool) -> void:
+	for value in range(100):
+		seed(value)
+		if (randf() < 0.5) == success:
+			seed(value)
+			return
 
 func _check(condition: bool, label: String) -> void:
 	if not condition:

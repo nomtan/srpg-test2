@@ -1,18 +1,26 @@
 class_name AttackSystem
 extends Node
 
+signal on_attacked(context: AttackContext)
+
 enum AttackDirection { FRONT, SIDE, BACK }
 
 var grid: GridSystem
 var line_of_sight: LineOfSight
 var equipment_database: Node
 var weapon_power_calculator: Node
+var reaction_system: PassiveSkillSystem
 
 
 func setup(source_grid: GridSystem, los: LineOfSight, equipment_db: Node = null, weapon_calculator: Node = null) -> void:
 	grid = source_grid
 	line_of_sight = los
 	equipment_database = equipment_db; weapon_power_calculator = weapon_calculator
+
+func setup_reactions(skills: SkillDatabase, units: UnitManager) -> void:
+	if reaction_system: on_attacked.disconnect(reaction_system.on_attacked)
+	reaction_system = PassiveSkillSystem.new(skills, self, units)
+	on_attacked.connect(reaction_system.on_attacked)
 
 
 func get_attackable_cells(attacker: BattleUnit) -> Array[Vector2i]:
@@ -126,11 +134,33 @@ func execute_attack(attacker: BattleUnit, target: BattleUnit) -> Dictionary:
 	attacker.face_toward(Vector2i(target.grid_x, target.grid_z))
 	attacker.play_attack_animation()
 	await attacker.wait_for_attack_impact()
+	if not is_instance_valid(attacker) or not is_instance_valid(target) or not can_attack(attacker, target):
+		return {"success": false, "hit": false, "damage": 0, "message": "Attack interrupted", "defeated": false}
+	return _resolve_attack(attacker, target, AttackContext.Origin.ACTIVE, 1.0)
+
+func execute_reaction_attack(attacker: BattleUnit, target: BattleUnit, multiplier: float) -> Dictionary:
+	if not can_attack(attacker, target): return {"success": false}
+	attacker.face_toward(Vector2i(target.grid_x, target.grid_z))
+	return _resolve_attack(attacker, target, AttackContext.Origin.REACTION, multiplier)
+
+func notify_attacked(attacker: BattleUnit, target: BattleUnit, hit: bool, damage: int, origin: AttackContext.Origin) -> AttackContext:
+	var context := AttackContext.new(attacker, target, hit, damage, origin)
+	on_attacked.emit(context)
+	return context
+
+func _resolve_attack(attacker: BattleUnit, target: BattleUnit, origin: AttackContext.Origin, multiplier: float) -> Dictionary:
 	target.face_toward(Vector2i(attacker.grid_x, attacker.grid_z))
 	var hit_rate := calculate_hit_rate(attacker, target)
-	if randi_range(1, 100) > hit_rate: return {"success": true, "hit": false, "damage": 0, "message": "Miss!", "defeated": false, "hit_rate": hit_rate}
-	var damage := calculate_damage(attacker, target)
-	var critical := randi_range(1, 100) <= calculate_critical_rate(attacker, target)
-	if critical: damage = maxi(1, roundi(damage * 1.5))
-	target.take_damage(damage)
-	return {"success": true, "hit": true, "damage": damage, "message": "Critical Hit!" if critical else "Hit!", "defeated": not target.is_alive(), "hit_rate": hit_rate, "critical": critical}
+	var hit := randi_range(1, 100) <= hit_rate
+	var damage := 0
+	var critical := false
+	var message := "Miss!"
+	if hit:
+		damage = maxi(1, roundi(calculate_damage(attacker, target) * multiplier))
+		critical = randi_range(1, 100) <= calculate_critical_rate(attacker, target)
+		if critical: damage = maxi(1, roundi(damage * 1.5))
+		target.take_damage(damage)
+		message = "Critical Hit!" if critical else "Hit!"
+	var context := notify_attacked(attacker, target, hit, damage, origin)
+	return {"success": true, "hit": hit, "damage": damage, "message": message, "defeated": not target.is_alive(),
+		"hit_rate": hit_rate, "critical": critical, "reaction_messages": context.reaction_messages}

@@ -83,6 +83,7 @@ func _ready() -> void:
 		unit.refresh_build_stats(status_calculator)
 	line_of_sight.setup(grid)
 	attack_system.setup(grid, line_of_sight, equipment_database, weapon_power_calculator)
+	attack_system.setup_reactions(skill_database, unit_manager)
 	skill_system.setup(grid, unit_manager, attack_system, element_system, line_of_sight, status_calculator, equipment_database, weapon_power_calculator)
 	job_system.setup(job_database)
 	experience_system.setup(job_database)
@@ -261,6 +262,11 @@ func _on_skill_confirmed() -> void:
 	await _play_pending_movement()
 	var result := skill_system.execute_skill(unit_manager.selected_unit, selected_skill, selected_skill_target)
 	var acting_unit := unit_manager.selected_unit
+	if not result.success:
+		selected_skill = null
+		_return_to_action_menu()
+		_update_status(result.message)
+		return
 	var total_exp := 0
 	var defeat_count := 0
 	for target_result: Dictionary in result.results:
@@ -309,20 +315,28 @@ func _on_combat_confirmed() -> void:
 	await _play_pending_movement()
 	camera_controller.pulse_focus()
 	var result: Dictionary = await attack_system.execute_attack(attacker, target)
+	selected_attack_target = null
+	if not result.success:
+		_after_primary_action(result.message)
+		return
 	var gained_exp := experience_system.calculate_action_exp(attacker, target, bool(result.hit) and int(result.damage) > 0)
 	if bool(result.defeated): gained_exp += 30
 	_grant_growth(attacker, gained_exp, 5 + (5 if result.defeated else 0))
 	_show_floating_result(target, "critical" if bool(result.get("critical", false)) else ("damage" if result.hit else "miss"), int(result.damage))
 	battle_log.show_attack_result(attacker, target, result)
+	for message: String in result.reaction_messages:
+		battle_log.add_message(message)
 	_update_status(result.message)
 	if not target.is_alive(): unit_manager.remove_unit(target)
-	selected_attack_target = null
 	attacker.has_used_action = true
 	_after_primary_action("攻撃しました")
 
 
 func _after_primary_action(message: String) -> void:
 	var unit := unit_manager.selected_unit
+	if not unit.is_alive():
+		_finish_action()
+		return
 	if unit.has_moved:
 		_request_final_facing("%s。向きを選択してください" % message)
 	else:

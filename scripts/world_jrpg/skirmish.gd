@@ -238,6 +238,7 @@ func _setup_rules() -> void:
 	skills.setup(combat_grid, manager, attacks, elements, los)
 	skill_db = SkillDatabase.new()
 	add_child(skill_db)
+	attacks.setup_reactions(skill_db, manager)
 	_sync_units()
 
 func _data_unit(id: String, title: String, team: String, cell: Vector2i, health: int, power: int, defense: int, speed: int) -> BattleUnit:
@@ -448,13 +449,18 @@ func _execute_pending() -> void:
 			stage = "menu"
 			_refresh("スキルを使用できません。")
 			return
-		message = selected_skill.skill_name + " を使用した。"
+		message = result.message
 	else:
 		var result := await attacks.execute_attack(hero_data, _target_at(pending_target))
 		message = "%d ダメージ" % int(result.damage) if result.hit else "Miss"
+		for reaction: String in result.get("reaction_messages", []):
+			message += "\n" + reaction
 	attacked = true
 	hero_data.has_used_action = true
 	_sync_units()
+	if not hero_data.is_alive():
+		_complete(false)
+		return
 	if manager.are_all_enemies_defeated():
 		_complete(true)
 		return
@@ -497,11 +503,15 @@ func _act_enemy(actor: BattleUnit) -> void:
 	await _walk(enemy.actor, route)
 	if not route.is_empty(): enemy.cell = route.back()
 	_sync_units()
-	if _can_attack(enemy.cell, hero_cell): await attacks.execute_attack(actor, hero_data)
+	var message := "敵の行動終了"
+	if _can_attack(enemy.cell, hero_cell):
+		var result := await attacks.execute_attack(actor, hero_data)
+		for reaction: String in result.get("reaction_messages", []):
+			message += "\n" + reaction
 	if not hero_data.is_alive():
 		_complete(false)
 		return
-	_refresh("敵の行動終了")
+	_refresh(message)
 	turn_manager.finish_actor_turn(actor, false)
 
 func _complete(won: bool) -> void:

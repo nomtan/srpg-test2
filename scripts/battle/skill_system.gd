@@ -98,6 +98,7 @@ func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> 
 	var messages: Array[String] = ["%s uses %s" % [user.unit_name, skill.skill_name]]
 	var target_results: Array[Dictionary] = []
 	for target: BattleUnit in preview.targets:
+		if not user.is_alive(): break
 		if skill.skill_type == SkillData.SkillType.ATTACK:
 			target.face_toward(Vector2i(user.grid_x, user.grid_z))
 		if skill.skill_type == SkillData.SkillType.BUFF:
@@ -116,8 +117,12 @@ func execute_skill(user: BattleUnit, skill: SkillData, target_pos: Vector2i) -> 
 			target.take_damage(damage)
 			messages.append("%s takes %d damage%s" % [target.unit_name, damage, " (Critical!)" if critical else ""])
 			target_results.append({"target": target, "hit": true, "damage": damage, "heal": 0, "defeated": not target.is_alive(), "result_type": "damage", "critical": critical})
+			if skill.skill_type == SkillData.SkillType.ATTACK:
+				messages.append_array(attacks.notify_attacked(user, target, true, damage, AttackContext.Origin.ACTIVE).reaction_messages)
 			if not target.is_alive(): units.remove_unit(target)
 		else:
 			messages.append("Miss!")
 			target_results.append({"target": target, "hit": false, "damage": 0, "heal": 0, "defeated": false, "result_type": "miss"})
+			if skill.skill_type == SkillData.SkillType.ATTACK:
+				messages.append_array(attacks.notify_attacked(user, target, false, 0, AttackContext.Origin.ACTIVE).reaction_messages)
 	return {"success": true, "message": "\n".join(messages), "preview": preview, "results": target_results}

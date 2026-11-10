@@ -101,11 +101,14 @@ func _find_best_destination(enemy: BattleUnit, target: BattleUnit, reachable: Di
 
 func _attack(enemy: BattleUnit, target: BattleUnit) -> String:
 	var result: Dictionary = await attack_system.execute_attack(enemy, target)
+	if not result.success: return result.message
 	floating_result.emit(target, "damage" if result.hit else "miss", int(result.damage))
 	if not target.is_alive(): unit_manager.remove_unit(target)
-	if not result.hit: return "%s attacks %s\nMiss!" % [enemy.unit_name, target.unit_name]
-	var message := "%s attacks %s\nHit! %d damage" % [enemy.unit_name, target.unit_name, result.damage]
+	var outcome := "Hit! %d damage" % result.damage if result.hit else "Miss!"
+	var message := "%s attacks %s\n%s" % [enemy.unit_name, target.unit_name, outcome]
 	if result.defeated: message += "\n%s defeated" % target.unit_name
+	for reaction: String in result.reaction_messages:
+		message += "\n" + reaction
 	return message
 
 func _show_skill_results(result: Dictionary) -> void:

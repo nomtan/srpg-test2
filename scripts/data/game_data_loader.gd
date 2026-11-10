@@ -181,12 +181,42 @@ static func _make_passive_skill(row: Dictionary) -> SkillData:
 			if key == "effects":
 				skill.passive_effects.append(entry)
 			else:
+				if not _valid_attack_trigger(entry):
+					return null
 				skill.passive_triggers.append(entry)
 	skill.skill_id = row.id
 	skill.skill_name = row.name
 	skill.description = row.get("description", "")
 	skill.skill_type = SkillData.SkillType.PASSIVE
 	return skill
+
+static func _valid_attack_trigger(trigger: Dictionary) -> bool:
+	if trigger.get("event") != "on_attacked":
+		return false
+	if not _enum_array(trigger.get("attackOrigins"), ["active", "reaction"]) or not _enum_array(trigger.get("hitResults"), ["hit", "evade"]):
+		return false
+	var chance: Variant = trigger.get("chance")
+	if not (chance is int or chance is float) or not is_finite(float(chance)) or chance < 0 or chance > 1:
+		return false
+	var effects: Variant = trigger.get("effects")
+	if not effects is Array or effects.is_empty():
+		return false
+	for effect: Variant in effects:
+		if not effect is Dictionary or not effect.get("type") is String:
+			return false
+		if effect.type in ["counter_attack", "heal"] and not _positive_number(effect.get("powerMultiplier", 1)):
+			return false
+		if effect.type == "heal" and (not _integer(effect.get("power", 0)) or effect.get("power", 0) < 0):
+			return false
+	return true
+
+static func _enum_array(value: Variant, choices: Array) -> bool:
+	if not value is Array or value.is_empty():
+		return false
+	for entry: Variant in value:
+		if not entry in choices:
+			return false
+	return true
 
 static func _make_equipment(row: Dictionary, built_in_weapon: WeaponData) -> EquipmentData:
 	if not row.get("type") is String or not _enum_has(EquipmentData.EquipmentType, row.type.to_upper()):
