@@ -2,6 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { validateJob } from './src/jobData';
 
 const DATA_ROOT = path.resolve(__dirname, '../data/admin');
 const ICON_ROOT = path.resolve(__dirname, 'public/skill-icons');
@@ -62,6 +63,10 @@ function localDataApi(): Plugin {
             const value: unknown = JSON.parse(raw);
             if (!value || Array.isArray(value) || typeof value !== 'object' || (value as { id?: unknown }).id !== id) {
               return send(400, { error: 'Object id must match filename' });
+            }
+            if (category === 'jobs') {
+              const error = validateJob(value as Record<string, unknown>);
+              if (error) return send(400, { error });
             }
             await fs.mkdir(dir, { recursive: true });
             await fs.writeFile(filename, JSON.stringify(value, null, 2) + '\n');
