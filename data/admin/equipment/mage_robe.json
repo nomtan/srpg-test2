@@ -1,0 +1,15 @@
+{
+  "id": "mage_robe",
+  "name": "Mage Robe",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "mnd": 2,
+    "vit": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe"
+}
