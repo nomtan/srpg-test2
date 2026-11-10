@@ -1,0 +1,22 @@
+{
+  "id": "wooden_staff",
+  "name": "Wooden Staff",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 0,
+  "minRange": 1,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "res://assets/weapons/staff/staff.glb",
+  "visualScale": 0.82
+}
