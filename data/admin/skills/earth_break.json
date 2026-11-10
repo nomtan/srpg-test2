@@ -1,0 +1,17 @@
+{
+  "id": "earth_break",
+  "name": "アースブレイク",
+  "type": "attack",
+  "targetType": "ENEMY",
+  "rangeType": "MAGIC",
+  "element": "EARTH",
+  "apCost": 10,
+  "power": 18,
+  "accuracyModifier": -10,
+  "minRange": 1,
+  "maxRange": 2,
+  "areaRadius": 1,
+  "requiresLineOfSight": false,
+  "scalingType": "MAGICAL",
+  "criticalModifier": 0
+}
