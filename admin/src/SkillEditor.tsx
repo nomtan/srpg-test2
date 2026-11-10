@@ -37,7 +37,7 @@ export function validateSkill(value: Json): string | null {
 export default function SkillEditor({ value, onChange }: Props) {
   const patch = (key: string, next: unknown) => onChange({ ...value, [key]: next });
   const triggers: Json[] = Array.isArray(value.triggers) ? value.triggers : [];
-  const patchTrigger = (index: number, patch: Json) => patch('triggers', triggers.map((t, i) => i === index ? { ...t, ...patch } : t));
+  const patchTrigger = (index: number, fields: Json) => patch('triggers', triggers.map((t, i) => i === index ? { ...t, ...fields } : t));
   const patchEffect = (ti: number, ei: number, fields: Json) => {
     const effects: Json[] = triggers[ti].effects || [];
     patchTrigger(ti, { effects: effects.map((e, i) => i === ei ? { ...e, ...fields } : e) });
