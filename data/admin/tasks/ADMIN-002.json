@@ -1,10 +1,10 @@
 {
   "id": "ADMIN-002",
   "title": "マスターデータの移行と参照検証",
-  "status": "todo",
+  "status": "in_progress",
   "priority": "high",
   "area": "admin",
-  "description": "既存Godotコードにハードコードされたジョブ・スキル・装備・キャラをJSONへ移行。ID重複、参照先、スキーマを検証。",
+  "description": "既存Godotコードにハードコードされたジョブ・スキル・装備・キャラをJSONへ移行。ID重複、参照先、スキーマを検証。 現状: ジョブ31件、スキル8件、装備17件のJSONスナップショットとGodot読み込みを追加済み。実行テスト・データ同値性検証は未完了。",
   "godotFiles": [
     "data/admin/"
   ],
