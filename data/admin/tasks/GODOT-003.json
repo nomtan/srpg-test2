@@ -4,7 +4,7 @@
   "status": "todo",
   "priority": "high",
   "area": "godot",
-  "description": "攻撃のoriginをACTIVE/REACTIONで分類。アクティブ攻撃にのみ反撃可能。命中・回避のどちらでも判定。リアクション攻撃/回復はAP/MP消費なし。",
+  "description": "## 目的\nパッシブによる反撃（リアクション攻撃）と自己回復（リアクション回復）を実装する。\n\n## 確定仕様\n- 自分の行動を起点にした攻撃をACTIVE、リアクションから発生した攻撃をREACTIONと区別する。\n- 反撃はACTIVE攻撃を受けたときだけ発動候補。REACTION攻撃への再反撃は禁止。\n- 命中でも回避でもリアクション攻撃・回復の発動判定を行う。\n- リアクション攻撃はAP消費なし。リアクション回復はMP消費なし。両者とも通常行動を消費しない。\n- 発動確率はパッシブごとに設定可能（例: 50%）。装備中のパッシブだけ判定する。\n- 回復リアクションはACTIVE/REACTIONのどちらを受けても発動候補にできる。\n\n## 実装内容\n攻撃結果（hit/evade）とoriginを保持するコンテキストを用意し、命中・回避確定後にon_attackedを通知する。スキル定義のtriggers、attackOrigins、hitResults、chance、effectsを読み取り、counter_attack / healを実行する。反撃は攻撃者を対象にする。\n\n## 完了条件\nACTIVE命中・ACTIVE回避で反撃/回復が発動可能。REACTIONに反撃は発動しない。回復のREACTION被攻撃時判定は有効。AP/MPを消費せず、既存の通常攻撃とスキルを壊さない。\n\n## 依存・注意\nイベント連鎖防止、死亡時、射程外などはGODOT-004で一緒に検証する。",
   "godotFiles": [
     "scripts/skill/passive_skill_system.gd"
   ],
@@ -35,5 +35,6 @@
   ],
   "implementationBranch": "separate-godot-branch",
   "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
-  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。",
+  "body": "## 目的\nパッシブによる反撃（リアクション攻撃）と自己回復（リアクション回復）を実装する。\n\n## 確定仕様\n- 自分の行動を起点にした攻撃をACTIVE、リアクションから発生した攻撃をREACTIONと区別する。\n- 反撃はACTIVE攻撃を受けたときだけ発動候補。REACTION攻撃への再反撃は禁止。\n- 命中でも回避でもリアクション攻撃・回復の発動判定を行う。\n- リアクション攻撃はAP消費なし。リアクション回復はMP消費なし。両者とも通常行動を消費しない。\n- 発動確率はパッシブごとに設定可能（例: 50%）。装備中のパッシブだけ判定する。\n- 回復リアクションはACTIVE/REACTIONのどちらを受けても発動候補にできる。\n\n## 実装内容\n攻撃結果（hit/evade）とoriginを保持するコンテキストを用意し、命中・回避確定後にon_attackedを通知する。スキル定義のtriggers、attackOrigins、hitResults、chance、effectsを読み取り、counter_attack / healを実行する。反撃は攻撃者を対象にする。\n\n## 完了条件\nACTIVE命中・ACTIVE回避で反撃/回復が発動可能。REACTIONに反撃は発動しない。回復のREACTION被攻撃時判定は有効。AP/MPを消費せず、既存の通常攻撃とスキルを壊さない。\n\n## 依存・注意\nイベント連鎖防止、死亡時、射程外などはGODOT-004で一緒に検証する。"
 }
