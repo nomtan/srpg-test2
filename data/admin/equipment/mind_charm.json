@@ -1,0 +1,12 @@
+{
+  "id": "mind_charm",
+  "name": "Mind Charm",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "mnd": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory"
+}
