@@ -13,6 +13,9 @@ func open(unit: BattleUnit, skills: Array[SkillData]) -> void:
 	var first: Button = null
 	for skill in skills:
 		var button := Button.new()
+		button.icon = skill.get_icon()
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 24)
 		button.text = "%s  AP %d" % [skill.skill_name, skill.ap_cost]
 		button.disabled = unit.ap < skill.ap_cost
 		button.pressed.connect(func() -> void: skill_selected.emit(skill))

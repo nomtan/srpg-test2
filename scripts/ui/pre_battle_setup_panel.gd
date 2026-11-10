@@ -165,6 +165,9 @@ func _refresh_skills() -> void:
 
 func _add_skill_button(container: VBoxContainer, skill: SkillData, equipped: bool) -> void:
 	var button := Button.new()
+	button.icon = skill.get_icon()
+	button.expand_icon = true
+	button.add_theme_constant_override("icon_max_width", 24)
 	var passive := skill.skill_type == SkillData.SkillType.PASSIVE
 	button.text = "[Passive] " + skill.skill_name if passive else skill.skill_name
 	if not passive and not equipped:
@@ -183,6 +186,7 @@ func _change_skill_equipment(skill: SkillData, equipped: bool) -> void:
 		if not added:
 			message_label.text = "No free passive slot" if passive else "No free active slot"
 			return
+	if passive and status_calculator: selected_unit.refresh_build_stats(status_calculator)
 	_refresh_skills()
 
 func _start_battle() -> void:

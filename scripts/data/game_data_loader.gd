@@ -23,7 +23,14 @@ static func load_skills(skills: Dictionary, root: String = ROOT) -> void:
 		if skill == null:
 			_warn("skills", id, "invalid skill fields")
 			continue
+		skill.icon_path = _skill_icon_path(records[id].get("iconPath"))
 		skills[id] = skill
+
+static func _skill_icon_path(value: Variant) -> String:
+	if not value is String:
+		return ""
+	var pattern := RegEx.create_from_string("^/skill-icons/[a-zA-Z0-9_-]+\\.(png|webp)$")
+	return "res://admin/public" + value if pattern.search(value) else ""
 
 static func load_jobs(jobs: Dictionary, skills: Dictionary, root: String = ROOT) -> void:
 	var candidates := {}
@@ -179,6 +186,9 @@ static func _make_passive_skill(row: Dictionary) -> SkillData:
 			if not entry is Dictionary:
 				return null
 			if key == "effects":
+				if not _valid_stat_modifier(entry):
+					_warn("skills", row.id, "ignoring unsupported or invalid passive stat effect")
+					continue
 				skill.passive_effects.append(entry)
 			else:
 				if not _valid_attack_trigger(entry):
@@ -189,6 +199,18 @@ static func _make_passive_skill(row: Dictionary) -> SkillData:
 	skill.description = row.get("description", "")
 	skill.skill_type = SkillData.SkillType.PASSIVE
 	return skill
+
+static func _valid_stat_modifier(effect: Dictionary) -> bool:
+	if effect.get("type") != "stat_bonus" or effect.has("condition") or effect.has("conditions"):
+		return false
+	var stat: Variant = effect.get("stat")
+	if not stat is String:
+		return false
+	if not (stat in STATS or stat in ["max_hp", "max_ap"] or stat in SkillData.PASSIVE_BUILD_STATS
+		or (stat.ends_with("_resistance") and stat.trim_suffix("_resistance") in ELEMENTS)):
+		return false
+	var value: Variant = effect.get("value")
+	return effect.get("mode") in ["flat", "percent"] and (value is int or value is float) and absf(float(value)) <= 1.0e9
 
 static func _valid_attack_trigger(trigger: Dictionary) -> bool:
 	if trigger.get("event") != "on_attacked":

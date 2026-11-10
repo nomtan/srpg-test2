@@ -73,7 +73,7 @@ func _ready() -> void:
 	save_manager.status_message.connect(_on_save_status)
 	save_manager.load_or_create(unit_manager.get_player_units())
 	unit_progress.apply_progress_to_units(unit_manager.get_player_units())
-	status_calculator.setup(job_database, equipment_database)
+	status_calculator.setup(job_database, equipment_database, skill_database)
 	equipment_system.setup(equipment_database, job_database, status_calculator)
 	weapon_power_calculator.setup(status_calculator)
 	job_unlock_system.setup(job_database)

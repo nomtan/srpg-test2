@@ -12,6 +12,8 @@ var grid_x: int
 var grid_z: int
 var move_range: int = 4
 var jump_height: int = 1
+var base_move_range := 4
+var base_jump_height := 1
 var team: String
 var has_acted: bool = false
 var has_moved: bool = false
@@ -32,6 +34,7 @@ var job_id := ""
 var job_name := ""
 var element: ElementType = ElementType.NONE
 var max_ap := 30
+var base_max_ap := 30
 var ap := 30
 var skill_ids: Array[String] = []
 const MAX_EQUIPPED_SKILLS := 6
@@ -95,6 +98,8 @@ func configure(
 	team = unit_team
 	move_range = movement
 	jump_height = jump
+	base_move_range = movement
+	base_jump_height = jump
 	name = unit_id
 
 
@@ -928,6 +933,7 @@ func configure_role(id: String, display_name: String, affinity: ElementType, new
 	sub_job_name = display_name
 	element = affinity
 	max_ap = new_max_ap
+	base_max_ap = new_max_ap
 	ap = max_ap
 	skill_ids = skills.duplicate()
 	equipped_skill_ids = skills.duplicate()
@@ -964,6 +970,7 @@ func add_exp(amount: int, growth: Dictionary) -> Array[Dictionary]:
 
 func apply_level_growth(growth: Dictionary) -> Dictionary:
 	max_hp += int(growth.get("max_hp", 5)); max_ap += int(growth.get("max_ap", 1))
+	base_max_ap += int(growth.get("max_ap", 1))
 	attack_power += int(growth.get("attack_power", 1)); defense += int(growth.get("defense", 1))
 	accuracy += int(growth.get("accuracy", 1)); evasion += int(growth.get("evasion", 1))
 	base_str += int(growth.get("str", growth.get("attack_power", 1)))
@@ -983,6 +990,9 @@ func refresh_build_stats(status_calculator: Node) -> void:
 	strength = int(final_stats.str); dexterity = int(final_stats.dex); vitality = int(final_stats.vit)
 	mind = int(final_stats.mnd); intelligence = int(final_stats.int); agility = int(final_stats.agi)
 	max_hp = status_calculator.calculate_max_hp(self, final_stats)
+	var was_full_ap := ap == max_ap
+	max_ap = status_calculator.calculate_max_ap(self)
+	ap = max_ap if was_full_ap else clampi(ap, 0, max_ap)
 	attack_power = build_stats.attack_power; defense = build_stats.defense
 	accuracy = build_stats.accuracy; evasion = build_stats.evasion
 	move_range = build_stats.move_range; jump_height = build_stats.jump_height

@@ -288,6 +288,12 @@ func _setup_hud() -> void:
 	for spec in [["move", "移動"], ["attack", "攻撃"], ["skill", "スキル"], ["wait", "待機 / 行動終了"], ["confirm", "実行する"], ["cancel", "キャンセル [Esc]"], ["north", "北を向く"], ["east", "東を向く"], ["south", "南を向く"], ["west", "西を向く"], ["power_slash", "強斬り  AP 5"], ["guard_stance", "ガードスタンス  AP 6"], ["retreat", "退却"]]:
 		var button := Button.new()
 		button.text = spec[1]
+		var skill := skill_db.get_skill(spec[0])
+		if skill:
+			button.text = "%s  AP %d" % [skill.skill_name, skill.ap_cost]
+			button.icon = skill.get_icon()
+			button.expand_icon = true
+			button.add_theme_constant_override("icon_max_width", 24)
 		button.focus_mode = Control.FOCUS_ALL
 		button.custom_minimum_size.y = 30
 		button.pressed.connect(_command.bind(spec[0]))

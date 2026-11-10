@@ -26,6 +26,8 @@ func _run() -> void:
 	_check_save_and_battle(jobs, skills, equipment)
 	_check_passive_slots_and_save(jobs, skills)
 	await _check_reactions(skills)
+	_check_stat_modifiers(jobs, skills, equipment)
+	_check_skill_icons()
 	jobs.free()
 	skills.free()
 	equipment.free()
@@ -208,6 +210,61 @@ func _seed_chance(success: bool) -> void:
 		if (randf() < 0.5) == success:
 			seed(value)
 			return
+
+func _check_stat_modifiers(jobs: JobDatabase, skills: SkillDatabase, equipment: EquipmentDatabase) -> void:
+	var effects := [
+		{"type": "stat_bonus", "stat": "str", "mode": "flat", "value": 6},
+		{"type": "stat_bonus", "stat": "str", "mode": "percent", "value": 50},
+		{"type": "stat_bonus", "stat": "accuracy", "mode": "flat", "value": 8},
+		{"type": "stat_bonus", "stat": "max_ap", "mode": "percent", "value": 50},
+		{"type": "stat_bonus", "stat": "max_hp", "mode": "flat", "value": 20},
+		{"type": "stat_bonus", "stat": "fire_resistance", "mode": "flat", "value": 15},
+		{"type": "stat_bonus", "stat": "evasion", "mode": "flat", "value": 100, "condition": "unknown"},
+	]
+	var skill := GameDataLoader._make_skill({"id": "test_stats", "name": "Stats", "type": "passive", "activationMode": "equipped", "effects": effects})
+	_check(skill.passive_effects.size() == 6, "unsupported conditional modifier is omitted")
+	skills.skills[skill.skill_id] = skill
+	var calculator := StatusCalculator.new()
+	calculator.setup(jobs, equipment, skills)
+	var unlocks := SkillUnlockSystem.new()
+	unlocks.setup(jobs, skills)
+	var unit := BattleUnit.new()
+	unit.main_job_id = "swordsman"
+	unit.equipped_weapon_id = "iron_sword"
+	unit.learned_skill_ids.append(skill.skill_id)
+	unit.refresh_build_stats(calculator)
+	var accuracy := unit.accuracy
+	var evasion := unit.evasion
+	var hp := unit.max_hp
+	_check(unit.strength == 14 and unit.max_ap == 30, "unequipped passive leaves job and weapon stats unchanged")
+	_check(unlocks.equip_passive_skill(unit, skill.skill_id), "equip stat passive")
+	for i in range(2):
+		unit.refresh_build_stats(calculator)
+		_check(unit.strength == 30 and unit.accuracy == accuracy + 8 and unit.evasion == evasion, "flat and percentage modifiers apply once")
+		_check(unit.max_hp == hp + 20 and unit.max_ap == 45 and unit.build_stats.elemental_resistances.fire == 15, "HP, AP and elemental modifiers apply")
+	_check(UnitProgressData.from_unit(unit).to_dict().max_ap == 30, "save records base AP without passive bonus")
+	unlocks.unequip_passive_skill(unit, skill.skill_id)
+	unit.refresh_build_stats(calculator)
+	_check(unit.max_hp == hp and unit.max_ap == 30 and unit.accuracy == accuracy and unit.strength == 14, "unequipping restores base values")
+	for node: Node in [unit, unlocks, calculator]:
+		node.free()
+
+func _check_skill_icons() -> void:
+	var skill := SkillData.new()
+	var fallback := skill.get_icon()
+	_check(fallback != null, "missing icon uses shared placeholder")
+	_check(GameDataLoader._skill_icon_path("/skill-icons/power_slash.webp") == "res://admin/public/skill-icons/power_slash.webp", "admin icon path maps to shared image")
+	_check(GameDataLoader._skill_icon_path("/skill-icons/../icon.png").is_empty(), "invalid icon path is ignored")
+	skill.icon_path = "res://admin/public/skill-icons/nonexistent_smoke.png"
+	_check(skill.get_icon() == fallback, "missing image falls back")
+	var path := "user://skill-icon-smoke-%d.png" % Time.get_ticks_usec()
+	var sample := Image.create_empty(12, 12, false, Image.FORMAT_RGBA8)
+	sample.fill(Color.CYAN)
+	_check(sample.save_png(path) == OK, "write test icon")
+	skill.icon_path = path
+	var texture := skill.get_icon()
+	_check(texture != null and texture != fallback and texture.get_width() == 12, "uploaded image can load before importing")
+	DirAccess.remove_absolute(path)
 
 func _check(condition: bool, label: String) -> void:
 	if not condition:

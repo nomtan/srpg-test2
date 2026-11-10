@@ -31,8 +31,10 @@ func apply_progress_to_unit(unit: BattleUnit) -> void:
 	var saved: Dictionary = units_progress[unit.unit_id]
 	unit.level = int(saved.get("level", unit.level))
 	unit.exp = int(saved.get("exp", unit.exp))
-	for property_name: String in ["max_hp", "max_ap", "attack_power", "defense", "accuracy", "evasion", "strength", "dexterity", "vitality", "mind", "intelligence", "agility"]:
+	for property_name: String in ["max_hp", "attack_power", "defense", "accuracy", "evasion", "strength", "dexterity", "vitality", "mind", "intelligence", "agility"]:
 		unit.set(property_name, int(saved.get(property_name, unit.get(property_name))))
+	unit.base_max_ap = int(saved.get("max_ap", unit.base_max_ap))
+	unit.max_ap = unit.base_max_ap
 	unit.base_str = int(saved.get("base_str", saved.get("strength", unit.base_str)))
 	unit.base_dex = int(saved.get("base_dex", saved.get("dexterity", unit.base_dex)))
 	unit.base_vit = int(saved.get("base_vit", saved.get("vitality", unit.base_vit)))

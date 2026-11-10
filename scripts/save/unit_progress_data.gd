@@ -10,7 +10,7 @@ static func from_unit(unit: BattleUnit) -> UnitProgressData:
 		"level": unit.level,
 		"exp": unit.exp,
 		"max_hp": unit.max_hp,
-		"max_ap": unit.max_ap,
+		"max_ap": unit.base_max_ap,
 		"attack_power": unit.attack_power,
 		"defense": unit.defense,
 		"accuracy": unit.accuracy,
