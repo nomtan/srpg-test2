@@ -1,0 +1,22 @@
+{
+  "id": "iron_sword",
+  "name": "Iron Sword",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "str": 1,
+    "dex": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 0,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "res://assets/weapons/sword/hero_voxel_sword.glb",
+  "visualScale": 1
+}
