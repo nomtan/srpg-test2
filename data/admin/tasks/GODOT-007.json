@@ -8,5 +8,28 @@
   "godotFiles": [
     "scripts/job/job_database.gd"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "現行ジョブ定義を合意済み転職ルールへ移行する。",
+  "context": "合意仕様: 下位ジョブ一定Lvから上位2種に分岐し、上位一定Lvから最上位2種へ。最上位の片方には追加条件。旧『上位2種取得が必須』条件は廃止。現行job_database.gdには旧前提条件が残る。",
+  "implementation": [
+    "docs/job.mdとJobDatabaseのジョブ一覧・required_job_levelsを突合し差分表を作る。",
+    "各下位→上位2種→最上位2種の対応表と追加条件の未定部分を整理する。",
+    "確定済み条件のみ反映し、未定の転職条件を勝手に補完しない。",
+    "既存ユニットのジョブ解放・セーブデータ互換性を確認する。"
+  ],
+  "acceptanceCriteria": [
+    "最上位ジョブの解放に上位ジョブ2つを同時要求しない。",
+    "確定した分岐条件と実装が一致する。",
+    "未定条件は仕様上TODOとして明示される。",
+    "既存ジョブ進行データを読み込める。"
+  ],
+  "dependencies": [
+    "GODOT-001"
+  ],
+  "openQuestions": [
+    "追加条件と最終ジョブ分岐の全件確定が必要。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
