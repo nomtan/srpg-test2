@@ -1,0 +1,14 @@
+{
+  "id": "chain_mail",
+  "name": "Chain Mail",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "vit": 3,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium"
+}
