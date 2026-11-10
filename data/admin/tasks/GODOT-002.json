@@ -4,7 +4,7 @@
   "status": "todo",
   "priority": "high",
   "area": "godot",
-  "description": "PASSIVEを追加。パッシブは習得だけでは発動せず専用スロットにセットした場合のみ有効。スロット数は暫定3。",
+  "description": "## 目的\n習得済みパッシブを専用スロットに装備したときだけ有効化する。\n\n## 実装内容\n1. scripts/skill/skill_data.gd の SkillType に PASSIVE を追加し、既存のATTACK/HEAL/BUFF/DEBUFFの意味を維持する。\n2. BattleUnitおよび進行データに equipped_passive_skill_ids を追加する。既存の equipped_skill_ids（アクティブ用）とは別管理。\n3. 習得済みIDのみ装備可能、重複装備不可、存在しないスキルIDを拒否する。暫定上限3スロットは定数化し、将来変更可能にする。\n4. スキル取得・装備解除・戦闘開始時の有効パッシブ一覧を取得するAPIを設ける。\n\n## 完了条件\n習得だけでは効果が出ず、専用スロットに装備した場合だけ有効。アクティブスキルの装備動作を壊さない。旧データでは空スロットで起動できる。\n\n## 依存・注意\nセーブ永続化はGODOT-006、戦闘時の発動はGODOT-003/004で扱う。",
   "godotFiles": [
     "scripts/skill/skill_data.gd"
   ],
@@ -32,5 +32,6 @@
   ],
   "implementationBranch": "separate-godot-branch",
   "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
-  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。",
+  "body": "## 目的\n習得済みパッシブを専用スロットに装備したときだけ有効化する。\n\n## 実装内容\n1. scripts/skill/skill_data.gd の SkillType に PASSIVE を追加し、既存のATTACK/HEAL/BUFF/DEBUFFの意味を維持する。\n2. BattleUnitおよび進行データに equipped_passive_skill_ids を追加する。既存の equipped_skill_ids（アクティブ用）とは別管理。\n3. 習得済みIDのみ装備可能、重複装備不可、存在しないスキルIDを拒否する。暫定上限3スロットは定数化し、将来変更可能にする。\n4. スキル取得・装備解除・戦闘開始時の有効パッシブ一覧を取得するAPIを設ける。\n\n## 完了条件\n習得だけでは効果が出ず、専用スロットに装備した場合だけ有効。アクティブスキルの装備動作を壊さない。旧データでは空スロットで起動できる。\n\n## 依存・注意\nセーブ永続化はGODOT-006、戦闘時の発動はGODOT-003/004で扱う。"
 }
