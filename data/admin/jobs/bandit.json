@@ -1,0 +1,38 @@
+{
+  "id": "bandit",
+  "name": "Bandit",
+  "rank": "BASIC",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 4,
+    "dex": 1,
+    "vit": 2,
+    "mnd": 0,
+    "int": 0,
+    "agi": 2
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {},
+  "learnableSkills": [
+    {
+      "job_level": 1,
+      "skill_id": "heavy_attack"
+    }
+  ],
+  "playerSelectable": false,
+  "allowedWeaponTypes": [
+    2,
+    5
+  ],
+  "bodyScenePath": ""
+}
