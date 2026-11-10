@@ -146,24 +146,44 @@ func _refresh_skills() -> void:
 		$Layout/Detail/StartBattle.grab_focus()
 	for container in [equipped_list, available_list]:
 		for child in container.get_children(): child.queue_free()
-	for skill_id in selected_unit.equipped_skill_ids:
-		var skill := skills.get_skill(skill_id)
-		var button := Button.new(); button.text = skill.skill_name if skill else skill_id
-		button.pressed.connect(func() -> void: selected_unit.unequip_skill(skill_id); _refresh_skills())
-		equipped_list.add_child(button)
+	for skill: SkillData in skills.get_skills_for_unit(selected_unit):
+		_add_skill_button(equipped_list, skill, true)
+	for skill: SkillData in skills.get_passives_for_unit(selected_unit):
+		_add_skill_button(equipped_list, skill, true)
 	for skill_id in unlocks.get_available_skill_ids_for_unit(selected_unit):
-		if skill_id in selected_unit.equipped_skill_ids: continue
+		if skill_id in selected_unit.equipped_skill_ids or skill_id in selected_unit.equipped_passive_skill_ids: continue
 		var skill := skills.get_skill(skill_id)
-		var button := Button.new(); button.text = "%s  AP %d  Range %d-%d" % [skill.skill_name, skill.ap_cost, skill.min_range, skill.max_range]
-		button.pressed.connect(func() -> void:
-			if selected_unit.equip_skill(skill_id): _refresh_skills()
-			else: message_label.text = "Max 6 skills can be equipped")
-		available_list.add_child(button)
+		if skill: _add_skill_button(available_list, skill, false)
 	var build_text := ""
 	if selected_unit.build_stats:
 		var b := selected_unit.build_stats
 		build_text = "\nSTR %d  DEX %d  VIT %d  MND %d  INT %d  AGI %d\nATK %d  MATK %d  DEF %d  MDEF %d  ACC %d  CRIT %d%%  EVA %d%%  SPD %d  MOVE %d  JUMP %d" % [selected_unit.strength, selected_unit.dexterity, selected_unit.vitality, selected_unit.mind, selected_unit.intelligence, selected_unit.agility, b.attack_power, b.magic_attack_power, b.defense, b.magic_defense, b.accuracy, b.critical_rate, b.evasion, b.speed, b.move_range, b.jump_height]
-	message_label.text = "Equipped Skills %d / %d%s" % [selected_unit.equipped_skill_ids.size(), BattleUnit.MAX_EQUIPPED_SKILLS, build_text]
+	message_label.text = "Active %d / %d   Passive %d / %d%s" % [
+		selected_unit.equipped_skill_ids.size(), BattleUnit.MAX_EQUIPPED_SKILLS,
+		selected_unit.equipped_passive_skill_ids.size(), BattleUnit.MAX_EQUIPPED_PASSIVE_SKILLS, build_text,
+	]
+
+func _add_skill_button(container: VBoxContainer, skill: SkillData, equipped: bool) -> void:
+	var button := Button.new()
+	var passive := skill.skill_type == SkillData.SkillType.PASSIVE
+	button.text = "[Passive] " + skill.skill_name if passive else skill.skill_name
+	if not passive and not equipped:
+		button.text += "  AP %d  Range %d-%d" % [skill.ap_cost, skill.min_range, skill.max_range]
+	button.pressed.connect(_change_skill_equipment.bind(skill, equipped))
+	container.add_child(button)
+
+func _change_skill_equipment(skill: SkillData, equipped: bool) -> void:
+	var id := skill.skill_id
+	var passive := skill.skill_type == SkillData.SkillType.PASSIVE
+	if equipped:
+		if passive: unlocks.unequip_passive_skill(selected_unit, id)
+		else: selected_unit.unequip_skill(id)
+	else:
+		var added := unlocks.equip_passive_skill(selected_unit, id) if passive else (unlocks.can_equip_skill(selected_unit, id) and selected_unit.equip_skill(id))
+		if not added:
+			message_label.text = "No free passive slot" if passive else "No free active slot"
+			return
+	_refresh_skills()
 
 func _start_battle() -> void:
 	for unit in units:

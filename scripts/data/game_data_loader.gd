@@ -143,6 +143,8 @@ static func _make_job(row: Dictionary) -> JobData:
 static func _make_skill(row: Dictionary) -> SkillData:
 	if not row.get("type") is String or not _enum_has(SkillData.SkillType, row.type.to_upper()):
 		return null
+	if row.type.to_upper() == "PASSIVE":
+		return _make_passive_skill(row)
 	if not _enum_has(SkillData.TargetType, row.get("targetType")) or not _enum_has(SkillData.RangeType, row.get("rangeType")):
 		return null
 	if not _enum_has(BattleUnit.ElementType, row.get("element")) or not _enum_has(SkillData.ScalingType, row.get("scalingType")):
@@ -163,6 +165,27 @@ static func _make_skill(row: Dictionary) -> SkillData:
 	skill.requires_line_of_sight = row.requiresLineOfSight
 	for key: String in SKILL_NUMBERS:
 		skill.set(SKILL_NUMBERS[key], int(row[key]))
+	return skill
+
+static func _make_passive_skill(row: Dictionary) -> SkillData:
+	if row.get("activationMode") != "equipped" or not row.get("description", "") is String:
+		return null
+	var skill := SkillData.new()
+	for key: String in ["effects", "triggers"]:
+		var entries: Variant = row.get(key, [])
+		if not entries is Array:
+			return null
+		for entry: Variant in entries:
+			if not entry is Dictionary:
+				return null
+			if key == "effects":
+				skill.passive_effects.append(entry)
+			else:
+				skill.passive_triggers.append(entry)
+	skill.skill_id = row.id
+	skill.skill_name = row.name
+	skill.description = row.get("description", "")
+	skill.skill_type = SkillData.SkillType.PASSIVE
 	return skill
 
 static func _make_equipment(row: Dictionary, built_in_weapon: WeaponData) -> EquipmentData:

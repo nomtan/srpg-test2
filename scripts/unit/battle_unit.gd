@@ -35,8 +35,10 @@ var max_ap := 30
 var ap := 30
 var skill_ids: Array[String] = []
 const MAX_EQUIPPED_SKILLS := 6
+const MAX_EQUIPPED_PASSIVE_SKILLS := 3
 var learned_skill_ids: Array[String] = []
 var equipped_skill_ids: Array[String] = []
+var equipped_passive_skill_ids: Array[String] = []
 var main_job_id := ""
 var main_job_name := ""
 var sub_job_id := ""
@@ -944,7 +946,12 @@ func equip_skill(id: String) -> bool:
 	equipped_skill_ids.append(id); return true
 func unequip_skill(id: String) -> void: equipped_skill_ids.erase(id)
 func clear_equipped_skills() -> void: equipped_skill_ids.clear()
-func get_build_data() -> Dictionary: return {"unit_id": unit_id, "main_job_id": main_job_id, "sub_job_id": sub_job_id, "equipped_skill_ids": equipped_skill_ids.duplicate()}
+func get_build_data() -> Dictionary:
+	return {
+		"unit_id": unit_id, "main_job_id": main_job_id, "sub_job_id": sub_job_id,
+		"equipped_skill_ids": equipped_skill_ids.duplicate(),
+		"equipped_passive_skill_ids": equipped_passive_skill_ids.duplicate(),
+	}
 
 func add_exp(amount: int, growth: Dictionary) -> Array[Dictionary]:
 	exp += amount

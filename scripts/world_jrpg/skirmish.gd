@@ -322,6 +322,9 @@ func _refresh(message: String) -> void:
 	status.text += "左スティック：カメラ移動　右：視点回転\n十字キー：行動・マス選択\nA：決定　B：戻る　Y：待機\nLB/RB：回転　LT/RT：距離\n右押込：旅人へ\n"
 	for key: String in buttons:
 		var show_button := (stage == "menu" and key in ["move", "attack", "skill", "wait", "cancel", "retreat"]) or (stage == "confirm" and key in ["confirm", "cancel"]) or (stage in ["move", "attack", "skill_target"] and key == "cancel") or (stage == "skills" and key in ["power_slash", "guard_stance", "cancel"]) or (stage == "facing" and key in ["north", "east", "south", "west"])
+		if key in ["power_slash", "guard_stance"]:
+			var skill := skill_db.get_skill(key)
+			show_button = show_button and skill != null and skill.skill_type != SkillData.SkillType.PASSIVE
 		buttons[key].visible = show_button and not busy
 		buttons[key].disabled = busy or resolved
 	buttons.move.disabled = moved and attacked

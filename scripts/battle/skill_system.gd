@@ -14,7 +14,8 @@ func setup(source_grid: GridSystem, unit_manager: UnitManager, attack_system: At
 	grid = source_grid; units = unit_manager; attacks = attack_system; elements = element_system; los = line; status_calculator = calculator
 	equipment_database = equipment_db; weapon_power_calculator = weapon_calculator
 
-func can_use_skill(user: BattleUnit, skill: SkillData) -> bool: return user.is_alive() and user.ap >= skill.ap_cost
+func can_use_skill(user: BattleUnit, skill: SkillData) -> bool:
+	return user.is_alive() and skill.skill_type != SkillData.SkillType.PASSIVE and user.ap >= skill.ap_cost
 
 func get_skill_range_cells(user: BattleUnit, skill: SkillData) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []

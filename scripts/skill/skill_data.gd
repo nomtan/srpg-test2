@@ -1,7 +1,7 @@
 class_name SkillData
 extends Resource
 
-enum SkillType { ATTACK, HEAL, BUFF, DEBUFF }
+enum SkillType { ATTACK, HEAL, BUFF, DEBUFF, PASSIVE }
 enum TargetType { ENEMY, ALLY, SELF, EMPTY_CELL }
 enum RangeType { MELEE, RANGED, MAGIC }
 enum ScalingType { PHYSICAL, MAGICAL, HEALING, FIXED, TERRAIN }
@@ -22,6 +22,8 @@ var area_radius := 0
 var requires_line_of_sight := true
 var scaling_type: ScalingType = ScalingType.PHYSICAL
 var critical_modifier := 0
+var passive_effects: Array[Dictionary] = []
+var passive_triggers: Array[Dictionary] = []
 
 static func create(id: String, display_name: String, type: SkillType, target: TargetType, range_kind: RangeType, affinity: BattleUnit.ElementType, cost: int, skill_power: int, accuracy: int, min_r: int, max_r: int, area: int = 0, los: bool = true) -> SkillData:
 	var skill := SkillData.new()

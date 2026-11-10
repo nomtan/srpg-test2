@@ -3,9 +3,11 @@ extends Node
 
 var units_progress: Dictionary = {}
 var job_database: JobDatabase
+var skill_unlock_system: SkillUnlockSystem
 
-func setup(database: JobDatabase) -> void:
+func setup(database: JobDatabase, unlock_system: SkillUnlockSystem = null) -> void:
 	job_database = database
+	skill_unlock_system = unlock_system
 
 func is_empty() -> bool:
 	return units_progress.is_empty()
@@ -43,6 +45,8 @@ func apply_progress_to_unit(unit: BattleUnit) -> void:
 	unit.job_exps = _dictionary_copy(saved.get("job_exps", unit.job_exps))
 	unit.learned_skill_ids = _string_array(saved.get("learned_skill_ids", unit.learned_skill_ids))
 	unit.equipped_skill_ids = _string_array(saved.get("equipped_skill_ids", unit.equipped_skill_ids))
+	# Version 1 saves predating passive slots have no field and restore an empty loadout.
+	_restore_passive_skills(unit, saved.get("equipped_passive_skill_ids", []))
 	unit.unlocked_job_ids = _string_array(saved.get("unlocked_job_ids", unit.unlocked_job_ids))
 	unit.equipped_weapon_id = str(saved.get("equipped_weapon_id", unit.equipped_weapon_id))
 	unit.equipped_armor_id = str(saved.get("equipped_armor_id", unit.equipped_armor_id))
@@ -62,6 +66,15 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	units_progress = data.duplicate(true)
+
+func _restore_passive_skills(unit: BattleUnit, entries: Variant) -> void:
+	unit.equipped_passive_skill_ids.clear()
+	if not entries is Array:
+		push_warning("Invalid passive skill loadout for '%s'" % unit.unit_id)
+		return
+	for id: Variant in entries:
+		if not id is String or not skill_unlock_system or not skill_unlock_system.equip_passive_skill(unit, id):
+			push_warning("Ignoring invalid or unavailable passive '%s' for '%s'" % [id, unit.unit_id])
 
 func _apply_job_names(unit: BattleUnit) -> void:
 	var main_job := job_database.get_job(unit.main_job_id) if job_database else null

@@ -24,6 +24,7 @@ func _run() -> void:
 	_compare("equipment", equipment.equipments, builtin_equipment, 17)
 	_check_fallback(jobs.jobs, skills.skills)
 	_check_save_and_battle(jobs, skills, equipment)
+	_check_passive_slots_and_save(jobs, skills)
 	jobs.free()
 	skills.free()
 	equipment.free()
@@ -97,6 +98,45 @@ func _check_save_and_battle(jobs: JobDatabase, skills: SkillDatabase, equipment:
 	var result := system.execute_skill(unit, guard, Vector2i(unit.grid_x, unit.grid_z))
 	_check(result.success and unit.ap == 6 and unit.temporary_defense_bonus == 3, "loaded guard stance preserves combat effects")
 	for node: Node in [system, manager, grid, unit, progress, save]:
+		node.free()
+
+func _check_passive_slots_and_save(jobs: JobDatabase, skills: SkillDatabase) -> void:
+	var unlocks := SkillUnlockSystem.new()
+	unlocks.setup(jobs, skills)
+	var progress := UnitProgressManager.new()
+	progress.setup(jobs, unlocks)
+	var unit := BattleUnit.new()
+	unit.unit_id = "passive_smoke"
+	for id: String in ["test_one", "test_two", "test_three", "test_four", "test_unlearned"]:
+		var skill := GameDataLoader._make_skill({"id": id, "name": id, "type": "passive", "activationMode": "equipped", "effects": [], "triggers": []})
+		_check(skill != null, "parse passive skill " + id)
+		if skill:
+			skills.skills[id] = skill
+	unit.learned_skill_ids.assign(["test_one", "test_two", "test_three", "test_four", "power_slash"])
+	_check(skills.get_passives_for_unit(unit).is_empty(), "learning alone does not activate a passive")
+	_check(not unlocks.equip_passive_skill(unit, "test_unlearned") and not unlocks.equip_passive_skill(unit, "power_slash"), "passive slots reject unlearned and active skills")
+	for id: String in ["test_one", "test_two", "test_three"]:
+		_check(unlocks.equip_passive_skill(unit, id), "equip " + id)
+	_check(not unlocks.equip_passive_skill(unit, "test_one") and not unlocks.equip_passive_skill(unit, "test_four"), "reject duplicate and fourth slot")
+	unit.equipped_skill_ids.assign(["test_one", "power_slash"])
+	var active := skills.get_skills_for_unit(unit)
+	_check(active.size() == 1 and active[0].skill_id == "power_slash", "only active skills reach the battle list")
+	unlocks.unequip_passive_skill(unit, "test_two")
+	_check(skills.get_passives_for_unit(unit).size() == 2, "unequip deactivates passive")
+	progress.update_progress_from_units([unit])
+	var saved := progress.to_dict()
+	unit.equipped_passive_skill_ids.clear()
+	progress.apply_progress_to_unit(unit)
+	_check(unit.equipped_passive_skill_ids == ["test_one", "test_three"], "restore passive loadout from save")
+	saved[unit.unit_id].equipped_passive_skill_ids = ["test_one", "missing", "test_unlearned", "test_one", "power_slash", 9]
+	progress.from_dict(saved)
+	progress.apply_progress_to_unit(unit)
+	_check(unit.equipped_passive_skill_ids == ["test_one"], "discard invalid, unlearned, active and duplicate IDs")
+	saved[unit.unit_id].erase("equipped_passive_skill_ids")
+	progress.from_dict(saved)
+	progress.apply_progress_to_unit(unit)
+	_check(unit.equipped_passive_skill_ids.is_empty(), "old save defaults to empty passive slots")
+	for node: Node in [unit, progress, unlocks]:
 		node.free()
 
 func _check(condition: bool, label: String) -> void:

@@ -32,5 +32,13 @@ func get_skills_for_unit(unit: BattleUnit) -> Array[SkillData]:
 	var result: Array[SkillData] = []
 	for id in unit.equipped_skill_ids:
 		var skill := get_skill(id)
-		if skill: result.append(skill)
+		if skill and skill.skill_type != SkillData.SkillType.PASSIVE: result.append(skill)
+	return result
+
+func get_passives_for_unit(unit: BattleUnit) -> Array[SkillData]:
+	var result: Array[SkillData] = []
+	for id: String in unit.equipped_passive_skill_ids:
+		var skill := get_skill(id)
+		if skill and skill.skill_type == SkillData.SkillType.PASSIVE and not skill in result:
+			result.append(skill)
 	return result
