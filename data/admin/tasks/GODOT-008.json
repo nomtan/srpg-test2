@@ -1,0 +1,14 @@
+{
+  "id": "GODOT-008",
+  "title": "スキルアイコンのGodot UI連携",
+  "status": "todo",
+  "priority": "medium",
+  "area": "godot",
+  "body": "## 目的\n管理画面でスキルごとに登録するアイコンを、Godotのスキル一覧・スロット装備UI・戦闘コマンド等で表示できるようにする。\n\n## データ仕様\n管理画面のスキルJSONには iconPath（例: /skill-icons/power_slash.png）が保存される。実画像は admin/public/skill-icons/{skillId}.png または .webp に保存される。これは管理画面のURLであり、Godotのres://パスではない。\n\n## 実装内容\n1. GODOT-001のJSONローダーと整合するアイコン参照の変換・配置ルールを決める。\n2. ビルド/同期工程で画像をGodotのアセットディレクトリへコピーするか、別の共有アセット配置方式を採用する。実装前に既存アセット構成を確認する。\n3. SkillDataなどにアイコン参照を保持し、スキル一覧・スロット・戦闘UIで読み込む。\n4. 未登録・欠損画像時は共通の代替アイコンを表示し、ゲームを停止させない。\n\n## 完了条件\n管理画面でアイコンを変更すると、所定の同期手順後にGodotのスキルスロット・一覧UIに反映される。画像がなくてもUIが崩れない。\n\n## 注意\nGodot本体はこのタスクの実装指示があるまで変更しない。",
+  "godotFiles": [
+    "scripts/skill/skill_data.gd",
+    "scripts/skill/skill_database.gd"
+  ],
+  "relatedDataIds": [],
+  "description": "## 目的\n管理画面でスキルごとに登録するアイコンを、Godotのスキル一覧・スロット装備UI・戦闘コマンド等で表示できるようにする。\n\n## データ仕様\n管理画面のスキルJSONには iconPath（例: /skill-icons/power_slash.png）が保存される。実画像は admin/public/skill-icons/{skillId}.png または .webp に保存される。これは管理画面のURLであり、Godotのres://パスではない。\n\n## 実装内容\n1. GODOT-001のJSONローダーと整合するアイコン参照の変換・配置ルールを決める。\n2. ビルド/同期工程で画像をGodotのアセットディレクトリへコピーするか、別の共有アセット配置方式を採用する。実装前に既存アセット構成を確認する。\n3. SkillDataなどにアイコン参照を保持し、スキル一覧・スロット・戦闘UIで読み込む。\n4. 未登録・欠損画像時は共通の代替アイコンを表示し、ゲームを停止させない。\n\n## 完了条件\n管理画面でアイコンを変更すると、所定の同期手順後にGodotのスキルスロット・一覧UIに反映される。画像がなくてもUIが崩れない。\n\n## 注意\nGodot本体はこのタスクの実装指示があるまで変更しない。"
+}
