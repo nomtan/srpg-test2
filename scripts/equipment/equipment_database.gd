@@ -4,6 +4,10 @@ extends Node
 var equipments: Dictionary = {}
 
 func _ready() -> void:
+	_register_builtins()
+	GameDataLoader.load_equipment(equipments)
+
+func _register_builtins() -> void:
 	_register(WeaponData.create_weapon("iron_sword", "Iron Sword", WeaponData.WeaponType.SWORD, 5, 0, 0, Vector2i(1, 1), {"str": 1, "dex": 1}, false, "res://assets/weapons/sword/hero_voxel_sword.glb"))
 	_register(WeaponData.create_weapon("iron_axe", "Iron Axe", WeaponData.WeaponType.AXE, 8, -10, 0, Vector2i(1, 1), {"str": 2, "agi": -1}))
 	_register(WeaponData.create_weapon("iron_spear", "Iron Spear", WeaponData.WeaponType.SPEAR, 5, 0, 0, Vector2i(1, 2), {"str": 1, "agi": 1}))

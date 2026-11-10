@@ -238,7 +238,6 @@ func _setup_rules() -> void:
 	skills.setup(combat_grid, manager, attacks, elements, los)
 	skill_db = SkillDatabase.new()
 	add_child(skill_db)
-	skill_db.configure_phase_11_5_scaling()
 	_sync_units()
 
 func _data_unit(id: String, title: String, team: String, cell: Vector2i, health: int, power: int, defense: int, speed: int) -> BattleUnit:

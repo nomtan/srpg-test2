@@ -4,6 +4,10 @@ extends Node
 var skills: Dictionary = {}
 
 func _ready() -> void:
+	_register_builtins()
+	GameDataLoader.load_skills(skills)
+
+func _register_builtins() -> void:
 	_register(SkillData.create("power_slash", "強斬り", SkillData.SkillType.ATTACK, SkillData.TargetType.ENEMY, SkillData.RangeType.MELEE, BattleUnit.ElementType.NONE, 5, 12, -5, 1, 1, 0, false))
 	_register(SkillData.create("earth_break", "アースブレイク", SkillData.SkillType.ATTACK, SkillData.TargetType.ENEMY, SkillData.RangeType.MAGIC, BattleUnit.ElementType.EARTH, 10, 18, -10, 1, 2, 1, false))
 	_register(SkillData.create("aqua_edge", "アクアエッジ", SkillData.SkillType.ATTACK, SkillData.TargetType.ENEMY, SkillData.RangeType.MAGIC, BattleUnit.ElementType.WATER, 8, 14, 0, 1, 2, 0, false))
@@ -12,9 +16,10 @@ func _ready() -> void:
 	_register(SkillData.create("piercing_arrow", "貫通矢", SkillData.SkillType.ATTACK, SkillData.TargetType.ENEMY, SkillData.RangeType.RANGED, BattleUnit.ElementType.WIND, 9, 10, -5, 2, 4))
 	_register(SkillData.create("heavy_attack", "強打", SkillData.SkillType.ATTACK, SkillData.TargetType.ENEMY, SkillData.RangeType.MELEE, BattleUnit.ElementType.NONE, 4, 10, -5, 1, 1, 0, false))
 	_register(SkillData.create("guard_stance", "ガードスタンス", SkillData.SkillType.BUFF, SkillData.TargetType.SELF, SkillData.RangeType.MAGIC, BattleUnit.ElementType.NONE, 6, 0, 0, 0, 0, 0, false))
+	_configure_builtin_scaling()
 
 func _register(skill: SkillData) -> void: skills[skill.skill_id] = skill
-func configure_phase_11_5_scaling() -> void:
+func _configure_builtin_scaling() -> void:
 	_set_scaling("earth_break", SkillData.ScalingType.MAGICAL)
 	_set_scaling("aqua_edge", SkillData.ScalingType.MAGICAL)
 	_set_scaling("healing_water", SkillData.ScalingType.HEALING)

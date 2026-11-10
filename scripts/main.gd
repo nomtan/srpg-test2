@@ -63,6 +63,7 @@ var battle_result := ""
 
 
 func _ready() -> void:
+	GameDataLoader.load_jobs(job_database.jobs, skill_database.skills)
 	grid.generate_grid()
 	world_map.apply_to_grid(grid)
 	unit_manager.setup(grid)
@@ -75,7 +76,6 @@ func _ready() -> void:
 	equipment_system.setup(equipment_database, job_database, status_calculator)
 	weapon_power_calculator.setup(status_calculator)
 	job_unlock_system.setup(job_database)
-	skill_database.configure_phase_11_5_scaling()
 	for unit: BattleUnit in unit_manager.units:
 		if unit.team == "player": job_unlock_system.unlock_available_jobs(unit)
 		equipment_system.refresh_weapon_visual(unit)
