@@ -1,0 +1,12 @@
+{
+  "id": "ADMIN-003",
+  "title": "タスク管理画面の拡張",
+  "status": "todo",
+  "priority": "medium",
+  "area": "admin",
+  "description": "現在のJSON編集から、担当・優先度・ステータス・Godotファイル・関連データのフォーム編集とフィルターへ拡張。",
+  "godotFiles": [
+    "admin/src/"
+  ],
+  "relatedDataIds": []
+}
