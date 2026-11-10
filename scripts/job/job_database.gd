@@ -24,19 +24,31 @@ func _ready() -> void:
 	_add("ninja", "忍者", JobData.JobRank.ADVANCED, {"str": 3, "dex": 6, "vit": -1, "mnd": 1, "int": 1, "agi": 8}, {"dual_blader": 5})
 	_add("priest", "プリースト", JobData.JobRank.ADVANCED, {"str": 0, "dex": 1, "vit": 0, "mnd": 8, "int": 3, "agi": 0}, {"healer": 5})
 	_add("sorcerer", "ソーサラー", JobData.JobRank.ADVANCED, {"str": -2, "dex": 1, "vit": -1, "mnd": 4, "int": 9, "agi": 0}, {"mage": 5})
-	# Master jobs (data registration only in this phase)
-	_add("sword_saint", "剣聖", JobData.JobRank.MASTER, {"str": 10, "dex": 7, "vit": 8, "mnd": 3, "int": 0, "agi": 5}, {"holy_knight": 5, "heavy_knight": 5})
-	_add("paladin", "パラディン", JobData.JobRank.MASTER, {"str": 5, "dex": 3, "vit": 8, "mnd": 10, "int": 4, "agi": 1}, {"holy_knight": 5, "priest": 5})
-	_add("magic_swordsman", "魔法剣士", JobData.JobRank.MASTER, {"str": 7, "dex": 4, "vit": 5, "mnd": 6, "int": 7, "agi": 4}, {"holy_knight": 5, "sorcerer": 5}, [{"job_level": 1, "skill_id": "aqua_edge"}, {"job_level": 3, "skill_id": "healing_water"}])
-	_add("fortress_knight", "フォートレスナイト", JobData.JobRank.MASTER, {"str": 7, "dex": 3, "vit": 11, "mnd": 4, "int": 0, "agi": 3}, {"heavy_knight": 5, "holy_knight": 5})
-	_add("spear_saint", "槍聖", JobData.JobRank.MASTER, {"str": 7, "dex": 9, "vit": 5, "mnd": 3, "int": 0, "agi": 10}, {"dragoon": 5, "sniper": 5})
-	_add("gunslinger", "ガンスリンガー", JobData.JobRank.MASTER, {"str": 1, "dex": 11, "vit": 3, "mnd": 3, "int": 6, "agi": 7}, {"sniper": 5, "sorcerer": 5})
-	_add("war_god", "武神", JobData.JobRank.MASTER, {"str": 11, "dex": 6, "vit": 10, "mnd": 3, "int": 0, "agi": 4}, {"monk": 5, "heavy_knight": 5})
-	_add("fist_saint", "拳聖", JobData.JobRank.MASTER, {"str": 8, "dex": 9, "vit": 5, "mnd": 3, "int": 0, "agi": 11}, {"monk": 5, "ninja": 5})
-	_add("assassin", "アサシン", JobData.JobRank.MASTER, {"str": 4, "dex": 10, "vit": -1, "mnd": 0, "int": 3, "agi": 11}, {"ninja": 5, "sniper": 5})
-	_add("alchemist", "アルケミスト", JobData.JobRank.MASTER, {"str": 0, "dex": 7, "vit": 4, "mnd": 7, "int": 7, "agi": 4}, {"priest": 5, "sorcerer": 5})
-	_add("scholar", "学者", JobData.JobRank.MASTER, {"str": -1, "dex": 3, "vit": 3, "mnd": 11, "int": 11, "agi": 0}, {"priest": 5, "sorcerer": 5})
-	_add("necromancer", "ネクロマンサー", JobData.JobRank.MASTER, {"str": -2, "dex": 6, "vit": -1, "mnd": 7, "int": 11, "agi": 7}, {"sorcerer": 5, "ninja": 5})
+	# Legacy records stay selectable for saves. New unlocks await confirmed requirements.
+	_add("sword_saint", "剣聖", JobData.JobRank.MASTER, {"str": 10, "dex": 7, "vit": 8, "mnd": 3, "int": 0, "agi": 5})
+	jobs["sword_saint"].unlock_pending = true
+	_add("paladin", "パラディン", JobData.JobRank.MASTER, {"str": 5, "dex": 3, "vit": 8, "mnd": 10, "int": 4, "agi": 1})
+	jobs["paladin"].unlock_pending = true
+	_add("magic_swordsman", "魔法剣士", JobData.JobRank.ADVANCED, {"str": 7, "dex": 4, "vit": 5, "mnd": 6, "int": 7, "agi": 4}, {}, [{"job_level": 1, "skill_id": "aqua_edge"}, {"job_level": 3, "skill_id": "healing_water"}])
+	jobs["magic_swordsman"].unlock_pending = true
+	_add("fortress_knight", "フォートレスナイト", JobData.JobRank.MASTER, {"str": 7, "dex": 3, "vit": 11, "mnd": 4, "int": 0, "agi": 3})
+	jobs["fortress_knight"].unlock_pending = true
+	_add("spear_saint", "槍聖", JobData.JobRank.MASTER, {"str": 7, "dex": 9, "vit": 5, "mnd": 3, "int": 0, "agi": 10})
+	jobs["spear_saint"].unlock_pending = true
+	_add("gunslinger", "ガンスリンガー", JobData.JobRank.MASTER, {"str": 1, "dex": 11, "vit": 3, "mnd": 3, "int": 6, "agi": 7})
+	jobs["gunslinger"].unlock_pending = true
+	_add("war_god", "武神", JobData.JobRank.MASTER, {"str": 11, "dex": 6, "vit": 10, "mnd": 3, "int": 0, "agi": 4})
+	jobs["war_god"].unlock_pending = true
+	_add("fist_saint", "拳聖", JobData.JobRank.MASTER, {"str": 8, "dex": 9, "vit": 5, "mnd": 3, "int": 0, "agi": 11})
+	jobs["fist_saint"].unlock_pending = true
+	_add("assassin", "アサシン", JobData.JobRank.MASTER, {"str": 4, "dex": 10, "vit": -1, "mnd": 0, "int": 3, "agi": 11})
+	jobs["assassin"].unlock_pending = true
+	_add("alchemist", "アルケミスト", JobData.JobRank.MASTER, {"str": 0, "dex": 7, "vit": 4, "mnd": 7, "int": 7, "agi": 4})
+	jobs["alchemist"].unlock_pending = true
+	_add("scholar", "学者", JobData.JobRank.MASTER, {"str": -1, "dex": 3, "vit": 3, "mnd": 11, "int": 11, "agi": 0})
+	jobs["scholar"].unlock_pending = true
+	_add("necromancer", "ネクロマンサー", JobData.JobRank.MASTER, {"str": -2, "dex": 6, "vit": -1, "mnd": 7, "int": 11, "agi": 7})
+	jobs["necromancer"].unlock_pending = true
 	# Enemy-only compatibility jobs.
 	_add("bandit", "Bandit", JobData.JobRank.BASIC, {"str": 4, "dex": 1, "vit": 2, "mnd": 0, "int": 0, "agi": 2}, {}, [{"job_level": 1, "skill_id": "heavy_attack"}], false)
 	_add("enemy_archer", "Enemy Archer", JobData.JobRank.BASIC, {"str": 2, "dex": 4, "vit": 0, "mnd": 0, "int": 0, "agi": 2}, {}, [{"job_level": 1, "skill_id": "aimed_shot"}], false)

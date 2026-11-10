@@ -1,7 +1,8 @@
 {
   "id": "GODOT-001",
   "title": "JSONマスターデータローダー",
-  "status": "todo",
+  "status": "done",
+  "implementationResult": "31ジョブ・8スキル・17装備の読み込みと内蔵定義との同値性、不正データのフォールバックをヘッドレスで確認。",
   "priority": "high",
   "area": "godot",
   "description": "## 目的\n管理画面で編集する data/admin/{jobs,skills,equipment}/*.json をGodot側で読み込めるようにする。管理画面とゲーム本体の開発は分離し、本タスク実施まではGodotコードを変更しない。\n\n## 実装内容\n1. 既存の scripts/job/job_database.gd、scripts/skill/skill_database.gd、scripts/equipment/equipment_database.gd と関連Resourceを調査する。\n2. JSONのID、列挙値、数値、配列、参照先を検証するローダーを作成する。欠損・不正レコードではクラッシュさせず警告を出す。\n3. 現行のハードコード定義を安全なフォールバックとして維持し、読み込み順と優先順位を明確にする。\n4. 既存データとJSONの値が一致するか比較する。移行時に既存セーブ・戦闘の挙動を変えない。\n\n## 完了条件\n既存31ジョブ・8スキル・17装備が正常に読み込める。不正JSON時にもゲーム起動でき、参照切れを検出できる。Godot起動テストと既存機能の回帰テストが通る。\n\n## 依存・注意\n管理画面のJSONは現時点で編集用スナップショット。新しいパッシブ定義はGODOT-002以降で対応する。",

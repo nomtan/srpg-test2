@@ -16,6 +16,7 @@ var base_move_range := 4
 var base_jump_height := 1
 var speed_modifier := 1.0
 var player_selectable := true
+var unlock_pending := false
 var allowed_weapon_types: Array[int] = []
 ## Optional shared job-body visual; identity belongs to the character's appearance.
 var body_scene_path: String = ""

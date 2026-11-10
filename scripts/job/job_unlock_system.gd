@@ -8,8 +8,15 @@ func setup(database: JobDatabase) -> void:
 
 func can_unlock_job(unit: BattleUnit, job_id: String) -> bool:
 	var job := job_database.get_job(job_id)
-	if not job or not job.player_selectable: return false
+	if not job or not job.player_selectable or job.unlock_pending: return false
+	if job.job_rank == JobData.JobRank.MASTER:
+		if job.required_jobs.size() != 1: return false
+		var prerequisite := job_database.get_job(job.required_jobs[0])
+		if not prerequisite or prerequisite.job_rank != JobData.JobRank.ADVANCED: return false
 	for required_job_id: String in job.required_jobs:
+		var owns_job := required_job_id in unit.unlocked_job_ids or unit.job_levels.has(required_job_id) \
+			or required_job_id in [unit.main_job_id, unit.sub_job_id]
+		if not owns_job: return false
 		if unit.get_job_level_for(required_job_id) < int(job.required_job_levels.get(required_job_id, 1)):
 			return false
 	return true

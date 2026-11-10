@@ -22,10 +22,8 @@
   "baseMoveRange": 4,
   "baseJumpHeight": 1,
   "speedModifier": 1,
-  "requiredJobLevels": {
-    "sniper": 5,
-    "sorcerer": 5
-  },
+  "requiredJobLevels": {},
+  "unlockPending": true,
   "learnableSkills": [],
   "playerSelectable": true,
   "allowedWeaponTypes": [

@@ -1,7 +1,8 @@
 {
   "id": "GODOT-006",
   "title": "セーブデータのパッシブ装備枠対応",
-  "status": "todo",
+  "status": "done",
+  "implementationResult": "パッシブ装備の保存と復元、旧セーブの読み込み、不正IDの除外を検証。",
   "priority": "high",
   "area": "godot",
   "description": "## 目的\nパッシブ装備スロットを既存セーブデータと互換性を保ちながら保存・復元する。\n\n## 実装内容\n1. scripts/save/unit_progress_manager.gd、UnitProgressData、SaveManagerの保存形式とバージョンを確認する。\n2. equipped_passive_skill_ids をシリアライズ・デシリアライズ対象に追加する。\n3. 旧セーブで項目が存在しない場合は空配列を採用し、読み込み失敗を起こさない。\n4. 復元時に未習得ID、削除済みスキル、重複ID、スロット上限超過を検証・正規化する。\n5. 保存→再起動→復元の一連のテストを行う。\n\n## 完了条件\n旧セーブがロード可能。新セーブでパッシブ装備状態が復元される。アクティブスキル・ジョブ・装備の既存保存項目が変わらない。",

@@ -17,7 +17,7 @@ const WEAPON_NUMBERS := {
 }
 
 static func load_skills(skills: Dictionary, root: String = ROOT) -> void:
-	var records := _read_records(root.path_join("skills"))
+	var records := _read_records(root.path_join("skills"), skills)
 	for id: String in records:
 		var skill := _make_skill(records[id])
 		if skill == null:
@@ -34,7 +34,7 @@ static func _skill_icon_path(value: Variant) -> String:
 
 static func load_jobs(jobs: Dictionary, skills: Dictionary, root: String = ROOT) -> void:
 	var candidates := {}
-	var records := _read_records(root.path_join("jobs"))
+	var records := _read_records(root.path_join("jobs"), jobs)
 	for id: String in records:
 		var job := _make_job(records[id])
 		if job == null:
@@ -63,7 +63,7 @@ static func load_jobs(jobs: Dictionary, skills: Dictionary, root: String = ROOT)
 	jobs.merge(candidates, true)
 
 static func load_equipment(equipment: Dictionary, root: String = ROOT) -> void:
-	var records := _read_records(root.path_join("equipment"))
+	var records := _read_records(root.path_join("equipment"), equipment)
 	for id: String in records:
 		var item := _make_equipment(records[id], equipment.get(id) as WeaponData)
 		if item == null:
@@ -71,11 +71,16 @@ static func load_equipment(equipment: Dictionary, root: String = ROOT) -> void:
 			continue
 		equipment[id] = item
 
-static func _read_records(directory: String) -> Dictionary:
+static func _read_records(directory: String, builtins: Dictionary) -> Dictionary:
 	var records := {}
 	var files := DirAccess.get_files_at(directory)
 	var seen_ids := {}
 	var category := directory.get_file()
+	var missing: PackedStringArray = []
+	for id: String in builtins:
+		if not (id + ".json") in files: missing.append(id)
+	if not missing.is_empty():
+		_warn(category, "missing files", ", ".join(missing))
 	var id_pattern := RegEx.create_from_string("^[a-zA-Z0-9_-]+$")
 	for file: String in files:
 		if file.get_extension() != "json":
@@ -114,6 +119,8 @@ static func _make_job(row: Dictionary) -> JobData:
 		return null
 	if not row.get("playerSelectable") is bool or not _resource_path(row.get("bodyScenePath")):
 		return null
+	if not row.get("unlockPending", false) is bool:
+		return null
 	if not row.get("requiredJobLevels") is Dictionary or not row.get("learnableSkills") is Array or not row.get("allowedWeaponTypes") is Array:
 		return null
 	var requirements := {}
@@ -143,6 +150,7 @@ static func _make_job(row: Dictionary) -> JobData:
 	var growth := _int_values(row.growth, JOB_GROWTH)
 	var job := JobData.create(row.id, row.name, growth, skills, JobData.JobRank[row.rank], bonuses, requirements)
 	job.player_selectable = row.playerSelectable
+	job.unlock_pending = row.get("unlockPending", false)
 	job.body_scene_path = row.bodyScenePath
 	job.allowed_weapon_types = weapons
 	return job

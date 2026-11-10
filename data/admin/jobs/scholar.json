@@ -22,10 +22,8 @@
   "baseMoveRange": 4,
   "baseJumpHeight": 1,
   "speedModifier": 1,
-  "requiredJobLevels": {
-    "priest": 5,
-    "sorcerer": 5
-  },
+  "requiredJobLevels": {},
+  "unlockPending": true,
   "learnableSkills": [],
   "playerSelectable": true,
   "allowedWeaponTypes": [

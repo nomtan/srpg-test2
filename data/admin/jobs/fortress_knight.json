@@ -22,10 +22,8 @@
   "baseMoveRange": 4,
   "baseJumpHeight": 1,
   "speedModifier": 1,
-  "requiredJobLevels": {
-    "heavy_knight": 5,
-    "holy_knight": 5
-  },
+  "requiredJobLevels": {},
+  "unlockPending": true,
   "learnableSkills": [],
   "playerSelectable": true,
   "allowedWeaponTypes": [

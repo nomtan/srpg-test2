@@ -28,6 +28,7 @@ func _run() -> void:
 	await _check_reactions(skills)
 	_check_stat_modifiers(jobs, skills, equipment)
 	_check_skill_icons()
+	_check_job_unlocks(jobs)
 	jobs.free()
 	skills.free()
 	equipment.free()
@@ -196,8 +197,23 @@ func _check_reactions(skills: SkillDatabase) -> void:
 	system.setup(grid, manager, attacks, elements, null)
 	var skill_result := system.execute_skill(attacker, skills.get_skill("power_slash"), Vector2i(11, 10))
 	_check(skill_result.success and events.size() == 1 and events[0].origin == AttackContext.Origin.ACTIVE, "attack skill publishes an active attack event")
-	defender.take_damage(defender.hp)
 	defender.equipped_passive_skill_ids.append("test_counter")
+	grid.move_occupied_unit(Vector2i(11, 10), Vector2i(14, 10), defender)
+	defender.grid_x = 14
+	_seed_chance(true)
+	var out_of_range := attacks.notify_attacked(attacker, defender, false, 0, AttackContext.Origin.ACTIVE)
+	_check(out_of_range.reaction_messages.size() == 1 and "out of range" in out_of_range.reaction_messages[0], "out-of-range counters do not execute")
+	grid.move_occupied_unit(Vector2i(14, 10), Vector2i(11, 10), defender)
+	defender.grid_x = 11
+	attacker.hp = 1
+	for value in range(1000):
+		seed(value)
+		if randf() < 0.5 and randi_range(1, 100) <= 5:
+			seed(value)
+			break
+	attacks.notify_attacked(attacker, defender, false, 0, AttackContext.Origin.ACTIVE)
+	_check(not attacker.is_alive() and manager.unit_at(Vector2i(10, 10)) == null, "lethal counter clears the defeated attacker's tile")
+	defender.take_damage(defender.hp)
 	events.clear()
 	attacks.notify_attacked(attacker, defender, true, 999, AttackContext.Origin.ACTIVE)
 	_check(events.size() == 1, "dead defenders cannot react")
@@ -265,6 +281,37 @@ func _check_skill_icons() -> void:
 	var texture := skill.get_icon()
 	_check(texture != null and texture != fallback and texture.get_width() == 12, "uploaded image can load before importing")
 	DirAccess.remove_absolute(path)
+
+func _check_job_unlocks(jobs: JobDatabase) -> void:
+	var unlocks := JobUnlockSystem.new()
+	unlocks.setup(jobs)
+	var progress := UnitProgressManager.new()
+	progress.setup(jobs)
+	var unit := BattleUnit.new()
+	unit.unit_id = "legacy_job_smoke"
+	progress.from_dict({unit.unit_id: {"main_job_id": "paladin", "job_levels": {"paladin": 4, "holy_knight": 5, "priest": 5}, "unlocked_job_ids": ["paladin"]}})
+	progress.apply_progress_to_unit(unit)
+	_check(unit.main_job_id == "paladin" and unit.get_job_level_for("paladin") == 4 and "paladin" in unlocks.get_selectable_jobs(unit),
+		"previously unlocked pending jobs and levels remain usable")
+	_check(not unlocks.can_unlock_job(unit, "paladin") and not unlocks.can_unlock_job(unit, "magic_swordsman"), "pending definitions are not newly unlocked")
+	_check(jobs.get_job("magic_swordsman").job_rank == JobData.JobRank.ADVANCED, "magic swordsman uses the advanced rank")
+	for job: JobData in jobs.jobs.values():
+		if job.job_rank == JobData.JobRank.MASTER:
+			_check(job.required_jobs.size() <= 1, "no built-in master has two prerequisites: " + job.job_id)
+	var candidate := JobData.create("test_master", "Master", {}, [], JobData.JobRank.MASTER, {}, {"holy_knight": 5})
+	jobs.jobs[candidate.job_id] = candidate
+	_check(unlocks.can_unlock_job(unit, candidate.job_id), "configured master can unlock from one advanced job")
+	unit.set_job_level_for("holy_knight", 4)
+	_check(not unlocks.can_unlock_job(unit, candidate.job_id), "the prerequisite level is enforced")
+	unit.set_job_level_for("holy_knight", 5)
+	candidate.required_jobs.append("priest")
+	_check(not unlocks.can_unlock_job(unit, candidate.job_id), "two prerequisite masters cannot unlock")
+	candidate.required_jobs.assign(["ninja"])
+	candidate.required_job_levels = {"ninja": 1}
+	_check(not unlocks.can_unlock_job(unit, candidate.job_id), "unowned prerequisite does not count as level one")
+	jobs.jobs.erase(candidate.job_id)
+	for node: Node in [unit, progress, unlocks]:
+		node.free()
 
 func _check(condition: bool, label: String) -> void:
 	if not condition:

@@ -22,10 +22,8 @@
   "baseMoveRange": 4,
   "baseJumpHeight": 1,
   "speedModifier": 1,
-  "requiredJobLevels": {
-    "holy_knight": 5,
-    "priest": 5
-  },
+  "requiredJobLevels": {},
+  "unlockPending": true,
   "learnableSkills": [],
   "playerSelectable": true,
   "allowedWeaponTypes": [

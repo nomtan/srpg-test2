@@ -22,10 +22,8 @@
   "baseMoveRange": 4,
   "baseJumpHeight": 1,
   "speedModifier": 1,
-  "requiredJobLevels": {
-    "ninja": 5,
-    "sniper": 5
-  },
+  "requiredJobLevels": {},
+  "unlockPending": true,
   "learnableSkills": [],
   "playerSelectable": true,
   "allowedWeaponTypes": [
