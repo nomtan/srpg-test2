@@ -1,0 +1,22 @@
+{
+  "id": "iron_spear",
+  "name": "Iron Spear",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "str": 1,
+    "agi": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 0,
+  "minRange": 1,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1
+}
