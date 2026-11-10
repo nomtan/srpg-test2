@@ -4,7 +4,7 @@
   "status": "in_progress",
   "priority": "high",
   "area": "admin",
-  "description": "既存Godotコードにハードコードされたジョブ・スキル・装備・キャラをJSONへ移行。ID重複、参照先、スキーマを検証。 現状: ジョブ31件、スキル8件、装備17件のJSONスナップショットとGodot読み込みを追加済み。実行テスト・データ同値性検証は未完了。",
+  "description": "ジョブ31件・スキル8件・装備17件の管理画面用JSONスナップショットは作成済み。スキーマ検証・参照整合性・実行テストは未完了。Godotへの反映はGODOT-001に分離する。",
   "godotFiles": [
     "data/admin/"
   ],
