@@ -1,0 +1,14 @@
+{
+  "id": "accuracy_lens",
+  "name": "Accuracy Lens",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "dex": 2
+  },
+  "buildBonus": {
+    "accuracy": 5
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory"
+}
