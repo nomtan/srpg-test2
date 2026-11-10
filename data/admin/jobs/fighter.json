@@ -1,0 +1,32 @@
+{
+  "id": "fighter",
+  "name": "格闘士",
+  "rank": "BASIC",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 4,
+    "dex": 2,
+    "vit": 3,
+    "mnd": 0,
+    "int": 0,
+    "agi": 2
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {},
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    9
+  ],
+  "bodyScenePath": ""
+}
