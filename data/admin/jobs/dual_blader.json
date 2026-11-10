@@ -1,0 +1,33 @@
+{
+  "id": "dual_blader",
+  "name": "双剣士",
+  "rank": "BASIC",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 2,
+    "dex": 4,
+    "vit": -2,
+    "mnd": 0,
+    "int": 0,
+    "agi": 6
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {},
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    5,
+    6
+  ],
+  "bodyScenePath": ""
+}
