@@ -1,0 +1,14 @@
+{
+  "id": "speed_boots",
+  "name": "Speed Boots",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "agi": 2
+  },
+  "buildBonus": {
+    "move_range": 1
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory"
+}
