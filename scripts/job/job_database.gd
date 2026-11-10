@@ -42,6 +42,8 @@ func _ready() -> void:
 	_add("enemy_archer", "Enemy Archer", JobData.JobRank.BASIC, {"str": 2, "dex": 4, "vit": 0, "mnd": 0, "int": 0, "agi": 2}, {}, [{"job_level": 1, "skill_id": "aimed_shot"}], false)
 	_configure_weapon_types()
 
+	AdminMasterLoader.apply_jobs(self)
+
 func _add(id: String, display_name: String, rank: JobData.JobRank, bonuses: Dictionary, requirements: Dictionary = {}, skills: Array[Dictionary] = [], selectable: bool = true) -> void:
 	var growth := {"max_hp": 5, "max_ap": 1, "attack_power": 1, "defense": 1, "accuracy": 1, "evasion": 1}
 	var job := JobData.create(id, display_name, growth, skills, rank, bonuses, requirements)
