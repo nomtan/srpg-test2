@@ -8,5 +8,27 @@
   "godotFiles": [
     "scripts/status/status_calculator.gd"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "装備中パッシブによるステータス補正を戦闘計算に反映する。",
+  "context": "scripts/status/status_calculator.gd のパッシブ補正は現状プレースホルダー。",
+  "implementation": [
+    "パッシブ装備スロットを参照して有効な補正のみ集計する。",
+    "固定値/割合値の加算順序を既存ジョブ・装備・バフ計算と整合させる。",
+    "HP・AP・命中・回避・属性耐性等の適用対象を整理する。",
+    "装備変更時の再計算と解除後の補正消失を保証する。"
+  ],
+  "acceptanceCriteria": [
+    "未装備/未習得パッシブは補正されない。",
+    "装備/解除で数値が期待通り増減する。",
+    "既存のジョブ/装備補正が変わらない。"
+  ],
+  "dependencies": [
+    "GODOT-002"
+  ],
+  "openQuestions": [
+    "補正の丸め・乗算順序は既存計算を確認して決定する。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
