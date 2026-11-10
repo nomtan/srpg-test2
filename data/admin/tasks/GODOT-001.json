@@ -8,5 +8,26 @@
   "godotFiles": [
     "scripts/data/game_data_loader.gd"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "管理画面が保存するJSONをGodot実行時に読み込み、現行のマスターデータ参照APIを壊さず段階移行する。",
+  "context": "現在はJobDatabase/SkillDatabase/EquipmentDatabaseが_ready()内でハードコード登録する。data/admin/jobs(31件),skills(8件),equipment(17件)は編集用スナップショットでありGodot未接続。",
+  "implementation": [
+    "既存の各Databaseと対応するData Resourceのプロパティ、初期化順序を先に調査する。",
+    "res://data/admin/{jobs,skills,equipment}/*.jsonを列挙しID・型・列挙値・参照整合性を検証するローダーを作成する。",
+    "従来のget_job/get_skill/get_equipmentなど公開APIを維持し、移行期間は不正・欠損レコードでゲームが停止しないフォールバックを設ける。",
+    "JSONとハードコードの初期値差分を比較し、意図しないゲームバランス変更を防ぐ。"
+  ],
+  "acceptanceCriteria": [
+    "Godotで起動・マスターデータ参照できる。",
+    "現行31ジョブ・8スキル・17装備の主要値が移行前と一致する。",
+    "不正JSON・重複ID・参照先欠損をログに出し安全に処理する。",
+    "既存セーブ/戦闘のスモークテストが通る。"
+  ],
+  "dependencies": [],
+  "openQuestions": [
+    "JSONを唯一の正本とする切替時期を確定する。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
