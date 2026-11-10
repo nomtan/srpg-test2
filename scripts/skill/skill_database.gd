@@ -13,8 +13,6 @@ func _ready() -> void:
 	_register(SkillData.create("heavy_attack", "強打", SkillData.SkillType.ATTACK, SkillData.TargetType.ENEMY, SkillData.RangeType.MELEE, BattleUnit.ElementType.NONE, 4, 10, -5, 1, 1, 0, false))
 	_register(SkillData.create("guard_stance", "ガードスタンス", SkillData.SkillType.BUFF, SkillData.TargetType.SELF, SkillData.RangeType.MAGIC, BattleUnit.ElementType.NONE, 6, 0, 0, 0, 0, 0, false))
 
-	AdminMasterLoader.apply_skills(self)
-
 func _register(skill: SkillData) -> void: skills[skill.skill_id] = skill
 func configure_phase_11_5_scaling() -> void:
 	_set_scaling("earth_break", SkillData.ScalingType.MAGICAL)
