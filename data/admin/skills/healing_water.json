@@ -1,0 +1,17 @@
+{
+  "id": "healing_water",
+  "name": "癒しの水",
+  "type": "heal",
+  "targetType": "ALLY",
+  "rangeType": "MAGIC",
+  "element": "WATER",
+  "apCost": 8,
+  "power": 25,
+  "accuracyModifier": 0,
+  "minRange": 1,
+  "maxRange": 3,
+  "areaRadius": 0,
+  "requiresLineOfSight": false,
+  "scalingType": "HEALING",
+  "criticalModifier": 0
+}
