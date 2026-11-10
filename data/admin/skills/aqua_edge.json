@@ -1,0 +1,17 @@
+{
+  "id": "aqua_edge",
+  "name": "アクアエッジ",
+  "type": "attack",
+  "targetType": "ENEMY",
+  "rangeType": "MAGIC",
+  "element": "WATER",
+  "apCost": 8,
+  "power": 14,
+  "accuracyModifier": 0,
+  "minRange": 1,
+  "maxRange": 2,
+  "areaRadius": 0,
+  "requiresLineOfSight": false,
+  "scalingType": "MAGICAL",
+  "criticalModifier": 0
+}
