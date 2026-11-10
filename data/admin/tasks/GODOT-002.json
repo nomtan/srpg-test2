@@ -1,0 +1,12 @@
+{
+  "id": "GODOT-002",
+  "title": "パッシブスキル定義と装備スロット",
+  "status": "todo",
+  "priority": "high",
+  "area": "godot",
+  "description": "PASSIVEを追加。パッシブは習得だけでは発動せず専用スロットにセットした場合のみ有効。スロット数は暫定3。",
+  "godotFiles": [
+    "scripts/skill/skill_data.gd"
+  ],
+  "relatedDataIds": []
+}
