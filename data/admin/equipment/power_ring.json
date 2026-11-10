@@ -1,0 +1,12 @@
+{
+  "id": "power_ring",
+  "name": "Power Ring",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "str": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory"
+}
