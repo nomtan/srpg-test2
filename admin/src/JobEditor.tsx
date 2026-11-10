@@ -71,6 +71,7 @@ export default function JobEditor({ value, jobs, skills, onChange }: {
 
     <fieldset>
       <legend>転職条件</legend>
+      <label className="inline-check"><input type="checkbox" checked={value.unlockPending === true} onChange={e => patch('unlockPending', e.target.checked)} />新規解放を保留</label>
       {Object.entries(requirements).map(([id, level]) => <div className="job-entry" key={id}>
         <span>{jobOptions.get(id) ?? id}</span>
         <NumberField label="必要レベル" value={level} min={1} onChange={next => patch('requiredJobLevels', { ...requirements, [id]: next })} />

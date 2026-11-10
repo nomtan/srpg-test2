@@ -50,6 +50,7 @@ export function validateJob(job: Record<string, unknown>): string | undefined {
     return '速度倍率は0より大きい数で入力してください';
   }
   if (typeof job.playerSelectable !== 'boolean' || typeof job.bodyScenePath !== 'string') return '選択可否または外見パスが不正です';
+  if (job.unlockPending !== undefined && typeof job.unlockPending !== 'boolean') return '転職条件の確定待ち設定が不正です';
 
   const requirements = objectFields(job.requiredJobLevels);
   if (requirements !== job.requiredJobLevels || Object.entries(requirements).some(([id, level]) => !isId(id) || id === job.id || !isInteger(level, 1))) {

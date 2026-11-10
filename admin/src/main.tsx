@@ -88,6 +88,7 @@ function App() {
     setError('');
   }
   async function save() {
+    const version = requestVersion.current;
     try {
       const value = JSON.parse(draft) as RecordData;
       if (!value || Array.isArray(value) || value.id !== selected) throw new Error('IDは変更できません');
@@ -103,21 +104,27 @@ function App() {
       if (category === 'skills') { const validationError = validateSkill(value); if (validationError) throw new Error(validationError); }
       if (category === 'jobs') { const validationError = validateJob(value); if (validationError) throw new Error(validationError); }
       await request(category, selected, 'PUT', value);
+      if (version !== requestVersion.current) return;
       setNotice('保存しました（ローカルJSONに反映）');
       await refresh();
-    } catch (e) { setError(String(e)); }
+    } catch (e) { if (version === requestVersion.current) setError(String(e)); }
   }
   async function remove() {
     if (!selected || !rows.some(r => r.id === selected)) return;
     if (!confirm(selected + ' を削除しますか？')) return;
-    try { await request(category, selected, 'DELETE'); setSelected(''); setDraft(''); await refresh(); } catch (e) { setError(String(e)); }
+    const version = requestVersion.current;
+    try {
+      await request(category, selected, 'DELETE');
+      if (version !== requestVersion.current) return;
+      setSelected(''); setDraft(''); await refresh();
+    } catch (e) { if (version === requestVersion.current) setError(String(e)); }
   }
   return <div className="layout">
     <aside><h1>SRPG <span>ADMIN</span></h1><p className="sub">Local Data Studio · Phase 1</p>
       <nav>{categories.map(cat => <button key={cat} className={cat === category ? 'active' : ''} onClick={() => setCategory(cat)}>{labels[cat]}</button>)}</nav>
       <small>Git操作は行いません。変更はリポジトリ内のJSONファイルに保存されます。</small>
     </aside>
-    <main><header><div><p className="eyebrow">PROJECT / SRPG-TEST2</p><h2>{labels[category]}</h2></div><button className="primary" onClick={add}>＋ 新規作成</button></header>
+    <main><header><div><p className="eyebrow">PROJECT / SRPG-TEST2</p><h2>{labels[category]}</h2></div><button className="primary" onClick={add} disabled={loading}>＋ 新規作成</button></header>
       {category === 'tasks' && <div className="stats">{statuses.map(s => <button key={s} className={filter === s ? 'chosen' : ''} onClick={() => setFilter(filter === s ? 'all' : s)}><strong>{counts[s] || 0}</strong><span>{statusLabels[s]}</span></button>)}</div>}
       <div className="filters"><input aria-label="検索" placeholder="ID・タイトル・本文を検索" value={search} onChange={e => setSearch(e.target.value)} />{category === 'tasks' && <><select aria-label="優先度フィルター" value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}><option value="all">すべての優先度</option>{['critical','high','medium','low'].map(v => <option key={v} value={v}>{v}</option>)}</select><select aria-label="分類フィルター" value={areaFilter} onChange={e => setAreaFilter(e.target.value)}><option value="all">すべての分類</option>{['godot','admin','design','other'].map(v => <option key={v} value={v}>{v}</option>)}</select></>}</div>
       <section className="workspace"><div className="records"><div className="section-head">レコード <span>{visible.length}件</span></div>{loading && <p>読み込み中...</p>}{visible.map(r => <button className={selected === r.id ? 'record selected' : 'record'} key={r.id} onClick={() => open(r)}><b>{r.title || r.name || r.id}</b><small>{r.id}</small>{category === 'tasks' && <em>{statusLabels[String(r.status)] || r.status}</em>}</button>)}{!loading && visible.length === 0 && <p className="empty">レコードがありません</p>}</div>
