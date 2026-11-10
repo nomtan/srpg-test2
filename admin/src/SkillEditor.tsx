@@ -10,7 +10,7 @@ const inputNumber = (v: unknown, fallback = 0) => Number.isFinite(Number(v)) ? N
 
 export function validateSkill(value: Json): string | null {
   if (!String(value.name || '').trim()) return 'スキル名が必要です';
-  if (typeof value.iconPath !== 'string' || !/^\\/skill-icons\\/[a-zA-Z0-9_-]+\\.(png|webp)$/.test(value.iconPath)) return 'スキルアイコン（PNG/WebP）を登録してください';
+  if (typeof value.iconPath !== 'string' || !/^\/skill-icons\/[a-zA-Z0-9_-]+\.(png|webp)$/.test(value.iconPath)) return 'スキルアイコン（PNG/WebP）を登録してください';
   if (!TYPES.includes(String(value.type))) return 'スキル種別が不正です';
   if (value.type === 'passive') {
     if (value.activationMode !== 'equipped') return 'パッシブは装備時発動を指定してください';

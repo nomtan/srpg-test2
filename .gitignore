@@ -2,3 +2,4 @@
 .godot/
 /android/
 artifacts/
+node_modules

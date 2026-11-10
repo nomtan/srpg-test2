@@ -12,13 +12,13 @@ function localDataApi(): Plugin {
     configureServer(server) {
       server.middlewares.use('/api/skill-icons', async (req, res) => {
         const send = (status: number, data: unknown) => { res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
-        const id = decodeURIComponent((req.url || '').split('?')[0].replace(/^\\//, ''));
+        const id = decodeURIComponent((req.url || '').split('?')[0].replace(/^\//, ''));
         if (!/^[a-zA-Z0-9_-]+$/.test(id) || req.method !== 'PUT') return send(400, { error: 'Invalid icon id or method' });
         try {
           let raw = '';
           for await (const chunk of req) { raw += chunk.toString(); if (raw.length > 400_000) return send(413, { error: 'Icon too large (max 256KB)' }); }
           const payload = JSON.parse(raw) as { dataUrl?: string };
-          const match = /^data:image\\/(png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(payload.dataUrl || '');
+          const match = /^data:image\/(png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(payload.dataUrl || '');
           if (!match) return send(400, { error: 'PNG or WebP only' });
           const bytes = Buffer.from(match[2], 'base64');
           if (bytes.length > 256 * 1024 || bytes.length === 0) return send(413, { error: 'Icon must be 1-256KB' });
