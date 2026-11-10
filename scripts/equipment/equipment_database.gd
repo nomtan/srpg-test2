@@ -22,8 +22,6 @@ func _ready() -> void:
 	_register(AccessoryData.create_accessory("speed_boots", "Speed Boots", {"agi": 2}, {"move_range": 1}))
 	_register(AccessoryData.create_accessory("accuracy_lens", "Accuracy Lens", {"dex": 2}, {"accuracy": 5}))
 
-	AdminMasterLoader.apply_equipment(self)
-
 func _register(equipment: EquipmentData) -> void: equipments[equipment.equipment_id] = equipment
 func get_equipment(id: String) -> EquipmentData: return equipments.get(id)
 func get_weapon(id: String) -> WeaponData:
