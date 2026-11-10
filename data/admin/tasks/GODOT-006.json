@@ -1,0 +1,12 @@
+{
+  "id": "GODOT-006",
+  "title": "セーブデータのパッシブ装備枠対応",
+  "status": "todo",
+  "priority": "high",
+  "area": "godot",
+  "description": "既存セーブを壊さずパッシブ装備IDを保存・復元。旧セーブデータのマイグレーションとID参照チェック。",
+  "godotFiles": [
+    "scripts/save/unit_progress_manager.gd"
+  ],
+  "relatedDataIds": []
+}
