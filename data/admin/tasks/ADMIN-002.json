@@ -1,0 +1,12 @@
+{
+  "id": "ADMIN-002",
+  "title": "マスターデータの移行と参照検証",
+  "status": "todo",
+  "priority": "high",
+  "area": "admin",
+  "description": "既存Godotコードにハードコードされたジョブ・スキル・装備・キャラをJSONへ移行。ID重複、参照先、スキーマを検証。",
+  "godotFiles": [
+    "data/admin/"
+  ],
+  "relatedDataIds": []
+}
