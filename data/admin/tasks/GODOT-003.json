@@ -8,5 +8,32 @@
   "godotFiles": [
     "scripts/skill/passive_skill_system.gd"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "被攻撃時に確率で反撃または自己回復するリアクションパッシブを実装する。",
+  "context": "確定仕様: 自分の行動を起点とする攻撃=ACTIVE、反撃による攻撃=REACTION。反撃はACTIVEにのみ発動。命中・回避の両方でリアクション判定。反撃はAP消費なし、リアクション回復はMP消費なし。",
+  "implementation": [
+    "装備済みパッシブのon_attackedイベントからトリガー条件・発動率を評価する。",
+    "counter_attackは攻撃者を対象としorigin=REACTIONで実行。ACTIVEへのみ反撃を許可する。",
+    "healは原則自身を対象とし、ACTIVE/REACTIONのどちらの攻撃を受けても発動可能とする。",
+    "リアクション攻撃/回復はいずれもAP/MPを消費しない。攻撃の命中・回避判定は通常ルールを使う。",
+    "射程・生存・対象消滅などの不成立条件をチェックし、ログに発動/不発を残す。"
+  ],
+  "acceptanceCriteria": [
+    "ACTIVE命中時・回避時の両方で反撃50%スキルを抽選できる。",
+    "REACTION攻撃に対して反撃は発動しない。",
+    "回復リアクションは命中/回避およびACTIVE/REACTIONで判定できる。",
+    "AP/MPがリアクションによって減少しない。",
+    "行動済みユニットもリアクション可能。"
+  ],
+  "dependencies": [
+    "GODOT-002",
+    "GODOT-004"
+  ],
+  "openQuestions": [
+    "反撃時の射程判定は通常攻撃準拠を暫定採用。",
+    "回復量や複数パッシブの優先順はスキルデータで定義する。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
