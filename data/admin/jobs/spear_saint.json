@@ -1,0 +1,35 @@
+{
+  "id": "spear_saint",
+  "name": "槍聖",
+  "rank": "MASTER",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 7,
+    "dex": 9,
+    "vit": 5,
+    "mnd": 3,
+    "int": 0,
+    "agi": 10
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {
+    "dragoon": 5,
+    "sniper": 5
+  },
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    3
+  ],
+  "bodyScenePath": ""
+}
