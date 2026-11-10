@@ -1,10 +1,10 @@
 {
   "id": "GODOT-001",
   "title": "JSONマスターデータローダー",
-  "status": "todo",
+  "status": "in_progress",
   "priority": "high",
   "area": "godot",
-  "description": "管理画面のdata/admin以下のデータをGodotで読み込み、既存Resourceと互換性を保つ。",
+  "description": "管理画面のdata/admin以下のデータをGodotで読み込み、既存Resourceと互換性を保つ。 現状: ジョブ31件、スキル8件、装備17件のJSONスナップショットとGodot読み込みを追加済み。実行テスト・データ同値性検証は未完了。",
   "godotFiles": [
     "scripts/data/game_data_loader.gd"
   ],
