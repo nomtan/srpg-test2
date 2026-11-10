@@ -73,3 +73,35 @@ static func apply_jobs(database: JobDatabase) -> int:
 		database.jobs[id] = job
 		loaded += 1
 	return loaded
+
+static func apply_equipment(database: EquipmentDatabase) -> int:
+	var loaded := 0
+	for record: Dictionary in load_records("equipment"):
+		var id := str(record.get("id", ""))
+		var name := str(record.get("name", id))
+		var kind := str(record.get("type", ""))
+		var stats: Dictionary = record.get("statBonus", {})
+		var builds: Dictionary = record.get("buildBonus", {})
+		var equipment: EquipmentData = null
+		if kind == "weapon":
+			var weapon_name := str(record.get("weaponType", "NONE"))
+			if not WeaponData.WeaponType.has(weapon_name):
+				push_warning("Invalid weapon type: " + id)
+				continue
+			equipment = WeaponData.create_weapon(id, name, WeaponData.WeaponType[weapon_name], int(record.get("weaponPower", 0)), int(record.get("accuracyModifier", 0)), int(record.get("criticalModifier", 0)), Vector2i(int(record.get("minRange", 1)), int(record.get("maxRange", 1))), stats, bool(record.get("requiresLineOfSight", false)), str(record.get("visualModelPath", "")), float(record.get("visualScale", 0.78)))
+		elif kind == "armor":
+			equipment = ArmorData.create_armor(id, name, str(record.get("armorCategory", "light")), stats, builds)
+		elif kind == "accessory":
+			equipment = AccessoryData.create_accessory(id, name, stats, builds)
+		if equipment == null:
+			continue
+		equipment.description = str(record.get("description", ""))
+		equipment.price = int(record.get("price", 0))
+		for key: String in equipment.build_bonus:
+			equipment.build_bonus[key] = int(builds.get(key, 0))
+		var resistances: Dictionary = record.get("elementalResistanceBonus", {})
+		for key: String in equipment.elemental_resistance_bonus:
+			equipment.elemental_resistance_bonus[key] = int(resistances.get(key, 0))
+		database.equipments[id] = equipment
+		loaded += 1
+	return loaded
