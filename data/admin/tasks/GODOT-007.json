@@ -1,0 +1,12 @@
+{
+  "id": "GODOT-007",
+  "title": "ジョブデータと仕様書の差分解消",
+  "status": "todo",
+  "priority": "medium",
+  "area": "godot",
+  "description": "docs/job.mdの分岐仕様と現行ジョブ定義の差分を整理。最上位ジョブの2上位ジョブ条件を廃止する前に移行方針を確定。",
+  "godotFiles": [
+    "scripts/job/job_database.gd"
+  ],
+  "relatedDataIds": []
+}
