@@ -8,5 +8,27 @@
   "godotFiles": [
     "scripts/save/unit_progress_manager.gd"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "パッシブ装備スロットを既存セーブに後方互換で保存・復元する。",
+  "context": "scripts/save/unit_progress_manager.gd はlearned_skill_ids/equipped_skill_idsを保存。セーブバージョン1の既存データがある。",
+  "implementation": [
+    "UnitProgressData/UnitProgressManager/SaveManagerの保存・復元経路を調査する。",
+    "equipped_passive_skill_idsを保存し、存在しない旧セーブでは空配列をデフォルトにする。",
+    "重複ID・未習得・存在しないパッシブIDをロード時に除外する。",
+    "旧セーブバージョンを読み込めるマイグレーション方針を明示する。"
+  ],
+  "acceptanceCriteria": [
+    "新セーブでパッシブ装備が保持される。",
+    "旧セーブをロードしてもエラーにならない。",
+    "不正IDは安全に無視し警告が残る。"
+  ],
+  "dependencies": [
+    "GODOT-002"
+  ],
+  "openQuestions": [
+    "保存バージョンを上げるか、互換フィールド追加のみとするか確認する。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
