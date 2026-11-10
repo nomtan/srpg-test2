@@ -1,0 +1,35 @@
+{
+  "id": "necromancer",
+  "name": "ネクロマンサー",
+  "rank": "MASTER",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": -2,
+    "dex": 6,
+    "vit": -1,
+    "mnd": 7,
+    "int": 11,
+    "agi": 7
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {
+    "sorcerer": 5,
+    "ninja": 5
+  },
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    7
+  ],
+  "bodyScenePath": ""
+}
