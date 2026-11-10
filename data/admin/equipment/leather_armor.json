@@ -1,0 +1,14 @@
+{
+  "id": "leather_armor",
+  "name": "Leather Armor",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "vit": 1,
+    "agi": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "light"
+}
