@@ -1,0 +1,16 @@
+{
+  "id": "plate_armor",
+  "name": "Plate Armor",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "vit": 5,
+    "agi": -2
+  },
+  "buildBonus": {
+    "evasion": -5
+  },
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy"
+}
