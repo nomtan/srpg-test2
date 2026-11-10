@@ -1,0 +1,36 @@
+{
+  "id": "alchemist",
+  "name": "アルケミスト",
+  "rank": "MASTER",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 0,
+    "dex": 7,
+    "vit": 4,
+    "mnd": 7,
+    "int": 7,
+    "agi": 4
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {
+    "priest": 5,
+    "sorcerer": 5
+  },
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    7,
+    8
+  ],
+  "bodyScenePath": ""
+}
