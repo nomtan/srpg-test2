@@ -1,0 +1,22 @@
+{
+  "id": "iron_axe",
+  "name": "Iron Axe",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "str": 2,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "AXE",
+  "weaponPower": 8,
+  "accuracyModifier": -10,
+  "criticalModifier": 0,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1
+}
