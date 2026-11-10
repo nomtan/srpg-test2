@@ -1,0 +1,17 @@
+{
+  "id": "heavy_attack",
+  "name": "強打",
+  "type": "attack",
+  "targetType": "ENEMY",
+  "rangeType": "MELEE",
+  "element": "NONE",
+  "apCost": 4,
+  "power": 10,
+  "accuracyModifier": -5,
+  "minRange": 1,
+  "maxRange": 1,
+  "areaRadius": 0,
+  "requiresLineOfSight": false,
+  "scalingType": "PHYSICAL",
+  "criticalModifier": 0
+}
