@@ -1,0 +1,17 @@
+{
+  "id": "power_slash",
+  "name": "強斬り",
+  "type": "attack",
+  "targetType": "ENEMY",
+  "rangeType": "MELEE",
+  "element": "NONE",
+  "apCost": 5,
+  "power": 12,
+  "accuracyModifier": -5,
+  "minRange": 1,
+  "maxRange": 1,
+  "areaRadius": 0,
+  "requiresLineOfSight": false,
+  "scalingType": "PHYSICAL",
+  "criticalModifier": 0
+}
