@@ -1,13 +1,13 @@
 {
   "id": "chapter01",
   "title": "風見の崖と街道の襲撃",
-  "summary": "既存の assets/world_jrpg/story.json（NPC会話＋橋の遭遇戦）を新テンプレート形式へ移行したサンプル章。台詞は原文のまま、名前・パレットはキャラクターマスターへ、配置はエリアへ分離した。",
+  "summary": "既存の assets/world_jrpg/story.json（NPC会話＋橋の遭遇戦）を新テンプレート形式へ移行したサンプル章。台詞は原文のまま、名前・パレットはキャラクターマスターへ、配置は場所マスタ（stages）へ分離した。",
   "startSceneId": "ch01_talk_guide",
   "scenes": [
     {
       "id": "ch01_talk_guide",
       "type": "dialogue",
-      "areaId": "kazami_cliff",
+      "stageId": "kazami_cliff",
       "trigger": {
         "type": "talk_npc",
         "characterId": "guide"
@@ -27,7 +27,7 @@
     {
       "id": "ch01_talk_merchant",
       "type": "dialogue",
-      "areaId": "kazami_cliff",
+      "stageId": "kazami_cliff",
       "trigger": {
         "type": "talk_npc",
         "characterId": "merchant"
@@ -47,7 +47,7 @@
     {
       "id": "ch01_talk_guard",
       "type": "dialogue",
-      "areaId": "kazami_cliff",
+      "stageId": "kazami_cliff",
       "trigger": {
         "type": "talk_npc",
         "characterId": "guard"
@@ -67,7 +67,6 @@
     {
       "id": "ch01_bridge_battle",
       "type": "battle",
-      "areaId": "kazami_cliff",
       "stageId": "bridge_patrol",
       "title": "街道の襲撃",
       "trigger": {
