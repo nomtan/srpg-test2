@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { isRecordIconPath } from './recordIcons';
 
 type Json = Record<string, any>;
 type Props = { value: Json; onChange: (value: Json) => void };
@@ -10,7 +10,7 @@ const inputNumber = (v: unknown, fallback = 0) => Number.isFinite(Number(v)) ? N
 
 export function validateSkill(value: Json): string | null {
   if (!String(value.name || '').trim()) return 'スキル名が必要です';
-  if (typeof value.iconPath !== 'string' || !/^\/skill-icons\/[a-zA-Z0-9_-]+\.(png|webp)$/.test(value.iconPath)) return 'スキルアイコン（PNG/WebP）を登録してください';
+  if (!isRecordIconPath('skills', value.iconPath)) return 'スキルアイコン（PNG/WebP）を登録してください';
   if (!TYPES.includes(String(value.type))) return 'スキル種別が不正です';
   if (value.type === 'passive') {
     if (value.activationMode !== 'equipped') return 'パッシブは装備時発動を指定してください';
@@ -36,27 +36,6 @@ export function validateSkill(value: Json): string | null {
 }
 
 export default function SkillEditor({ value, onChange }: Props) {
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  async function uploadIcon(file?: File) {
-    if (!file) return;
-    setUploadError('');
-    if (!['image/png', 'image/webp'].includes(file.type)) { setUploadError('PNGまたはWebPを選択してください'); return; }
-    if (file.size > 256 * 1024) { setUploadError('画像サイズは256KB以下にしてください'); return; }
-    setUploading(true);
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error('画像を読み込めません'));
-        reader.readAsDataURL(file);
-      });
-      const response = await fetch('/api/skill-icons/' + encodeURIComponent(value.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl }) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'アップロードに失敗しました');
-      onChange({ ...value, iconPath: result.iconPath });
-    } catch (error) { setUploadError(String(error)); } finally { setUploading(false); }
-  }
   const patch = (key: string, next: unknown) => onChange({ ...value, [key]: next });
   const triggers: Json[] = Array.isArray(value.triggers) ? value.triggers : [];
   const patchTrigger = (index: number, fields: Json) => patch('triggers', triggers.map((t, i) => i === index ? { ...t, ...fields } : t));
@@ -65,13 +44,6 @@ export default function SkillEditor({ value, onChange }: Props) {
     patchTrigger(ti, { effects: effects.map((e, i) => i === ei ? { ...e, ...fields } : e) });
   };
   return <div className="task-form skill-form">
-    <div className="skill-icon-picker">
-      <div className="skill-icon-preview">{value.iconPath ? <img key={value.iconPath} src={value.iconPath + '?preview=' + encodeURIComponent(String(value.name || ''))} alt="スキルアイコン" /> : <span>未登録</span>}</div>
-      <div><strong>スキルアイコン（必須）</strong><p className="hint">スキルスロット・一覧表示用。PNG / WebP、256KB以下。画像は admin/public/skill-icons/ に保存されます。</p>
-      <input aria-label="スキルアイコンを選択" type="file" accept="image/png,image/webp" disabled={uploading} onChange={e => { void uploadIcon(e.target.files?.[0]); e.target.value = ''; }} />
-      {uploading && <p className="hint">アップロード中…</p>}{uploadError && <p role="alert" className="error">{uploadError}</p>}
-      <small>{value.iconPath || '画像を登録してください'}</small></div>
-    </div>
     <label>スキル名<input value={value.name || ''} onChange={e => patch('name', e.target.value)} /></label>
     <label>説明<textarea className="task-lines" value={value.description || ''} onChange={e => patch('description', e.target.value)} /></label>
     <div className="form-grid">
