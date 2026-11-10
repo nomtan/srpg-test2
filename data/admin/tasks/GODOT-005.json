@@ -1,0 +1,12 @@
+{
+  "id": "GODOT-005",
+  "title": "パッシブ能力補正",
+  "status": "todo",
+  "priority": "medium",
+  "area": "godot",
+  "description": "スロット装備中のパッシブのみ能力値・属性耐性へ反映。固定値/割合値と条件付き補正を段階的に実装。",
+  "godotFiles": [
+    "scripts/status/status_calculator.gd"
+  ],
+  "relatedDataIds": []
+}
