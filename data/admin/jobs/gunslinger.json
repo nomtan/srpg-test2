@@ -1,0 +1,35 @@
+{
+  "id": "gunslinger",
+  "name": "ガンスリンガー",
+  "rank": "MASTER",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": 1,
+    "dex": 11,
+    "vit": 3,
+    "mnd": 3,
+    "int": 6,
+    "agi": 7
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {
+    "sniper": 5,
+    "sorcerer": 5
+  },
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    4
+  ],
+  "bodyScenePath": ""
+}
