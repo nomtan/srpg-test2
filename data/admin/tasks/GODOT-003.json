@@ -1,0 +1,12 @@
+{
+  "id": "GODOT-003",
+  "title": "リアクション攻撃とリアクション回復",
+  "status": "todo",
+  "priority": "high",
+  "area": "godot",
+  "description": "攻撃のoriginをACTIVE/REACTIONで分類。アクティブ攻撃にのみ反撃可能。命中・回避のどちらでも判定。リアクション攻撃/回復はAP/MP消費なし。",
+  "godotFiles": [
+    "scripts/skill/passive_skill_system.gd"
+  ],
+  "relatedDataIds": []
+}
