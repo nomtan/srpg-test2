@@ -1,0 +1,21 @@
+{
+  "id": "short_bow",
+  "name": "Short Bow",
+  "description": "",
+  "price": 0,
+  "statBonus": {
+    "dex": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 4,
+  "accuracyModifier": 5,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 4,
+  "requiresLineOfSight": true,
+  "visualModelPath": "res://assets/weapons/bow/bow.glb",
+  "visualScale": 0.92
+}
