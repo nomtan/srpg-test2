@@ -1,0 +1,27 @@
+{
+  "id": "kazami_cliff",
+  "name": "風見の崖",
+  "npcPlacements": [
+    {
+      "characterId": "guide",
+      "position": [
+        32,
+        64
+      ]
+    },
+    {
+      "characterId": "merchant",
+      "position": [
+        44,
+        81
+      ]
+    },
+    {
+      "characterId": "guard",
+      "position": [
+        92,
+        54
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "id": "merchant",
+  "name": "道具屋 エダ",
+  "palette": "merchant",
+  "atlasPath": "res://assets/world_jrpg/merchant_atlas.png"
+}

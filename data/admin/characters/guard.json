@@ -1,0 +1,6 @@
+{
+  "id": "guard",
+  "name": "城の衛兵 ノエル",
+  "palette": "knight",
+  "atlasPath": "res://assets/world_jrpg/knight_atlas.png"
+}

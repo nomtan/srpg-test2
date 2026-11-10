@@ -1,0 +1,16 @@
+{
+  "id": "GODOT-009",
+  "title": "ストーリー再生（StoryRunner）と data/admin/stories 連携",
+  "status": "todo",
+  "priority": "medium",
+  "area": "godot",
+  "description": "## 目的\n管理画面（data/admin/stories）のチャプターJSONをGodot側で読み込み、トリガー判定→台詞再生→戦闘起動→結果分岐までを再生できるようにする。\n\n## データ仕様\n- stories/{chapterId}.json: id / title / startSceneId / scenes[] を持つ。\n- scene.type は dialogue / battle（将来 choice を追加）。dialogue は lines[{speaker, text}]、speaker は characters のID参照。\n- battle は stageId で stages を参照し、introLines / onVictory / onDefeat（lines, setFlags, next）を持つ。\n- trigger は talk_npc（characterId）/ enter_area（position, radius）。NPC配置は areas/{areaId}.json の npcPlacements が正。\n- フラグは setFlags / requiredFlags で管理し、Autoloadで保持してセーブ対象にする。\n\n## 実装内容\n1. StoryRunner（新規）を実装し、現行 world.gd の _show_dialog / _start_battle の流れをシーン再生に置き換える。\n2. サンプル章 chapter01（案内人・道具屋・衛兵の会話＋橋の遭遇戦）で現行 story.json と同じ体験になることを確認する。\n3. 参照整合性（speaker / stageId / next の実在）をロード時に検証し、欠けていれば警告する。\n\n## 完了条件\nchapter01 が Godot 上で再生でき、会話・戦闘・勝利/敗北分岐・再戦が現行実装と同等に動作する。\n\n## 注意事項\nこのタスクは別ブランチで実装する。feature/admin では admin/ と data/admin/ のみ編集する（リポジトリ運用ルール）。",
+  "godotFiles": [
+    "scripts/world_jrpg/world.gd",
+    "scripts/story/story_runner.gd"
+  ],
+  "relatedDataIds": [
+    "chapter01"
+  ],
+  "body": "## 目的\n管理画面（data/admin/stories）のチャプターJSONをGodot側で読み込み、トリガー判定→台詞再生→戦闘起動→結果分岐までを再生できるようにする。\n\n## データ仕様\n- stories/{chapterId}.json: id / title / startSceneId / scenes[] を持つ。\n- scene.type は dialogue / battle（将来 choice を追加）。dialogue は lines[{speaker, text}]、speaker は characters のID参照。\n- battle は stageId で stages を参照し、introLines / onVictory / onDefeat（lines, setFlags, next）を持つ。\n- trigger は talk_npc（characterId）/ enter_area（position, radius）。NPC配置は areas/{areaId}.json の npcPlacements が正。\n- フラグは setFlags / requiredFlags で管理し、Autoloadで保持してセーブ対象にする。\n\n## 実装内容\n1. StoryRunner（新規）を実装し、現行 world.gd の _show_dialog / _start_battle の流れをシーン再生に置き換える。\n2. サンプル章 chapter01（案内人・道具屋・衛兵の会話＋橋の遭遇戦）で現行 story.json と同じ体験になることを確認する。\n3. 参照整合性（speaker / stageId / next の実在）をロード時に検証し、欠けていれば警告する。\n\n## 完了条件\nchapter01 が Godot 上で再生でき、会話・戦闘・勝利/敗北分岐・再戦が現行実装と同等に動作する。\n\n## 注意事項\nこのタスクは別ブランチで実装する。feature/admin では admin/ と data/admin/ のみ編集する（リポジトリ運用ルール）。"
+}

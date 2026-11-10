@@ -1,0 +1,114 @@
+{
+  "id": "chapter01",
+  "title": "風見の崖と街道の襲撃",
+  "summary": "既存の assets/world_jrpg/story.json（NPC会話＋橋の遭遇戦）を新テンプレート形式へ移行したサンプル章。台詞は原文のまま、名前・パレットはキャラクターマスターへ、配置はエリアへ分離した。",
+  "startSceneId": "ch01_talk_guide",
+  "scenes": [
+    {
+      "id": "ch01_talk_guide",
+      "type": "dialogue",
+      "areaId": "kazami_cliff",
+      "trigger": {
+        "type": "talk_npc",
+        "characterId": "guide"
+      },
+      "lines": [
+        {
+          "speaker": "guide",
+          "text": "風見の崖へようこそ。南には港町、東には白亜の城が見えるでしょう？"
+        },
+        {
+          "speaker": "guide",
+          "text": "崖の南側から坂道を下りれば、町へ行けます。橋の先の金色の光には気をつけて。"
+        }
+      ],
+      "next": null
+    },
+    {
+      "id": "ch01_talk_merchant",
+      "type": "dialogue",
+      "areaId": "kazami_cliff",
+      "trigger": {
+        "type": "talk_npc",
+        "characterId": "merchant"
+      },
+      "lines": [
+        {
+          "speaker": "merchant",
+          "text": "いらっしゃい、旅人さん！ 今日は旅の話だけで十分よ。"
+        },
+        {
+          "speaker": "merchant",
+          "text": "北東は雪の高地、北西は火山。川を渡るなら、この町の橋を使ってね。"
+        }
+      ],
+      "next": null
+    },
+    {
+      "id": "ch01_talk_guard",
+      "type": "dialogue",
+      "areaId": "kazami_cliff",
+      "trigger": {
+        "type": "talk_npc",
+        "characterId": "guard"
+      },
+      "lines": [
+        {
+          "speaker": "guard",
+          "text": "ここは暁の城。街道の安全を守っている。"
+        },
+        {
+          "speaker": "guard",
+          "text": "橋の東に魔物が出たそうだ。近づくと戦闘になるから、準備して向かってくれ。"
+        }
+      ],
+      "next": null
+    },
+    {
+      "id": "ch01_bridge_battle",
+      "type": "battle",
+      "areaId": "kazami_cliff",
+      "stageId": "bridge_patrol",
+      "title": "街道の襲撃",
+      "trigger": {
+        "type": "enter_area",
+        "position": [
+          87,
+          80
+        ],
+        "radius": 2.5
+      },
+      "introLines": [
+        {
+          "speaker": "narrator",
+          "text": "街道をふさぐ魔物が現れた！ この場所で迎え撃とう。"
+        },
+        {
+          "speaker": "narrator",
+          "text": "青いマスをクリックして移動し、隣接する敵をクリックして攻撃。行動を終えたら「ターン終了」。"
+        }
+      ],
+      "onVictory": {
+        "lines": [
+          {
+            "speaker": "narrator",
+            "text": "街道の魔物を追い払った。このまま旅を続けよう。"
+          }
+        ],
+        "setFlags": [
+          "bridge_cleared"
+        ],
+        "next": null
+      },
+      "onDefeat": {
+        "lines": [
+          {
+            "speaker": "narrator",
+            "text": "一度退いて体勢を立て直そう。この場で回復した。光から離れて戻れば再挑戦できる。"
+          }
+        ],
+        "next": "ch01_bridge_battle"
+      }
+    }
+  ]
+}
