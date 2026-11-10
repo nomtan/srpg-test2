@@ -1,0 +1,33 @@
+{
+  "id": "healer",
+  "name": "治癒士",
+  "rank": "BASIC",
+  "growth": {
+    "max_hp": 5,
+    "max_ap": 1,
+    "attack_power": 1,
+    "defense": 1,
+    "accuracy": 1,
+    "evasion": 1
+  },
+  "statBonus": {
+    "str": -1,
+    "dex": 0,
+    "vit": -1,
+    "mnd": 5,
+    "int": 2,
+    "agi": -1
+  },
+  "hpBonus": 0,
+  "baseMoveRange": 4,
+  "baseJumpHeight": 1,
+  "speedModifier": 1,
+  "requiredJobLevels": {},
+  "learnableSkills": [],
+  "playerSelectable": true,
+  "allowedWeaponTypes": [
+    7,
+    8
+  ],
+  "bodyScenePath": ""
+}
