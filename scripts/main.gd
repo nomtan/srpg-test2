@@ -608,10 +608,13 @@ func _on_battle_ended(result: String) -> void:
 	_update_status(result)
 	battle_message.show_message("Mission Complete" if result == "Victory" else "Defeat", 4.0)
 	if result == "Victory":
-		unit_progress.update_progress_from_units(unit_manager.get_player_units())
+		var survivors := unit_manager.get_player_units()
+		for unit: BattleUnit in survivors:
+			unit.refresh_build_stats(status_calculator)
+		unit_progress.update_progress_from_units(survivors)
 		stage_progress.mark_stage_cleared(player_profile.current_stage_id, turn_manager.turn_count)
 		var saved := save_manager.save_game()
-		growth_panel.show_results(unit_manager.get_player_units(), saved)
+		growth_panel.show_results(survivors, saved)
 	else:
 		_update_status("Defeat - Enter / Space / Click to retry")
 
