@@ -8,5 +8,29 @@
   "godotFiles": [
     "scripts/skill/skill_data.gd"
   ],
-  "relatedDataIds": []
+  "relatedDataIds": [],
+  "goal": "PASSIVE種別と、習得済みパッシブを有効化する専用装備スロットを実装する。",
+  "context": "SkillData.SkillTypeはATTACK/HEAL/BUFF/DEBUFFのみ。UnitProgressManagerはlearned_skill_idsとequipped_skill_idsを保存している。",
+  "implementation": [
+    "SkillTypeにPASSIVEを追加し、既存アクティブスキルと装備スロットを分離する。",
+    "BattleUnitにequipped_passive_skill_ids等の状態を追加し、習得済みかつパッシブ種別のIDだけ装備できるよう検証する。",
+    "パッシブは習得だけでは効果が出ず、装備中のみ効果を適用する。",
+    "パッシブ専用スロット数は暫定3。定数化し変更可能にする。",
+    "アクティブスキルのコマンド一覧にPASSIVEが混入しないようにする。"
+  ],
+  "acceptanceCriteria": [
+    "未習得パッシブ・通常スキルはパッシブ枠に装備できない。",
+    "3枠上限・重複装備禁止が機能する。",
+    "パッシブ装備/解除で有効化状態が変わる。",
+    "既存アクティブスキルの挙動は維持される。"
+  ],
+  "dependencies": [
+    "GODOT-001"
+  ],
+  "openQuestions": [
+    "スロット3枠は暫定値。最終枠数は後日調整。"
+  ],
+  "implementationBranch": "separate-godot-branch",
+  "scope": "Godot本体の実装（feature/adminではコード変更禁止）",
+  "verification": "AIエージェントは変更前に関連ファイルと呼び出し元を確認し、実装後にGodot起動・既存機能回帰を確認して結果を報告する。"
 }
