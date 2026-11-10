@@ -1,0 +1,12 @@
+{
+  "id": "ADMIN-001",
+  "title": "スキル専用フォームと効果ビルダー",
+  "status": "todo",
+  "priority": "medium",
+  "area": "admin",
+  "description": "現状のJSONエディタを専用フォームに発展。トリガー・確率・命中/回避・attackOrigins・複数効果を編集。",
+  "godotFiles": [
+    "admin/src/"
+  ],
+  "relatedDataIds": []
+}
