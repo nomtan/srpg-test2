@@ -6,6 +6,9 @@ model (not humanoid_v1) and the in-place clips idle, walk and run. No weapon soc
 
     blender -b --factory-startup --python tools/asset_gen/character_pipeline/build_rigged_character.py -- --id test --preview artifacts/rigged_character_preview
 
+Each model has its own bone placement, hand regions and cloth bounds (CHARACTERS); the bone names,
+the cloth chains (Cape1-3, optional Tabard1-2) and the clips are shared.
+
 Blender axes: the character faces -Y, its left is +X, up is +Z. Pose angles are radians about the
 armature axes (see build_enemy.py): +X pitches an upward bone forward and swings a downward bone
 back, +Z turns toward the character's left.
@@ -90,7 +93,7 @@ for _side in ('Left', 'Right'):
 # The forearm skins only its elbow third; the twist bones (children of the forearm, turned at runtime
 # by scripts/character/forearm_twist.gd by 1/3 and 2/3 of the hand's turn about the arm) carry the rest,
 # so a grip that turns the hand spreads along the gauntlet instead of wringing the wrist.
-SKIN_SEGMENTS = {'LeftForeArm': ((.26, .03, .695), (.303, .036, .689)),
+TEST_SKIN_SEGMENTS = {'LeftForeArm': ((.26, .03, .695), (.303, .036, .689)),
                  'RightForeArm': ((-.26, -.001, .692), (-.303, .001, .688))}
 
 # The hands are weighted by region, not by distance (their bones lie closer together than the hand is
@@ -99,9 +102,50 @@ SKIN_SEGMENTS = {'LeftForeArm': ((.26, .03, .695), (.303, .036, .689)),
 # front of `thumb_y` within `thumb_u`, the line moving `thumb_slope` further forward per metre along the
 # arm so the index finger beside the thumb's tip stays a finger; the stubby little finger lies behind
 # `pinky_y` beyond `pinky_u`.
-HANDS = {'wrist': .388, 'wrist_blend': .01, 'knuckle': .443, 'middle': .465, 'blend': .004,
+TEST_HANDS = {'wrist': .388, 'wrist_blend': .01, 'knuckle': .443, 'middle': .465, 'blend': .004,
          'thumb_y': -.022, 'thumb_slope': .4, 'thumb_u': (.398, .452), 'thumb_joint': .422, 'pinky_y': .028, 'pinky_u': .409,
          'centre': {'Left': .054, 'Right': .01}, 'top': .72, 'bottom': .63}
+
+# test2: a knight with a cape and no tabard. Measured against test's mesh: the arms run about 2.5 cm
+# higher (wrist z 0.70) and nearly on the body's centre line (y -0.01 left, -0.02 right); the fingers
+# are shorter (knuckles 0.448, tips 0.483), the thumb lies along the front of the palm and is free only
+# near its tip, and the short little finger sits behind. The cape lies on the back down to the hips and
+# hangs free below them, so its chain starts lower than test's.
+TEST2_BONES = dict(TEST_BONES)
+for _name in ('Tabard1', 'Tabard2'):
+    del TEST2_BONES[_name]
+TEST2_BONES.update({
+    'LeftShoulder': ((.03, -.02, .73), (.12, -.022, .735), 'UpperChest', .03),
+    'LeftArm': ((.12, -.022, .735), (.26, -.02, .717), 'LeftShoulder', .035),
+    'LeftForeArm': ((.26, -.02, .717), (.395, -.012, .703), 'LeftArm', .03),
+    'LeftForeArmTwist1': ((.305, -.0173, .7123), (.35, -.0147, .7077), 'LeftForeArm', .03),
+    'LeftForeArmTwist2': ((.35, -.0147, .7077), (.395, -.012, .703), 'LeftForeArm', .03),
+    'LeftHand': ((.395, -.012, .703), (.448, -.01, .70), 'LeftForeArm', .025),
+    'LeftFingers1': ((.448, -.01, .70), (.466, -.01, .70), 'LeftHand', .01),
+    'LeftFingers2': ((.466, -.01, .70), (.484, -.01, .70), 'LeftFingers1', .01),
+    'LeftThumb1': ((.405, -.042, .693), (.425, -.048, .692), 'LeftHand', .008),
+    'LeftThumb2': ((.425, -.048, .692), (.44, -.05, .692), 'LeftThumb1', .008),
+    'LeftPinky': ((.412, .018, .698), (.446, .021, .698), 'LeftHand', .008),
+    'RightShoulder': ((-.03, -.025, .73), (-.12, -.027, .735), 'UpperChest', .03),
+    'RightArm': ((-.12, -.027, .735), (-.26, -.025, .717), 'RightShoulder', .035),
+    'RightForeArm': ((-.26, -.025, .717), (-.395, -.02, .703), 'RightArm', .03),
+    'RightForeArmTwist1': ((-.305, -.0233, .7123), (-.35, -.0217, .7077), 'RightForeArm', .03),
+    'RightForeArmTwist2': ((-.35, -.0217, .7077), (-.395, -.02, .703), 'RightForeArm', .03),
+    'RightHand': ((-.395, -.02, .703), (-.448, -.02, .70), 'RightForeArm', .025),
+    'RightFingers1': ((-.448, -.02, .70), (-.466, -.02, .70), 'RightHand', .01),
+    'RightFingers2': ((-.466, -.02, .70), (-.484, -.02, .70), 'RightFingers1', .01),
+    'RightThumb1': ((-.405, -.052, .693), (-.425, -.058, .692), 'RightHand', .008),
+    'RightThumb2': ((-.425, -.058, .692), (-.44, -.06, .692), 'RightThumb1', .008),
+    'RightPinky': ((-.412, .008, .698), (-.446, .011, .698), 'RightHand', .008),
+    'Cape1': ((0, .06, .50), (0, .09, .34), 'Chest', None),
+    'Cape2': ((0, .09, .34), (0, .12, .18), 'Cape1', None),
+    'Cape3': ((0, .12, .18), (0, .15, .02), 'Cape2', None),
+})
+TEST2_SKIN_SEGMENTS = {'LeftForeArm': ((.26, -.02, .717), (.305, -.0173, .7123)),
+                       'RightForeArm': ((-.26, -.025, .717), (-.305, -.0233, .7123))}
+TEST2_HANDS = {'wrist': .395, 'wrist_blend': .01, 'knuckle': .448, 'middle': .466, 'blend': .004,
+               'thumb_y': -.028, 'thumb_slope': .1, 'thumb_u': (.40, .445), 'thumb_joint': .425, 'pinky_y': .023, 'pinky_u': .412,
+               'centre': {'Left': -.01, 'Right': -.02}, 'top': .745, 'bottom': .655}
 
 # The fists baked into the bind pose, so a held weapon sits in a closed hand (SwordCombat runs its grip
 # through the centre of the fist mesh) and empty hands hang as fists. Radians in armature axes: fingers
@@ -111,7 +155,7 @@ FIST = {'Fingers1': 1.45, 'Fingers2': 1.35, 'Pinky': .9, 'Thumb1': (1.0, 1.0), '
 
 CHARACTERS = {
     'test': {
-        'bones': TEST_BONES,
+        'bones': TEST_BONES, 'hands': TEST_HANDS, 'skin_segments': TEST_SKIN_SEGMENTS,
         # Above head_full everything is Head; from head_blend it blends in within head_reach of the
         # centre line (the hood).
         'head_blend': .76, 'head_full': .81, 'head_reach': .14,
@@ -120,6 +164,16 @@ CHARACTERS = {
         # front of `front_y` within `tabard_x` of the centre line, away from the legs.
         'cloth': {'top': .64, 'blend': .08, 'floor': .065, 'leg_radius': .085, 'back_y': .04, 'front_y': -.085,
                   'tabard_x': .075, 'side_x': .18, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        'preview': {'scale': 1.25, 'target': (0, 0, .5)},
+    },
+    'test2': {
+        'bones': TEST2_BONES, 'hands': TEST2_HANDS, 'skin_segments': TEST2_SKIN_SEGMENTS,
+        # Hair instead of a hood; the narrower reach keeps the pauldrons (|x| > 0.11 at z 0.78) on the arms.
+        'head_blend': .76, 'head_full': .81, 'head_reach': .11,
+        # No tabard. The cape eases onto its chain below the hips (it lies on the back above them); its
+        # sides wrap beyond the tassets (|x| <= 0.2) near the ground.
+        'cloth': {'top': .50, 'blend': .08, 'floor': .065, 'leg_radius': .085, 'back_y': .03, 'front_y': -.03,
+                  'tabard_x': 0, 'side_x': .205, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': []},
         'preview': {'scale': 1.25, 'target': (0, 0, .5)},
     },
 }
@@ -156,9 +210,8 @@ def ramp(value, edge, width):
     return np.clip((value - edge) / width + .5, 0, 1)
 
 
-def hand_weights(co, names, w):
-    """Overwrites the hand regions of w in place (see HANDS); returns which vertices it set."""
-    h = HANDS
+def hand_weights(co, names, w, h):
+    """Overwrites the hand regions of w in place (see TEST_HANDS); returns which vertices it set."""
     touched = np.zeros(len(co), bool)
     for side, sign in (('Left', 1), ('Right', -1)):
         u = co[:, 0] * sign
@@ -225,7 +278,7 @@ def skin(mesh, rig, spec):
     d = np.full((len(co), len(names)), np.inf)
     for name in body:
         head, tail, _, radius = bones[name]
-        head, tail = SKIN_SEGMENTS.get(name, (head, tail))
+        head, tail = spec['skin_segments'].get(name, (head, tail))
         dist = be.segment_distance(co, np.array(head), np.array(tail))
         # Limb bones only reach across the centre line reluctantly.
         side = 1 if name.startswith('Left') else -1 if name.startswith('Right') else 0
@@ -254,19 +307,21 @@ def skin(mesh, rig, spec):
             leg_distance = np.where(mine, np.minimum(leg_distance, flat), leg_distance)
     loose = (leg_distance > cloth['leg_radius']) & (z > cloth['floor']) & (z < cloth['top'])
     # Only the hanging tabard is loose in front; the cuirass and tassets around it stay on the body.
-    front = loose & (co[:, 1] < cloth['front_y']) & (np.abs(co[:, 0]) < cloth['tabard_x']) & (z < bones[cloth['tabard'][0]][0][2] + .02)
+    front = np.zeros(len(co), bool)
+    if cloth['tabard']:
+        front = loose & (co[:, 1] < cloth['front_y']) & (np.abs(co[:, 0]) < cloth['tabard_x']) & (z < bones[cloth['tabard'][0]][0][2] + .02)
     # The cape hangs behind the body and wraps around its sides.
     back = (z < cloth['top']) & ((co[:, 1] > cloth['back_y']) | (loose & (np.abs(co[:, 0]) > cloth['side_x']) & (co[:, 1] > cloth['front_y'])))
     # The cloth eases onto its chain below `top`, so it stays attached to the torso above.
     ease = np.clip((cloth['top'] - z) / cloth['blend'], 0, 1)
     ease = (ease * ease * (3 - 2 * ease))[:, None]
     cape = chain_weights(z, bones, names, cloth['cape'])
-    tabard = chain_weights(z, bones, names, cloth['tabard'])
     w[back] = w[back] * (1 - ease[back]) + cape[back] * ease[back]
-    w[front] = tabard[front]
+    if cloth['tabard']:
+        w[front] = chain_weights(z, bones, names, cloth['tabard'])[front]
     print('Cloth: cape', int(back.sum()), 'tabard', int(front.sum()), 'of', len(co))
 
-    hand = hand_weights(co, names, w)
+    hand = hand_weights(co, names, w, spec['hands'])
 
     # Tripo meshes are many loose islands; smoothing across a small radius keeps neighbours together.
     # The hands smooth only across a few millimetres so the fingers stay apart.

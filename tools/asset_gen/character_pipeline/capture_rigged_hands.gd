@@ -3,11 +3,11 @@ extends SceneTree
 ## explorer with sword and shield, on an empty stage: the sword stance, the walk, the run, the slash, the overhead,
 ## the guard and the skill, each from the sword side and from the front, framed on the right wrist. Checks
 ## the gauntlet does not pinch or wring when the hand turns the grip.
-## Needs a renderer: godot --path . --script res://tools/asset_gen/character_pipeline/capture_rigged_hands.gd -- [out_dir]
+## Needs a renderer: godot --path . --script res://tools/asset_gen/character_pipeline/capture_rigged_hands.gd -- [out_dir] [character scene]
 ## Image: <out_dir>/hands.png, one row per pose (default artifacts/rigged_hands).
 
 const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
-const CHARACTER := preload("res://scenes/characters/standalone/test.tscn")
+const CHARACTER := "res://scenes/characters/standalone/test.tscn"
 const SIZE := 360
 # (clip getter, share of the clip's length)
 const POSES := [["idle", 0.3], ["walk", 0.25], ["run", 0.25], ["slash", 0.35], ["overhead", 0.4], ["guard", 1.0], ["skill", 0.45]]
@@ -33,7 +33,7 @@ func run() -> void:
 	sun.rotation = Vector3(-0.8, 0.6, 0)
 	root.add_child(sun)
 	var player = Explorer.new()
-	player.model_scene = CHARACTER
+	player.model_scene = load(args[1] if args.size() > 1 else CHARACTER)
 	player.start_in_roster_layout = true
 	root.add_child(player)
 	player.set_process(false)

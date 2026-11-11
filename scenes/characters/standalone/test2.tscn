@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/rigged_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/characters/standalone/test2/model.glb" id="2"]
+
+[node name="Test2Character" type="Node3D"]
+script = ExtResource("1")
+character_id = "standalone_test2"
+display_name = "テストキャラクター2"
+metadata/sword_grip_blade = Vector3(-0.62, 0, 1)
+metadata/weapon_lit = true
+metadata/sword_walk_swing = 0.35
+metadata/sword_walk_wrist = Vector3(-0.08, 0, 0.08)
+
+[node name="Model" type="Node3D" parent="."]
+scale = Vector3(1.85, 1.85, 1.85)
+
+[node name="Character" parent="Model" instance=ExtResource("2")]
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.15, 0)
+billboard = 1
+text = "テストキャラクター2"
+font_size = 24
+pixel_size = 0.010
+no_depth_test = false
