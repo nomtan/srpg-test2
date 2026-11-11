@@ -512,6 +512,10 @@ var _shield_rest := Basis.IDENTITY
 var arm_reach := 1.0
 # Right-hand weapon direction in the idle pose (character space); clip keys turn the hand from it.
 var _rest_blade := READY_BLADE
+# The model's "sword_grip_blade" meta: the one-handed sword's direction out of the fist in the bind pose (skeleton
+# space), for fists modelled around a handle, whose idle twist would not hold SWORD_REST_BLADE through the fist;
+# zero keeps SWORD_REST_BLADE.
+var _bind_blade := Vector3.ZERO
 # Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
 var _hand_frame: Dictionary = {}
 # Ready stance held outside the weapon's clips by the grip modifier; empty leaves those clips as animated.
@@ -546,6 +550,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		loadout = LOADOUTS.get(model.get("character_id"), "sword_shield")
 	if loadout == "none":
 		return false
+	_bind_blade = model.get_meta("sword_grip_blade", Vector3.ZERO)
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null or player == null or not player.has_animation("idle"):
 		return false
@@ -733,7 +738,13 @@ func _attach_sword() -> void:
 	grip.position = _fist_center("R")
 	var hand: Transform3D = _idle_global[rig["hand.R"]]
 	_rest_blade = SWORD_REST_BLADE
-	var blade := SWORD_REST_BLADE.normalized()
+	if not _bind_blade.is_zero_approx():
+		# The model's own grip: the bind-pose direction carried into the idle pose; the clips then turn the hand
+		# from where that grip leaves the blade.
+		var hand_index := skeleton.find_bone(rig["hand.R"])
+		var local := skeleton.get_bone_global_rest(hand_index).basis.orthonormalized().inverse() * _bind_blade
+		_rest_blade = hand.basis.orthonormalized() * local.normalized()
+	var blade := _rest_blade.normalized()
 	# Edges (the guard, along X) line up with the knuckles: the hand's finger axis, square to the blade.
 	var fingers := hand.basis.y.normalized()
 	fingers = (fingers - blade * blade.dot(fingers)).normalized()

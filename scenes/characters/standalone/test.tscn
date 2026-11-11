@@ -7,6 +7,7 @@
 script = ExtResource("1")
 character_id = "standalone_test"
 display_name = "テストキャラクター"
+metadata/sword_grip_blade = Vector3(-0.62, 0, 1)
 
 [node name="Model" type="Node3D" parent="."]
 scale = Vector3(1.85, 1.85, 1.85)
