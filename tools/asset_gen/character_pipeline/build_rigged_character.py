@@ -33,29 +33,81 @@ TEST_BONES = {
     'Root': ((0, -.03, 0), (0, -.03, .15), None, None),
     'Hips': ((0, -.03, .47), (0, -.035, .54), 'Root', .07),
     'Spine': ((0, -.035, .54), (0, -.04, .62), 'Hips', .07),
-    'Chest': ((0, -.04, .62), (0, -.035, .74), 'Spine', .08),
-    'Neck': ((0, -.035, .74), (0, -.035, .79), 'Chest', .03),
+    'Chest': ((0, -.04, .62), (0, -.04, .68), 'Spine', .08),
+    'UpperChest': ((0, -.04, .68), (0, -.035, .74), 'Chest', .08),
+    'Neck': ((0, -.035, .74), (0, -.035, .79), 'UpperChest', .03),
     'Head': ((0, -.035, .79), (0, -.035, .97), 'Neck', .08),
-    'LeftShoulder': ((.03, -.01, .71), (.12, 0, .715), 'Chest', .03),
+    # The source T-pose is not symmetric: the right arm runs about 3.5 cm further forward than the left
+    # (wrist y 0.005 against 0.049, hand 0.01 against 0.055), so each arm follows its own centre line.
+    'LeftShoulder': ((.03, -.01, .71), (.12, 0, .715), 'UpperChest', .03),
     'LeftArm': ((.12, 0, .715), (.26, .03, .695), 'LeftShoulder', .035),
     'LeftForeArm': ((.26, .03, .695), (.39, .048, .677), 'LeftArm', .03),
-    'LeftHand': ((.39, .048, .677), (.485, .06, .677), 'LeftForeArm', .025),
-    'RightShoulder': ((-.03, -.01, .71), (-.12, 0, .715), 'Chest', .03),
-    'RightArm': ((-.12, 0, .715), (-.26, .03, .695), 'RightShoulder', .035),
-    'RightForeArm': ((-.26, .03, .695), (-.39, .048, .677), 'RightArm', .03),
-    'RightHand': ((-.39, .048, .677), (-.485, .06, .677), 'RightForeArm', .025),
+    'LeftForeArmTwist1': ((.303, .036, .689), (.347, .042, .683), 'LeftForeArm', .03),
+    'LeftForeArmTwist2': ((.347, .042, .683), (.39, .048, .677), 'LeftForeArm', .03),
+    'LeftHand': ((.39, .048, .677), (.443, .054, .673), 'LeftForeArm', .025),
+    'LeftFingers1': ((.443, .054, .673), (.465, .057, .677), 'LeftHand', .01),
+    'LeftFingers2': ((.465, .057, .677), (.487, .057, .677), 'LeftFingers1', .01),
+    'LeftThumb1': ((.40, .03, .668), (.422, .022, .668), 'LeftHand', .008),
+    'LeftThumb2': ((.422, .022, .668), (.442, .018, .668), 'LeftThumb1', .008),
+    'LeftPinky': ((.41, .086, .672), (.44, .102, .672), 'LeftHand', .008),
+    'RightShoulder': ((-.03, -.015, .71), (-.12, -.02, .715), 'UpperChest', .03),
+    'RightArm': ((-.12, -.02, .715), (-.26, -.001, .692), 'RightShoulder', .035),
+    'RightForeArm': ((-.26, -.001, .692), (-.39, .005, .681), 'RightArm', .03),
+    'RightForeArmTwist1': ((-.303, .001, .688), (-.347, .003, .685), 'RightForeArm', .03),
+    'RightForeArmTwist2': ((-.347, .003, .685), (-.39, .005, .681), 'RightForeArm', .03),
+    'RightHand': ((-.39, .005, .681), (-.443, .011, .672), 'RightForeArm', .025),
+    'RightFingers1': ((-.443, .011, .672), (-.465, .01, .677), 'RightHand', .01),
+    'RightFingers2': ((-.465, .01, .677), (-.487, .01, .677), 'RightFingers1', .01),
+    'RightThumb1': ((-.40, -.015, .668), (-.422, -.023, .668), 'RightHand', .008),
+    'RightThumb2': ((-.422, -.023, .668), (-.442, -.027, .668), 'RightThumb1', .008),
+    'RightPinky': ((-.41, .042, .672), (-.44, .058, .672), 'RightHand', .008),
     'LeftUpLeg': ((.09, -.03, .46), (.10, -.04, .27), 'Hips', .05),
     'LeftLeg': ((.10, -.04, .27), (.095, -.02, .06), 'LeftUpLeg', .04),
-    'LeftFoot': ((.095, -.02, .06), (.095, -.13, .01), 'LeftLeg', .03),
+    'LeftFoot': ((.095, -.02, .06), (.095, -.075, .015), 'LeftLeg', .03),
+    'LeftToe': ((.095, -.075, .015), (.095, -.14, .01), 'LeftFoot', .02),
     'RightUpLeg': ((-.09, -.03, .46), (-.10, -.04, .27), 'Hips', .05),
     'RightLeg': ((-.10, -.04, .27), (-.095, -.02, .06), 'RightUpLeg', .04),
-    'RightFoot': ((-.095, -.02, .06), (-.095, -.13, .01), 'RightLeg', .03),
+    'RightFoot': ((-.095, -.02, .06), (-.095, -.075, .015), 'RightLeg', .03),
+    'RightToe': ((-.095, -.075, .015), (-.095, -.14, .01), 'RightFoot', .02),
     'Cape1': ((0, .07, .62), (0, .09, .43), 'Chest', None),
     'Cape2': ((0, .09, .43), (0, .11, .24), 'Cape1', None),
     'Cape3': ((0, .11, .24), (0, .13, .05), 'Cape2', None),
     'Tabard1': ((0, -.12, .44), (0, -.125, .25), 'Hips', None),
     'Tabard2': ((0, -.125, .25), (0, -.13, .04), 'Tabard1', None),
 }
+
+# Exported bone names follow humanoid_v1 (Mixamo-style), so the shared procedural clips and equipment
+# (SwordCombat, SwordGait, GaitCycle, GroundSit) recognise this skeleton. The cloth chains keep their names.
+EXPORT_NAMES = {'Hips': 'mixamorig_Hips', 'Spine': 'mixamorig_Spine', 'Chest': 'mixamorig_Spine1',
+                'UpperChest': 'mixamorig_Spine2', 'Neck': 'mixamorig_Neck', 'Head': 'head'}
+for _side in ('Left', 'Right'):
+    for _part, _name in (('Shoulder', 'Shoulder'), ('Arm', 'Arm'), ('ForeArm', 'ForeArm'), ('Hand', 'Hand'),
+                         ('ForeArmTwist1', 'ForeArmTwist1'), ('ForeArmTwist2', 'ForeArmTwist2'),
+                         ('Fingers1', 'HandMiddle1'), ('Fingers2', 'HandMiddle2'), ('Thumb1', 'HandThumb1'),
+                         ('Thumb2', 'HandThumb2'), ('Pinky', 'HandPinky1'), ('UpLeg', 'UpLeg'), ('Leg', 'Leg'), ('Foot', 'Foot'), ('Toe', 'ToeBase')):
+        EXPORT_NAMES[_side + _part] = f'mixamorig_{_side}{_name}'
+
+# The forearm skins only its elbow third; the twist bones (children of the forearm, turned at runtime
+# by scripts/character/forearm_twist.gd by 1/3 and 2/3 of the hand's turn about the arm) carry the rest,
+# so a grip that turns the hand spreads along the gauntlet instead of wringing the wrist.
+SKIN_SEGMENTS = {'LeftForeArm': ((.26, .03, .695), (.303, .036, .689)),
+                 'RightForeArm': ((-.26, -.001, .692), (-.303, .001, .688))}
+
+# The hands are weighted by region, not by distance (their bones lie closer together than the hand is
+# wide). Along the arm (|x|): the hand from `wrist` (blending in over `wrist_blend`) to the knuckles,
+# then the two finger bones. Across it, from each hand's centre line `centre` (y): the thumb is in
+# front of `thumb_y` within `thumb_u`, the line moving `thumb_slope` further forward per metre along the
+# arm so the index finger beside the thumb's tip stays a finger; the stubby little finger lies behind
+# `pinky_y` beyond `pinky_u`.
+HANDS = {'wrist': .388, 'wrist_blend': .01, 'knuckle': .443, 'middle': .465, 'blend': .004,
+         'thumb_y': -.022, 'thumb_slope': .4, 'thumb_u': (.398, .452), 'thumb_joint': .422, 'pinky_y': .028, 'pinky_u': .409,
+         'centre': {'Left': .054, 'Right': .01}, 'top': .72, 'bottom': .63}
+
+# The fists baked into the bind pose, so a held weapon sits in a closed hand (SwordCombat runs its grip
+# through the centre of the fist mesh) and empty hands hang as fists. Radians in armature axes: fingers
+# and the little finger curl down toward the palm (the T-pose palms face down), the thumb curls down and
+# swings in across the fingers.
+FIST = {'Fingers1': 1.45, 'Fingers2': 1.35, 'Pinky': .9, 'Thumb1': (1.0, 1.0), 'Thumb2': .8}
 
 CHARACTERS = {
     'test': {
@@ -100,6 +152,71 @@ def chain_weights(z, bones, names, chain):
     return rows
 
 
+def ramp(value, edge, width):
+    return np.clip((value - edge) / width + .5, 0, 1)
+
+
+def hand_weights(co, names, w):
+    """Overwrites the hand regions of w in place (see HANDS); returns which vertices it set."""
+    h = HANDS
+    touched = np.zeros(len(co), bool)
+    for side, sign in (('Left', 1), ('Right', -1)):
+        u = co[:, 0] * sign
+        across = co[:, 1] - h['centre'][side]
+        region = (u > h['wrist'] - h['wrist_blend']) & (co[:, 2] > h['bottom']) & (co[:, 2] < h['top']) & (np.abs(across) < .08)
+        if not region.any():
+            continue
+        rows = np.zeros((len(co), len(names)))
+        col = {part: names.index(side + part) for part in ('Hand', 'Fingers1', 'Fingers2', 'Thumb1', 'Thumb2', 'Pinky')}
+        finger = ramp(u, h['knuckle'], 2 * h['blend'])
+        tip = ramp(u, h['middle'], 2 * h['blend'])
+        rows[:, col['Hand']] = 1 - finger
+        rows[:, col['Fingers1']] = finger * (1 - tip)
+        rows[:, col['Fingers2']] = finger * tip
+        thumb = (across < h['thumb_y'] - h['thumb_slope'] * (u - h['thumb_u'][0])) & (u > h['thumb_u'][0]) & (u < h['thumb_u'][1])
+        joint = ramp(u, h['thumb_joint'], 2 * h['blend'])
+        root = ramp(u, h['thumb_u'][0] + .006, .012)
+        rows[thumb] = 0
+        rows[thumb, col['Hand']] = 1 - root[thumb]
+        rows[thumb, col['Thumb1']] = root[thumb] * (1 - joint[thumb])
+        rows[thumb, col['Thumb2']] = root[thumb] * joint[thumb]
+        pinky = (across > h['pinky_y']) & (u > h['pinky_u']) & (u < h['knuckle'])
+        rows[pinky] = 0
+        rows[pinky, col['Pinky']] = 1
+        # The wrist eases from the forearm's weights onto the hand.
+        ease = ramp(u, h['wrist'], h['wrist_blend'])[:, None]
+        w[region] = w[region] * (1 - ease[region]) + rows[region] * ease[region]
+        touched |= region
+        print(side, 'hand: thumb', int((thumb & region).sum()), 'little finger', int((pinky & region).sum()),
+              'fingers', int(((finger > .5) & region & ~thumb & ~pinky).sum()), 'of', int(region.sum()))
+    return touched
+
+
+def bake_fists(rig, mesh):
+    """Curls the fingers (FIST) and makes that the bind pose: the mesh keeps the fists, the bones' rest follows."""
+    pose = {}
+    for side, sign in (('Left', 1), ('Right', -1)):
+        for part, value in FIST.items():
+            curl, swing = value if isinstance(value, tuple) else (value, 0.0)
+            # +X is the left arm's outward direction: its fingertips curl down by turning about +Y.
+            pose[side + part] = rot(Z, sign * swing) @ rot(Y, sign * curl)
+    apply_pose(rig, pose)
+    bpy.context.view_layer.update()
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = mesh
+    mesh.select_set(True)
+    bpy.ops.object.modifier_apply(modifier='Armature')
+    bpy.context.view_layer.objects.active = rig
+    rig.select_set(True)
+    bpy.ops.object.mode_set(mode='POSE')
+    bpy.ops.pose.select_all(action='SELECT')
+    bpy.ops.pose.armature_apply(selected=False)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    modifier = mesh.modifiers.new('Armature', 'ARMATURE')
+    modifier.object = rig
+    print('Fists baked into the bind pose')
+
+
 def skin(mesh, rig, spec):
     bones = spec['bones']
     names = [n for n, b in bones.items() if b[2] is not None]
@@ -108,6 +225,7 @@ def skin(mesh, rig, spec):
     d = np.full((len(co), len(names)), np.inf)
     for name in body:
         head, tail, _, radius = bones[name]
+        head, tail = SKIN_SEGMENTS.get(name, (head, tail))
         dist = be.segment_distance(co, np.array(head), np.array(tail))
         # Limb bones only reach across the centre line reluctantly.
         side = 1 if name.startswith('Left') else -1 if name.startswith('Right') else 0
@@ -148,12 +266,15 @@ def skin(mesh, rig, spec):
     w[front] = tabard[front]
     print('Cloth: cape', int(back.sum()), 'tabard', int(front.sum()), 'of', len(co))
 
+    hand = hand_weights(co, names, w)
+
     # Tripo meshes are many loose islands; smoothing across a small radius keeps neighbours together.
+    # The hands smooth only across a few millimetres so the fingers stay apart.
     kd = KDTree(len(co))
     for i, p in enumerate(co):
         kd.insert(p, i)
     kd.balance()
-    near = [[j for _, j, _ in kd.find_range(p, .02)] for p in co]
+    near = [[j for _, j, _ in kd.find_range(p, .004 if hand[i] else .02)] for i, p in enumerate(co)]
     for _ in range(3):
         w = np.array([w[n].mean(0) for n in near])
     w[w < .01] = 0
@@ -166,7 +287,7 @@ def skin(mesh, rig, spec):
     mesh.parent = rig
     modifier = mesh.modifiers.new('Armature', 'ARMATURE')
     modifier.object = rig
-    feet = w[:, [names.index(n) for n in names if n.endswith(('Foot', 'Leg'))]].sum(1) > .6
+    feet = w[:, [names.index(n) for n in names if n.endswith(('Foot', 'Leg', 'Toe'))]].sum(1) > .6
     print('Skinned', len(co), 'vertices to', len(names), 'bones')
     return np.nonzero(feet)[0]
 
@@ -316,6 +437,9 @@ def export(character_id, rig, mesh):
     out = ROOT / f'assets/characters/standalone/{character_id}/model.glb'
     out.parent.mkdir(parents=True, exist_ok=True)
     rig['looping_clips'] = [name for name, *_ in CLIPS]
+    # Renaming a bone also renames its vertex group and the clips' channels.
+    for old, new in EXPORT_NAMES.items():
+        rig.data.bones[old].name = new
     bpy.ops.object.select_all(action='DESELECT')
     rig.select_set(True)
     mesh.select_set(True)
@@ -354,6 +478,7 @@ def main():
     mesh = import_source(args.id)
     rig = be.build_armature(spec['bones'], Vector((0, 0, 0)))
     feet = skin(mesh, rig, spec)
+    bake_fists(rig, mesh)
     create_animations(rig, mesh, feet)
     if not args.no_export:
         export(args.id, rig, mesh)

@@ -166,3 +166,16 @@ Godotテストは4 Body×4 Face、単一Skeleton、4クリップ中のhead追従
 - Skeleton: 影と同じボーン名・階層（Root + 18ボーン）を `SHADOW2_BONES` で体形に合わせて配置。クリップも影と共通（`CLIPS['shadow2'] = CLIPS['shadow1']`）。
 - スキニング: 顎はヒンジ y −0.17 より前、z 0.635〜0.70 の嘴の下縁（x ±0.07）。頭は z 0.69〜0.74 で `Head` へ移行（x ±0.19、z 0.78以上は全て）。背中の触手（y > 0.06）は腕に乗らず（`arm_max_y`）、腰より上は y 0.08〜0.16 で `Chest` に移行する（`back`）。
 - Godot: `scenes/characters/guardians/shadow2.tscn`（Modelは6.2倍＝約6m）。描画・筆の演出・追従は影と同じ `guardian_character.gd`。
+
+## 一体型キャラクター（standalone）
+
+`assets/characters/tripo/characters/<id>/model.glb` は Body/Face に分かれていない1体分の静的メッシュ（Tポーズ）原本で、上書きしない。`tools/asset_gen/character_pipeline/build_rigged_character.py` がモデルに合わせた専用Skeletonを作り、`assets/characters/standalone/<id>/model.glb` へ出力する。
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' -b --factory-startup --python tools/asset_gen/character_pipeline/build_rigged_character.py -- --id test --preview artifacts/rigged_character_preview
+& 'C:\Users\nomur\Desktop\godot\Godot_v4.6.1-stable_win64_console.exe' --path . --script res://tools/asset_gen/character_pipeline/capture_rigged_character.gd
+```
+
+- Skeleton: 骨の配置はモデルごと（`TEST_BONES`）だが、出力時の骨名は humanoid_v1 と同じ（`mixamorig_Hips`〜`mixamorig_Spine2`、`head`、腕・脚・`HandMiddle1`・`ToeBase`、`EXPORT_NAMES`）。これにより `SwordCombat`・`SwordGait`・`GaitCycle`・`GroundSit` がそのまま使える。マント（`Cape1〜3`、Spine1から）と前垂れ（`Tabard1〜2`、Hipsから）は独立した鎖で、脚に引っ張られない。前腕は肘側1/3だけを `ForeArm` に、残りを子の `ForeArmTwist1`・`ForeArmTwist2` にスキンする（`SKIN_SEGMENTS`）。`SwordCombat` のクリップは握りの向きを手の骨のねじれだけで作る（横薙ぎで約150°）ため、大きな籠手が手首で棒状に潰れていた。実行時に `scripts/character/forearm_twist.gd`（SkeletonModifier3D、装備の後に追加）が手のねじれの1/3・2/3を2本のツイスト骨に配り、ねじれを前腕全体に分散させる。原本のTポーズは左右非対称で、右腕は左腕より約3.5cm前にある（手首 y 0.005 対 0.049）。以前は左腕の値を鏡写しにしていたため、右手の骨が手の中心から約4cm後ろに外れていた。現在は各腕が自分の中心線に沿う。手は指（`Fingers1/2`→`HandMiddle1/2`）・親指（`Thumb1/2`→`HandThumb1/2`）・短い小指（`Pinky`→`HandPinky1`）に分け、骨同士が手の幅より近いため距離ではなく領域でウェイトを付ける（`HANDS`。親指の境界は指先へ向かって前へ傾け、人差し指を親指に含めない）。原本は指を伸ばした平手で、剣を持たせると平手が柄に乗って手首が折れたように見えたため、`bake_fists` が `FIST` の角度で指を曲げた拳をバインドポーズとして焼き込む（メッシュは拳の形になり、骨のrestも追従）。`SwordCombat` は拳メッシュの中心に柄を通すので、剣は握った拳の中に収まる。武器なしの手も拳になる。確認は `capture_rigged_hands.gd`（右手首の拡大を構え・歩行・横薙ぎ・上段・防御・奥義で撮影）。
+- クリップ: `idle`・`walk`・`run`（ループ、その場、マントがなびく）。探索者として操作する間は他キャラと同じ手続き的クリップが優先される: 武器を持つ間は `SwordCombat` の構え・歩行・攻撃（`sword_gait/*`、`sword/slash`・`overhead`・`guard`・`skill`）、納刀・武器なしでは `GaitCycle` の `gait/walk`・`gait/run`。手続き的クリップはマントと前垂れの骨を動かさない。
+- Godot: `scenes/characters/standalone/test.tscn`（`scripts/character/rigged_character.gd`、Modelは1.85倍＝身長約1.8m）。装備は `SwordCombat.LOADOUTS["standalone_test"]`（片手剣＋盾）。描画はインポートした材質のままで、ライティングや時間帯の影響を受ける（他キャラの無陰影トゥーン表示は使わない）。`JRPGWorldSample2` の初期操作キャラで、ロスターの末尾にもいる。
