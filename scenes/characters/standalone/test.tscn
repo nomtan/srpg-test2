@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/character/rigged_character.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/characters/standalone/test/model.glb" id="2"]
+
+[node name="TestCharacter" type="Node3D"]
+script = ExtResource("1")
+character_id = "standalone_test"
+display_name = "テストキャラクター"
+metadata/weapon_enabled = false
+
+[node name="Model" type="Node3D" parent="."]
+scale = Vector3(1.7, 1.7, 1.7)
+
+[node name="Character" parent="Model" instance=ExtResource("2")]
+
+[node name="NameLabel" type="Label3D" parent="."]
+position = Vector3(0, 2.0, 0)
+billboard = 1
+text = "テストキャラクター"
+font_size = 24
+pixel_size = 0.010
+no_depth_test = false

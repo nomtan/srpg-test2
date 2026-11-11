@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/open_field_world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter001.tscn" id="17"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter005.tscn" id="character005"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter006.tscn" id="character006"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/character007.tscn" id="character007"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test.tscn" id="standalone_test"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin.tscn" id="goblin"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_axe.tscn" id="goblin_axe"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_longsword.tscn" id="goblin_longsword"]
@@ -17,14 +18,25 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/skeleton.tscn" id="skeleton"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/dragon.tscn" id="dragon"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/dragon_blue.tscn" id="dragon_blue"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock1/model.glb" id="rock1"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock2/model.glb" id="rock2"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock3/model.glb" id="rock3"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock4/model.glb" id="rock4"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock5/model.glb" id="rock5"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock6/model.glb" id="rock6"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock7/model.glb" id="rock7"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock8/model.glb" id="rock8"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock9/model.glb" id="rock9"]
+[ext_resource type="PackedScene" path="res://assets/characters/tripo/assets/rock10/rock10.glb" id="rock10"]
 
 [node name="JRPGWorldSample2" type="Node3D"]
 script = ExtResource("1")
 player_spawn_position = Vector3(150, 0, 300)
 seed_trees = true
 field_enemies = Array[PackedScene]([ExtResource("goblin"), ExtResource("goblin_axe"), ExtResource("goblin_longsword"), ExtResource("goblin_staff"), ExtResource("wolf"), ExtResource("grimm"), ExtResource("skeleton")])
-player_model = ExtResource("17")
-character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007")])
+rock_models = Array[PackedScene]([ExtResource("rock1"), ExtResource("rock2"), ExtResource("rock3"), ExtResource("rock4"), ExtResource("rock5"), ExtResource("rock6"), ExtResource("rock7"), ExtResource("rock8"), ExtResource("rock9"), ExtResource("rock10")])
+player_model = ExtResource("standalone_test")
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007"), ExtResource("standalone_test")])
 
 [node name="Dragon" parent="." instance=ExtResource("dragon")]
 position = Vector3(186, 0, 284)

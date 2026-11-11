@@ -14,6 +14,8 @@ const SIT_SWITCH_BLEND := 0.6
 ## The attack clip just reached its contact moment (the arrow's release for the bow).
 signal attack_impact(clip: String)
 @export var model_scene: PackedScene = MODEL
+## The starting model is a roster scene (faces +Z, carries a name label); set before entering the tree.
+var start_in_roster_layout := false
 # Exploration supplies actual horizontal speed; -1 keeps standalone/battle clips native.
 var locomotion_speed := -1.0
 var model: Node3D
@@ -46,7 +48,7 @@ var _impact_time := -1.0
 
 func _ready() -> void:
 	super._ready()
-	set_model_scene(model_scene)
+	set_model_scene(model_scene, start_in_roster_layout)
 
 func set_model_scene(scene: PackedScene, roster_layout := false) -> void:
 	if scene == null: return

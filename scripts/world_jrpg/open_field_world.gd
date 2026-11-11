@@ -53,6 +53,9 @@ const ENEMY_GAP := 1
 ## Enemies (scenes/characters/enemies) placed in a row ahead of the spawn. They stand idle, and
 ## flinch, guard and fall to the explorer's blows like the sparring partner.
 @export var field_enemies: Array[PackedScene] = []
+## Authored rock models (e.g. the Tripo rocks) scattered in place of the procedural
+## boulders, one picked at random per spot; empty keeps the procedural rocks.
+@export var rock_models: Array[PackedScene] = []
 ## Streaming (see "Streaming tiles" and open_field_chunks.gd): the field is generated in
 ## CHUNK tiles around the explorer instead of all at once.
 @export_group("Streaming")
@@ -278,6 +281,8 @@ var terrain_text: Label
 var path_field := PackedFloat32Array()
 var path_points: Array = []
 var terrain_material: ShaderMaterial
+## The baked rock_models meshes (see _build_rock_models); empty draws procedural boulders.
+var rock_meshes: Array[Mesh] = []
 var lake_material: ShaderMaterial
 var sea_material: ShaderMaterial
 var river_material: ShaderMaterial
@@ -351,6 +356,8 @@ var river_rows := PackedFloat64Array()
 var path_rows := PackedFloat64Array()
 
 func _ready() -> void:
+	# Before streaming starts: the tile tasks pick among the authored rocks.
+	_build_rock_models()
 	# Hand-placed big creatures (field_dragon.gd) stand in clearings of their own, so no tree
 	# grows through them. Before streaming starts: the tile tasks read open_rows.
 	for child in get_children():
@@ -1412,10 +1419,69 @@ func _rebuild_far_forest(block: Dictionary) -> void:
 			Vegetation.add_far_trees(root, mesh_key, groups[mesh_key])
 			continue
 		var kind := mesh_key.get_slice("_", 0)
-		_multimesh(root, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), groups[mesh_key], _plant_material(kind), mesh_key, false)
+		_multimesh(root, _plant_mesh(mesh_key), groups[mesh_key], _plant_material(kind), mesh_key, false)
 
 func _plant_material(kind: String) -> Material:
+	# The authored rocks keep their own textured materials.
+	if kind == "tripo-rock": return null
 	return Props.rock_material(Color("8d939c"), 0.75) if kind == "rock" else Props.foliage_material()
+
+func _plant_mesh(mesh_key: String) -> Mesh:
+	var kind := mesh_key.get_slice("_", 0)
+	var variant := int(mesh_key.get_slice("_", 1))
+	return rock_meshes[variant] if kind == "tripo-rock" else Props.mesh(kind, variant)
+
+## Bakes every rock_models scene into one mesh like the procedural boulder's: centered,
+## its larger horizontal half extent 1 m, standing on y = 0, materials kept.
+func _build_rock_models() -> void:
+	rock_meshes.clear()
+	for scene in rock_models:
+		if scene == null: continue
+		var root := scene.instantiate()
+		var parts: Array = []
+		var stack: Array[Node] = [root]
+		while not stack.is_empty():
+			var node: Node = stack.pop_back()
+			stack.append_array(node.get_children())
+			if node is MeshInstance3D and node.mesh != null:
+				var xform := Transform3D()
+				var walk: Node = node
+				while walk != root and walk is Node3D:
+					xform = (walk as Node3D).transform * xform
+					walk = walk.get_parent()
+				parts.append([node, xform])
+		var bounds := AABB()
+		var first := true
+		for part: Array in parts:
+			var box: AABB = part[1] * (part[0] as MeshInstance3D).mesh.get_aabb()
+			bounds = box if first else bounds.merge(box)
+			first = false
+		if first:
+			root.free()
+			continue
+		var scale := 1.0 / maxf(maxf(bounds.size.x, bounds.size.z) * 0.5, 0.001)
+		var fit := Transform3D(Basis.from_scale(Vector3.ONE * scale), -Vector3(bounds.get_center().x, bounds.position.y, bounds.get_center().z) * scale)
+		var baked := ArrayMesh.new()
+		for part: Array in parts:
+			var instance: MeshInstance3D = part[0]
+			var xform: Transform3D = fit * (part[1] as Transform3D)
+			for s in instance.mesh.get_surface_count():
+				var arrays := instance.mesh.surface_get_arrays(s)
+				var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				for i in vertices.size(): vertices[i] = xform * vertices[i]
+				arrays[Mesh.ARRAY_VERTEX] = vertices
+				if arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array:
+					var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+					for i in normals.size(): normals[i] = (xform.basis * normals[i]).normalized()
+					arrays[Mesh.ARRAY_NORMAL] = normals
+				# Tangents follow the uniform rotation-free fit; drop them if the part rotates.
+				if not xform.basis.orthonormalized().is_equal_approx(Basis()): arrays[Mesh.ARRAY_TANGENT] = null
+				baked.add_surface_from_arrays(instance.mesh.surface_get_primitive_type(s), arrays)
+				var material := instance.get_active_material(s)
+				baked.surface_set_material(baked.get_surface_count() - 1, material)
+		rock_meshes.append(baked)
+		root.free()
+	if not rock_meshes.is_empty(): print("[JRPGWorld2] Scattering %d authored rock models" % rock_meshes.size())
 
 func _far_block_of(key: Vector2i) -> Dictionary:
 	return far_blocks.get(Vector2i(floori(key.x / float(FAR_BLOCK)), floori(key.y / float(FAR_BLOCK))), {})
@@ -2358,15 +2424,21 @@ func _plan_trees(t: Chunks.Tile) -> void:
 				cover[world_position_to_cell(Vector3(p.x, 0, p.y))] = "TREE"
 			elif roll < tree_chance + rock_chance:
 				kind = "rock"
-				variant = int(pick * 40.0) % 4
 				size *= 1.1 if pick < 0.7 else 2.2
-				rects.append(Rect2(p - Vector2(0.7, 0.7) * size, Vector2(1.4, 1.4) * size).grow(0.3))
+				if rock_meshes.is_empty():
+					variant = int(pick * 40.0) % 4
+					rects.append(Rect2(p - Vector2(0.7, 0.7) * size, Vector2(1.4, 1.4) * size).grow(0.3))
+				else:
+					kind = "tripo-rock"
+					variant = int(fmod(pick * 173.0, 1.0) * rock_meshes.size()) % rock_meshes.size()
+					rects.append(Rect2(p - Vector2(0.85, 0.85) * size, Vector2(1.7, 1.7) * size).grow(0.3))
 			else:
 				continue
 			var mesh_key := kind if Vegetation.has_asset(kind) else "%s_%d" % [kind, variant]
-			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.95, 1.05, stretch) if Vegetation.has_asset(kind) else lerpf(0.9, 1.15, stretch)
+			var tall := lerpf(0.6, 0.9, stretch) if kind == "rock" else lerpf(0.9, 1.1, stretch) if kind == "tripo-rock" else lerpf(0.95, 1.05, stretch) if Vegetation.has_asset(kind) else lerpf(0.9, 1.15, stretch)
 			var basis := Basis(Vector3.UP, angle).scaled(Vector3(size, size * tall, size))
-			trees.append([mesh_key, Transform3D(basis, Vector3(p.x, h - (0.35 * size if kind == "rock" else 0.1), p.y))])
+			var sink := 0.35 * size if kind == "rock" else 0.15 * size * tall if kind == "tripo-rock" else 0.1
+			trees.append([mesh_key, Transform3D(basis, Vector3(p.x, h - sink, p.y))])
 		z += spacing
 	t.trees = trees
 	t.rects = rects
@@ -2534,7 +2606,7 @@ func _attach_trees(t: Chunks.Tile, result: Dictionary) -> void:
 			Vegetation.add_tree_chunk(forest, mesh_key, groups[mesh_key])
 			continue
 		var kind := mesh_key.get_slice("_", 0)
-		_multimesh(forest, Props.mesh(kind, int(mesh_key.get_slice("_", 1))), groups[mesh_key], _plant_material(kind), mesh_key)
+		_multimesh(forest, _plant_mesh(mesh_key), groups[mesh_key], _plant_material(kind), mesh_key)
 	forest_excluded[t.key] = true
 	_mark_far(t.key, false, true)
 
@@ -2715,6 +2787,8 @@ func _spawn_characters() -> void:
 	cleared = true
 	player = Explorer.new()
 	if player_model: player.model_scene = player_model
+	# A roster scene starts the way switching to it shows it: turned to the explorer's axes, unlabelled.
+	player.start_in_roster_layout = player.model_scene in character_roster
 	player.use_3d = use_3d_player
 	player.name = "Explorer"
 	add_child(player)
