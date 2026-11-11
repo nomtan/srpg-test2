@@ -1,0 +1,16 @@
+{
+  "id": "gothic_armor",
+  "name": "ゴシックアーマー",
+  "description": "【原典:クロステイルズ】物防202/魔防156/回避75/俊敏-65｜その他:Mp回復-3%",
+  "price": 4500,
+  "statBonus": {
+    "vit": 7,
+    "mnd": 5,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

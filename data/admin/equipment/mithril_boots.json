@@ -1,0 +1,16 @@
+{
+  "id": "mithril_boots",
+  "name": "ミスリルブーツ",
+  "description": "【原典:クロステイルズ】物防90/回避34/俊敏24｜その他:Mp回復3%",
+  "price": 1800,
+  "statBonus": {
+    "vit": 4,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

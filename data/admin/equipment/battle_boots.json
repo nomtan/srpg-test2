@@ -1,0 +1,16 @@
+{
+  "id": "battle_boots",
+  "name": "バトルブーツ",
+  "description": "【原典:クロステイルズ】物防64/回避23/俊敏18｜固有:物攻+10",
+  "price": 550,
+  "statBonus": {
+    "vit": 3,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 2
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

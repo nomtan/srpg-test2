@@ -1,0 +1,22 @@
+{
+  "id": "bastard_sword",
+  "name": "バスタードソード",
+  "description": "【原典:クロステイルズ】物攻98/魔攻8/必殺10%/命中26/俊敏-42",
+  "price": 450,
+  "statBonus": {
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 6,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "asclepius",
+  "name": "アスクレピオス",
+  "description": "【原典:クロステイルズ】物攻58/魔攻148/必殺20%/命中130/俊敏-44｜固有:ターンHp回復+50、ガッツ+25%、ヘイト回復+10%｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 5,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 4,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

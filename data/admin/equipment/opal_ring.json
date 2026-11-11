@@ -1,0 +1,16 @@
+{
+  "id": "opal_ring",
+  "name": "オパールの指輪",
+  "description": "【原典:クロステイルズ】物攻24/魔攻14/命中23｜その他:Mp回復3%",
+  "price": 550,
+  "statBonus": {
+    "str": 1,
+    "int": 1
+  },
+  "buildBonus": {
+    "accuracy": 2
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

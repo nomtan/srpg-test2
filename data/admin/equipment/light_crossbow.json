@@ -1,0 +1,22 @@
+{
+  "id": "light_crossbow",
+  "name": "ライトボウガン",
+  "description": "【原典:クロステイルズ】物攻33/魔攻13/必殺20%/命中60/俊敏-18",
+  "price": 100,
+  "statBonus": {
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 2,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 4,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

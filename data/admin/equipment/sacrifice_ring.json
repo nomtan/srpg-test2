@@ -1,0 +1,16 @@
+{
+  "id": "sacrifice_ring",
+  "name": "身代わりの指輪",
+  "description": "【原典:クロステイルズ】物防38/魔防27/回避44｜固有:ガッツ+25%",
+  "price": 950,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

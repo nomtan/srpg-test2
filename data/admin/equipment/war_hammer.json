@@ -1,0 +1,23 @@
+{
+  "id": "war_hammer",
+  "name": "ウォーハンマー",
+  "description": "【原典:クロステイルズ】物攻66/魔攻36/必殺15%/命中48/俊敏-35",
+  "price": 300,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 4,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "holy_flame_scepter",
+  "name": "聖火のセプター",
+  "description": "【原典:クロステイルズ】物攻174/魔攻152/必殺15%/命中136/俊敏-54｜固有:Jp入手+25%、追加ダメージ+50、火耐性+1段階｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 5,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 11,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

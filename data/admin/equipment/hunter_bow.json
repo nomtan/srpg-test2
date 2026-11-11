@@ -1,0 +1,22 @@
+{
+  "id": "hunter_bow",
+  "name": "ハンターボウ",
+  "description": "【原典:クロステイルズ】物攻78/魔攻12/必殺10%/命中64/俊敏-32｜固有:回避力25%低下付与",
+  "price": 900,
+  "statBonus": {
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 4,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

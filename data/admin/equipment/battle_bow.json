@@ -1,0 +1,23 @@
+{
+  "id": "battle_bow",
+  "name": "バトルボウ",
+  "description": "【原典:クロステイルズ】物攻118/魔攻20/必殺10%/命中80/俊敏-40｜その他:物防20",
+  "price": 2700,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 7,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

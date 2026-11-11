@@ -1,0 +1,23 @@
+{
+  "id": "suigin_blade",
+  "name": "名刀粋銀",
+  "description": "【原典:クロステイルズ】物攻247/魔攻87/必殺20%/命中222/俊敏-76｜固有:盾防御無効、麻痺耐性+1段階、反撃威力+30｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 3,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 15,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "master_sword",
+  "name": "マスターソード",
+  "description": "【原典:クロステイルズ】物攻192/魔攻69/必殺20%/命中158/俊敏-52",
+  "price": 4500,
+  "statBonus": {
+    "int": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 12,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

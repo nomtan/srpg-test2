@@ -1,0 +1,14 @@
+{
+  "id": "life_ring",
+  "name": "生命の指輪",
+  "description": "【原典:クロステイルズ】物防58/魔防37｜固有:Hp+100",
+  "price": 2300,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

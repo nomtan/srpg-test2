@@ -1,0 +1,23 @@
+{
+  "id": "mithril_mace",
+  "name": "ミスリルメイス",
+  "description": "【原典:クロステイルズ】物攻134/魔攻112/必殺15%/命中104/俊敏-56｜固有:Mp回復+3%",
+  "price": 3500,
+  "statBonus": {
+    "int": 4,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

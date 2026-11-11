@@ -1,0 +1,16 @@
+{
+  "id": "knight_armor",
+  "name": "ナイトアーマー",
+  "description": "【原典:クロステイルズ】物防142/魔防114/回避52/俊敏-50｜その他:Mp回復-3%",
+  "price": 1800,
+  "statBonus": {
+    "vit": 5,
+    "mnd": 4,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

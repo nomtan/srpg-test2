@@ -1,0 +1,23 @@
+{
+  "id": "band_ballista",
+  "name": "バンドバリスタ",
+  "description": "【原典:クロステイルズ】物攻120/魔攻69/必殺20%/命中200/俊敏-55｜固有:ノックバック+30%、通常攻撃威力+10、盾防御無効｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 6,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

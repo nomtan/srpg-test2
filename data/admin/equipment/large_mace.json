@@ -1,0 +1,23 @@
+{
+  "id": "large_mace",
+  "name": "ラージメイス",
+  "description": "【原典:クロステイルズ】物攻82/魔攻48/必殺15%/命中56/俊敏-44",
+  "price": 600,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

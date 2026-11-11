@@ -1,0 +1,22 @@
+{
+  "id": "long_bow",
+  "name": "ロングボウ",
+  "description": "【原典:クロステイルズ】物攻64/魔攻8/必殺10%/命中44/俊敏-28",
+  "price": 450,
+  "statBonus": {
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 4,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 3,
+  "maxRange": 4,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

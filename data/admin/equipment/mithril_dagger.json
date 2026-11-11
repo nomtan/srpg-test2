@@ -1,0 +1,23 @@
+{
+  "id": "mithril_dagger",
+  "name": "ミスリルダガー",
+  "description": "【原典:クロステイルズ】物攻96/魔攻143/必殺25%/命中218/俊敏-24｜固有:Mp回復+5%",
+  "price": 3500,
+  "statBonus": {
+    "int": 4,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 6,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

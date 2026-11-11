@@ -1,0 +1,23 @@
+{
+  "id": "heavy_crossbow",
+  "name": "ヘヴィボウガン",
+  "description": "【原典:クロステイルズ】物攻93/魔攻53/必殺20%/命中160/俊敏-33｜固有:ノックバック+10%",
+  "price": 2600,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 6,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 6,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "velvet_robe",
+  "name": "ベルベットローブ",
+  "description": "【原典:クロステイルズ】物防56/魔防104/回避57/俊敏-24｜その他:Mp回復5%",
+  "price": 600,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 3,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "protection_ring",
+  "name": "護りの指輪",
+  "description": "【原典:クロステイルズ】物防33/魔防23｜固有:瀕死時物防+25%",
+  "price": 150,
+  "statBonus": {
+    "vit": 1,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "battle_staff",
+  "name": "バトルスタッフ",
+  "description": "【原典:クロステイルズ】物攻58/魔攻80/必殺15%/命中94/俊敏-32｜固有:通常攻撃威力+10",
+  "price": 900,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 4,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

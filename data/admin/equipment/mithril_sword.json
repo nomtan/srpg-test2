@@ -1,0 +1,23 @@
+{
+  "id": "mithril_sword",
+  "name": "ミスリルソード",
+  "description": "【原典:クロステイルズ】物攻172/魔攻94/必殺20%/命中134/俊敏-48｜固有:Mp回復+3%",
+  "price": 3500,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 11,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

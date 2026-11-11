@@ -1,0 +1,16 @@
+{
+  "id": "powered_boots",
+  "name": "パワードブーツ",
+  "description": "【原典:クロステイルズ】物防88/回避31/俊敏22｜固有:Hp+50、物攻+30、ノックバック無効｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 4,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

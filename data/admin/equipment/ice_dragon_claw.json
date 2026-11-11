@@ -1,0 +1,23 @@
+{
+  "id": "ice_dragon_claw",
+  "name": "氷竜爪",
+  "description": "【原典:クロステイルズ】物攻276/魔攻93/必殺15%/命中256/俊敏-48｜その他:物防82｜固有:麻痺発動15%、水耐性+1段階、通常攻撃威力+10｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 17,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

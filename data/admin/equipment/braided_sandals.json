@@ -1,0 +1,16 @@
+{
+  "id": "braided_sandals",
+  "name": "編み込みサンダル",
+  "description": "【原典:クロステイルズ】物防34/回避37/俊敏36｜その他:Mp回復3%",
+  "price": 550,
+  "statBonus": {
+    "vit": 1,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

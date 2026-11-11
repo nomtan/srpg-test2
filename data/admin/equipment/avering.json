@@ -1,0 +1,14 @@
+{
+  "id": "avering",
+  "name": "アヴェリング",
+  "description": "【原典:クロステイルズ】魔攻48/俊敏42｜その他:Mp回復5%｜固有:Hp&Mp+35、瀕死時俊敏+50%、ヘイト回復-15%｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

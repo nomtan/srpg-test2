@@ -1,0 +1,16 @@
+{
+  "id": "sapphire_ring",
+  "name": "サファイアの指輪",
+  "description": "【原典:クロステイルズ】物攻37/魔攻21/命中33｜その他:Mp回復3%",
+  "price": 1800,
+  "statBonus": {
+    "str": 1,
+    "int": 1
+  },
+  "buildBonus": {
+    "accuracy": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

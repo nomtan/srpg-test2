@@ -1,0 +1,23 @@
+{
+  "id": "mace",
+  "name": "メイス",
+  "description": "【原典:クロステイルズ】物攻48/魔攻24/必殺15%/命中32/俊敏-30",
+  "price": 100,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

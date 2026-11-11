@@ -1,0 +1,23 @@
+{
+  "id": "mithril_crossbow",
+  "name": "ミスリルボウガン",
+  "description": "【原典:クロステイルズ】物攻102/魔攻61/必殺20%/命中180/俊敏-36｜固有:Mp回復+3%",
+  "price": 3500,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 6,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

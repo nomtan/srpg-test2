@@ -1,0 +1,16 @@
+{
+  "id": "saint_sandals",
+  "name": "聖者のサンダル",
+  "description": "【原典:クロステイルズ】物防42/回避61/俊敏42｜その他:Mp回復3%｜固有:全能力+5、ターンHp回復+50、Exp入手+25%｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 2,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 6
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "metal_shield",
+  "name": "メタルシールド",
+  "description": "【原典:クロステイルズ】盾防御15%/物防58/魔防36/回避-18/俊敏-36",
+  "price": 1200,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

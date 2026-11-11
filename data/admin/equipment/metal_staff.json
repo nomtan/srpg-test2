@@ -1,0 +1,23 @@
+{
+  "id": "metal_staff",
+  "name": "メタルスタッフ",
+  "description": "【原典:クロステイルズ】物攻50/魔攻101/必殺10%/命中86/俊敏-44",
+  "price": 1800,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

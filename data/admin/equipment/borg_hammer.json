@@ -1,0 +1,23 @@
+{
+  "id": "borg_hammer",
+  "name": "戦槌ボルグ",
+  "description": "【原典:クロステイルズ】物攻210/魔攻140/必殺15%/命中168/俊敏-84｜固有:ガッツ+50%、魔法反射10%、反撃無効｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 4,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 13,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

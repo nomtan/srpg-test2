@@ -1,0 +1,15 @@
+{
+  "id": "amber_ring",
+  "name": "琥珀の指輪",
+  "description": "【原典:クロステイルズ】物攻19/魔攻11/命中18｜その他:Mp回復3%",
+  "price": 300,
+  "statBonus": {
+    "str": 1
+  },
+  "buildBonus": {
+    "accuracy": 2
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

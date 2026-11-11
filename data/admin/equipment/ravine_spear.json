@@ -1,0 +1,23 @@
+{
+  "id": "ravine_spear",
+  "name": "竜槍ラヴィーネ",
+  "description": "【原典:クロステイルズ】物攻268/魔攻148/必殺10%/命中268/俊敏-80｜その他:回避-60｜固有:全能力+20、即死無効、跳躍力+3｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 5,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 17,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

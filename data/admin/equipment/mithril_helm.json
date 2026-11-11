@@ -1,0 +1,14 @@
+{
+  "id": "mithril_helm",
+  "name": "ミスリルヘルム",
+  "description": "【原典:クロステイルズ】物防88/魔防74｜固有:Mp回復5%",
+  "price": 1800,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

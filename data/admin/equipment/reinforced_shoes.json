@@ -1,0 +1,16 @@
+{
+  "id": "reinforced_shoes",
+  "name": "強化シューズ",
+  "description": "【原典:クロステイルズ】物防40/回避44/俊敏40",
+  "price": 300,
+  "statBonus": {
+    "vit": 2,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

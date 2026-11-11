@@ -1,0 +1,16 @@
+{
+  "id": "round_shield",
+  "name": "ラウンドシールド",
+  "description": "【原典:クロステイルズ】盾防御20%/物防46/魔防28/回避-16/俊敏-32",
+  "price": 600,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

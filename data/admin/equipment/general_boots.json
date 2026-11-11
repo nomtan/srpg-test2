@@ -1,0 +1,16 @@
+{
+  "id": "general_boots",
+  "name": "ジェネラルブーツ",
+  "description": "【原典:クロステイルズ】物防100/回避38/俊敏26｜固有:物攻+20",
+  "price": 2300,
+  "statBonus": {
+    "vit": 4,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "wood_armor",
+  "name": "ウッドアーマー",
+  "description": "【原典:クロステイルズ】物防62/魔防47/回避21/俊敏-28｜その他:Mp回復-3%",
+  "price": 100,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 2,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

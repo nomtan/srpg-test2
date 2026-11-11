@@ -1,0 +1,16 @@
+{
+  "id": "holy_garb",
+  "name": "ホーリーガーブ",
+  "description": "【原典:クロステイルズ】物防132/魔防228/回避128/俊敏-42｜その他:Mp回復5%｜固有:Jp入手+10%、ヘイト回復+20%、魔法回避強化｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 8,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

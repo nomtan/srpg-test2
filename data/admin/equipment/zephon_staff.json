@@ -1,0 +1,23 @@
+{
+  "id": "zephon_staff",
+  "name": "魔杖ゼフォン",
+  "description": "【原典:クロステイルズ】物攻106/魔攻220/必殺10%/命中192/俊敏-60｜固有:麻痺発動10%、封印無効、瀕死時魔攻+50%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 7,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 7,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

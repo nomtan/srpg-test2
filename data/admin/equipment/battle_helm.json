@@ -1,0 +1,14 @@
+{
+  "id": "battle_helm",
+  "name": "バトルヘルム",
+  "description": "【原典:クロステイルズ】物防62/魔防48",
+  "price": 550,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

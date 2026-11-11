@@ -1,0 +1,23 @@
+{
+  "id": "war_staff",
+  "name": "ウォースタッフ",
+  "description": "【原典:クロステイルズ】物攻74/魔攻140/必殺15%/命中150/俊敏-45｜固有:通常攻撃威力+15",
+  "price": 3900,
+  "statBonus": {
+    "int": 4,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

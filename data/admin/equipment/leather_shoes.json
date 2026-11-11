@@ -1,0 +1,16 @@
+{
+  "id": "leather_shoes",
+  "name": "レザーシューズ",
+  "description": "【原典:クロステイルズ】物防23/回避28/俊敏30",
+  "price": 50,
+  "statBonus": {
+    "vit": 1,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "aegis_shield",
+  "name": "神盾アイギス",
+  "description": "【原典:クロステイルズ】盾防御35%/物防148/魔防90/回避-32/俊敏-68｜固有:ガッツ+50%、状態異常耐性+1段階、ヘイト回復+10%｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 5,
+    "mnd": 3,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

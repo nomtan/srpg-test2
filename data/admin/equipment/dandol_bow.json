@@ -1,0 +1,23 @@
+{
+  "id": "dandol_bow",
+  "name": "邪弓ダンドール",
+  "description": "【原典:クロステイルズ】物攻230/魔攻48/必殺10%/命中156/俊敏-68｜固有:病毒発動35%、麻痺発動20%、物防25%低下付与｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 14,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 3,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

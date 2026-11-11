@@ -1,0 +1,23 @@
+{
+  "id": "absolute_zero_crossbow",
+  "name": "絶対零弩",
+  "description": "【原典:クロステイルズ】物攻165/魔攻87/必殺20%/命中280/俊敏-51｜固有:爬虫類特効、俊敏25%低下付与、鈍足発動40%｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 3,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 10,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

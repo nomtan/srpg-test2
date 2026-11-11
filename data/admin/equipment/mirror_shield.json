@@ -1,0 +1,16 @@
+{
+  "id": "mirror_shield",
+  "name": "ミラーシールド",
+  "description": "【原典:クロステイルズ】盾防御25%/物防76/魔防66/回避-24/俊敏-44｜固有:物理反射10%、魔法反射25%、瀕死時魔防+25%｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "greed_ring",
+  "name": "強欲の指輪",
+  "description": "【原典:クロステイルズ】魔攻49/命中-18/回避-25/俊敏72｜その他:Mp回復-3%｜固有:ドロップ率+25%、ドロップ金+100%、瀕死時俊敏+50%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": 4
+  },
+  "buildBonus": {
+    "accuracy": -2,
+    "evasion": -3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

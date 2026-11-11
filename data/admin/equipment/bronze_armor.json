@@ -1,0 +1,16 @@
+{
+  "id": "bronze_armor",
+  "name": "ブロンズアーマー",
+  "description": "【原典:クロステイルズ】物防83/魔防64/回避28/俊敏-37｜その他:Mp回復-3%",
+  "price": 300,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

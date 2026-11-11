@@ -1,0 +1,23 @@
+{
+  "id": "hunting_god_bow",
+  "name": "狩神の弓",
+  "description": "【原典:クロステイルズ】物攻207/魔攻44/必殺15%/命中210/俊敏-64｜固有:ドロップ率+50%、ドロップ金+50%、ヘイト回復+20%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 1,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 13,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 2,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "mana_sandals",
+  "name": "マナサンダル",
+  "description": "【原典:クロステイルズ】物防49/回避68/俊敏32｜その他:Mp回復5%｜固有:杖強化+25、魔法回避強化、瀕死時俊敏+75%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 2,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 7
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

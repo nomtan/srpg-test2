@@ -1,0 +1,23 @@
+{
+  "id": "mana_staff",
+  "name": "マナスタッフ",
+  "description": "【原典:クロステイルズ】物攻78/魔攻206/必殺10%/命中166/俊敏-56｜固有:消費Mp低下-5、Mp+50、パリィ+5%｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 6,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

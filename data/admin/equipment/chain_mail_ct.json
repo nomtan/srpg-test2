@@ -1,0 +1,16 @@
+{
+  "id": "chain_mail_ct",
+  "name": "チェインメイル",
+  "description": "【原典:クロステイルズ】物防112/魔防83/回避112/俊敏-40",
+  "price": 1800,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

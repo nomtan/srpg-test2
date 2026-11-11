@@ -1,0 +1,23 @@
+{
+  "id": "compo_bow",
+  "name": "コンポボウ",
+  "description": "【原典:クロステイルズ】物攻94/魔攻16/必殺10%/命中69/俊敏-36",
+  "price": 1800,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 6,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 3,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

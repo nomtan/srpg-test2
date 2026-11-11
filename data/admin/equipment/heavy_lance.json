@@ -1,0 +1,23 @@
+{
+  "id": "heavy_lance",
+  "name": "ヘヴィランス",
+  "description": "【原典:クロステイルズ】物攻168/魔攻86/必殺10%/命中156/俊敏-55｜その他:回避-34｜固有:ノックバック+10%",
+  "price": 3900,
+  "statBonus": {
+    "int": 3,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 11,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

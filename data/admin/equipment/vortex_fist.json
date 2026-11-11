@@ -1,0 +1,23 @@
+{
+  "id": "vortex_fist",
+  "name": "風拳ボルテックス",
+  "description": "【原典:クロステイルズ】物攻208/魔攻69/必殺15%/命中216/俊敏-39｜その他:物防70｜固有:風属性威力+25、命中力25%低下付与、跳躍力+2｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 13,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

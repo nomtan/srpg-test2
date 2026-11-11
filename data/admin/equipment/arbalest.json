@@ -1,0 +1,23 @@
+{
+  "id": "arbalest",
+  "name": "アーバレスト",
+  "description": "【原典:クロステイルズ】物攻119/魔攻69/必殺20%/命中200/俊敏-39",
+  "price": 4500,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 7,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 6,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "battle_armor",
+  "name": "バトルアーマー",
+  "description": "【原典:クロステイルズ】物防124/魔防95/回避45/俊敏-46｜その他:Mp回復-3%",
+  "price": 1200,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

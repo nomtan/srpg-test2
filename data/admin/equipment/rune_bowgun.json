@@ -1,0 +1,23 @@
+{
+  "id": "rune_bowgun",
+  "name": "ルーンボウガン",
+  "description": "【原典:クロステイルズ】物攻128/魔攻124/必殺20%/命中220/俊敏-42｜固有:魔防+30、Mp+50、Mp吸収10%｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 4,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

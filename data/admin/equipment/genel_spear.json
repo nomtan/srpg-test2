@@ -1,0 +1,23 @@
+{
+  "id": "genel_spear",
+  "name": "ゲネルスピア",
+  "description": "【原典:クロステイルズ】物攻156/魔攻116/必殺25%/命中161/俊敏-55｜その他:回避-16｜固有:Mp+30、消費Mp低下-3、Exp入手+25%｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 4,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 10,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

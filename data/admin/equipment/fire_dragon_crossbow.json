@@ -1,0 +1,23 @@
+{
+  "id": "fire_dragon_crossbow",
+  "name": "火竜弩",
+  "description": "【原典:クロステイルズ】物攻156/魔攻93/必殺25%/命中260/俊敏-46｜固有:追加ダメージ+50、物防25%低下付与、ドロップ率+50%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 10,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 6,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

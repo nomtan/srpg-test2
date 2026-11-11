@@ -1,0 +1,23 @@
+{
+  "id": "mithril_spear",
+  "name": "ミスリルスピア",
+  "description": "【原典:クロステイルズ】物攻176/魔攻104/必殺5%/命中182/俊敏-60｜その他:回避-42｜固有:Mp回復+7%",
+  "price": 5400,
+  "statBonus": {
+    "int": 3,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 11,
+  "accuracyModifier": 0,
+  "criticalModifier": 3,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

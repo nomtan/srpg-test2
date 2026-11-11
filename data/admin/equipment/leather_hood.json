@@ -1,0 +1,14 @@
+{
+  "id": "leather_hood",
+  "name": "レザーフード",
+  "description": "【原典:クロステイルズ】物防15/魔攻10/魔防22｜その他:Mp回復3%",
+  "price": 150,
+  "statBonus": {
+    "vit": 1,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "sandals",
+  "name": "サンダル",
+  "description": "【原典:クロステイルズ】物防17/回避19/俊敏24｜その他:Mp回復3%",
+  "price": 50,
+  "statBonus": {
+    "vit": 1,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 2
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

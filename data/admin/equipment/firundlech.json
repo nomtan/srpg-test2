@@ -1,0 +1,23 @@
+{
+  "id": "firundlech",
+  "name": "フィルンドルヒ",
+  "description": "【原典:クロステイルズ】物攻164/魔攻199/必殺20%/命中306/俊敏-42｜固有:反撃威力+50、麻痺発動20%、反撃無効｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 6,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 10,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

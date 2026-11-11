@@ -1,0 +1,16 @@
+{
+  "id": "scale_mail",
+  "name": "スケイルメイル",
+  "description": "【原典:クロステイルズ】物防128/魔防92/回避126/俊敏-44",
+  "price": 2600,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

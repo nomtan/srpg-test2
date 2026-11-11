@@ -1,0 +1,16 @@
+{
+  "id": "pure_white_ring",
+  "name": "純白の指輪",
+  "description": "【原典:クロステイルズ】物防30/魔防64/回避29｜固有:ヘイト回復+20%",
+  "price": 1400,
+  "statBonus": {
+    "vit": 1,
+    "mnd": 3
+  },
+  "buildBonus": {
+    "evasion": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

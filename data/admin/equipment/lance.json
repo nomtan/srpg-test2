@@ -1,0 +1,23 @@
+{
+  "id": "lance",
+  "name": "ランス",
+  "description": "【原典:クロステイルズ】物攻104/魔攻52/必殺10%/命中102/俊敏-40｜その他:回避-16",
+  "price": 900,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 7,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

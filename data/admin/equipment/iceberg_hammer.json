@@ -1,0 +1,23 @@
+{
+  "id": "iceberg_hammer",
+  "name": "アイスベルクハンマー",
+  "description": "【原典:クロステイルズ】物攻226/魔攻148/必殺15%/命中160/俊敏-87｜固有:水属性威力+25、爬虫類特効、通常攻撃威力+25｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 5,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 14,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

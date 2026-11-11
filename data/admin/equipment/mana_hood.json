@@ -1,0 +1,15 @@
+{
+  "id": "mana_hood",
+  "name": "マナフード",
+  "description": "【原典:クロステイルズ】物防52/魔攻32/魔防86｜その他:Mp回復5%｜固有:封印無効、瀕死時魔攻+50%、ヘイト回復+10%｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 2,
+    "int": 1,
+    "mnd": 3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

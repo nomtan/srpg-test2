@@ -1,0 +1,22 @@
+{
+  "id": "short_sword",
+  "name": "ショートソード",
+  "description": "【原典:クロステイルズ】物攻56/魔攻13/必殺20%/命中46/俊敏-24",
+  "price": 100,
+  "statBonus": {
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 4,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

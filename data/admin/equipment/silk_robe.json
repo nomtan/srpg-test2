@@ -1,0 +1,16 @@
+{
+  "id": "silk_robe",
+  "name": "シルクローブ",
+  "description": "【原典:クロステイルズ】物防79/魔防143/回避82/俊敏-30｜その他:Mp回復5%",
+  "price": 1800,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 5,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

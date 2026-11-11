@@ -1,0 +1,23 @@
+{
+  "id": "agnea_spear",
+  "name": "火槍アグネア",
+  "description": "【原典:クロステイルズ】物攻284/魔攻132/必殺5%/命中256/俊敏-85｜その他:回避-54｜固有:追加ダメージ+50、遅死発動10%、火耐性+1段階｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 4,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 18,
+  "accuracyModifier": 0,
+  "criticalModifier": 3,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

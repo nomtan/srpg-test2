@@ -1,0 +1,23 @@
+{
+  "id": "kris_knife",
+  "name": "クリスナイフ",
+  "description": "【原典:クロステイルズ】物攻44/魔攻47/必殺25%/命中98/俊敏-14",
+  "price": 300,
+  "statBonus": {
+    "int": 1,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

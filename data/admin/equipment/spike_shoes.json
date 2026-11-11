@@ -1,0 +1,16 @@
+{
+  "id": "spike_shoes",
+  "name": "スパイクシューズ",
+  "description": "【原典:クロステイルズ】物防31/回避36/俊敏35",
+  "price": 150,
+  "statBonus": {
+    "vit": 1,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

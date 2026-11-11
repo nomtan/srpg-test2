@@ -1,0 +1,16 @@
+{
+  "id": "mithril_robe",
+  "name": "ミスリルローブ",
+  "description": "【原典:クロステイルズ】物防102/魔防189/回避103/俊敏-36｜その他:Mp回復5%｜固有:Mp回復7%",
+  "price": 3500,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 6,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

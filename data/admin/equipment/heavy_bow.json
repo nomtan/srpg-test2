@@ -1,0 +1,23 @@
+{
+  "id": "heavy_bow",
+  "name": "ヘヴィボウ",
+  "description": "【原典:クロステイルズ】物攻128/魔攻24/必殺10%/命中89/俊敏-44｜固有:通常攻撃威力+10",
+  "price": 3900,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 4,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

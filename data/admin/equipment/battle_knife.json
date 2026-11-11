@@ -1,0 +1,23 @@
+{
+  "id": "battle_knife",
+  "name": "バトルナイフ",
+  "description": "【原典:クロステイルズ】物攻32/魔攻31/必殺25%/命中74/俊敏-12",
+  "price": 100,
+  "statBonus": {
+    "int": 1,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 2,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

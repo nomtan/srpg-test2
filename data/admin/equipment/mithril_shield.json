@@ -1,0 +1,16 @@
+{
+  "id": "mithril_shield",
+  "name": "ミスリルシールド",
+  "description": "【原典:クロステイルズ】盾防御20%/物防90/魔防74/回避-26/俊敏-48｜固有:Mp回復3%",
+  "price": 3500,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

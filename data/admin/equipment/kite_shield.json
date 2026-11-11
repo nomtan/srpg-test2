@@ -1,0 +1,16 @@
+{
+  "id": "kite_shield",
+  "name": "カイトシールド",
+  "description": "【原典:クロステイルズ】盾防御20%/物防68/魔防42/回避-20/俊敏-40｜固有:瀕死時俊敏+50%",
+  "price": 1800,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

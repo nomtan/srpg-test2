@@ -1,0 +1,23 @@
+{
+  "id": "tonitrus_sword",
+  "name": "雷剣トニトルス",
+  "description": "【原典:クロステイルズ】物攻258/魔攻52/必殺10%/命中98/俊敏-76｜固有:パリィ+10%、麻痺発動10%、風属性威力+25｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 16,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

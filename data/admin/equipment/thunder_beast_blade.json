@@ -1,0 +1,23 @@
+{
+  "id": "thunder_beast_blade",
+  "name": "雷獣刀",
+  "description": "【原典:クロステイルズ】物攻136/魔攻159/必殺30%/命中298/俊敏-12｜固有:麻痺発動15%、盾防御無効、跳躍力+2｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 5,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 9,
+  "accuracyModifier": 0,
+  "criticalModifier": 15,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "sun_blade",
+  "name": "サンブレード",
+  "description": "【原典:クロステイルズ】物攻322/魔攻34/必殺10%/命中90/俊敏-96｜固有:Hp+100、物防25%低下付与、追加ダメージ+30｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 1,
+    "agi": -5
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 20,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "leather_mail",
+  "name": "レザーメイル",
+  "description": "【原典:クロステイルズ】物防47/魔防32/回避47/俊敏-24",
+  "price": 100,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

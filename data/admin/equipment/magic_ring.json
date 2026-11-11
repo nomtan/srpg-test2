@@ -1,0 +1,14 @@
+{
+  "id": "magic_ring",
+  "name": "魔力の指輪",
+  "description": "【原典:クロステイルズ】魔攻40/魔防33｜固有:Mp+40",
+  "price": 1800,
+  "statBonus": {
+    "int": 2,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

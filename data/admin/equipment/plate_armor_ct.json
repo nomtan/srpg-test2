@@ -1,0 +1,16 @@
+{
+  "id": "plate_armor_ct",
+  "name": "プレートアーマー",
+  "description": "【原典:クロステイルズ】物防164/魔防127/回避59/俊敏-57｜その他:Mp回復-3%",
+  "price": 2600,
+  "statBonus": {
+    "vit": 5,
+    "mnd": 4,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

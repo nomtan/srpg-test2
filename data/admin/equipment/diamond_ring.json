@@ -1,0 +1,16 @@
+{
+  "id": "diamond_ring",
+  "name": "ダイヤモンドの指輪",
+  "description": "【原典:クロステイルズ】物攻41/魔攻25/命中38｜その他:Mp回復3%",
+  "price": 2300,
+  "statBonus": {
+    "str": 2,
+    "int": 1
+  },
+  "buildBonus": {
+    "accuracy": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

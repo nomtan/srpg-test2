@@ -1,0 +1,23 @@
+{
+  "id": "wisdom_staff",
+  "name": "ウィズダムスタッフ",
+  "description": "【原典:クロステイルズ】物攻66/魔攻182/必殺10%/命中140/俊敏-52",
+  "price": 6800,
+  "statBonus": {
+    "int": 6,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 4,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "feather_hat",
+  "name": "羽根付き帽子",
+  "description": "【原典:クロステイルズ】物防34/魔防34/命中34｜固有:命中力+25",
+  "price": 550,
+  "statBonus": {
+    "vit": 1,
+    "mnd": 1
+  },
+  "buildBonus": {
+    "accuracy": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

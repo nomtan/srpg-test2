@@ -1,0 +1,23 @@
+{
+  "id": "enif_sword",
+  "name": "聖剣エニフ",
+  "description": "【原典:クロステイルズ】物攻233/魔攻127/必殺20%/命中198/俊敏-60｜固有:ガッツ+50%、ターンHp回復+75、ヘイト回復+20%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 4,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 15,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "half_helm",
+  "name": "ハーフヘルム",
+  "description": "【原典:クロステイルズ】物防50/魔防39",
+  "price": 300,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

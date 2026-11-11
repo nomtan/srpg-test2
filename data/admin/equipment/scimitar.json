@@ -1,0 +1,23 @@
+{
+  "id": "scimitar",
+  "name": "シミター",
+  "description": "【原典:クロステイルズ】物攻102/魔攻23/必殺20%/命中70/俊敏-32",
+  "price": 600,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 6,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

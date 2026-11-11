@@ -1,0 +1,23 @@
+{
+  "id": "mithril_blade",
+  "name": "ミスリルブレード",
+  "description": "【原典:クロステイルズ】物攻210/魔攻64/必殺10%/命中66/俊敏-72｜固有:Mp回復+3%",
+  "price": 5400,
+  "statBonus": {
+    "int": 2,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 13,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "berserker_cursed_armor",
+  "name": "狂戦士の呪鎧",
+  "description": "【原典:クロステイルズ】物防276/魔防198/回避98/俊敏-77｜その他:Mp回復-5%｜固有:瀕死時物攻+50%、通常攻撃威力+25、ガッツ+25%｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 9,
+    "mnd": 7,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

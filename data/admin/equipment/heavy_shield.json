@@ -1,0 +1,16 @@
+{
+  "id": "heavy_shield",
+  "name": "ヘヴィシールド",
+  "description": "【原典:クロステイルズ】盾防御15%/物防88/魔防50/回避-34/俊敏-44",
+  "price": 2600,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

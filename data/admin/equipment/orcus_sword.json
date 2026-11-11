@@ -1,0 +1,23 @@
+{
+  "id": "orcus_sword",
+  "name": "魔剣オルクス",
+  "description": "【原典:クロステイルズ】物攻240/魔攻71/必殺25%/命中190/俊敏-68｜固有:Hp吸収30%、Mp吸収10%、ヘイト回復-10%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 15,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

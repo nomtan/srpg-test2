@@ -1,0 +1,23 @@
+{
+  "id": "metal_claw",
+  "name": "メタルクロー",
+  "description": "【原典:クロステイルズ】物攻116/魔攻29/必殺15%/命中102/俊敏-24｜その他:物防38",
+  "price": 900,
+  "statBonus": {
+    "int": 1,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 7,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

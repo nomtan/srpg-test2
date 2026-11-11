@@ -1,0 +1,23 @@
+{
+  "id": "academia_staff",
+  "name": "アカデミアスタッフ",
+  "description": "【原典:クロステイルズ】物攻42/魔攻122/必殺10%/命中110/俊敏-40",
+  "price": 2700,
+  "statBonus": {
+    "int": 4,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "STAFF",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

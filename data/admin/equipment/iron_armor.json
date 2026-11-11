@@ -1,0 +1,16 @@
+{
+  "id": "iron_armor",
+  "name": "アイアンアーマー",
+  "description": "【原典:クロステイルズ】物防105/魔防79/回避35/俊敏-40｜その他:Mp回復-3%",
+  "price": 600,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

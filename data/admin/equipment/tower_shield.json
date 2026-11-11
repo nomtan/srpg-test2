@@ -1,0 +1,16 @@
+{
+  "id": "tower_shield",
+  "name": "タワーシールド",
+  "description": "【原典:クロステイルズ】盾防御10%/物防102/魔防64/回避-38/俊敏-52｜固有:ノックバック無効",
+  "price": 4500,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

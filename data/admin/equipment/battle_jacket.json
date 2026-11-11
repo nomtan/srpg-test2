@@ -1,0 +1,16 @@
+{
+  "id": "battle_jacket",
+  "name": "バトルジャケット",
+  "description": "【原典:クロステイルズ】物防65/魔防44/回避61/俊敏-28",
+  "price": 300,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

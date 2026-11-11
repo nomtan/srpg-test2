@@ -1,0 +1,16 @@
+{
+  "id": "hard_leather_mail",
+  "name": "ハードレザーメイル",
+  "description": "【原典:クロステイルズ】物防78/魔防56/回避78/俊敏-32",
+  "price": 600,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

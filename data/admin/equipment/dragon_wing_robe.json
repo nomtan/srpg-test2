@@ -1,0 +1,16 @@
+{
+  "id": "dragon_wing_robe",
+  "name": "竜翼のローブ",
+  "description": "【原典:クロステイルズ】物防164/魔防156/回避168/俊敏-51｜その他:Mp回復5%｜固有:移動力+1、鈍足無効、風耐性+1段階｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 5,
+    "mnd": 5,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

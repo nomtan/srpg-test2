@@ -1,0 +1,16 @@
+{
+  "id": "emerald_ring",
+  "name": "エメラルドの指輪",
+  "description": "【原典:クロステイルズ】物攻29/魔攻16/命中26｜その他:Mp回復3%",
+  "price": 950,
+  "statBonus": {
+    "str": 1,
+    "int": 1
+  },
+  "buildBonus": {
+    "accuracy": 3
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "heat_bunker",
+  "name": "ヒートバンカー",
+  "description": "【原典:クロステイルズ】物攻168/魔攻53/必殺20%/命中184/俊敏-33｜その他:物防58｜固有:ノックバック+30%、追加ダメージ+30、盾防御無効｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 11,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

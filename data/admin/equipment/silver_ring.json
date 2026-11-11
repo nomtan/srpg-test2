@@ -1,0 +1,14 @@
+{
+  "id": "silver_ring",
+  "name": "銀の指輪",
+  "description": "【原典:クロステイルズ】物防17/魔攻33｜固有:病毒無効",
+  "price": 300,
+  "statBonus": {
+    "vit": 1,
+    "int": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

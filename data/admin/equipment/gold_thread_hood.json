@@ -1,0 +1,15 @@
+{
+  "id": "gold_thread_hood",
+  "name": "金糸のフード",
+  "description": "【原典:クロステイルズ】物防40/魔攻23/魔防60｜その他:Mp回復3%｜固有:魔攻+10",
+  "price": 2300,
+  "statBonus": {
+    "vit": 2,
+    "int": 1,
+    "mnd": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

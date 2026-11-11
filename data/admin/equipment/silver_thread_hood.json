@@ -1,0 +1,15 @@
+{
+  "id": "silver_thread_hood",
+  "name": "銀糸のフード",
+  "description": "【原典:クロステイルズ】物防31/魔攻19/魔防47｜その他:Mp回復3%｜固有:Mp回復3%",
+  "price": 1400,
+  "statBonus": {
+    "vit": 1,
+    "int": 1,
+    "mnd": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

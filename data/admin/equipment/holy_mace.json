@@ -1,0 +1,23 @@
+{
+  "id": "holy_mace",
+  "name": "ホーリーメイス",
+  "description": "【原典:クロステイルズ】物攻126/魔攻108/必殺15%/命中92/俊敏-47｜固有:ターンHp回復+25、病毒無効、ヘイト回復+35%｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

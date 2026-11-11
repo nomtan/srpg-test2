@@ -1,0 +1,16 @@
+{
+  "id": "chain_boots",
+  "name": "チェインブーツ",
+  "description": "【原典:クロステイルズ】物防57/回避40/俊敏20",
+  "price": 950,
+  "statBonus": {
+    "vit": 2,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

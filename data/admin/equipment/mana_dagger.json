@@ -1,0 +1,23 @@
+{
+  "id": "mana_dagger",
+  "name": "マナダガー",
+  "description": "【原典:クロステイルズ】物攻84/魔攻148/必殺25%/命中194/俊敏-22｜固有:Mp回復+10%、Mp吸収10%、Mp+50｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 5,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "wing_boots",
+  "name": "ウィングブーツ",
+  "description": "【原典:クロステイルズ】物防74/回避82/俊敏55｜固有:移動力+2、跳躍力+3、敵乗り越え可｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 3,
+    "agi": 3
+  },
+  "buildBonus": {
+    "evasion": 8
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

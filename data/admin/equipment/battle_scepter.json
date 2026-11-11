@@ -1,0 +1,23 @@
+{
+  "id": "battle_scepter",
+  "name": "バトルセプター",
+  "description": "【原典:クロステイルズ】物攻86/魔攻76/必殺15%/命中68/俊敏-41",
+  "price": 1200,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

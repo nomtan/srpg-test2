@@ -1,0 +1,15 @@
+{
+  "id": "silk_hood",
+  "name": "シルクフード",
+  "description": "【原典:クロステイルズ】物防26/魔攻16/魔防42｜その他:Mp回復3%｜固有:消費Mp低下-1",
+  "price": 950,
+  "statBonus": {
+    "vit": 1,
+    "int": 1,
+    "mnd": 2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

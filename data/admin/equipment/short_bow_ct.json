@@ -1,0 +1,22 @@
+{
+  "id": "short_bow_ct",
+  "name": "ショートボウ",
+  "description": "【原典:クロステイルズ】物攻46/魔攻4/必殺10%/命中32/俊敏-24",
+  "price": 150,
+  "statBonus": {
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 3,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

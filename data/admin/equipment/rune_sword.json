@@ -1,0 +1,23 @@
+{
+  "id": "rune_sword",
+  "name": "ルーンソード",
+  "description": "【原典:クロステイルズ】物攻200/魔攻103/必殺20%/命中166/俊敏-48｜固有:魔防+50、Mp+30、消費Mp低下-5｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 13,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

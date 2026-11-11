@@ -1,0 +1,16 @@
+{
+  "id": "mana_shield",
+  "name": "マナシールド",
+  "description": "【原典:クロステイルズ】盾防御20%/物防68/魔防82/回避-18/俊敏-44｜固有:Mp+40、ヘイト回復+5%、消費Mp低下-3｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

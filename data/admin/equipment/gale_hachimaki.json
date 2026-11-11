@@ -1,0 +1,17 @@
+{
+  "id": "gale_hachimaki",
+  "name": "疾風の鉢巻き",
+  "description": "【原典:クロステイルズ】物防64/魔防41/命中41/回避41｜固有:瀕死時回避力+50%、鈍足無効、風耐性+1段階｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2
+  },
+  "buildBonus": {
+    "accuracy": 4,
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

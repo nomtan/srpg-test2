@@ -1,0 +1,13 @@
+{
+  "id": "shield_ring",
+  "name": "盾の指輪",
+  "description": "【原典:クロステイルズ】物防22/魔防9｜固有:盾防御+15%",
+  "price": 50,
+  "statBonus": {
+    "vit": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

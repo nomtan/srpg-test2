@@ -1,0 +1,16 @@
+{
+  "id": "beret",
+  "name": "ベレー帽",
+  "description": "【原典:クロステイルズ】物防54/魔防52/命中59｜固有:命中力+50",
+  "price": 1800,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 2
+  },
+  "buildBonus": {
+    "accuracy": 6
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

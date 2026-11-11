@@ -1,0 +1,16 @@
+{
+  "id": "mithril_armor",
+  "name": "ミスリルアーマー",
+  "description": "【原典:クロステイルズ】物防176/魔防150/回避68/俊敏-58｜その他:Mp回復-3%｜固有:Mp回復3%",
+  "price": 3500,
+  "statBonus": {
+    "vit": 6,
+    "mnd": 5,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

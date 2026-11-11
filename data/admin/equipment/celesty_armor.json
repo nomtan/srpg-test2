@@ -1,0 +1,16 @@
+{
+  "id": "celesty_armor",
+  "name": "聖鎧セレスティ",
+  "description": "【原典:クロステイルズ】物防262/魔防232/回避106/俊敏-80｜その他:Mp回復3%｜固有:全能力+25、ターンHp回復+50、ノックバック無効｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 9,
+    "mnd": 8,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

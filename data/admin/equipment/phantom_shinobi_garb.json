@@ -1,0 +1,16 @@
+{
+  "id": "phantom_shinobi_garb",
+  "name": "幻影の忍帷子",
+  "description": "【原典:クロステイルズ】物防214/魔防147/回避241/俊敏-68｜固有:ヘイト回復+20%、敵乗り越え可、精神耐性+2段階｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 7,
+    "mnd": 5,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

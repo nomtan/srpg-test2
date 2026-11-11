@@ -1,0 +1,23 @@
+{
+  "id": "mithril_claw",
+  "name": "ミスリルクロー",
+  "description": "【原典:クロステイルズ】物攻188/魔攻75/必殺15%/命中180/俊敏-36｜その他:物防66｜固有:Mp回復+5%",
+  "price": 5400,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 12,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

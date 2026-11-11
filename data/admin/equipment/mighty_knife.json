@@ -1,0 +1,23 @@
+{
+  "id": "mighty_knife",
+  "name": "マイティナイフ",
+  "description": "【原典:クロステイルズ】物攻132/魔攻111/必殺25%/命中242/俊敏-42",
+  "price": 4500,
+  "statBonus": {
+    "int": 3,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 13,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

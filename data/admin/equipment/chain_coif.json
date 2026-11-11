@@ -1,0 +1,16 @@
+{
+  "id": "chain_coif",
+  "name": "チェインコイフ",
+  "description": "【原典:クロステイルズ】物防40/魔防24/命中40",
+  "price": 950,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1
+  },
+  "buildBonus": {
+    "accuracy": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

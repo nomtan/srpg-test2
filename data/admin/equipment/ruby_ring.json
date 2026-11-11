@@ -1,0 +1,15 @@
+{
+  "id": "ruby_ring",
+  "name": "ルビーの指輪",
+  "description": "【原典:クロステイルズ】物攻32/魔攻19/魔防29｜その他:Mp回復3%",
+  "price": 1400,
+  "statBonus": {
+    "str": 1,
+    "int": 1,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

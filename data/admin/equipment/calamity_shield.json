@@ -1,0 +1,16 @@
+{
+  "id": "calamity_shield",
+  "name": "厄災の盾",
+  "description": "【原典:クロステイルズ】盾防御10%/物防116/魔防106/回避-40/俊敏-60｜固有:物理耐性+1段階、状態異常耐性-1段階、ヘイト回復-15%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 4,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

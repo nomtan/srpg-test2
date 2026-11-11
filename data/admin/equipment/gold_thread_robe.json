@@ -1,0 +1,16 @@
+{
+  "id": "gold_thread_robe",
+  "name": "金糸のローブ",
+  "description": "【原典:クロステイルズ】物防116/魔防197/回避113/俊敏-39｜その他:Mp回復5%｜固有:魔法反射10%",
+  "price": 4500,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 7,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

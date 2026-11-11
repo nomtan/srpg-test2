@@ -1,0 +1,23 @@
+{
+  "id": "morning_star",
+  "name": "モーニングスター",
+  "description": "【原典:クロステイルズ】物攻114/魔攻72/必殺15%/命中80/俊敏-50｜固有:追加ダメージ+10",
+  "price": 1800,
+  "statBonus": {
+    "int": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 7,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "iron_boots",
+  "name": "アイアンブーツ",
+  "description": "【原典:クロステイルズ】物防51/回避18/俊敏16",
+  "price": 300,
+  "statBonus": {
+    "vit": 2,
+    "agi": 1
+  },
+  "buildBonus": {
+    "evasion": 2
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

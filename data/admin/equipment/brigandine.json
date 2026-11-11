@@ -1,0 +1,16 @@
+{
+  "id": "brigandine",
+  "name": "ブリガンダイン",
+  "description": "【原典:クロステイルズ】物防95/魔防69/回避93/俊敏-36",
+  "price": 1200,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

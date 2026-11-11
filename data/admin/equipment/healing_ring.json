@@ -1,0 +1,14 @@
+{
+  "id": "healing_ring",
+  "name": "癒しの指輪",
+  "description": "【原典:クロステイルズ】物防44/魔防21｜固有:ターンHp回復+50",
+  "price": 550,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "mithril_bow",
+  "name": "ミスリルボウ",
+  "description": "【原典:クロステイルズ】物攻138/魔攻42/必殺10%/命中104/俊敏-48｜固有:Mp回復+3%",
+  "price": 5400,
+  "statBonus": {
+    "int": 1,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 9,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 4,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

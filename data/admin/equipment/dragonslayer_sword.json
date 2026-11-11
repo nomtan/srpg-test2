@@ -1,0 +1,23 @@
+{
+  "id": "dragonslayer_sword",
+  "name": "竜殺剣",
+  "description": "【原典:クロステイルズ】物攻298/魔攻20/必殺10%/命中74/俊敏-102｜固有:爬虫類特効、通常攻撃威力+25、ノックバック+20%｜レア装備:黄金の骨/魚x4と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 1,
+    "agi": -5
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 19,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "dragon_scale_armor",
+  "name": "竜鱗の大鎧",
+  "description": "【原典:クロステイルズ】物防288/魔防214/回避102/俊敏-89｜その他:Mp回復-3%｜固有:Hp+100、物攻+20、火耐性+1段階｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 10,
+    "mnd": 7,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

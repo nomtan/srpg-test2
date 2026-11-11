@@ -1,0 +1,16 @@
+{
+  "id": "silver_thread_robe",
+  "name": "銀糸のローブ",
+  "description": "【原典:クロステイルズ】物防95/魔防162/回避91/俊敏-33｜その他:Mp回復5%",
+  "price": 2600,
+  "statBonus": {
+    "vit": 3,
+    "mnd": 5,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "robe",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

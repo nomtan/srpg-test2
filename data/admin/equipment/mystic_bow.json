@@ -1,0 +1,23 @@
+{
+  "id": "mystic_bow",
+  "name": "ミスティックボウ",
+  "description": "【原典:クロステイルズ】物攻126/魔攻67/必殺10%/命中92/俊敏-44｜固有:Mp回復+10%、封印発動10%、Exp入手+10%｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 4,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

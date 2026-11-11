@@ -1,0 +1,16 @@
+{
+  "id": "academia_sandals",
+  "name": "アカデミアサンダル",
+  "description": "【原典:クロステイルズ】物防40/回避43/俊敏40｜その他:Mp回復3%｜固有:魔攻+10",
+  "price": 950,
+  "statBonus": {
+    "vit": 2,
+    "agi": 2
+  },
+  "buildBonus": {
+    "evasion": 4
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

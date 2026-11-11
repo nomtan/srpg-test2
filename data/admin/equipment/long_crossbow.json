@@ -1,0 +1,23 @@
+{
+  "id": "long_crossbow",
+  "name": "ロングボウガン",
+  "description": "【原典:クロステイルズ】物攻46/魔攻21/必殺20%/命中80/俊敏-21",
+  "price": 300,
+  "statBonus": {
+    "int": 1,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 3,
+  "accuracyModifier": 0,
+  "criticalModifier": 10,
+  "minRange": 1,
+  "maxRange": 4,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

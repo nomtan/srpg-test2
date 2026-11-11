@@ -1,0 +1,23 @@
+{
+  "id": "heavy_mace",
+  "name": "ヘヴィメイス",
+  "description": "【原典:クロステイルズ】物攻130/魔攻84/必殺15%/命中88/俊敏-59｜固有:物防25%低下付与",
+  "price": 2600,
+  "statBonus": {
+    "int": 3,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "MACE",
+  "weaponPower": 8,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

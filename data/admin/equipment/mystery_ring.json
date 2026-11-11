@@ -1,0 +1,16 @@
+{
+  "id": "mystery_ring",
+  "name": "神秘の指輪",
+  "description": "【原典:クロステイルズ】命中53/回避61/俊敏54｜固有:Exp入手+25%、Jp入手+10%、ガッツ+50%｜レア装備:黄金の骨/魚x5と交換",
+  "price": 0,
+  "statBonus": {
+    "agi": 3
+  },
+  "buildBonus": {
+    "accuracy": 5,
+    "evasion": 6
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

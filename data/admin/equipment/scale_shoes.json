@@ -1,0 +1,16 @@
+{
+  "id": "scale_shoes",
+  "name": "スケイルシューズ",
+  "description": "【原典:クロステイルズ】物防62/回避68/俊敏55",
+  "price": 1400,
+  "statBonus": {
+    "vit": 2,
+    "agi": 3
+  },
+  "buildBonus": {
+    "evasion": 7
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

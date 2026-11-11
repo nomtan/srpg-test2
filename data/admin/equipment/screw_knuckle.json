@@ -1,0 +1,23 @@
+{
+  "id": "screw_knuckle",
+  "name": "スクリューナックル",
+  "description": "【原典:クロステイルズ】物攻216/魔攻69/必殺15%/命中204/俊敏-39｜その他:物防74｜固有:追加ダメージ+10",
+  "price": 6800,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 14,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

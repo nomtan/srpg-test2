@@ -1,0 +1,16 @@
+{
+  "id": "mithril_cuirass",
+  "name": "ミスリルキュイラス",
+  "description": "【原典:クロステイルズ】物防142/魔防112/回避143/俊敏-48｜固有:Mp回復5%",
+  "price": 3500,
+  "statBonus": {
+    "vit": 5,
+    "mnd": 4,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

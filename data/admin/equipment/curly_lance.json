@@ -1,0 +1,23 @@
+{
+  "id": "curly_lance",
+  "name": "カーリーランス",
+  "description": "【原典:クロステイルズ】物攻144/魔攻76/必殺10%/命中140/俊敏-50｜その他:回避-28",
+  "price": 2700,
+  "statBonus": {
+    "int": 2,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SPEAR",
+  "weaponPower": 9,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 2,
+  "maxRange": 2,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

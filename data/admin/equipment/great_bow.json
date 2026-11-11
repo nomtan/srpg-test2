@@ -1,0 +1,23 @@
+{
+  "id": "great_bow",
+  "name": "グレートボウ",
+  "description": "【原典:クロステイルズ】物攻162/魔攻32/必殺10%/命中114/俊敏-52",
+  "price": 6800,
+  "statBonus": {
+    "int": 1,
+    "agi": -3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "BOW",
+  "weaponPower": 10,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 4,
+  "maxRange": 5,
+  "requiresLineOfSight": true,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

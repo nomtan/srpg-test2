@@ -1,0 +1,23 @@
+{
+  "id": "stiletto",
+  "name": "スティレット",
+  "description": "【原典:クロステイルズ】物攻72/魔攻63/必殺30%/命中146/俊敏-14",
+  "price": 1200,
+  "statBonus": {
+    "int": 2,
+    "agi": -1
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "DAGGER",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 15,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

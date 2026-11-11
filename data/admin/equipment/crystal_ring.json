@@ -1,0 +1,13 @@
+{
+  "id": "crystal_ring",
+  "name": "水晶の指輪",
+  "description": "【原典:クロステイルズ】物攻10/魔攻9/命中9｜その他:Mp回復3%",
+  "price": 50,
+  "statBonus": {},
+  "buildBonus": {
+    "accuracy": 1
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

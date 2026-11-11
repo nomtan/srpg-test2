@@ -1,0 +1,23 @@
+{
+  "id": "heavy_knuckle",
+  "name": "ヘヴィナックル",
+  "description": "【原典:クロステイルズ】物攻168/魔攻53/必殺15%/命中152/俊敏-33｜その他:物防62｜固有:ノックバック+10%",
+  "price": 3900,
+  "statBonus": {
+    "int": 2,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "FIST",
+  "weaponPower": 11,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

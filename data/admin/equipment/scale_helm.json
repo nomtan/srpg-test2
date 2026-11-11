@@ -1,0 +1,16 @@
+{
+  "id": "scale_helm",
+  "name": "スケイルヘルム",
+  "description": "【原典:クロステイルズ】物防46/魔防29/命中46",
+  "price": 1400,
+  "statBonus": {
+    "vit": 2,
+    "mnd": 1
+  },
+  "buildBonus": {
+    "accuracy": 5
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

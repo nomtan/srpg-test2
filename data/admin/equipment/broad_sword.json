@@ -1,0 +1,22 @@
+{
+  "id": "broad_sword",
+  "name": "ブロードソード",
+  "description": "【原典:クロステイルズ】物攻78/魔攻4/必殺10%/命中18/俊敏-36",
+  "price": 150,
+  "statBonus": {
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 5,
+  "accuracyModifier": 0,
+  "criticalModifier": 5,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

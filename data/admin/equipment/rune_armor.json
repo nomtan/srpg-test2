@@ -1,0 +1,16 @@
+{
+  "id": "rune_armor",
+  "name": "ルーンアーマー",
+  "description": "【原典:クロステイルズ】物防224/魔防182/回避85/俊敏-70｜その他:Mp回復5%｜固有:魔攻+30、Mp+50、瀕死時魔防+25%｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 7,
+    "mnd": 6,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "heavy",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

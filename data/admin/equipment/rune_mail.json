@@ -1,0 +1,16 @@
+{
+  "id": "rune_mail",
+  "name": "ルーンメイル",
+  "description": "【原典:クロステイルズ】物防130/魔防108/回避124/俊敏-44｜その他:Mp回復3%｜固有:物攻+20、魔攻+20、Hp&Mp+35｜レア装備:黄金の骨/魚x2と交換",
+  "price": 0,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 4,
+    "agi": -2
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "armor",
+  "armorCategory": "medium",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

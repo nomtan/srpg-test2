@@ -1,0 +1,23 @@
+{
+  "id": "soul_eater",
+  "name": "ソウルイーター",
+  "description": "【原典:クロステイルズ】物攻274/魔攻70/必殺15%/命中86/俊敏-84｜固有:Mp吸収15%、封印発動25%、Exp入手+10%｜レア装備:黄金の骨/魚x3と交換",
+  "price": 0,
+  "statBonus": {
+    "int": 2,
+    "agi": -4
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "weapon",
+  "weaponType": "SWORD",
+  "weaponPower": 17,
+  "accuracyModifier": 0,
+  "criticalModifier": 8,
+  "minRange": 1,
+  "maxRange": 1,
+  "requiresLineOfSight": false,
+  "visualModelPath": "",
+  "visualScale": 1.0,
+  "iconPath": "/equipment-icons/placeholder.png"
+}

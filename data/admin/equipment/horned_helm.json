@@ -1,0 +1,14 @@
+{
+  "id": "horned_helm",
+  "name": "ホーンドヘルム",
+  "description": "【原典:クロステイルズ】物防100/魔防77｜固有:物攻+20",
+  "price": 2300,
+  "statBonus": {
+    "vit": 4,
+    "mnd": 3
+  },
+  "buildBonus": {},
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}

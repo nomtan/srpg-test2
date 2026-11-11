@@ -1,0 +1,16 @@
+{
+  "id": "copper_hachimaki",
+  "name": "銅の鉢巻き",
+  "description": "【原典:クロステイルズ】物防22/魔防13/命中22",
+  "price": 150,
+  "statBonus": {
+    "vit": 1,
+    "mnd": 1
+  },
+  "buildBonus": {
+    "accuracy": 2
+  },
+  "elementalResistanceBonus": {},
+  "type": "accessory",
+  "iconPath": "/equipment-icons/placeholder.png"
+}
