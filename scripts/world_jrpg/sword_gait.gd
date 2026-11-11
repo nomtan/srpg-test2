@@ -101,7 +101,9 @@ var arm_length := 1.0
 
 ## Adds the "sword_gait" library (idle, walk, run) to the player and returns the stance's first pose as local bone
 ## transforms, for the attack clips to start and end in; {} when the Body lacks the bones or an idle.
-static func install_armed(player: AnimationPlayer, target: Skeleton3D, sword_grip: Basis, shield_grip: Basis) -> Dictionary:
+## walk_swing scales the sword arm's swing in the walk (the model's "sword_walk_swing" meta; 1 keeps WALK_SWORD), and
+## walk_wrist moves its wrist (arm lengths, chest frame; the "sword_walk_wrist" meta), e.g. out to clear the hips.
+static func install_armed(player: AnimationPlayer, target: Skeleton3D, sword_grip: Basis, shield_grip: Basis, walk_swing := 1.0, walk_wrist := Vector3.ZERO) -> Dictionary:
 	var builder := new()
 	if not builder.setup(player, target): return {}
 	builder._sword_grip = sword_grip
@@ -109,9 +111,14 @@ static func install_armed(player: AnimationPlayer, target: Skeleton3D, sword_gri
 	var chain: Array = ARM_CHAINS.R
 	var points: Array = chain.map(func(bone: String) -> Vector3: return (builder._idle_global[bone] as Transform3D).origin)
 	builder.arm_length = (points[1] - points[0]).length() + (points[2] - points[1]).length()
+	var walk_style := ARMED_WALK_STYLE
+	if not is_equal_approx(walk_swing, 1.0) or not walk_wrist.is_zero_approx():
+		var sword := WALK_SWORD.merged({"wrist": WALK_SWORD.wrist + walk_wrist, "swing": WALK_SWORD.swing * walk_swing,
+			"aim_swing": WALK_SWORD.aim_swing * walk_swing}, true)
+		walk_style = ARMED_WALK_STYLE.merged({"sword": sword}, true)
 	var library := AnimationLibrary.new()
 	library.add_animation("idle", builder._make_stance())
-	library.add_animation("walk", builder._make_cycle(WALK_STYLE.merged(ARMED_WALK_STYLE, true)))
+	library.add_animation("walk", builder._make_cycle(WALK_STYLE.merged(walk_style, true)))
 	library.add_animation("run", builder._make_cycle(RUN_STYLE.merged(ARMED_RUN_STYLE, true)))
 	if player.has_animation_library(ARMED_LIBRARY): player.remove_animation_library(ARMED_LIBRARY)
 	player.add_animation_library(ARMED_LIBRARY, library)

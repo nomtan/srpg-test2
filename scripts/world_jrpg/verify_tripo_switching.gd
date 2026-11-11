@@ -44,7 +44,7 @@ func run() -> void:
 	for clip in ["idle", "walk", "run"]:
 		actor.walking = clip != "idle"
 		actor.running = clip == "run"
-		actor.locomotion_speed = 16.0 if clip == "run" else 4.5
+		actor.locomotion_speed = 16.0 if clip == "run" else 3.8
 		actor.world_facing = Vector3(0.6, 0, 0.8)
 		actor._update_model()
 		for step in ids.size():

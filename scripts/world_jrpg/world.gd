@@ -43,7 +43,7 @@ var hud: CanvasLayer
 const Actor = preload("res://scripts/world_jrpg/pixel_actor.gd")
 const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
 const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
-const WALK_SPEED := 4.5
+const WALK_SPEED := 3.8
 const RUN_SPEED := 16.0
 # Shift eases the gait between walk and sprint instead of jumping 3.5x in one frame.
 const RUN_ACCELERATION := 38.0

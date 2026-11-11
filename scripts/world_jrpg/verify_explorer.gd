@@ -24,7 +24,7 @@ func run() -> void:
 	actor.walking = true
 	actor._process(0)
 	check(player.current_animation == "walk", "Walking selects walk")
-	actor.locomotion_speed = 4.5
+	actor.locomotion_speed = 3.8
 	actor._process(0)
 	check(is_equal_approx(player.speed_scale, 1.0), "Normal walking keeps native cadence")
 	player.advance(0.2)
@@ -38,7 +38,7 @@ func run() -> void:
 	actor._process(0)
 	check(player.current_animation == run_clip and is_equal_approx(player.current_animation_position / player.current_animation_length, walk_phase), "Walk to run preserves stride phase")
 	check(is_equal_approx(player.speed_scale, 1.25), "Sprint cadence stays at a moderate 1.25x")
-	actor.locomotion_speed = 4.5
+	actor.locomotion_speed = 3.8
 	actor._process(0)
 	var walk_rate := 1.0 / player.get_animation("walk").length
 	check(is_equal_approx(player.speed_scale / RunCycle.LENGTH, walk_rate), "Run starting from walking speed keeps the walk cadence")
@@ -52,7 +52,7 @@ func run() -> void:
 	actor._process(0)
 	check(player.current_animation == run_clip, "Slowing from a sprint keeps running until near walking speed")
 	var run_phase := player.current_animation_position / player.current_animation_length
-	actor.locomotion_speed = 4.5
+	actor.locomotion_speed = 3.8
 	actor._process(0)
 	check(player.current_animation == "walk" and is_equal_approx(player.current_animation_position / player.current_animation_length, run_phase), "Run to walk preserves stride phase")
 	actor.walking = false

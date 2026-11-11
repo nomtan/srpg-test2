@@ -5,7 +5,7 @@ const SwordCombat = preload("res://scripts/world_jrpg/sword_combat.gd")
 const RunCycle = preload("res://scripts/world_jrpg/run_cycle.gd")
 const GroundSit = preload("res://scripts/world_jrpg/ground_sit.gd")
 const GaitCycle = preload("res://scripts/world_jrpg/gait_cycle.gd")
-const WALK_CYCLE_SPEED := 4.5
+const WALK_CYCLE_SPEED := 3.8 # Keep in sync with World.WALK_SPEED so walking plays at native cadence.
 const RUN_CYCLE_SPEED := 12.8 # Full sprint uses 1.25x, avoiding frantic torso bob at 2x.
 # Still faster than a walk while slowing from a sprint: keep the run until then.
 const RUN_EXIT_SPEED := 5.5

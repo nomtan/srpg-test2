@@ -91,7 +91,7 @@ func _run() -> void:
 	Input.parse_input_event(move_key)
 	Input.flush_buffered_events()
 	world._process(0.01)
-	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.045), "Walking retains 4.5 units per second")
+	check(is_equal_approx(world.player.position.x - spawn_position.x, 0.038), "Walking retains 3.8 units per second")
 	world.player.position = spawn_position
 	var sprint_key := key_event(KEY_SHIFT)
 	sprint_key.physical_keycode = KEY_SHIFT

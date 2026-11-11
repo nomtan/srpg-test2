@@ -516,6 +516,8 @@ var _rest_blade := READY_BLADE
 # space), for fists modelled around a handle, whose idle twist would not hold SWORD_REST_BLADE through the fist;
 # zero keeps SWORD_REST_BLADE.
 var _bind_blade := Vector3.ZERO
+# The model's "weapon_lit" meta: the weapons keep their imported (lit) materials instead of the characters' toon.
+var _weapon_lit := false
 # Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
 var _hand_frame: Dictionary = {}
 # Ready stance held outside the weapon's clips by the grip modifier; empty leaves those clips as animated.
@@ -551,6 +553,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 	if loadout == "none":
 		return false
 	_bind_blade = model.get_meta("sword_grip_blade", Vector3.ZERO)
+	_weapon_lit = model.get_meta("weapon_lit", false)
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null or player == null or not player.has_animation("idle"):
 		return false
@@ -686,7 +689,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 			has_shield = true
 			guard_clip = GUARD
 			var shield_grip: Basis = (_idle_global[rig["hand.L"]] as Transform3D).basis.inverse() * _shield_rest
-			rest_pose = SwordGait.install_armed(player, skeleton, grip.basis, shield_grip)
+			rest_pose = SwordGait.install_armed(player, skeleton, grip.basis, shield_grip, float(model.get_meta("sword_walk_swing", 1.0)), model.get_meta("sword_walk_wrist", Vector3.ZERO))
 			if not rest_pose.is_empty():
 				idle_clip = SwordGait.STANCE_CLIP
 				walk_clip = SwordGait.ARMED_WALK
@@ -1243,7 +1246,10 @@ func _back_line(chest: int) -> Vector2:
 
 ## Weapons use the characters' toon shading so they keep the same brightness at night instead of going black.
 ## Only instance-level overrides are set; the imported weapon resources are left untouched.
+## A model whose own materials take the scene's lights (the "weapon_lit" meta) keeps the weapons' imported, lit
+## materials to match.
 func _apply_character_toon(root: Node3D) -> void:
+	if _weapon_lit: return
 	for node in root.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
 		if mesh.mesh == null: continue

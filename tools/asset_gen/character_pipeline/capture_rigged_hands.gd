@@ -1,6 +1,6 @@
 extends SceneTree
 ## Close-ups of the standalone test character's sword hand (scenes/characters/standalone/test.tscn) as an
-## explorer with sword and shield, on an empty stage: the sword stance, the walk, the slash, the overhead,
+## explorer with sword and shield, on an empty stage: the sword stance, the walk, the run, the slash, the overhead,
 ## the guard and the skill, each from the sword side and from the front, framed on the right wrist. Checks
 ## the gauntlet does not pinch or wring when the hand turns the grip.
 ## Needs a renderer: godot --path . --script res://tools/asset_gen/character_pipeline/capture_rigged_hands.gd -- [out_dir]
@@ -10,7 +10,7 @@ const Explorer = preload("res://scripts/world_jrpg/explorer_actor.gd")
 const CHARACTER := preload("res://scenes/characters/standalone/test.tscn")
 const SIZE := 360
 # (clip getter, share of the clip's length)
-const POSES := [["idle", 0.3], ["walk", 0.25], ["slash", 0.35], ["overhead", 0.4], ["guard", 1.0], ["skill", 0.45]]
+const POSES := [["idle", 0.3], ["walk", 0.25], ["run", 0.25], ["slash", 0.35], ["overhead", 0.4], ["guard", 1.0], ["skill", 0.45]]
 
 
 func _initialize() -> void:
@@ -46,7 +46,7 @@ func run() -> void:
 	var skeleton := player.model.find_child("Skeleton3D", true, false) as Skeleton3D
 	var hand := skeleton.find_bone("mixamorig_RightHand")
 	var combat = player.sword_combat
-	var clips := {"idle": player.idle_clip, "walk": player.walk_clip, "slash": combat.slash_clip,
+	var clips := {"idle": player.idle_clip, "walk": player.walk_clip, "run": player.run_clip, "slash": combat.slash_clip,
 		"overhead": combat.overhead_clip, "guard": combat.guard_clip, "skill": combat.skill_clip}
 	var rows: Array[Image] = []
 	for pose: Array in POSES:
@@ -54,6 +54,8 @@ func run() -> void:
 		animation.play(clip, 0)
 		animation.seek(animation.get_animation(clip).length * pose[1], true)
 		animation.pause()
+		# ForearmTwist blends its per-clip holds in over a few frames; let them settle as in play.
+		for frame in 20: await process_frame
 		var row: Image = null
 		# Skeleton space: the character faces +Z and its right (the sword side) is -X.
 		var front := (skeleton.global_basis * Vector3.BACK).normalized()
