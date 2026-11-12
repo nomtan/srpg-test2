@@ -18,6 +18,7 @@ import math
 import sys
 from pathlib import Path
 
+import bmesh
 import bpy
 import numpy as np
 from mathutils import Matrix, Quaternion, Vector
@@ -147,6 +148,64 @@ TEST2_HANDS = {'wrist': .395, 'wrist_blend': .01, 'knuckle': .448, 'middle': .46
                'thumb_y': -.028, 'thumb_slope': .1, 'thumb_u': (.40, .445), 'thumb_joint': .425, 'pinky_y': .023, 'pinky_u': .412,
                'centre': {'Left': -.01, 'Right': -.02}, 'top': .745, 'bottom': .655}
 
+# test3: a knight without a cape: a front tabard from the belt and a long back skirt behind the legs.
+# The arms are short in the upper arm (elbow 0.232, wrist 0.368) and swept unevenly: the left arm runs
+# behind the body's centre line (hand y +0.055), the right in front of it (hand y -0.082). All four
+# fingers start at one knuckle line (0.416), so the little finger curls with them (no pinky region);
+# the thumb lies along the front of the palm. Knees are low (0.205) under the gathered trousers.
+TEST3_BONES = dict(TEST_BONES)
+TEST3_BONES.update({
+    'Root': ((0, -.035, 0), (0, -.035, .15), None, None),
+    'Hips': ((0, -.035, .46), (0, -.035, .54), 'Root', .07),
+    'Spine': ((0, -.035, .54), (0, -.04, .62), 'Hips', .07),
+    'Chest': ((0, -.04, .62), (0, -.035, .68), 'Spine', .08),
+    'UpperChest': ((0, -.035, .68), (0, -.03, .75), 'Chest', .08),
+    'Neck': ((0, -.03, .75), (0, -.03, .80), 'UpperChest', .03),
+    'Head': ((0, -.03, .80), (0, -.03, .97), 'Neck', .08),
+    'LeftShoulder': ((.03, -.02, .73), (.11, -.012, .735), 'UpperChest', .03),
+    'LeftArm': ((.11, -.012, .735), (.232, .022, .722), 'LeftShoulder', .035),
+    'LeftForeArm': ((.232, .022, .722), (.368, .04, .712), 'LeftArm', .03),
+    'LeftForeArmTwist1': ((.2773, .028, .7187), (.3227, .034, .7153), 'LeftForeArm', .03),
+    'LeftForeArmTwist2': ((.3227, .034, .7153), (.368, .04, .712), 'LeftForeArm', .03),
+    'LeftHand': ((.368, .04, .712), (.416, .055, .713), 'LeftForeArm', .025),
+    'LeftFingers1': ((.416, .055, .713), (.44, .057, .713), 'LeftHand', .01),
+    'LeftFingers2': ((.44, .057, .713), (.466, .058, .713), 'LeftFingers1', .01),
+    'LeftThumb1': ((.386, .012, .708), (.405, .006, .708), 'LeftHand', .008),
+    'LeftThumb2': ((.405, .006, .708), (.427, .004, .708), 'LeftThumb1', .008),
+    'LeftPinky': ((.416, .085, .712), (.444, .087, .712), 'LeftHand', .008),
+    'RightShoulder': ((-.03, -.035, .73), (-.11, -.035, .735), 'UpperChest', .03),
+    'RightArm': ((-.11, -.035, .735), (-.232, -.05, .722), 'RightShoulder', .035),
+    'RightForeArm': ((-.232, -.05, .722), (-.368, -.072, .712), 'RightArm', .03),
+    'RightForeArmTwist1': ((-.2773, -.0573, .7187), (-.3227, -.0647, .7153), 'RightForeArm', .03),
+    'RightForeArmTwist2': ((-.3227, -.0647, .7153), (-.368, -.072, .712), 'RightForeArm', .03),
+    'RightHand': ((-.368, -.072, .712), (-.417, -.082, .713), 'RightForeArm', .025),
+    'RightFingers1': ((-.417, -.082, .713), (-.44, -.083, .713), 'RightHand', .01),
+    'RightFingers2': ((-.44, -.083, .713), (-.466, -.083, .713), 'RightFingers1', .01),
+    'RightThumb1': ((-.386, -.108, .708), (-.402, -.116, .708), 'RightHand', .008),
+    'RightThumb2': ((-.402, -.116, .708), (-.42, -.12, .708), 'RightThumb1', .008),
+    'RightPinky': ((-.417, -.058, .712), (-.445, -.058, .712), 'RightHand', .008),
+    'LeftUpLeg': ((.08, -.03, .46), (.088, -.025, .205), 'Hips', .05),
+    'LeftLeg': ((.088, -.025, .205), (.092, -.018, .07), 'LeftUpLeg', .04),
+    'LeftFoot': ((.092, -.018, .07), (.095, -.07, .018), 'LeftLeg', .03),
+    'LeftToe': ((.095, -.07, .018), (.095, -.125, .01), 'LeftFoot', .02),
+    'RightUpLeg': ((-.08, -.03, .46), (-.088, -.025, .205), 'Hips', .05),
+    'RightLeg': ((-.088, -.025, .205), (-.092, -.018, .07), 'RightUpLeg', .04),
+    'RightFoot': ((-.092, -.018, .07), (-.095, -.07, .018), 'RightLeg', .03),
+    'RightToe': ((-.095, -.07, .018), (-.095, -.125, .01), 'RightFoot', .02),
+    # The back skirt rides the cape chain; the tabard hangs from the belt in front.
+    'Cape1': ((0, .05, .54), (0, .07, .40), 'Hips', None),
+    'Cape2': ((0, .07, .40), (0, .09, .27), 'Cape1', None),
+    'Cape3': ((0, .09, .27), (0, .11, .14), 'Cape2', None),
+    'Tabard1': ((0, -.12, .54), (0, -.125, .40), 'Hips', None),
+    'Tabard2': ((0, -.125, .40), (0, -.13, .25), 'Tabard1', None),
+})
+TEST3_SKIN_SEGMENTS = {'LeftForeArm': ((.232, .022, .722), (.2773, .028, .7187)),
+                       'RightForeArm': ((-.232, -.05, .722), (-.2773, -.0573, .7187))}
+# Centres put the thumb's edge at y 0.02 (left) and -0.108 (right). pinky_y beyond the hand: no pinky region.
+TEST3_HANDS = {'wrist': .37, 'wrist_blend': .01, 'knuckle': .416, 'middle': .44, 'blend': .004,
+               'thumb_y': -.03, 'thumb_slope': 0, 'thumb_u': (.386, .428), 'thumb_joint': .405, 'pinky_y': 1, 'pinky_u': .416,
+               'centre': {'Left': .05, 'Right': -.078}, 'top': .75, 'bottom': .665}
+
 # The fists baked into the bind pose, so a held weapon sits in a closed hand (SwordCombat runs its grip
 # through the centre of the fist mesh) and empty hands hang as fists. Radians in armature axes: fingers
 # and the little finger curl down toward the palm (the T-pose palms face down), the thumb curls down and
@@ -176,6 +235,17 @@ CHARACTERS = {
                   'tabard_x': 0, 'side_x': .205, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': []},
         'preview': {'scale': 1.25, 'target': (0, 0, .5)},
     },
+    'test3': {
+        'bones': TEST3_BONES, 'hands': TEST3_HANDS, 'skin_segments': TEST3_SKIN_SEGMENTS,
+        # The pauldrons reach in to |x| 0.06 up to z 0.79; only the gorget and the face blend below 0.83.
+        'head_blend': .79, 'head_full': .83, 'head_reach': .07,
+        # The back skirt (behind back_y, and the dark side tails beyond side_x) eases onto the cape chain
+        # below the belt; the tabard is the front panel within tabard_x.
+        'cloth': {'top': .54, 'blend': .08, 'floor': .065, 'leg_radius': .085, 'back_y': .07, 'front_y': -.10,
+                  'tabard_x': .06, 'side_x': .15, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        'clean': {'min_extent': .004},
+        'preview': {'scale': 1.25, 'target': (0, 0, .5)},
+    },
 }
 
 
@@ -191,7 +261,45 @@ def import_source(character_id):
     mesh.data.transform(mesh.matrix_world)
     mesh.matrix_world = Matrix.Identity(4)
     mesh.name = mesh.data.name = character_id
+    if 'clean' in CHARACTERS[character_id]:
+        clean_mesh(mesh, CHARACTERS[character_id]['clean'])
     return mesh
+
+
+def clean_mesh(mesh, clean):
+    """Tidies the Tripo mesh before skinning (the source file is untouched).
+
+    Tripo splits every UV seam into coincident vertices, so the mesh arrives as over a thousand loose
+    islands; welding them (UVs and normals live on the face corners and survive) leaves a few dozen real
+    parts, and the seams can no longer open when the skin bends. Then it drops the crumpled shards
+    smaller than `min_extent` across (a few millimetres of folded triangles at the elbows and the face)."""
+    bm = bmesh.new()
+    bm.from_mesh(mesh.data)
+    before = len(bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
+    welded = len(bm.verts)
+    seen, shards = set(), []
+    for start in bm.verts:
+        if start in seen:
+            continue
+        seen.add(start)
+        stack, part = [start], []
+        while stack:
+            v = stack.pop()
+            part.append(v)
+            for e in v.link_edges:
+                other = e.other_vert(v)
+                if other not in seen:
+                    seen.add(other)
+                    stack.append(other)
+        co = np.array([v.co[:] for v in part])
+        if (co.max(0) - co.min(0)).max() < clean['min_extent']:
+            shards.append(part)
+    bmesh.ops.delete(bm, geom=[v for part in shards for v in part], context='VERTS')
+    bm.to_mesh(mesh.data)
+    bm.free()
+    print(f'Cleaned: welded {before} -> {welded} vertices, removed {len(shards)} shards '
+          f'({sum(len(p) for p in shards)} vertices), {len(mesh.data.vertices)} left')
 
 
 def chain_weights(z, bones, names, chain):
