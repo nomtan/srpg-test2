@@ -206,6 +206,64 @@ TEST3_HANDS = {'wrist': .37, 'wrist_blend': .01, 'knuckle': .416, 'middle': .44,
                'thumb_y': -.03, 'thumb_slope': 0, 'thumb_u': (.386, .428), 'thumb_joint': .405, 'pinky_y': 1, 'pinky_u': .416,
                'centre': {'Left': .05, 'Right': -.078}, 'top': .75, 'bottom': .665}
 
+# test4: a bare-chested youth with a sash, loose tiered trousers gathered above the shins, and a
+# torn front panel hanging from the sash (slightly to the right of centre, y -0.07 to -0.12, down to
+# z 0.12). No cape: the cape chain stays for the shared clips but holds no vertices. The T-pose is
+# symmetric, the arms just behind the centre line (y +0.02); the short bare upper arm meets a wide
+# bracer at the elbow (0.23), wrist 0.37. The fingers are spread (knuckles 0.44, tips 0.487), the
+# thumb lies in front along the palm and the little finger behind. Knees hide in the trousers (~0.25).
+TEST4_BONES = dict(TEST_BONES)
+TEST4_BONES.update({
+    'Root': ((0, -.02, 0), (0, -.02, .15), None, None),
+    'Hips': ((0, -.02, .46), (0, -.025, .54), 'Root', .07),
+    'Spine': ((0, -.025, .54), (0, -.03, .62), 'Hips', .07),
+    'Chest': ((0, -.03, .62), (0, -.03, .68), 'Spine', .08),
+    'UpperChest': ((0, -.03, .68), (0, -.025, .755), 'Chest', .08),
+    'Neck': ((0, -.025, .755), (0, -.02, .79), 'UpperChest', .03),
+    'Head': ((0, -.02, .79), (0, -.01, .97), 'Neck', .08),
+    'LeftShoulder': ((.03, -.015, .745), (.10, .015, .745), 'UpperChest', .03),
+    'LeftArm': ((.10, .015, .745), (.23, .022, .737), 'LeftShoulder', .035),
+    'LeftForeArm': ((.23, .022, .737), (.37, .03, .727), 'LeftArm', .03),
+    'LeftForeArmTwist1': ((.2767, .0247, .7337), (.3233, .0273, .7303), 'LeftForeArm', .03),
+    'LeftForeArmTwist2': ((.3233, .0273, .7303), (.37, .03, .727), 'LeftForeArm', .03),
+    'LeftHand': ((.37, .03, .727), (.44, .03, .733), 'LeftForeArm', .025),
+    'LeftFingers1': ((.44, .03, .733), (.462, .03, .733), 'LeftHand', .01),
+    'LeftFingers2': ((.462, .03, .733), (.485, .03, .733), 'LeftFingers1', .01),
+    'LeftThumb1': ((.385, -.015, .715), (.41, -.022, .712), 'LeftHand', .008),
+    'LeftThumb2': ((.41, -.022, .712), (.435, -.026, .712), 'LeftThumb1', .008),
+    'LeftPinky': ((.43, .062, .73), (.46, .066, .73), 'LeftHand', .008),
+    'RightShoulder': ((-.03, -.015, .745), (-.10, .015, .745), 'UpperChest', .03),
+    'RightArm': ((-.10, .015, .745), (-.23, .022, .737), 'RightShoulder', .035),
+    'RightForeArm': ((-.23, .022, .737), (-.37, .03, .727), 'RightArm', .03),
+    'RightForeArmTwist1': ((-.2767, .0247, .7337), (-.3233, .0273, .7303), 'RightForeArm', .03),
+    'RightForeArmTwist2': ((-.3233, .0273, .7303), (-.37, .03, .727), 'RightForeArm', .03),
+    'RightHand': ((-.37, .03, .727), (-.44, .03, .733), 'RightForeArm', .025),
+    'RightFingers1': ((-.44, .03, .733), (-.462, .03, .733), 'RightHand', .01),
+    'RightFingers2': ((-.462, .03, .733), (-.485, .03, .733), 'RightFingers1', .01),
+    'RightThumb1': ((-.385, -.015, .715), (-.41, -.022, .712), 'RightHand', .008),
+    'RightThumb2': ((-.41, -.022, .712), (-.435, -.026, .712), 'RightThumb1', .008),
+    'RightPinky': ((-.43, .062, .73), (-.46, .066, .73), 'RightHand', .008),
+    'LeftUpLeg': ((.085, -.015, .46), (.09, -.005, .25), 'Hips', .05),
+    'LeftLeg': ((.09, -.005, .25), (.093, 0, .07), 'LeftUpLeg', .04),
+    'LeftFoot': ((.093, 0, .07), (.10, -.06, .02), 'LeftLeg', .03),
+    'LeftToe': ((.10, -.06, .02), (.10, -.11, .01), 'LeftFoot', .02),
+    'RightUpLeg': ((-.085, -.015, .46), (-.09, -.005, .25), 'Hips', .05),
+    'RightLeg': ((-.09, -.005, .25), (-.093, 0, .07), 'RightUpLeg', .04),
+    'RightFoot': ((-.093, 0, .07), (-.10, -.06, .02), 'RightLeg', .03),
+    'RightToe': ((-.10, -.06, .02), (-.10, -.11, .01), 'RightFoot', .02),
+    'Cape1': ((0, .06, .54), (0, .07, .40), 'Hips', None),
+    'Cape2': ((0, .07, .40), (0, .08, .27), 'Cape1', None),
+    'Cape3': ((0, .08, .27), (0, .09, .14), 'Cape2', None),
+    # The front panel hangs from the sash.
+    'Tabard1': ((-.01, -.10, .54), (-.015, -.105, .36), 'Hips', None),
+    'Tabard2': ((-.015, -.105, .36), (-.02, -.11, .14), 'Tabard1', None),
+})
+TEST4_SKIN_SEGMENTS = {'LeftForeArm': ((.23, .022, .737), (.2767, .0247, .7337)),
+                       'RightForeArm': ((-.23, .022, .737), (-.2767, .0247, .7337))}
+TEST4_HANDS = {'wrist': .37, 'wrist_blend': .01, 'knuckle': .44, 'middle': .462, 'blend': .004,
+               'thumb_y': -.042, 'thumb_slope': 0, 'thumb_u': (.38, .44), 'thumb_joint': .41, 'pinky_y': .028, 'pinky_u': .43,
+               'centre': {'Left': .03, 'Right': .03}, 'top': .765, 'bottom': .70}
+
 # The fists baked into the bind pose, so a held weapon sits in a closed hand (SwordCombat runs its grip
 # through the centre of the fist mesh) and empty hands hang as fists. Radians in armature axes: fingers
 # and the little finger curl down toward the palm (the T-pose palms face down), the thumb curls down and
@@ -243,6 +301,17 @@ CHARACTERS = {
         # below the belt; the tabard is the front panel within tabard_x.
         'cloth': {'top': .54, 'blend': .08, 'floor': .065, 'leg_radius': .085, 'back_y': .07, 'front_y': -.10,
                   'tabard_x': .06, 'side_x': .15, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        'clean': {'min_extent': .004},
+        'preview': {'scale': 1.25, 'target': (0, 0, .5)},
+    },
+    'test4': {
+        'bones': TEST4_BONES, 'hands': TEST4_HANDS, 'skin_segments': TEST4_SKIN_SEGMENTS,
+        # Hair locks reach down to z 0.775 beside the neck, inside |x| 0.095; the shoulders stay below.
+        'head_blend': .775, 'head_full': .80, 'head_reach': .095,
+        # No cape (back_y and side_x out of reach, so the flared trousers stay on the legs); the front
+        # panel is the loose cloth in front of front_y within tabard_x.
+        'cloth': {'top': .56, 'blend': .06, 'floor': .10, 'leg_radius': .085, 'back_y': 1, 'front_y': -.07,
+                  'tabard_x': .06, 'side_x': 1, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
         'clean': {'min_extent': .004},
         'preview': {'scale': 1.25, 'target': (0, 0, .5)},
     },

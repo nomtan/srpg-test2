@@ -40,7 +40,7 @@ const KT_GUARD := "katana/guard"
 # meta overrides it ("none" for bare hands), even on a model marked weapon_enabled = false.
 const LOADOUTS := {"charcter001": "greatsword", "charcter002": "dual_daggers", "charcter003": "staff", "charcter005": "greataxe",
 	"charcter006": "bow", "character007": "katana", "standalone_test": "sword_shield",
-	"standalone_test2": "sword_shield", "standalone_test3": "sword_shield"}
+	"standalone_test2": "sword_shield", "standalone_test3": "sword_shield", "standalone_test4": "sword_shield"}
 # The sword stands tip-down along +Y; its handle is just above the guard.
 const GRIP := Vector3(0.0, 0.9, 0.0)
 const SWORD_SCALE := 0.9
