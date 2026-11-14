@@ -202,12 +202,12 @@ const REGION_NAMES := {
 	Biomes.Biome.HIGHLAND: "東の高原", Biomes.Biome.MOUNTAIN: "北嶺の山腹", Biomes.Biome.WETLAND: "湖畔の湿原",
 	Biomes.Biome.FARMLAND: "城下の畑", Biomes.Biome.LAKESHORE: "鏡の湖畔",
 }
-## Battle-grid conventions: 1 m cells; logical heights snap to 1 m steps. A battle moves
-## units on tactical cells of TACTICAL_SPAN x TACTICAL_SPAN cells (2 m x 2 m), aligned to
-## the world origin; a unit stands at the tactical cell's center (with an even span, the
-## corner its four middle 1 m cells share).
-const CELL_SIZE := 1.0
-const TACTICAL_SPAN := 2
+## Battle-grid conventions: CELL_SIZE m cells (the biome debug grid and SRPG cover use the
+## same cells); logical heights snap to 1 m steps. A battle moves units on tactical cells of
+## TACTICAL_SPAN x TACTICAL_SPAN cells (1.5 m x 1.5 m with a span of 1), aligned to the world
+## origin; a unit stands at the tactical cell's center.
+const CELL_SIZE := 1.5
+const TACTICAL_SPAN := 1
 ## SRPG mode (F4) quarter view: the explore camera looking down SRPG_PITCH (rad, ~35 deg) along a
 ## grid diagonal from SRPG_DISTANCE m (zoomable within SRPG_ZOOM). It stays a perspective camera
 ## this near, since grass fade, shadow reach and fog are all measured from the camera.
@@ -672,7 +672,7 @@ func _density_rhythm(p: Vector2) -> float:
 
 # --- Terrain query API (SRPG foundation) ------------------------------------------
 # Gameplay height = macro + meso terrain; visual height = gameplay + micro relief.
-# A future battle grid reads gameplay heights in 1 m cells (CELL_SIZE) and can snap
+# A future battle grid reads gameplay heights in CELL_SIZE cells and can snap
 # them to logical steps (HEIGHT_STEP); exploration keeps using the smooth visual surface.
 # Every query loads the tile it reads first if the streamer has not (see _data_tile).
 
@@ -742,7 +742,7 @@ func tactical_cell_to_world_position(tactical: Vector2i) -> Vector3:
 	var z := (tactical.y + 0.5) * size
 	return Vector3(x, get_visual_height(x, z), z)
 
-## The 1 m cells a tactical cell covers, row by row.
+## The CELL_SIZE cells a tactical cell covers, row by row.
 func tactical_cell_cells(tactical: Vector2i) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	for z in TACTICAL_SPAN:
@@ -754,7 +754,7 @@ func tactical_cell_cells(tactical: Vector2i) -> Array[Vector2i]:
 func get_cell_info(cell: Vector2i) -> Dictionary:
 	return _point_info(cell, cell_to_world_position(cell))
 
-## The same for a tactical cell, read at its center point alone (the 1 m cell holding the
+## The same for a tactical cell, read at its center point alone (the CELL_SIZE cell holding the
 ## center gives the cover).
 func get_tactical_cell_info(tactical: Vector2i) -> Dictionary:
 	return _point_info(tactical, tactical_cell_to_world_position(tactical))
@@ -3064,6 +3064,7 @@ func _set_biome_debug(on: bool) -> void:
 	biome_debug = on
 	for material in _field_materials():
 		material.set_shader_parameter("biome_debug", 1.0 if on else 0.0)
+		material.set_shader_parameter("biome_cell", CELL_SIZE)
 
 func _set_grid_debug(on: bool) -> void:
 	grid_debug = on

@@ -93,6 +93,8 @@ uniform float biome_debug = 0.0;
 uniform float biome_uv_scale = 0.0025;
 uniform float biome_uv_offset = 0.0;
 uniform float biome_extent = 400.0;
+// Battle-cell size (m) of the faint grid drawn over the biome debug view (CELL_SIZE).
+uniform float biome_cell = 1.5;
 // Battle-grid view (SRPG mode): grid_span m tactical cells inside 0..grid_extent, each outlined as
 // its own tile: blue glowing tiles for the move range, red ones for the attack range, thin faint
 // outlines for a band of cells around them, and a yellow cursor cell with corner brackets.

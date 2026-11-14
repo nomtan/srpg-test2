@@ -77,8 +77,8 @@ void fragment() {
     color *= mix(vec3(1.0), vec3(0.82, 0.88, 0.90), damp);
     color *= 1.0 - wetness * 0.2;
     if (biome_debug > 0.5) {
-        // Flat biome colors with a faint 1 m battle-cell grid near the camera.
-        vec2 g = abs(fract(p) - 0.5);
+        // Flat biome colors with a faint biome_cell m battle-cell grid near the camera.
+        vec2 g = abs(fract(p / biome_cell) - 0.5);
         float line = smoothstep(0.46, 0.49, max(g.x, g.y)) * (1.0 - smoothstep(20.0, 60.0, length(VERTEX)));
         vec3 flat_color = (p.x < 0.0 || p.y < 0.0 || p.x > biome_extent || p.y > biome_extent) ? vec3(0.3) : of_biome_debug(p);
         color = mix(flat_color * (0.7 + 0.3 * n.y), vec3(0.05), line * 0.5);
