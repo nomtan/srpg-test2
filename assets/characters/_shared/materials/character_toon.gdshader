@@ -34,6 +34,10 @@ uniform float middle_band = 0.84;
 // 0 = flat albedo with no light bands or received shadows, for textures that
 // already paint their own shading (Tripo look). 1 = full toon bands.
 uniform float shade_strength = 1.0;
+// How much the time of day's night_tint (set by field_weather.gd, white by day) darkens this
+// material: 0 keeps it as bright at night (the default), 1 takes the full tint.
+uniform float night_amount = 0.0;
+global uniform vec3 night_tint;
 
 // Reserved for future palette, expression, emblem, and gameplay effects.
 // Keep per-surface ShaderMaterial instances so Head parameters can change independently.
@@ -94,12 +98,12 @@ void fragment() {
 	METALLIC = 0.0;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;
-	EMISSION = ALBEDO * mix(1.0, shadow_band, shade_strength);
+	EMISSION = ALBEDO * mix(1.0, shadow_band, shade_strength) * mix(vec3(1.0), night_tint, night_amount);
 }
 
 void light() {
 	float energy = clamp(max(max(LIGHT_COLOR.r, LIGHT_COLOR.g), LIGHT_COLOR.b) / PI, 0.0, 1.0);
 	float illumination = max(dot(normalize(NORMAL), LIGHT), 0.0) * ATTENUATION * energy * (2.2 / PI) + 0.045;
 	float band = illumination >= 0.60 ? 1.0 : (illumination >= 0.28 ? middle_band : shadow_band);
-	DIFFUSE_LIGHT = max(DIFFUSE_LIGHT, vec3((band - shadow_band) * shade_strength));
+	DIFFUSE_LIGHT = max(DIFFUSE_LIGHT, vec3((band - shadow_band) * shade_strength) * mix(vec3(1.0), night_tint, night_amount));
 }

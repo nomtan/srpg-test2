@@ -5,6 +5,10 @@ const Batch = preload("res://scripts/world_jrpg/voxel_batch.gd")
 const SKY_SHADER = preload("res://scripts/world_jrpg/atmosphere.gdshader")
 const PRECIP_SHADER = preload("res://scripts/world_jrpg/precipitation.gdshader")
 const TIMES := ["朝", "昼", "夕方", "夜"]
+## The night_tint shader global at night (white at other times): the flat, unlit models that opt in
+## (test-test4 and their weapons through character_toon's night_amount, every enemy) are multiplied
+## by it, so they darken with the night without taking the lights' shading.
+const NIGHT_TINT := Vector3(0.45, 0.5, 0.66)
 const WEATHER := ["晴れ", "雨", "曇り", "雪"]
 const SEASONS := ["春", "夏", "秋", "冬"]
 ## Per season: sun/ambient tint (lerped in by `amount`), sun energy scale, and the drifting
@@ -154,6 +158,7 @@ func apply_conditions(time: int, weather: int, season := -1) -> void:
 	sky_material.set_shader_parameter("sun_direction", sun.global_basis.z)
 	sky_material.set_shader_parameter("coverage", [0.4, 0.95, 0.83, 0.9][weather_index])
 	sky_material.set_shader_parameter("night", 1.0 if night else 0.0)
+	RenderingServer.global_shader_parameter_set("night_tint", NIGHT_TINT if night else Vector3.ONE)
 	base_fog = [0.0018, 0.009, 0.0045, 0.007][weather_index]
 	env.fog_light_color = horizon
 	env.fog_light_energy = 0.32 if night else 0.65

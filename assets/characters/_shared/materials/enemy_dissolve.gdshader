@@ -1,6 +1,8 @@
 shader_type spatial;
 // Enemy look: the painted Tripo texture shown flat (as character_toon with shade_strength = 0),
-// plus a per-instance dissolve that burns the model away into dust from glowing edges.
+// plus a per-instance dissolve that burns the model away into dust from glowing edges. The time
+// of day's night_tint (set by field_weather.gd, white by day) darkens it at night; the burning
+// edge keeps its glow.
 render_mode unshaded;
 
 uniform sampler2D base_color_texture : source_color, filter_linear_mipmap, repeat_enable;
@@ -9,6 +11,7 @@ uniform vec3 ember_color : source_color = vec3(1.0, 0.52, 0.22);
 uniform float ember_width = 0.08;
 // Noise cells per metre of model space.
 uniform float noise_scale = 18.0;
+global uniform vec3 night_tint;
 // 0 = whole, 1 = gone. Set per mesh with set_instance_shader_parameter, so instances sharing
 // this material dissolve independently.
 instance uniform float dissolve = 0.0;
@@ -35,7 +38,7 @@ void vertex() {
 }
 
 void fragment() {
-	vec3 color = texture(base_color_texture, UV).rgb;
+	vec3 color = texture(base_color_texture, UV).rgb * night_tint;
 	if (dissolve > 0.0) {
 		float n = noise(model_position * noise_scale) * 0.65 + noise(model_position * noise_scale * 2.7) * 0.35;
 		float threshold = dissolve * (1.0 + ember_width) - ember_width * 0.5;

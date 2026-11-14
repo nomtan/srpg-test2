@@ -8,7 +8,7 @@ script = ExtResource("1")
 character_id = "standalone_test"
 display_name = "テストキャラクター"
 metadata/sword_grip_blade = Vector3(-0.62, 0, 1)
-metadata/weapon_lit = true
+metadata/night_shade = true
 metadata/sword_walk_swing = 0.35
 metadata/sword_walk_wrist = Vector3(-0.08, 0, 0.08)
 

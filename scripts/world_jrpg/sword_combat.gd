@@ -519,6 +519,8 @@ var _rest_blade := READY_BLADE
 var _bind_blade := Vector3.ZERO
 # The model's "weapon_lit" meta: the weapons keep their imported (lit) materials instead of the characters' toon.
 var _weapon_lit := false
+# The model's "night_shade" meta: the weapons' toon darkens with the night (character_toon's night_amount 1).
+var _night_shade := false
 # Per hand: maps (fingers, blade) back to the hand bone's local axes for the two-handed grip.
 var _hand_frame: Dictionary = {}
 # Ready stance held outside the weapon's clips by the grip modifier; empty leaves those clips as animated.
@@ -542,7 +544,7 @@ var sheath: Node3D
 var sheath_bone := ""
 var _sheath_rest := Transform3D.IDENTITY
 var _sheath_drawn := Transform3D.IDENTITY
-# One toon material per weapon texture, shared by every character carrying it.
+# One toon material per weapon texture (and night_shade), shared by every character carrying it.
 static var _toon_materials: Dictionary = {}
 
 func install(model: Node3D, player: AnimationPlayer) -> bool:
@@ -555,6 +557,7 @@ func install(model: Node3D, player: AnimationPlayer) -> bool:
 		return false
 	_bind_blade = model.get_meta("sword_grip_blade", Vector3.ZERO)
 	_weapon_lit = model.get_meta("weapon_lit", false)
+	_night_shade = model.get_meta("night_shade", false)
 	skeleton = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton == null or player == null or not player.has_animation("idle"):
 		return false
@@ -1248,7 +1251,7 @@ func _back_line(chest: int) -> Vector2:
 ## Weapons use the characters' toon shading so they keep the same brightness at night instead of going black.
 ## Only instance-level overrides are set; the imported weapon resources are left untouched.
 ## A model whose own materials take the scene's lights (the "weapon_lit" meta) keeps the weapons' imported, lit
-## materials to match.
+## materials to match. A "night_shade" model's weapons get their own toon that darkens with the night.
 func _apply_character_toon(root: Node3D) -> void:
 	if _weapon_lit: return
 	for node in root.find_children("*", "MeshInstance3D", true, false):
@@ -1257,12 +1260,14 @@ func _apply_character_toon(root: Node3D) -> void:
 		for surface in mesh.mesh.get_surface_count():
 			var source := mesh.get_active_material(surface) as BaseMaterial3D
 			if source == null or source.albedo_texture == null: continue
-			if not _toon_materials.has(source.albedo_texture):
+			var key := [source.albedo_texture, _night_shade]
+			if not _toon_materials.has(key):
 				var toon := ShaderMaterial.new()
 				toon.shader = CHARACTER_TOON
 				toon.set_shader_parameter("base_color_texture", source.albedo_texture)
-				_toon_materials[source.albedo_texture] = toon
-			mesh.set_surface_override_material(surface, _toon_materials[source.albedo_texture])
+				toon.set_shader_parameter("night_amount", 1.0 if _night_shade else 0.0)
+				_toon_materials[key] = toon
+			mesh.set_surface_override_material(surface, _toon_materials[key])
 
 func _make_clip(path: NodePath, title: String, keys: Array) -> Animation:
 	var animation := Animation.new()
