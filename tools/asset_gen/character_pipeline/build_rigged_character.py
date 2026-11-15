@@ -148,63 +148,58 @@ TEST2_HANDS = {'wrist': .395, 'wrist_blend': .01, 'knuckle': .448, 'middle': .46
                'thumb_y': -.028, 'thumb_slope': .1, 'thumb_u': (.40, .445), 'thumb_joint': .425, 'pinky_y': .023, 'pinky_u': .412,
                'centre': {'Left': -.01, 'Right': -.02}, 'top': .745, 'bottom': .655}
 
-# test3: a knight without a cape: a front tabard from the belt and a long back skirt behind the legs.
-# The arms are short in the upper arm (elbow 0.232, wrist 0.368) and swept unevenly: the left arm runs
-# behind the body's centre line (hand y +0.055), the right in front of it (hand y -0.082). All four
-# fingers start at one knuckle line (0.416), so the little finger curls with them (no pinky region);
-# the thumb lies along the front of the palm. Knees are low (0.205) under the gathered trousers.
+# test3 (replaced 2026-11-15): a bearded knight in dark plate with spiked pauldrons (up to z 0.862,
+# |x| 0.07-0.205) and a high collar (to z 0.85, |x| < 0.07), two belts (z ~0.56-0.59) with pouches on
+# the hips, and a long coat split into panels below the belt: a pointed front panel (|x| < 0.06, to z
+# 0.26), long side panels (|x| 0.12-0.175, to z 0.12) and a back panel (y > 0.06, to z 0.17). The source
+# is exported in centimetres (height 97.3), so it is scaled by 0.01 on import. The T-pose is symmetric,
+# the arms level on the centre line (y 0, z 0.748 at the shoulder to 0.738 at the hand): elbow 0.235
+# where the strapped bracer begins, wrist 0.385. The gauntlet's four fingers start at one knuckle line
+# (0.432, tips 0.488), so there is no pinky region; the thumb hangs low in front of the palm (y < -0.04,
+# z 0.715-0.725, x 0.39-0.445). Knee 0.30, ankle 0.08.
 TEST3_BONES = dict(TEST_BONES)
 TEST3_BONES.update({
-    'Root': ((0, -.035, 0), (0, -.035, .15), None, None),
-    'Hips': ((0, -.035, .46), (0, -.035, .54), 'Root', .07),
-    'Spine': ((0, -.035, .54), (0, -.04, .62), 'Hips', .07),
-    'Chest': ((0, -.04, .62), (0, -.035, .68), 'Spine', .08),
-    'UpperChest': ((0, -.035, .68), (0, -.03, .75), 'Chest', .08),
-    'Neck': ((0, -.03, .75), (0, -.03, .80), 'UpperChest', .03),
-    'Head': ((0, -.03, .80), (0, -.03, .97), 'Neck', .08),
-    'LeftShoulder': ((.03, -.02, .73), (.11, -.012, .735), 'UpperChest', .03),
-    'LeftArm': ((.11, -.012, .735), (.232, .022, .722), 'LeftShoulder', .035),
-    'LeftForeArm': ((.232, .022, .722), (.368, .04, .712), 'LeftArm', .03),
-    'LeftForeArmTwist1': ((.2773, .028, .7187), (.3227, .034, .7153), 'LeftForeArm', .03),
-    'LeftForeArmTwist2': ((.3227, .034, .7153), (.368, .04, .712), 'LeftForeArm', .03),
-    'LeftHand': ((.368, .04, .712), (.416, .055, .713), 'LeftForeArm', .025),
-    'LeftFingers1': ((.416, .055, .713), (.44, .057, .713), 'LeftHand', .01),
-    'LeftFingers2': ((.44, .057, .713), (.466, .058, .713), 'LeftFingers1', .01),
-    'LeftThumb1': ((.386, .012, .708), (.405, .006, .708), 'LeftHand', .008),
-    'LeftThumb2': ((.405, .006, .708), (.427, .004, .708), 'LeftThumb1', .008),
-    'LeftPinky': ((.416, .085, .712), (.444, .087, .712), 'LeftHand', .008),
-    'RightShoulder': ((-.03, -.035, .73), (-.11, -.035, .735), 'UpperChest', .03),
-    'RightArm': ((-.11, -.035, .735), (-.232, -.05, .722), 'RightShoulder', .035),
-    'RightForeArm': ((-.232, -.05, .722), (-.368, -.072, .712), 'RightArm', .03),
-    'RightForeArmTwist1': ((-.2773, -.0573, .7187), (-.3227, -.0647, .7153), 'RightForeArm', .03),
-    'RightForeArmTwist2': ((-.3227, -.0647, .7153), (-.368, -.072, .712), 'RightForeArm', .03),
-    'RightHand': ((-.368, -.072, .712), (-.417, -.082, .713), 'RightForeArm', .025),
-    'RightFingers1': ((-.417, -.082, .713), (-.44, -.083, .713), 'RightHand', .01),
-    'RightFingers2': ((-.44, -.083, .713), (-.466, -.083, .713), 'RightFingers1', .01),
-    'RightThumb1': ((-.386, -.108, .708), (-.402, -.116, .708), 'RightHand', .008),
-    'RightThumb2': ((-.402, -.116, .708), (-.42, -.12, .708), 'RightThumb1', .008),
-    'RightPinky': ((-.417, -.058, .712), (-.445, -.058, .712), 'RightHand', .008),
-    'LeftUpLeg': ((.08, -.03, .46), (.088, -.025, .205), 'Hips', .05),
-    'LeftLeg': ((.088, -.025, .205), (.092, -.018, .07), 'LeftUpLeg', .04),
-    'LeftFoot': ((.092, -.018, .07), (.095, -.07, .018), 'LeftLeg', .03),
-    'LeftToe': ((.095, -.07, .018), (.095, -.125, .01), 'LeftFoot', .02),
-    'RightUpLeg': ((-.08, -.03, .46), (-.088, -.025, .205), 'Hips', .05),
-    'RightLeg': ((-.088, -.025, .205), (-.092, -.018, .07), 'RightUpLeg', .04),
-    'RightFoot': ((-.092, -.018, .07), (-.095, -.07, .018), 'RightLeg', .03),
-    'RightToe': ((-.095, -.07, .018), (-.095, -.125, .01), 'RightFoot', .02),
-    # The back skirt rides the cape chain; the tabard hangs from the belt in front.
-    'Cape1': ((0, .05, .54), (0, .07, .40), 'Hips', None),
-    'Cape2': ((0, .07, .40), (0, .09, .27), 'Cape1', None),
-    'Cape3': ((0, .09, .27), (0, .11, .14), 'Cape2', None),
-    'Tabard1': ((0, -.12, .54), (0, -.125, .40), 'Hips', None),
-    'Tabard2': ((0, -.125, .40), (0, -.13, .25), 'Tabard1', None),
+    'Root': ((0, -.015, 0), (0, -.015, .15), None, None),
+    'Hips': ((0, -.015, .46), (0, -.015, .54), 'Root', .07),
+    'Spine': ((0, -.015, .54), (0, -.017, .62), 'Hips', .07),
+    'Chest': ((0, -.017, .62), (0, -.015, .68), 'Spine', .08),
+    'UpperChest': ((0, -.015, .68), (0, -.013, .76), 'Chest', .08),
+    'Neck': ((0, -.013, .76), (0, -.013, .82), 'UpperChest', .03),
+    'Head': ((0, -.013, .82), (0, -.015, .97), 'Neck', .08),
 })
-TEST3_SKIN_SEGMENTS = {'LeftForeArm': ((.232, .022, .722), (.2773, .028, .7187)),
-                       'RightForeArm': ((-.232, -.05, .722), (-.2773, -.0573, .7187))}
-# Centres put the thumb's edge at y 0.02 (left) and -0.108 (right). pinky_y beyond the hand: no pinky region.
-TEST3_HANDS = {'wrist': .37, 'wrist_blend': .01, 'knuckle': .416, 'middle': .44, 'blend': .004,
-               'thumb_y': -.03, 'thumb_slope': 0, 'thumb_u': (.386, .428), 'thumb_joint': .405, 'pinky_y': 1, 'pinky_u': .416,
-               'centre': {'Left': .05, 'Right': -.078}, 'top': .75, 'bottom': .665}
+for _side, _s in (('Left', 1), ('Right', -1)):
+    TEST3_BONES.update({
+        _side + 'Shoulder': ((_s * .03, -.01, .73), (_s * .12, 0, .748), 'UpperChest', .03),
+        _side + 'Arm': ((_s * .12, 0, .748), (_s * .235, 0, .742), _side + 'Shoulder', .035),
+        _side + 'ForeArm': ((_s * .235, 0, .742), (_s * .385, 0, .738), _side + 'Arm', .03),
+        _side + 'ForeArmTwist1': ((_s * .285, 0, .7407), (_s * .335, 0, .7393), _side + 'ForeArm', .03),
+        _side + 'ForeArmTwist2': ((_s * .335, 0, .7393), (_s * .385, 0, .738), _side + 'ForeArm', .03),
+        _side + 'Hand': ((_s * .385, 0, .738), (_s * .432, 0, .738), _side + 'ForeArm', .025),
+        _side + 'Fingers1': ((_s * .432, 0, .738), (_s * .458, 0, .739), _side + 'Hand', .01),
+        _side + 'Fingers2': ((_s * .458, 0, .739), (_s * .486, 0, .739), _side + 'Fingers1', .01),
+        _side + 'Thumb1': ((_s * .395, -.03, .73), (_s * .418, -.045, .722), _side + 'Hand', .008),
+        _side + 'Thumb2': ((_s * .418, -.045, .722), (_s * .445, -.05, .718), _side + 'Thumb1', .008),
+        _side + 'Pinky': ((_s * .432, .025, .738), (_s * .46, .027, .738), _side + 'Hand', .008),
+        _side + 'UpLeg': ((_s * .08, -.015, .46), (_s * .08, 0, .30), 'Hips', .05),
+        _side + 'Leg': ((_s * .08, 0, .30), (_s * .088, .002, .08), _side + 'UpLeg', .04),
+        _side + 'Foot': ((_s * .088, .002, .08), (_s * .09, -.06, .02), _side + 'Leg', .03),
+        _side + 'Toe': ((_s * .09, -.06, .02), (_s * .09, -.12, .008), _side + 'Foot', .02),
+    })
+TEST3_BONES.update({
+    # The back and side panels ride the cape chain; the front panel hangs from the belt.
+    'Cape1': ((0, .07, .52), (0, .09, .38), 'Hips', None),
+    'Cape2': ((0, .09, .38), (0, .11, .25), 'Cape1', None),
+    'Cape3': ((0, .11, .25), (0, .125, .12), 'Cape2', None),
+    'Tabard1': ((0, -.11, .54), (0, -.115, .40), 'Hips', None),
+    'Tabard2': ((0, -.115, .40), (0, -.12, .25), 'Tabard1', None),
+})
+TEST3_SKIN_SEGMENTS = {'LeftForeArm': ((.235, 0, .742), (.285, 0, .7407)),
+                       'RightForeArm': ((-.235, 0, .742), (-.285, 0, .7407))}
+# The fingers lie within y -0.03 to 0.03; the thumb is everything in front of y -0.036. pinky_y beyond
+# the hand: no pinky region.
+TEST3_HANDS = {'wrist': .385, 'wrist_blend': .01, 'knuckle': .432, 'middle': .458, 'blend': .004,
+               'thumb_y': -.036, 'thumb_slope': 0, 'thumb_u': (.392, .45), 'thumb_joint': .418, 'pinky_y': 1, 'pinky_u': .432,
+               'centre': {'Left': 0, 'Right': 0}, 'top': .77, 'bottom': .70}
 
 # test4: a bare-chested youth with a sash, loose tiered trousers gathered above the shins, and a
 # torn front panel hanging from the sash (slightly to the right of centre, y -0.07 to -0.12, down to
@@ -264,6 +259,129 @@ TEST4_HANDS = {'wrist': .37, 'wrist_blend': .01, 'knuckle': .44, 'middle': .462,
                'thumb_y': -.042, 'thumb_slope': 0, 'thumb_u': (.38, .44), 'thumb_joint': .41, 'pinky_y': .028, 'pinky_u': .43,
                'centre': {'Left': .03, 'Right': .03}, 'top': .765, 'bottom': .70}
 
+# test5: a crusader in a bucket helm: a white surcoat with a black cross over dark plate, a hood draped
+# on the shoulders (up to z 0.83, |x| < 0.12), a belt at z 0.58-0.60 with a pouch on the right hip, a
+# front panel hanging from the belt to z 0.105 (|x| < 0.06), and a cape lying on the back down to the
+# belt and hanging free below it (to z 0.09, y up to 0.126), with a narrow strip down each side (|x|
+# 0.10-0.19). The arms are long and level (y -0.005, z 0.757): elbow 0.235 where the flared bracer
+# begins, wrist band 0.326-0.35. The gauntlet's four fingers start at one knuckle line (0.392, tips
+# 0.457), so there is no pinky region; the thumb lies low in front of the palm (y < -0.043, z
+# 0.733-0.76, x 0.348-0.41). Knee plates at z 0.27-0.36, ankle 0.08.
+TEST5_BONES = dict(TEST_BONES)
+TEST5_BONES.update({
+    'Root': ((0, -.02, 0), (0, -.02, .15), None, None),
+    'Hips': ((0, -.02, .48), (0, -.023, .56), 'Root', .07),
+    'Spine': ((0, -.023, .56), (0, -.025, .63), 'Hips', .07),
+    'Chest': ((0, -.025, .63), (0, -.02, .69), 'Spine', .08),
+    'UpperChest': ((0, -.02, .69), (0, -.017, .75), 'Chest', .08),
+    'Neck': ((0, -.017, .75), (0, -.02, .80), 'UpperChest', .03),
+    'Head': ((0, -.02, .80), (0, -.028, .975), 'Neck', .08),
+    'LeftShoulder': ((.03, -.017, .74), (.115, -.005, .757), 'UpperChest', .03),
+    'LeftArm': ((.115, -.005, .757), (.235, -.005, .757), 'LeftShoulder', .035),
+    'LeftForeArm': ((.235, -.005, .757), (.338, -.01, .757), 'LeftArm', .03),
+    'LeftForeArmTwist1': ((.2693, -.0067, .757), (.3037, -.0083, .757), 'LeftForeArm', .03),
+    'LeftForeArmTwist2': ((.3037, -.0083, .757), (.338, -.01, .757), 'LeftForeArm', .03),
+    'LeftHand': ((.338, -.01, .757), (.392, -.012, .752), 'LeftForeArm', .025),
+    'LeftFingers1': ((.392, -.012, .752), (.42, -.012, .751), 'LeftHand', .01),
+    'LeftFingers2': ((.42, -.012, .751), (.452, -.012, .75), 'LeftFingers1', .01),
+    'LeftThumb1': ((.352, -.042, .75), (.38, -.055, .745), 'LeftHand', .008),
+    'LeftThumb2': ((.38, -.055, .745), (.408, -.062, .742), 'LeftThumb1', .008),
+    'LeftPinky': ((.40, .009, .751), (.43, .009, .751), 'LeftHand', .008),
+    'RightShoulder': ((-.03, -.017, .74), (-.115, -.005, .757), 'UpperChest', .03),
+    'RightArm': ((-.115, -.005, .757), (-.235, -.005, .757), 'RightShoulder', .035),
+    'RightForeArm': ((-.235, -.005, .757), (-.338, -.01, .757), 'RightArm', .03),
+    'RightForeArmTwist1': ((-.2693, -.0067, .757), (-.3037, -.0083, .757), 'RightForeArm', .03),
+    'RightForeArmTwist2': ((-.3037, -.0083, .757), (-.338, -.01, .757), 'RightForeArm', .03),
+    'RightHand': ((-.338, -.01, .757), (-.392, -.012, .752), 'RightForeArm', .025),
+    'RightFingers1': ((-.392, -.012, .752), (-.42, -.012, .751), 'RightHand', .01),
+    'RightFingers2': ((-.42, -.012, .751), (-.452, -.012, .75), 'RightFingers1', .01),
+    'RightThumb1': ((-.352, -.042, .75), (-.38, -.055, .745), 'RightHand', .008),
+    'RightThumb2': ((-.38, -.055, .745), (-.408, -.062, .742), 'RightThumb1', .008),
+    'RightPinky': ((-.40, .009, .751), (-.43, .009, .751), 'RightHand', .008),
+    'LeftUpLeg': ((.095, -.02, .47), (.10, -.03, .30), 'Hips', .05),
+    'LeftLeg': ((.10, -.03, .30), (.105, -.015, .08), 'LeftUpLeg', .04),
+    'LeftFoot': ((.105, -.015, .08), (.108, -.07, .025), 'LeftLeg', .03),
+    'LeftToe': ((.108, -.07, .025), (.11, -.12, .01), 'LeftFoot', .02),
+    'RightUpLeg': ((-.095, -.02, .47), (-.10, -.03, .30), 'Hips', .05),
+    'RightLeg': ((-.10, -.03, .30), (-.105, -.015, .08), 'RightUpLeg', .04),
+    'RightFoot': ((-.105, -.015, .08), (-.108, -.07, .025), 'RightLeg', .03),
+    'RightToe': ((-.108, -.07, .025), (-.11, -.12, .01), 'RightFoot', .02),
+    # The cape lies on the back down to the belt and hangs free below it; the front panel hangs from
+    # the belt.
+    'Cape1': ((0, .06, .58), (0, .08, .40), 'Hips', None),
+    'Cape2': ((0, .08, .40), (0, .10, .24), 'Cape1', None),
+    'Cape3': ((0, .10, .24), (0, .125, .09), 'Cape2', None),
+    'Tabard1': ((0, -.105, .56), (0, -.105, .34), 'Hips', None),
+    'Tabard2': ((0, -.105, .34), (0, -.10, .10), 'Tabard1', None),
+})
+TEST5_SKIN_SEGMENTS = {'LeftForeArm': ((.235, -.005, .757), (.2693, -.0067, .757)),
+                       'RightForeArm': ((-.235, -.005, .757), (-.2693, -.0067, .757))}
+# Centre y -0.012: the fingers lie within y -0.042 to 0.017; the thumb line moves forward along the
+# arm so the index finger (y > -0.042) beside the thumb's tip stays a finger.
+TEST5_HANDS = {'wrist': .338, 'wrist_blend': .01, 'knuckle': .392, 'middle': .42, 'blend': .004,
+               'thumb_y': -.03, 'thumb_slope': .2, 'thumb_u': (.35, .415), 'thumb_joint': .38, 'pinky_y': 1, 'pinky_u': .40,
+               'centre': {'Left': -.012, 'Right': -.012}, 'top': .79, 'bottom': .72}
+
+# test6: a barefoot youth with spiky black hair: bare chest, a band on each upper arm, a wide belt with a
+# skull charm and two canisters on the left front and a pouch behind, baggy trousers gathered at a cuff
+# (z 0.22) above wrapped shins. No cape and no tabard. The arms sweep back from the shoulders (y 0.01 at
+# x 0.10, 0.07 at the wrist 0.30, 0.10 at the fingertips) and fall slightly (z 0.715 to 0.695); the
+# dark bracer runs 0.24-0.30. The hand turns a further 20 degrees back: knuckles 0.345, tips 0.393; the
+# thumb hangs low in front of the palm (z 0.67-0.69, y < 0.058) and the short little finger lies
+# behind it (y > 0.112, from 0.33). Crotch 0.36 under the baggy trousers, knee about 0.24, ankle 0.07.
+TEST6_BONES = dict(TEST_BONES)
+for _name in ('Tabard1', 'Tabard2'):
+    del TEST6_BONES[_name]
+TEST6_BONES.update({
+    'Root': ((0, -.025, 0), (0, -.025, .15), None, None),
+    'Hips': ((0, -.025, .44), (0, -.025, .52), 'Root', .07),
+    'Spine': ((0, -.025, .52), (0, -.03, .60), 'Hips', .07),
+    'Chest': ((0, -.03, .60), (0, -.025, .66), 'Spine', .08),
+    'UpperChest': ((0, -.025, .66), (0, -.012, .745), 'Chest', .08),
+    'Neck': ((0, -.012, .745), (0, -.008, .785), 'UpperChest', .03),
+    'Head': ((0, -.008, .785), (0, -.015, .975), 'Neck', .08),
+    'LeftShoulder': ((.03, -.015, .715), (.10, .01, .715), 'UpperChest', .03),
+    'LeftArm': ((.10, .01, .715), (.205, .04, .708), 'LeftShoulder', .035),
+    'LeftForeArm': ((.205, .04, .708), (.30, .07, .70), 'LeftArm', .03),
+    'LeftForeArmTwist1': ((.2367, .05, .7053), (.2683, .06, .7027), 'LeftForeArm', .03),
+    'LeftForeArmTwist2': ((.2683, .06, .7027), (.30, .07, .70), 'LeftForeArm', .03),
+    'LeftHand': ((.30, .07, .70), (.345, .09, .697), 'LeftForeArm', .025),
+    'LeftFingers1': ((.345, .09, .697), (.368, .10, .696), 'LeftHand', .01),
+    'LeftFingers2': ((.368, .10, .696), (.393, .108, .695), 'LeftFingers1', .01),
+    'LeftThumb1': ((.318, .052, .685), (.333, .05, .678), 'LeftHand', .008),
+    'LeftThumb2': ((.333, .05, .678), (.348, .05, .675), 'LeftThumb1', .008),
+    'LeftPinky': ((.335, .115, .698), (.36, .122, .698), 'LeftHand', .008),
+    'RightShoulder': ((-.03, -.015, .715), (-.10, .01, .715), 'UpperChest', .03),
+    'RightArm': ((-.10, .01, .715), (-.205, .036, .708), 'RightShoulder', .035),
+    'RightForeArm': ((-.205, .036, .708), (-.30, .065, .70), 'RightArm', .03),
+    'RightForeArmTwist1': ((-.2367, .0457, .7053), (-.2683, .0553, .7027), 'RightForeArm', .03),
+    'RightForeArmTwist2': ((-.2683, .0553, .7027), (-.30, .065, .70), 'RightForeArm', .03),
+    'RightHand': ((-.30, .065, .70), (-.345, .084, .697), 'RightForeArm', .025),
+    'RightFingers1': ((-.345, .084, .697), (-.368, .093, .696), 'RightHand', .01),
+    'RightFingers2': ((-.368, .093, .696), (-.393, .10, .695), 'RightFingers1', .01),
+    'RightThumb1': ((-.318, .048, .685), (-.333, .046, .678), 'RightHand', .008),
+    'RightThumb2': ((-.333, .046, .678), (-.348, .046, .675), 'RightThumb1', .008),
+    'RightPinky': ((-.335, .108, .698), (-.36, .115, .698), 'RightHand', .008),
+    'LeftUpLeg': ((.08, -.02, .42), (.09, -.015, .24), 'Hips', .05),
+    'LeftLeg': ((.09, -.015, .24), (.093, -.012, .07), 'LeftUpLeg', .04),
+    'LeftFoot': ((.093, -.012, .07), (.096, -.07, .02), 'LeftLeg', .03),
+    'LeftToe': ((.096, -.07, .02), (.098, -.12, .01), 'LeftFoot', .02),
+    'RightUpLeg': ((-.08, -.02, .42), (-.09, -.015, .24), 'Hips', .05),
+    'RightLeg': ((-.09, -.015, .24), (-.093, -.012, .07), 'RightUpLeg', .04),
+    'RightFoot': ((-.093, -.012, .07), (-.096, -.07, .02), 'RightLeg', .03),
+    'RightToe': ((-.096, -.07, .02), (-.098, -.12, .01), 'RightFoot', .02),
+    # The cape chain stays for the shared clips but holds no vertices.
+    'Cape1': ((0, .06, .54), (0, .07, .40), 'Hips', None),
+    'Cape2': ((0, .07, .40), (0, .08, .27), 'Cape1', None),
+    'Cape3': ((0, .08, .27), (0, .09, .14), 'Cape2', None),
+})
+TEST6_SKIN_SEGMENTS = {'LeftForeArm': ((.205, .04, .708), (.2367, .05, .7053)),
+                       'RightForeArm': ((-.205, .036, .708), (-.2367, .0457, .7053))}
+# The swept hand's centre line lies at y 0.085 (left) and 0.08 (right) across the palm.
+TEST6_HANDS = {'wrist': .30, 'wrist_blend': .01, 'knuckle': .345, 'middle': .368, 'blend': .004,
+               'thumb_y': -.027, 'thumb_slope': 0, 'thumb_u': (.315, .352), 'thumb_joint': .335, 'pinky_y': .027, 'pinky_u': .33,
+               'centre': {'Left': .085, 'Right': .08}, 'top': .725, 'bottom': .655}
+
 # The fists baked into the bind pose, so a held weapon sits in a closed hand (SwordCombat runs its grip
 # through the centre of the fist mesh) and empty hands hang as fists. Radians in armature axes: fingers
 # and the little finger curl down toward the palm (the T-pose palms face down), the thumb curls down and
@@ -295,12 +413,15 @@ CHARACTERS = {
     },
     'test3': {
         'bones': TEST3_BONES, 'hands': TEST3_HANDS, 'skin_segments': TEST3_SKIN_SEGMENTS,
-        # The pauldrons reach in to |x| 0.06 up to z 0.79; only the gorget and the face blend below 0.83.
-        'head_blend': .79, 'head_full': .83, 'head_reach': .07,
-        # The back skirt (behind back_y, and the dark side tails beyond side_x) eases onto the cape chain
-        # below the belt; the tabard is the front panel within tabard_x.
-        'cloth': {'top': .54, 'blend': .08, 'floor': .065, 'leg_radius': .085, 'back_y': .07, 'front_y': -.10,
-                  'tabard_x': .06, 'side_x': .15, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        # Exported in centimetres.
+        'source_scale': .01,
+        # The chin is at z 0.83 inside the high collar (|x| < 0.07); the pauldron spikes reach z 0.862 at
+        # |x| > 0.07, so the head takes everything only above them.
+        'head_blend': .82, 'head_full': .87, 'head_reach': .065,
+        # The back panel (behind back_y) and the side panels (beyond side_x, away from the legs) ease onto
+        # the cape chain below the belt pouches; the front panel is in front of front_y within tabard_x.
+        'cloth': {'top': .52, 'blend': .08, 'floor': .065, 'leg_radius': .07, 'back_y': .06, 'front_y': -.09,
+                  'tabard_x': .06, 'side_x': .13, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
         'clean': {'min_extent': .004},
         'preview': {'scale': 1.25, 'target': (0, 0, .5)},
     },
@@ -312,6 +433,28 @@ CHARACTERS = {
         # panel is the loose cloth in front of front_y within tabard_x.
         'cloth': {'top': .56, 'blend': .06, 'floor': .10, 'leg_radius': .085, 'back_y': 1, 'front_y': -.07,
                   'tabard_x': .06, 'side_x': 1, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        'clean': {'min_extent': .004},
+        'preview': {'scale': 1.25, 'target': (0, 0, .5)},
+    },
+    'test5': {
+        'bones': TEST5_BONES, 'hands': TEST5_HANDS, 'skin_segments': TEST5_SKIN_SEGMENTS,
+        # The helm rises out of the hood at z 0.83; the hood around it blends within head_reach and the
+        # rest of it (|x| up to 0.12) stays on the shoulders.
+        'head_blend': .80, 'head_full': .85, 'head_reach': .065,
+        # The cape (behind back_y, and the side strips beyond side_x away from the legs) eases onto its
+        # chain below the belt; the front panel is in front of front_y within tabard_x.
+        'cloth': {'top': .58, 'blend': .08, 'floor': .065, 'leg_radius': .085, 'back_y': .045, 'front_y': -.085,
+                  'tabard_x': .065, 'side_x': .15, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        'clean': {'min_extent': .004},
+        'preview': {'scale': 1.25, 'target': (0, 0, .5)},
+    },
+    'test6': {
+        'bones': TEST6_BONES, 'hands': TEST6_HANDS, 'skin_segments': TEST6_SKIN_SEGMENTS,
+        # The spiky hair starts above the narrow neck (|x| 0.03 at z 0.78); the shoulders stay below 0.75.
+        'head_blend': .76, 'head_full': .79, 'head_reach': .08,
+        # No cloth chains: back_y and side_x out of reach, no tabard. The trousers stay on the legs.
+        'cloth': {'top': .40, 'blend': .06, 'floor': .09, 'leg_radius': .085, 'back_y': 1, 'front_y': -1,
+                  'tabard_x': 0, 'side_x': 1, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': []},
         'clean': {'min_extent': .004},
         'preview': {'scale': 1.25, 'target': (0, 0, .5)},
     },
@@ -329,6 +472,8 @@ def import_source(character_id):
     mesh = meshes[0]
     mesh.data.transform(mesh.matrix_world)
     mesh.matrix_world = Matrix.Identity(4)
+    if 'source_scale' in CHARACTERS[character_id]:
+        mesh.data.transform(Matrix.Scale(CHARACTERS[character_id]['source_scale'], 4))
     mesh.name = mesh.data.name = character_id
     if 'clean' in CHARACTERS[character_id]:
         clean_mesh(mesh, CHARACTERS[character_id]['clean'])

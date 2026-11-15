@@ -214,7 +214,8 @@ const TACTICAL_SPAN := 1
 ## Four angles (srpg_quarter 0..3: from the south-east, north-east, north-west, south-west).
 const SRPG_PITCH := 0.61
 const SRPG_DISTANCE := 22.0
-const SRPG_ZOOM := Vector2(10.0, 48.0)
+## The near end lets the camera come up to a unit, close to exploration's MIN_CAMERA_DISTANCE.
+const SRPG_ZOOM := Vector2(3.0, 48.0)
 const SRPG_TURN_TIME := 0.35
 ## The SRPG camera's tilt range (rad) for raising and lowering it, and how quickly (1/s) its
 ## tilt and distance ease toward where they were sent.

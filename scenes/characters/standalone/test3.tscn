@@ -13,12 +13,12 @@ metadata/sword_walk_swing = 0.35
 metadata/sword_walk_wrist = Vector3(-0.08, 0, 0.08)
 
 [node name="Model" type="Node3D" parent="."]
-scale = Vector3(1.85, 1.85, 1.85)
+scale = Vector3(2.13, 2.13, 2.13)
 
 [node name="Character" parent="Model" instance=ExtResource("2")]
 
 [node name="NameLabel" type="Label3D" parent="."]
-position = Vector3(0, 2.15, 0)
+position = Vector3(0, 2.45, 0)
 billboard = 1
 text = "テストキャラクター3"
 font_size = 24

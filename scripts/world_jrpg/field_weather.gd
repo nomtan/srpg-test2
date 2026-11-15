@@ -6,7 +6,7 @@ const SKY_SHADER = preload("res://scripts/world_jrpg/atmosphere.gdshader")
 const PRECIP_SHADER = preload("res://scripts/world_jrpg/precipitation.gdshader")
 const TIMES := ["朝", "昼", "夕方", "夜"]
 ## The night_tint shader global at night (white at other times): the flat, unlit models that opt in
-## (test-test4 and their weapons through character_toon's night_amount, every enemy) are multiplied
+## (test-test6 and their weapons through character_toon's night_amount, every enemy) are multiplied
 ## by it, so they darken with the night without taking the lights' shading.
 const NIGHT_TINT := Vector3(0.45, 0.5, 0.66)
 const WEATHER := ["晴れ", "雨", "曇り", "雪"]

@@ -1,0 +1,30 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/world_jrpg/lineup_stage_world.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/character/character_lineup.gd" id="character_lineup"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter001.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter002.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter003.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter004.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter005.tscn" id="character005"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter006.tscn" id="character006"]
+[ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/character007.tscn" id="character007"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test.tscn" id="standalone_test"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test2.tscn" id="standalone_test2"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test3.tscn" id="standalone_test3"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test4.tscn" id="standalone_test4"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test5.tscn" id="standalone_test5"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test6.tscn" id="standalone_test6"]
+
+[node name="LineupStageSample" type="Node3D"]
+script = ExtResource("1")
+player_model = ExtResource("standalone_test")
+player_spawn_position = Vector3(200.25, 0, 206.25)
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007"), ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6")])
+
+[node name="StandaloneLineup" type="Node3D" parent="."]
+position = Vector3(201, 0, 200.25)
+script = ExtResource("character_lineup")
+characters = Array[PackedScene]([ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6")])
+spacing = 1.5
+face_toward = Vector2(201, 206.25)

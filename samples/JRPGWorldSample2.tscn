@@ -1,6 +1,7 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/open_field_world.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/character/character_lineup.gd" id="character_lineup"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter001.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter002.tscn" id="18"]
 [ext_resource type="PackedScene" path="res://scenes/characters/tripo_roster/charcter003.tscn" id="19"]
@@ -12,6 +13,8 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/standalone/test2.tscn" id="standalone_test2"]
 [ext_resource type="PackedScene" path="res://scenes/characters/standalone/test3.tscn" id="standalone_test3"]
 [ext_resource type="PackedScene" path="res://scenes/characters/standalone/test4.tscn" id="standalone_test4"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test5.tscn" id="standalone_test5"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test6.tscn" id="standalone_test6"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin.tscn" id="goblin"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_axe.tscn" id="goblin_axe"]
 [ext_resource type="PackedScene" path="res://scenes/characters/enemies/goblin_longsword.tscn" id="goblin_longsword"]
@@ -39,7 +42,7 @@ seed_trees = true
 field_enemies = Array[PackedScene]([ExtResource("goblin"), ExtResource("goblin_axe"), ExtResource("goblin_longsword"), ExtResource("goblin_staff"), ExtResource("wolf"), ExtResource("grimm"), ExtResource("skeleton")])
 rock_models = Array[PackedScene]([ExtResource("rock1"), ExtResource("rock2"), ExtResource("rock3"), ExtResource("rock4"), ExtResource("rock5"), ExtResource("rock6"), ExtResource("rock7"), ExtResource("rock8"), ExtResource("rock9"), ExtResource("rock10")])
 player_model = ExtResource("standalone_test")
-character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007"), ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4")])
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007"), ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6")])
 
 [node name="Dragon" parent="." instance=ExtResource("dragon")]
 position = Vector3(186, 0, 284)
@@ -48,3 +51,11 @@ face_toward = Vector2(150, 305)
 [node name="DragonBlue" parent="." instance=ExtResource("dragon_blue")]
 position = Vector3(114, 0, 284)
 face_toward = Vector2(150, 305)
+
+[node name="StandaloneLineup" type="Node3D" parent="."]
+position = Vector3(150, 0, 307)
+script = ExtResource("character_lineup")
+characters = Array[PackedScene]([ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6")])
+spacing = 2.0
+face_toward = Vector2(150, 300)
+clear_radius = 8.0
