@@ -1,0 +1,44 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://dv6avp5f55md6"
+path.s3tc="res://.godot/imported/model_dwarf_warrior_3d_model_basecolor.jpg-2a666b4625e80e362bc809d092bf2963.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "20a34c33b6ed643331b0c105be7b045c"
+}
+
+[deps]
+
+source_file="res://assets/characters/standalone/test7/model_dwarf_warrior_3d_model_basecolor.jpg"
+dest_files=["res://.godot/imported/model_dwarf_warrior_3d_model_basecolor.jpg-2a666b4625e80e362bc809d092bf2963.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0

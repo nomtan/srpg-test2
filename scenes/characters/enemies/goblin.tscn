@@ -12,10 +12,10 @@ weapon_id = "scimitar"
 shield_id = "round"
 
 [node name="Model" type="Node3D" parent="."]
-scale = Vector3(2.025, 2.025, 2.025)
+scale = Vector3(1.51875, 1.51875, 1.51875)
 
 [node name="NameLabel" type="Label3D" parent="."]
-position = Vector3(0, 2.4, 0)
+position = Vector3(0, 1.9, 0)
 billboard = 1
 text = "ゴブリン"
 font_size = 24

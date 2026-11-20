@@ -37,7 +37,7 @@ func run() -> void:
 	for clip in goblin.CLIPS:
 		check(player.has_animation(clip), "Goblin has the %s clip" % clip)
 	check(player.get_animation("idle").loop_mode == Animation.LOOP_LINEAR and player.get_animation("death").loop_mode == Animation.LOOP_NONE, "idle loops, death holds its last frame")
-	check(is_equal_approx(goblin.get_node("Model").scale.x, 2.025), "Goblin is drawn 1.5 times its first size")
+	check(is_equal_approx(goblin.get_node("Model").scale.x, 1.51875), "Goblin is drawn at 0.75 times its former size")
 	var skeleton: Skeleton3D = goblin.skeleton
 	check(goblin.find_children("*", "Skeleton3D", true, false).size() == 1, "One skeleton")
 	var body: MeshInstance3D = null

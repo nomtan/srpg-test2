@@ -382,6 +382,58 @@ TEST6_HANDS = {'wrist': .30, 'wrist_blend': .01, 'knuckle': .345, 'middle': .368
                'thumb_y': -.027, 'thumb_slope': 0, 'thumb_u': (.315, .352), 'thumb_joint': .335, 'pinky_y': .027, 'pinky_u': .33,
                'centre': {'Left': .085, 'Right': .08}, 'top': .725, 'bottom': .655}
 
+# test7: a stout dwarf warrior in a horned helmet: a long orange beard from under the nose (z 0.75) over
+# the chest, two braids ending at z 0.46 (|x| 0.06-0.10) and a centre tip over the belt buckle down to z
+# 0.36 (|x| < 0.045, y to -0.18); large shoulder plates (to z 0.745, |x| to 0.30), a fur trim at the
+# elbow (|x| 0.20-0.29), a belt at z 0.43-0.47 with pouches on the hips, a green tunic down to z 0.20
+# over puffy trousers and tall boots (cuff 0.14-0.18). Exported in centimetres (height 94.7). The T-pose
+# is symmetric, the arms just behind the centre line (y 0.03) and falling slightly (shoulder z 0.68,
+# elbow 0.65, hand 0.633): elbow 0.225 inside the fur, gauntlet 0.29-0.36, wrist 0.36. The four fingers
+# start at one knuckle line (0.43, tips 0.488), so there is no pinky region; the thumb sits low in front
+# of the palm (y < -0.02, z 0.60-0.645, x 0.395-0.44). Short legs: crotch 0.19, knee 0.15, ankle 0.055.
+TEST7_BONES = dict(TEST_BONES)
+TEST7_BONES.update({
+    'Root': ((0, .015, 0), (0, .015, .15), None, None),
+    'Hips': ((0, .015, .30), (0, .015, .40), 'Root', .07),
+    'Spine': ((0, .015, .40), (0, .012, .50), 'Hips', .07),
+    'Chest': ((0, .012, .50), (0, .012, .60), 'Spine', .08),
+    'UpperChest': ((0, .012, .60), (0, .015, .71), 'Chest', .08),
+    'Neck': ((0, .015, .71), (0, .015, .76), 'UpperChest', .03),
+    'Head': ((0, .015, .76), (0, .02, .95), 'Neck', .08),
+})
+for _side, _s in (('Left', 1), ('Right', -1)):
+    TEST7_BONES.update({
+        # The shoulder joint sits under the middle of the plate (|x| 0.10-0.215), not at its inner edge.
+        _side + 'Shoulder': ((_s * .03, .015, .69), (_s * .16, .03, .67), 'UpperChest', .03),
+        _side + 'Arm': ((_s * .16, .03, .67), (_s * .225, .033, .65), _side + 'Shoulder', .035),
+        _side + 'ForeArm': ((_s * .225, .033, .65), (_s * .36, .03, .638), _side + 'Arm', .03),
+        _side + 'ForeArmTwist1': ((_s * .27, .032, .646), (_s * .315, .031, .642), _side + 'ForeArm', .03),
+        _side + 'ForeArmTwist2': ((_s * .315, .031, .642), (_s * .36, .03, .638), _side + 'ForeArm', .03),
+        _side + 'Hand': ((_s * .36, .03, .638), (_s * .43, .028, .632), _side + 'ForeArm', .025),
+        _side + 'Fingers1': ((_s * .43, .028, .632), (_s * .457, .028, .632), _side + 'Hand', .01),
+        _side + 'Fingers2': ((_s * .457, .028, .632), (_s * .488, .028, .632), _side + 'Fingers1', .01),
+        _side + 'Thumb1': ((_s * .395, -.02, .622), (_s * .415, -.032, .613), _side + 'Hand', .008),
+        _side + 'Thumb2': ((_s * .415, -.032, .613), (_s * .435, -.035, .608), _side + 'Thumb1', .008),
+        _side + 'Pinky': ((_s * .43, .07, .632), (_s * .46, .07, .632), _side + 'Hand', .008),
+        _side + 'UpLeg': ((_s * .09, .02, .29), (_s * .10, .02, .15), 'Hips', .05),
+        _side + 'Leg': ((_s * .10, .02, .15), (_s * .11, .02, .055), _side + 'UpLeg', .04),
+        _side + 'Foot': ((_s * .11, .02, .055), (_s * .115, -.04, .015), _side + 'Leg', .03),
+        _side + 'Toe': ((_s * .115, -.04, .015), (_s * .115, -.09, .008), _side + 'Foot', .02),
+    })
+TEST7_BONES.update({
+    # The back and the front of the tunic below the belt hang from the hips.
+    'Cape1': ((0, .11, .42), (0, .14, .31), 'Hips', None),
+    'Cape2': ((0, .14, .31), (0, .165, .20), 'Cape1', None),
+    'Cape3': ((0, .165, .20), (0, .18, .12), 'Cape2', None),
+    'Tabard1': ((0, -.13, .42), (0, -.14, .31), 'Hips', None),
+    'Tabard2': ((0, -.14, .31), (0, -.15, .20), 'Tabard1', None),
+})
+TEST7_SKIN_SEGMENTS = {'LeftForeArm': ((.225, .033, .65), (.27, .032, .646)),
+                       'RightForeArm': ((-.225, .033, .65), (-.27, .032, .646))}
+TEST7_HANDS = {'wrist': .36, 'wrist_blend': .01, 'knuckle': .43, 'middle': .457, 'blend': .004,
+               'thumb_y': -.05, 'thumb_slope': 0, 'thumb_u': (.392, .44), 'thumb_joint': .415, 'pinky_y': 1, 'pinky_u': .43,
+               'centre': {'Left': .03, 'Right': .03}, 'top': .70, 'bottom': .575}
+
 # The fists baked into the bind pose, so a held weapon sits in a closed hand (SwordCombat runs its grip
 # through the centre of the fist mesh) and empty hands hang as fists. Radians in armature axes: fingers
 # and the little finger curl down toward the palm (the T-pose palms face down), the thumb curls down and
@@ -455,6 +507,27 @@ CHARACTERS = {
         # No cloth chains: back_y and side_x out of reach, no tabard. The trousers stay on the legs.
         'cloth': {'top': .40, 'blend': .06, 'floor': .09, 'leg_radius': .085, 'back_y': 1, 'front_y': -1,
                   'tabard_x': 0, 'side_x': 1, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': []},
+        'clean': {'min_extent': .004},
+        'preview': {'scale': 1.25, 'target': (0, 0, .5)},
+    },
+    'test7': {
+        'bones': TEST7_BONES, 'hands': TEST7_HANDS, 'skin_segments': TEST7_SKIN_SEGMENTS,
+        # Exported in centimetres.
+        'source_scale': .01,
+        # The helmet's rim is at z 0.77 and its horns (|x| to 0.18) start above 0.80; the shoulder plates
+        # stay below 0.745.
+        'head_blend': .745, 'head_full': .775, 'head_reach': .11,
+        # The tunic's back (behind back_y, clear of the boot heels at y 0.11) and its front (in front of
+        # front_y within tabard_x) ease onto their chains below the belt; its sides stay on the legs.
+        'cloth': {'top': .42, 'blend': .06, 'floor': .17, 'leg_radius': .07, 'back_y': .12, 'front_y': -.10,
+                  'tabard_x': .08, 'side_x': 1, 'cape': ['Cape1', 'Cape2', 'Cape3'], 'tabard': ['Tabard1', 'Tabard2']},
+        # The beard hangs in front of the chest (|x| < 0.10, y < -0.07, above the belt) with its tip over
+        # the buckle (|x| < 0.045, y < -0.125): the moustache follows the head, the rest the chest.
+        # The shoulder plates (|x| 0.10-0.215, z 0.66-0.746) sit on the shoulder above the arm instead of
+        # turning down with it, which pulled them in and made the shoulders look narrow.
+        'pauldron': {'x': (.08, .20, .225), 'z': (.655, .685, .76)},
+        'beard': {'boxes': [(.10, -.07, (.48, .80)), (.045, -.125, (.34, .48))],
+                  'upper': 'Head', 'lower': 'Chest', 'blend': (.64, .72)},
         'clean': {'min_extent': .004},
         'preview': {'scale': 1.25, 'target': (0, 0, .5)},
     },
@@ -642,6 +715,37 @@ def skin(mesh, rig, spec):
     if cloth['tabard']:
         w[front] = chain_weights(z, bones, names, cloth['tabard'])[front]
     print('Cloth: cape', int(back.sum()), 'tabard', int(front.sum()), 'of', len(co))
+
+    if 'pauldron' in spec:
+        # Shoulder plates ride the shoulder bone: above the arm (z from low to full) and out to the
+        # plate's rim (|x| full weight to `edge`, fading to `out`), below the helmet (`top`).
+        inner, edge, out = spec['pauldron']['x']
+        low, full, top = spec['pauldron']['z']
+        ax = np.abs(co[:, 0])
+        tz = np.clip((z - low) / (full - low), 0, 1)
+        tx = 1 - np.clip((ax - edge) / (out - edge), 0, 1)
+        s = tz * tz * (3 - 2 * tz) * tx * tx * (3 - 2 * tx) * ((ax > inner) & (z < top))
+        for side, sign in (('Left', 1), ('Right', -1)):
+            mine = (co[:, 0] * sign > 0)[:, None]
+            row = np.zeros(len(names))
+            row[names.index(side + 'Shoulder')] = 1
+            w = np.where(mine, w * (1 - s[:, None]) + row * s[:, None], w)
+        print('Pauldron', int((s > .5).sum()), 'of', len(co))
+
+    if 'beard' in spec:
+        # A long beard rides the chest, blending onto the head toward the moustache, instead of taking
+        # weights from the hips and thighs it hangs near.
+        beard = spec['beard']
+        inside = np.zeros(len(co), bool)
+        for reach, front_y, (low, high) in beard['boxes']:
+            inside |= (np.abs(co[:, 0]) < reach) & (co[:, 1] < front_y) & (z >= low) & (z < high)
+        t = np.clip((z - beard['blend'][0]) / (beard['blend'][1] - beard['blend'][0]), 0, 1)
+        t = t * t * (3 - 2 * t)
+        rows = np.zeros((len(co), len(names)))
+        rows[:, names.index(beard['upper'])] = t
+        rows[:, names.index(beard['lower'])] = 1 - t
+        w[inside] = rows[inside]
+        print('Beard', int(inside.sum()), 'of', len(co))
 
     hand = hand_weights(co, names, w, spec['hands'])
 

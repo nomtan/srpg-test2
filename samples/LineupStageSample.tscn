@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/world_jrpg/lineup_stage_world.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/character/character_lineup.gd" id="character_lineup"]
@@ -15,16 +15,17 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/standalone/test4.tscn" id="standalone_test4"]
 [ext_resource type="PackedScene" path="res://scenes/characters/standalone/test5.tscn" id="standalone_test5"]
 [ext_resource type="PackedScene" path="res://scenes/characters/standalone/test6.tscn" id="standalone_test6"]
+[ext_resource type="PackedScene" path="res://scenes/characters/standalone/test7.tscn" id="standalone_test7"]
 
 [node name="LineupStageSample" type="Node3D"]
 script = ExtResource("1")
 player_model = ExtResource("standalone_test")
 player_spawn_position = Vector3(200.25, 0, 206.25)
-character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007"), ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6")])
+character_roster = Array[PackedScene]([ExtResource("17"), ExtResource("18"), ExtResource("19"), ExtResource("20"), ExtResource("character005"), ExtResource("character006"), ExtResource("character007"), ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6"), ExtResource("standalone_test7")])
 
 [node name="StandaloneLineup" type="Node3D" parent="."]
 position = Vector3(201, 0, 200.25)
 script = ExtResource("character_lineup")
-characters = Array[PackedScene]([ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6")])
+characters = Array[PackedScene]([ExtResource("standalone_test"), ExtResource("standalone_test2"), ExtResource("standalone_test3"), ExtResource("standalone_test4"), ExtResource("standalone_test5"), ExtResource("standalone_test6"), ExtResource("standalone_test7")])
 spacing = 1.5
 face_toward = Vector2(201, 206.25)
